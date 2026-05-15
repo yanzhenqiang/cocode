@@ -114,7 +114,7 @@ export function migrateLegacyClaudeConfigHome(options?: {
   }
 
   const homeDir = options?.homeDir ?? homedir()
-  const openClaudeDir = join(homeDir, '.openclaude')
+  const cocodeDir = join(homeDir, '.cocode')
   const legacyClaudeDir = join(homeDir, '.claude')
 
   try {
@@ -126,14 +126,14 @@ export function migrateLegacyClaudeConfigHome(options?: {
     }
 
     if (legacyDirExists) {
-      copyMissingPathSync(legacyClaudeDir, openClaudeDir)
+      copyMissingPathSync(legacyClaudeDir, cocodeDir)
     }
 
     for (const legacyFile of legacyGlobalConfigFiles) {
-      const openClaudeFile = legacyFile.replace(/^\.claude/, '.openclaude')
+      const cocodeFile = legacyFile.replace(/^\.claude/, '.cocode')
       copyMissingPathSync(
         join(homeDir, legacyFile),
-        join(homeDir, openClaudeFile),
+        join(homeDir, cocodeFile),
       )
     }
     return true
@@ -151,9 +151,9 @@ export function resolveClaudeConfigHomeDir(options?: {
   }
 
   const homeDir = options?.homeDir ?? homedir()
-  const openClaudeDir = join(homeDir, '.openclaude')
+  const cocodeDir = join(homeDir, '.cocode')
 
-  return openClaudeDir.normalize('NFC')
+  return cocodeDir.normalize('NFC')
 }
 
 // Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
@@ -166,13 +166,13 @@ export const getClaudeConfigHomeDir = memoize(
       configDirEnv,
       homeDir,
     })
-    const openClaudeDir = join(homeDir, '.openclaude')
+    const cocodeDir = join(homeDir, '.cocode')
     const legacyClaudeDir = join(homeDir, '.claude')
 
     if (
       !configDirEnv &&
       !migrationSucceeded &&
-      !pathIsDirectory(openClaudeDir) &&
+      !pathIsDirectory(cocodeDir) &&
       pathExists(legacyClaudeDir)
     ) {
       return legacyClaudeDir.normalize('NFC')

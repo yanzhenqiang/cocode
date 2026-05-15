@@ -1,6 +1,6 @@
 # Web Search Providers
 
-OpenClaude supports multiple search backends through a provider adapter system.
+Cocode supports multiple search backends through a provider adapter system.
 
 ## Supported Providers
 

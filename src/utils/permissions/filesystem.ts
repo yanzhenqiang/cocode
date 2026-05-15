@@ -66,7 +66,7 @@ export const DANGEROUS_FILES = [
   '.profile',
   '.ripgreprc',
   '.mcp.json',
-  '.openclaude.json',
+  '.cocode.json',
   '.claude.json',
 ] as const
 
@@ -79,7 +79,7 @@ export const DANGEROUS_DIRECTORIES = [
   '.vscode',
   '.idea',
   '.claude',
-  '.openclaude',
+  '.cocode',
 ] as const
 
 /**
@@ -97,7 +97,7 @@ export function normalizeCaseForComparison(path: string): string {
 
 /**
  * If filePath is inside a .claude/skills/{name}/ directory (project) or
- * .openclaude/skills/{name}/ directory (global), plus the legacy global
+ * .cocode/skills/{name}/ directory (global), plus the legacy global
  * .claude/skills path, return the skill name and a session-allow pattern
  * scoped to just that skill.
  * Used to offer a narrower "allow edits to this skill only" option in the
@@ -116,8 +116,8 @@ export function getClaudeSkillScope(
       prefix: '/.claude/skills/',
     },
     {
-      dir: expandPath(join(homedir(), '.openclaude', 'skills')),
-      prefix: '~/.openclaude/skills/',
+      dir: expandPath(join(homedir(), '.cocode', 'skills')),
+      prefix: '~/.cocode/skills/',
     },
     {
       dir: expandPath(join(homedir(), '.claude', 'skills')),
@@ -218,8 +218,8 @@ export function isClaudeSettingsPath(filePath: string): boolean {
 
   // Use platform separator so endsWith checks work on both Unix (/) and Windows (\)
   if (
-    normalizedPath.endsWith(`${sep}.openclaude${sep}settings.json`) ||
-    normalizedPath.endsWith(`${sep}.openclaude${sep}settings.local.json`) ||
+    normalizedPath.endsWith(`${sep}.cocode${sep}settings.json`) ||
+    normalizedPath.endsWith(`${sep}.cocode${sep}settings.local.json`) ||
     normalizedPath.endsWith(`${sep}.claude${sep}settings.json`) ||
     normalizedPath.endsWith(`${sep}.claude${sep}settings.local.json`)
   ) {
@@ -245,9 +245,9 @@ function isClaudeConfigFilePath(filePath: string): boolean {
   const commandsDir = join(getOriginalCwd(), '.claude', 'commands')
   const agentsDir = join(getOriginalCwd(), '.claude', 'agents')
   const skillsDir = join(getOriginalCwd(), '.claude', 'skills')
-  const openCommandsDir = join(getOriginalCwd(), '.openclaude', 'commands')
-  const openAgentsDir = join(getOriginalCwd(), '.openclaude', 'agents')
-  const openSkillsDir = join(getOriginalCwd(), '.openclaude', 'skills')
+  const openCommandsDir = join(getOriginalCwd(), '.cocode', 'commands')
+  const openAgentsDir = join(getOriginalCwd(), '.cocode', 'agents')
+  const openSkillsDir = join(getOriginalCwd(), '.cocode', 'skills')
 
   return (
     pathInWorkingPath(filePath, commandsDir) ||
@@ -1291,8 +1291,8 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
   if (claudeFolderAllowRule) {
     // Check if this rule is scoped under a Claude config folder.
     // Accepts broad project/global patterns ('/.claude/**',
-    // '~/.openclaude/**', and legacy '~/.claude/**') plus narrowed skill
-    // patterns like '~/.openclaude/skills/my-skill/**' so users can grant
+    // '~/.cocode/**', and legacy '~/.claude/**') plus narrowed skill
+    // patterns like '~/.cocode/skills/my-skill/**' so users can grant
     // session access to a single skill without also exposing settings.json
     // or hooks/. The rule already matched the path via matchingRuleForInput;
     // this is an additional scope check. Reject '..' to prevent a rule like
