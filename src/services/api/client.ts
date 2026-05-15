@@ -574,6 +574,22 @@ function buildFetch(
     if (injectClientRequestId && !headers.has(CLIENT_REQUEST_ID_HEADER)) {
       headers.set(CLIENT_REQUEST_ID_HEADER, randomUUID())
     }
+    // Allow env vars to override/delete specific headers for proxy compatibility
+    const betaOverride = process.env.ANTHROPIC_BETA_OVERRIDE
+    if (betaOverride !== undefined) {
+      if (betaOverride === '') {
+        headers.delete('anthropic-beta')
+      } else {
+        headers.set('anthropic-beta', betaOverride)
+      }
+    }
+    if (isEnvTruthy(process.env.ANTHROPIC_DISABLE_X_APP)) {
+      headers.delete('x-app')
+    }
+    if (isEnvTruthy(process.env.ANTHROPIC_DISABLE_SESSION_ID)) {
+      headers.delete('x-claude-code-session-id')
+      headers.delete('X-Claude-Code-Session-Id')
+    }
     try {
       // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
       const url = input instanceof Request ? input.url : String(input)
