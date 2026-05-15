@@ -18,8 +18,10 @@ export interface PreflightCheckResult {
 async function checkEndpoints(): Promise<PreflightCheckResult> {
   try {
     const oauthConfig = getOauthConfig();
+    // Use custom base URL if set, otherwise fall back to OAuth config
+    const baseApiUrl = process.env.ANTHROPIC_BASE_URL || oauthConfig.BASE_API_URL;
     const tokenUrl = new URL(oauthConfig.TOKEN_URL);
-    const endpoints = [`${oauthConfig.BASE_API_URL}/api/hello`, `${tokenUrl.origin}/v1/oauth/hello`];
+    const endpoints = [`${baseApiUrl}/api/hello`, `${tokenUrl.origin}/v1/oauth/hello`];
     const checkEndpoint = async (url: string): Promise<PreflightCheckResult> => {
       try {
         const response = await axios.get(url, {
