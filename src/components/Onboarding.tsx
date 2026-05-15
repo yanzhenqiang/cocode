@@ -16,10 +16,8 @@ import { ApproveApiKey } from './ApproveApiKey.js';
 import { ConsoleOAuthFlow } from './ConsoleOAuthFlow.js';
 import { Select } from './CustomSelect/select.js';
 import { WelcomeV2 } from './LogoV2/WelcomeV2.js';
-import { PressEnterToContinue } from './PressEnterToContinue.js';
 import { ThemePicker } from './ThemePicker.js';
-import { OrderedList } from './ui/OrderedList.js';
-type StepId = 'theme' | 'oauth' | 'api-key' | 'security' | 'terminal-setup';
+type StepId = 'theme' | 'oauth' | 'api-key' | 'terminal-setup';
 interface OnboardingStep {
   id: StepId;
   component: React.ReactNode;
@@ -62,37 +60,7 @@ export function Onboarding({
       <ThemePicker onThemeSelect={handleThemeSelection} showIntroText={true} helpText="To change this later, run /theme" hideEscToCancel={true} skipExitHandling={true} // Skip exit handling as Onboarding already handles it
     />
     </Box>;
-  const securityStep = <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Security notes:</Text>
-      <Box flexDirection="column" width={70}>
-        {/**
-         * OrderedList misnumbers items when rendering conditionally,
-         * so put all items in the if/else
-         */}
-        <OrderedList>
-          <OrderedList.Item>
-            <Text>{PRODUCT_DISPLAY_NAME} can make mistakes</Text>
-            <Text dimColor wrap="wrap">
-              You should always review {PRODUCT_DISPLAY_NAME}&apos;s responses,
-              especially when
-              <Newline />
-              running code.
-              <Newline />
-            </Text>
-          </OrderedList.Item>
-          <OrderedList.Item>
-            <Text>
-              Due to prompt injection risks, only use it with code you trust
-            </Text>
-            <Text dimColor wrap="wrap">
-              Repository files and tool output can contain instructions that try
-              to steer {PRODUCT_DISPLAY_NAME} toward unsafe tool use.
-            </Text>
-          </OrderedList.Item>
-        </OrderedList>
-      </Box>
-      <PressEnterToContinue />
-    </Box>;
+
   // Create the steps array - determine which steps to include based on reAuth and oauthEnabled
   const apiKeyNeedingApproval = useMemo(() => {
     // Add API key step if needed
@@ -131,10 +99,6 @@ export function Onboarding({
         </SkippableStep>
     });
   }
-  steps.push({
-    id: 'security',
-    component: securityStep
-  });
   if (shouldOfferTerminalSetup()) {
     steps.push({
       id: 'terminal-setup',
@@ -170,24 +134,9 @@ export function Onboarding({
   }
   const currentStep = steps[currentStepIndex];
 
-  // Handle Enter on security step and Escape on terminal-setup step
-  // Dependencies match what goToNextStep uses internally
-  const handleSecurityContinue = useCallback(() => {
-    if (currentStepIndex === steps.length - 1) {
-      onDone();
-    } else {
-      goToNextStep();
-    }
-  }, [currentStepIndex, steps.length, oauthEnabled, onDone]);
   const handleTerminalSetupSkip = useCallback(() => {
     goToNextStep();
   }, [currentStepIndex, steps.length, oauthEnabled, onDone]);
-  useKeybindings({
-    'confirm:yes': handleSecurityContinue
-  }, {
-    context: 'Confirmation',
-    isActive: currentStep?.id === 'security'
-  });
   useKeybindings({
     'confirm:no': handleTerminalSetupSkip
   }, {
