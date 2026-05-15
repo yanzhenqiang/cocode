@@ -238,8 +238,7 @@ import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
 import { useChromeExtensionNotification } from 'src/hooks/useChromeExtensionNotification.js';
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
 import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
-import { getTipToShowOnSpinner, recordShownTip } from 'src/services/tips/tipScheduler.js';
-import type { Theme } from 'src/utils/theme.js';
+
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
 import { shouldRunStartupChecks } from './replStartupGates.js';
 import { checkAndDisableBypassPermissionsIfNeeded, checkAndDisableAutoModeIfNeeded, useKickOffCheckAndDisableBypassPermissionsIfNeeded, useKickOffCheckAndDisableAutoModeIfNeeded } from 'src/utils/permissions/bypassPermissionsKillswitch.js';
@@ -1562,38 +1561,9 @@ export function REPL({
   // saveGlobalConfig writes back-to-back. Reset at submit in onSubmit.
   const tipPickedThisTurnRef = React.useRef(false);
   const pickNewSpinnerTip = useCallback(() => {
-    if (tipPickedThisTurnRef.current) return;
+    // tips service removed — no-op
     tipPickedThisTurnRef.current = true;
-    const newMessages = messagesRef.current.slice(bashToolsProcessedIdx.current);
-    for (const tool of extractBashToolsFromMessages(newMessages)) {
-      bashTools.current.add(tool);
-    }
-    bashToolsProcessedIdx.current = messagesRef.current.length;
-    void getTipToShowOnSpinner({
-      theme,
-      readFileState: readFileState.current,
-      bashTools: bashTools.current
-    }).then(async tip => {
-      if (tip) {
-        const content = await tip.content({
-          theme
-        });
-        setAppState(prev => ({
-          ...prev,
-          spinnerTip: content
-        }));
-        recordShownTip(tip);
-      } else {
-        setAppState(prev => {
-          if (prev.spinnerTip === undefined) return prev;
-          return {
-            ...prev,
-            spinnerTip: undefined
-          };
-        });
-      }
-    });
-  }, [setAppState, theme]);
+  }, []);
 
   // Resets UI loading state. Does NOT call onTurnComplete - that should be
   // called explicitly only when a query turn actually completes.
