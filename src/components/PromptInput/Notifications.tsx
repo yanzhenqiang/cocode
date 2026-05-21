@@ -41,6 +41,7 @@ type Props = {
   mcpClients?: MCPServerConnection[];
   isInputWrapped?: boolean;
   isNarrow?: boolean;
+  isInOverageMode?: boolean;
 };
 export function Notifications(t0) {
   const $ = _c(34);
@@ -51,7 +52,8 @@ export function Notifications(t0) {
     messages,
     mcpClients,
     isInputWrapped: t1,
-    isNarrow: t2
+    isNarrow: t2,
+    isInOverageMode
   } = t0;
   const autoUpdaterResult = undefined;
   const isAutoUpdating = false;
