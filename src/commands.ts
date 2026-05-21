@@ -33,7 +33,6 @@ import lsp from './commands/lsp/index.js'
 import login from './commands/login/index.js'
 import logout from './commands/logout/index.js'
 import installGitHubApp from './commands/install-github-app/index.js'
-import installSlackApp from './commands/install-slack-app/index.js'
 import breakCache from './commands/break-cache/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
@@ -299,7 +298,6 @@ const COMMANDS = memoize((): Command[] => [
   knowledge,
   lsp,
   installGitHubApp,
-  installSlackApp,
   mcp,
   memory,
   mobile,
