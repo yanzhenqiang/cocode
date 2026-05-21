@@ -6,7 +6,6 @@ import { diagnosticTracker } from '../../services/diagnosticTracking.js'
 import { clearDeliveredDiagnosticsForFile } from '../../services/lsp/LSPDiagnosticRegistry.js'
 import { getLspServerManager } from '../../services/lsp/manager.js'
 import { notifyVscodeFileUpdated } from '../../services/mcp/vscodeSdkMcp.js'
-import { checkTeamMemSecrets } from '../../services/teamMemorySync/teamMemSecretGuard.js'
 import {
   activateConditionalSkillsForPaths,
   addSkillDirectories,
@@ -153,12 +152,6 @@ export const FileWriteTool = buildTool({
   async validateInput({ file_path, content }, toolUseContext: ToolUseContext) {
     const fullFilePath = expandPath(file_path)
 
-    // Reject writes to team memory files that contain secrets
-    const secretError = checkTeamMemSecrets(fullFilePath, content)
-    if (secretError) {
-      return { result: false, message: secretError, errorCode: 0 }
-    }
-
     // Check if path should be ignored based on permission settings
     const appState = toolUseContext.getAppState()
     const denyRule = matchingRuleForInput(
@@ -243,8 +236,6 @@ export const FileWriteTool = buildTool({
 
     // Activate conditional skills whose path patterns match this file
     activateConditionalSkillsForPaths([fullFilePath], cwd)
-
-    await diagnosticTracker.beforeFileEditedCompat(fullFilePath)
 
     // Ensure parent directory exists before the atomic read-modify-write section.
     // Must stay OUTSIDE the critical section below (a yield between the staleness

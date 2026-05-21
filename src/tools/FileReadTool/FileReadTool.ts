@@ -15,7 +15,7 @@ import { logEvent } from '../../services/analytics/index.js'
 import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   getFileExtensionForAnalytics,
-} from '../../services/analytics/metadata.js'
+} from '../../services/analytics/index.js'
 import {
   countTokensWithAPI,
   roughTokenCountEstimationForFileType,

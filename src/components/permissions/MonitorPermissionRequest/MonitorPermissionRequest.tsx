@@ -1,7 +1,7 @@
 import React from 'react'
 import { getOriginalCwd } from '../../../bootstrap/state.js'
 import { Box, Text } from '../../../ink.js'
-import { sanitizeToolNameForAnalytics } from '../../../services/analytics/metadata.js'
+import { sanitizeToolNameForAnalytics } from '../../../services/analytics/index.js'
 import { env } from '../../../utils/env.js'
 import { shouldShowAlwaysAllowOptions } from '../../../utils/permissions/permissionsLoader.js'
 import { usePermissionRequestLogging } from '../hooks.js'

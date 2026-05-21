@@ -4,7 +4,7 @@ import { logError } from 'src/utils/log.js';
 import { getOriginalCwd } from '../../../bootstrap/state.js';
 import { PRODUCT_DISPLAY_NAME } from '../../../constants/product.js';
 import { Box, Text } from '../../../ink.js';
-import { sanitizeToolNameForAnalytics } from '../../../services/analytics/metadata.js';
+import { sanitizeToolNameForAnalytics } from '../../../services/analytics/index.js';
 import { SKILL_TOOL_NAME } from '../../../tools/SkillTool/constants.js';
 import { SkillTool } from '../../../tools/SkillTool/SkillTool.js';
 import { env } from '../../../utils/env.js';

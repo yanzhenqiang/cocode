@@ -28,7 +28,7 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from '../analytics/index.js'
-import { sanitizeToolNameForAnalytics } from '../analytics/metadata.js'
+import { sanitizeToolNameForAnalytics } from '../analytics/index.js'
 import { EMPTY_USAGE } from './emptyUsage.js'
 import { classifyAPIError } from './errors.js'
 import { extractConnectionErrorDetails } from './errorUtils.js'

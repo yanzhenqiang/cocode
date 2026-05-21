@@ -6,7 +6,7 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from 'src/services/analytics/index.js'
-import { sanitizeToolNameForAnalytics } from 'src/services/analytics/metadata.js'
+import { sanitizeToolNameForAnalytics } from 'src/services/analytics/index.js'
 import type { Tool as ToolType, ToolUseContext } from '../../Tool.js'
 import { getLanguageName } from '../../utils/cliHighlight.js'
 import { SandboxManager } from '../../utils/sandbox/sandbox-adapter.js'

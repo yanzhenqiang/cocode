@@ -12,7 +12,7 @@ import {
 } from '../../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/growthbook.js'
 import { logEvent } from '../../services/analytics/index.js'
-import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/metadata.js'
+import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
 import { getCacheControl } from '../../services/api/claude.js'
 import { parsePromptTooLongTokenCounts } from '../../services/api/errors.js'
 import { getDefaultMaxRetries } from '../../services/api/withRetry.js'

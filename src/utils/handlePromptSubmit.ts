@@ -1,13 +1,12 @@
 import type { UUID } from 'crypto'
 import { logEvent } from 'src/services/analytics/index.js'
-import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 'src/services/analytics/metadata.js'
+import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 'src/services/analytics/index.js'
 import { type Command, getCommandName, isCommandEnabled } from '../commands.js'
 import { selectableUserMessagesFilter } from './messageFilters.js'
 import type { SpinnerMode } from '../components/Spinner/types.js'
 import type { QuerySource } from '../constants/querySource.js'
 import { expandPastedTextRefs, parseReferences } from '../history.js'
 import type { CanUseToolFn } from '../hooks/useCanUseTool.js'
-import type { IDESelection } from '../hooks/useIdeSelection.js'
 import type { AppState } from '../state/AppState.js'
 import type { SetToolJSXFn } from '../Tool.js'
 import type { LocalJSXCommandOnDone } from '../types/command.js'
@@ -40,7 +39,6 @@ type BaseExecutionParams = {
   queuedCommands?: QueuedCommand[]
   messages: Message[]
   mainLoopModel: string
-  ideSelection: IDESelection | undefined
   querySource: QuerySource
   commands: Command[]
   queryGuard: QueryGuard
@@ -131,7 +129,6 @@ export async function handlePromptSubmit(
     getToolUseContext,
     messages,
     mainLoopModel,
-    ideSelection,
     setUserInputOnProcessing,
     setAbortController,
     onQuery,
@@ -153,8 +150,7 @@ export async function handlePromptSubmit(
       queuedCommands,
       messages,
       mainLoopModel,
-      ideSelection,
-      querySource: params.querySource,
+        querySource: params.querySource,
       commands,
       queryGuard,
       setToolJSX,
@@ -370,7 +366,6 @@ export async function handlePromptSubmit(
     queuedCommands: [cmd],
     messages,
     mainLoopModel,
-    ideSelection,
     querySource: params.querySource,
     commands,
     queryGuard,
@@ -391,14 +386,13 @@ export async function handlePromptSubmit(
  * Core logic for executing user input without UI side effects.
  *
  * All commands arrive as `queuedCommands`. First command gets full treatment
- * (attachments, ideSelection, pastedContents with image resizing). Commands 2-N
+ * (attachments, pastedContents with image resizing). Commands 2-N
  * get `skipAttachments` to avoid duplicating turn-level context.
  */
 async function executeUserInput(params: ExecuteUserInputParams): Promise<void> {
   const {
     messages,
     mainLoopModel,
-    ideSelection,
     querySource,
     queryGuard,
     setToolJSX,
@@ -489,7 +483,7 @@ async function executeUserInput(params: ExecuteUserInputParams): Promise<void> {
           querySource,
           canUseTool,
           uuid: cmd.uuid,
-          ideSelection: isFirst ? ideSelection : undefined,
+          // IDE selection removed
           skipSlashCommands: cmd.skipSlashCommands,
           bridgeOrigin: cmd.bridgeOrigin,
           isMeta: cmd.isMeta,

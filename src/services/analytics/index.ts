@@ -1,3 +1,5 @@
+import { extname } from 'path'
+
 /**
  * No-op analytics service — events are silently discarded.
  *
@@ -72,3 +74,83 @@ export async function logEventAsync(
 
 /** Reset for testing — no-op. */
 export function _resetForTesting(): void {}
+
+// ─── Stubs for metadata.ts functions ───────────────────────────────────────
+
+/** No-op: telemetry is disabled. */
+export function extractMcpToolDetails(_toolName: string): undefined {
+	return undefined
+}
+
+/** No-op: telemetry is disabled. */
+export function extractSkillName(_toolName: string): undefined {
+	return undefined
+}
+
+/** No-op: telemetry is disabled. */
+export function extractToolInputForTelemetry(_toolInput: unknown): undefined {
+	return undefined
+}
+
+/** No-op: telemetry is disabled. */
+export function mcpToolDetailsForAnalytics(
+	_toolName: string,
+	_mcpServerType?: string,
+	_mcpServerBaseUrl?: string,
+): { mcpServerName?: undefined; mcpToolName?: undefined } {
+	return {}
+}
+
+/**
+ * Sanitizes tool names for analytics logging to avoid PII exposure.
+ * No-op in this build — MCP tool names are redacted, built-in names pass through.
+ */
+export function sanitizeToolNameForAnalytics(
+	toolName: string,
+): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS {
+	if (toolName.startsWith('mcp__')) {
+		return 'mcp_tool' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+	}
+	return toolName as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+}
+
+/** No-op: telemetry is disabled. */
+export function isToolDetailsLoggingEnabled(): boolean {
+	return false
+}
+
+/**
+ * Extracts and sanitizes a file extension for analytics logging.
+ * No-op: returns the extension or 'other' for long ones.
+ */
+export function getFileExtensionForAnalytics(
+	filePath: string,
+): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS | undefined {
+	const ext = extname(filePath).toLowerCase()
+	if (!ext || ext === '.') {
+		return undefined
+	}
+
+	const extension = ext.slice(1) // remove leading dot
+	if (extension.length > 10) {
+		return 'other' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+	}
+
+	return extension as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+}
+
+/** No-op: telemetry is disabled. */
+export function getFileExtensionsFromBashCommand(
+	_command: string,
+	_simulatedSedEditFilePath?: string,
+): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS | undefined {
+	return undefined
+}
+
+/** No-op: telemetry is disabled. */
+export function getMcpToolAnalyticsMetadata(
+	_mcpInfo: unknown,
+	_toolName: string,
+): { serverName: undefined; mcpToolName: undefined } {
+	return { serverName: undefined, mcpToolName: undefined }
+}

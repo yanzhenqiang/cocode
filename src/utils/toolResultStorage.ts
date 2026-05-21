@@ -14,7 +14,7 @@ import {
 } from '../constants/toolLimits.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js'
 import { logEvent } from '../services/analytics/index.js'
-import { sanitizeToolNameForAnalytics } from '../services/analytics/metadata.js'
+import { sanitizeToolNameForAnalytics } from '../services/analytics/index.js'
 import type { Message } from '../types/message.js'
 import { logForDebugging } from './debug.js'
 import { getErrnoCode, toError } from './errors.js'
