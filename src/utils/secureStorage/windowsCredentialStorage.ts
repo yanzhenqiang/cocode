@@ -10,8 +10,8 @@ import {
 import type { SecureStorage, SecureStorageData } from './index.js'
 
 /**
- * Windows-specific secure storage implementation using DPAPI for new writes,
- * with best-effort reads/deletes from the legacy PasswordVault path.
+ * Windows-specific secure storage implementation using DPAPI.
+ * Legacy PasswordVault support removed.
  */
 function escapePowerShellSingleQuoted(value: string): string {
   return value.replace(/'/g, "''")
@@ -28,10 +28,6 @@ function getWindowsSecureStorageEntropy(): string {
 function getWindowsSecureStorageFilePath(): string {
   const resourceName = getLegacyResourceName().replace(/[^a-zA-Z0-9._-]/g, '_')
   return join(getClaudeConfigHomeDir(), `${resourceName}.secure.dpapi`)
-}
-
-function shouldUseLegacyPasswordVault(): boolean {
-  return process.env.COCODE_ENABLE_LEGACY_WINDOWS_PASSWORDVAULT === '1'
 }
 
 function runPowerShell(
@@ -62,37 +58,6 @@ function getFailureWarning(
   }
 
   return fallback
-}
-
-function readLegacyPasswordVault(): SecureStorageData | null {
-  if (!shouldUseLegacyPasswordVault()) {
-    return null
-  }
-
-  const resourceName = getLegacyResourceName().replace(/"/g, '`"')
-  const username = getUsername().replace(/"/g, '`"')
-  const script = `
-    Add-Type -AssemblyName System.Runtime.WindowsRuntime
-    try {
-      $vault = New-Object Windows.Security.Credentials.PasswordVault
-      $cred = $vault.Retrieve("${resourceName}", "${username}")
-      $cred.FillPassword()
-      [Console]::Out.Write($cred.Password)
-    } catch {
-      exit 1
-    }
-  `
-
-  const result = runPowerShell(script)
-  if (result?.exitCode === 0 && result.stdout) {
-    try {
-      return jsonParse(result.stdout)
-    } catch {
-      return null
-    }
-  }
-
-  return null
 }
 
 export const windowsCredentialStorage: SecureStorage = {
@@ -138,11 +103,11 @@ export const windowsCredentialStorage: SecureStorage = {
       try {
         return jsonParse(result.stdout)
       } catch {
-        return readLegacyPasswordVault()
+        return null
       }
     }
 
-    return readLegacyPasswordVault()
+    return null
   },
   async readAsync(): Promise<SecureStorageData | null> {
     return this.read()
@@ -211,25 +176,6 @@ export const windowsCredentialStorage: SecureStorage = {
       }
     `
     const removeDpapiResult = runPowerShell(removeDpapiScript)
-
-    if (shouldUseLegacyPasswordVault()) {
-      const resourceName = getLegacyResourceName().replace(/"/g, '`"')
-      const username = getUsername().replace(/"/g, '`"')
-      const removeLegacyScript = `
-        Add-Type -AssemblyName System.Runtime.WindowsRuntime
-        try {
-          $vault = New-Object Windows.Security.Credentials.PasswordVault
-          $cred = $vault.Retrieve("${resourceName}", "${username}")
-          $vault.Remove($cred)
-        } catch {
-          exit 0
-        }
-      `
-      const removeLegacyResult = runPowerShell(removeLegacyScript)
-
-      void removeLegacyResult
-    }
-
     return (removeDpapiResult?.exitCode ?? 1) === 0
   },
 }

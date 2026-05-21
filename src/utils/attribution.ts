@@ -2,7 +2,6 @@ import { feature } from 'bun:bundle'
 import { stat } from 'fs/promises'
 import { getClientType } from '../bootstrap/state.js'
 import { getRemoteSessionUrl, isRemoteSessionLocal } from '../constants/product.js'
-import { isEnvTruthy } from './envUtils.js'
 import { TERMINAL_OUTPUT_TAGS } from '../constants/xml.js'
 import type { AppState } from '../state/AppState.js'
 import { FILE_EDIT_TOOL_NAME } from '../tools/FileEditTool/constants.js'
@@ -15,18 +14,14 @@ import {
   type AttributionData,
   calculateCommitAttribution,
   isInternalModelRepo,
-  isInternalModelRepoCached,
   sanitizeModelName,
 } from './commitAttribution.js'
 import { logForDebugging } from './debug.js'
 import { parseJSONL } from './json.js'
 import { logError } from './log.js'
-import { getAPIProvider } from './model/providers.js'
 import {
   getCanonicalName,
   getMainLoopModel,
-  getPublicModelDisplayName,
-  getPublicModelName,
 } from './model/model.js'
 import { isMemoryFileAccess } from './sessionFileAccessHooks.js'
 import { getTranscriptPath } from './sessionStorage.js'
@@ -37,64 +32,6 @@ import { isUndercover } from './undercover.js'
 export type AttributionTexts = {
   commit: string
   pr: string
-}
-
-function sanitizeCoAuthorNamePart(value: string): string {
-  return value
-    .replace(/[\r\n<>]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/\(\s+/g, '(')
-    .replace(/\s+\)/g, ')')
-    .trim()
-}
-
-function formatClaudeCoAuthorName(model: string): string {
-  const publicName = getPublicModelDisplayName(model)
-  if (!publicName) {
-    return sanitizeCoAuthorNamePart(getPublicModelName(model))
-  }
-  const coAuthorName = publicName.startsWith('Claude ')
-    ? publicName
-    : `Claude ${publicName}`
-  return sanitizeCoAuthorNamePart(coAuthorName)
-}
-
-export function getDefaultCommitCoAuthorName({
-  model,
-  apiProvider,
-  isInternalRepo,
-}: {
-  model: string
-  apiProvider: string
-  isInternalRepo: boolean
-}): string {
-  const isKnownPublicModel = getPublicModelDisplayName(model) !== null
-  const normalizedModel = model.toLowerCase()
-  const isClaudeProvider =
-    apiProvider === 'firstParty' ||
-    apiProvider === 'bedrock' ||
-    apiProvider === 'vertex' ||
-    apiProvider === 'foundry' ||
-    normalizedModel.includes('claude')
-
-  if (isClaudeProvider && (isInternalRepo || isKnownPublicModel)) {
-    return formatClaudeCoAuthorName(model)
-  }
-
-  // Unknown first-party models may be unreleased Claude codenames, so keep the
-  // historical public fallback. OpenAI-compatible providers should identify the
-  // actual configured model instead of claiming Claude Opus.
-  if (apiProvider === 'firstParty') {
-    // @[MODEL LAUNCH]: Update this fallback when the default public Claude model changes.
-    return 'Claude Opus 4.6'
-  }
-
-  const sanitizedModel = sanitizeCoAuthorNamePart(model)
-  return sanitizedModel ? `Cocode (${sanitizedModel})` : 'Cocode'
-}
-
-export function getDefaultCommitCoAuthorEmail(_apiProvider: string): string {
-  return 'cocode@gitlawb.com'
 }
 
 /**
@@ -125,21 +62,10 @@ export function getAttributionTexts(): AttributionTexts {
 
   // First-party unknown models may be unreleased Claude codenames. Other
   // providers can safely use the configured public model string.
-  const model = getMainLoopModel()
-  const apiProvider = getAPIProvider()
-  const modelName = getDefaultCommitCoAuthorName({
-    model,
-    apiProvider,
-    isInternalRepo: isInternalModelRepoCached(),
-  })
   const defaultAttribution =
     '🤖 Generated with [Cocode](https://github.com/Gitlawb/cocode)'
-  const coAuthorEmail = getDefaultCommitCoAuthorEmail(apiProvider)
-  const defaultCommit = isEnvTruthy(
-    process.env.COCODE_DISABLE_CO_AUTHORED_BY,
-  )
-    ? ''
-    : `Co-Authored-By: ${modelName} <${coAuthorEmail}>`
+  // Co-Authored-By attribution removed — not supported in this build
+  const defaultCommit = ''
 
   const settings = getInitialSettings()
 

@@ -446,10 +446,8 @@ async function performVersionUpdate(
     await getVersionPaths(version)
   const { executable: executablePath } = getBaseDirectories()
 
-  // For lockless updates, use a unique staging path to avoid conflicts between concurrent downloads
-  const stagingPath = isEnvTruthy(process.env.ENABLE_LOCKLESS_UPDATES)
-    ? `${baseStagingPath}.${process.pid}.${Date.now()}`
-    : baseStagingPath
+  // Use base staging path directly — lockless variant removed
+  const stagingPath = baseStagingPath
 
   // Only download if not already installed (or if force reinstall)
   const needsInstall = !(await versionIsAvailable(version)) || forceReinstall
@@ -565,48 +563,42 @@ async function updateLatest(
   let wasNewInstall = false
   let latencyMs: number
 
-  if (isEnvTruthy(process.env.ENABLE_LOCKLESS_UPDATES)) {
-    // Lockless: rely on atomic operations, errors propagate
-    wasNewInstall = await performVersionUpdate(version, forceReinstall)
-    latencyMs = Date.now() - startTime
-  } else {
-    // Lock-based updates
-    const { installPath } = await getVersionPaths(version)
-    // If force reinstall, remove any existing lock to bypass stale locks
-    if (forceReinstall) {
-      await forceRemoveLock(installPath)
+  // Lock-based updates only — lockless mode removed
+  const { installPath } = await getVersionPaths(version)
+  // If force reinstall, remove any existing lock to bypass stale locks
+  if (forceReinstall) {
+    await forceRemoveLock(installPath)
+  }
+
+  const lockAcquired = await tryWithVersionLock(
+    installPath,
+    async () => {
+      wasNewInstall = await performVersionUpdate(version, forceReinstall)
+    },
+    3, // retries
+  )
+
+  latencyMs = Date.now() - startTime
+
+  // Lock acquisition failed - get lock holder PID for error message
+  if (!lockAcquired) {
+    const dirs = getBaseDirectories()
+    let lockHolderPid: number | undefined
+    if (isPidBasedLockingEnabled()) {
+      const lockfilePath = getLockFilePathFromVersionPath(dirs, installPath)
+      if (isLockActive(lockfilePath)) {
+        lockHolderPid = readLockContent(lockfilePath)?.pid
+      }
     }
-
-    const lockAcquired = await tryWithVersionLock(
-      installPath,
-      async () => {
-        wasNewInstall = await performVersionUpdate(version, forceReinstall)
-      },
-      3, // retries
-    )
-
-    latencyMs = Date.now() - startTime
-
-    // Lock acquisition failed - get lock holder PID for error message
-    if (!lockAcquired) {
-      const dirs = getBaseDirectories()
-      let lockHolderPid: number | undefined
-      if (isPidBasedLockingEnabled()) {
-        const lockfilePath = getLockFilePathFromVersionPath(dirs, installPath)
-        if (isLockActive(lockfilePath)) {
-          lockHolderPid = readLockContent(lockfilePath)?.pid
-        }
-      }
-      logEvent('tengu_native_update_lock_failed', {
-        latency_ms: latencyMs,
-        lock_holder_pid: lockHolderPid,
-      })
-      return {
-        success: false,
-        latestVersion: version,
-        lockFailed: true,
-        lockHolderPid,
-      }
+    logEvent('tengu_native_update_lock_failed', {
+      latency_ms: latencyMs,
+      lock_holder_pid: lockHolderPid,
+    })
+    return {
+      success: false,
+      latestVersion: version,
+      lockFailed: true,
+      lockHolderPid,
     }
   }
 

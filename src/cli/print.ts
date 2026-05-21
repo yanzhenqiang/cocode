@@ -181,9 +181,7 @@ import {
   transitionPermissionMode,
 } from 'src/utils/permissions/permissionSetup.js'
 import {
-  tryGenerateSuggestion,
   logSuggestionOutcome,
-  logSuggestionSuppressed,
   type PromptVariant,
 } from 'src/services/PromptSuggestion/promptSuggestion.js'
 import { getLastCacheSafeParams } from 'src/utils/forkedAgent.js'
@@ -326,7 +324,6 @@ import { getCommands, clearCommandsCache } from '../commands.js'
 import {
   isBareMode,
   isEnvTruthy,
-  isEnvDefinedFalsy,
 } from '../utils/envUtils.js'
 import { installPluginsForHeadless } from '../utils/plugins/headlessPluginInstall.js'
 import { refreshActivePlugins } from '../utils/plugins/refresh.js'
@@ -2265,92 +2262,7 @@ function runHeadlessStreaming(
             )
           }
 
-          // Generate and emit prompt suggestion for SDK consumers
-          if (
-            options.promptSuggestions &&
-            !isEnvDefinedFalsy(process.env.CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION)
-          ) {
-            // TS narrows suggestionState to never in the while loop body;
-            // cast via unknown to reset narrowing.
-            const state = suggestionState as unknown as typeof suggestionState
-            state.abortController?.abort()
-            const localAbort = new AbortController()
-            suggestionState.abortController = localAbort
-
-            const cacheSafeParams = getLastCacheSafeParams()
-            if (!cacheSafeParams) {
-              logSuggestionSuppressed(
-                'sdk_no_params',
-                undefined,
-                undefined,
-                'sdk',
-              )
-            } else {
-              // Use a ref object so the IIFE's finally can compare against its own
-              // promise without a self-reference (which upsets TypeScript's flow analysis).
-              const ref: { promise: Promise<void> | null } = { promise: null }
-              ref.promise = (async () => {
-                try {
-                  const result = await tryGenerateSuggestion(
-                    localAbort,
-                    mutableMessages,
-                    getAppState,
-                    cacheSafeParams,
-                    'sdk',
-                  )
-                  if (!result || localAbort.signal.aborted) return
-                  const suggestionMsg = {
-                    type: 'prompt_suggestion' as const,
-                    suggestion: result.suggestion,
-                    uuid: randomUUID(),
-                    session_id: getSessionId(),
-                  }
-                  const lastEmittedEntry = {
-                    text: result.suggestion,
-                    emittedAt: Date.now(),
-                    promptId: result.promptId,
-                    generationRequestId: result.generationRequestId,
-                  }
-                  // Defer emission if the result is being held for background agents,
-                  // so that prompt_suggestion always arrives after result.
-                  // Only set lastEmitted when the suggestion is actually delivered
-                  // to the consumer; deferred suggestions may be discarded before
-                  // delivery if a new command arrives first.
-                  if (heldBackResult) {
-                    suggestionState.pendingSuggestion = suggestionMsg
-                    suggestionState.pendingLastEmittedEntry = {
-                      text: lastEmittedEntry.text,
-                      promptId: lastEmittedEntry.promptId,
-                      generationRequestId: lastEmittedEntry.generationRequestId,
-                    }
-                  } else {
-                    suggestionState.lastEmitted = lastEmittedEntry
-                    output.enqueue(suggestionMsg)
-                  }
-                } catch (error) {
-                  if (
-                    error instanceof Error &&
-                    (error.name === 'AbortError' ||
-                      error.name === 'APIUserAbortError')
-                  ) {
-                    logSuggestionSuppressed(
-                      'aborted',
-                      undefined,
-                      undefined,
-                      'sdk',
-                    )
-                    return
-                  }
-                  logError(toError(error))
-                } finally {
-                  if (suggestionState.inflightPromise === ref.promise) {
-                    suggestionState.inflightPromise = null
-                  }
-                }
-              })()
-              suggestionState.inflightPromise = ref.promise
-            }
-          }
+          // Prompt suggestion feature removed in this build
 
           // Log headless profiler metrics for this turn and start next turn
           logHeadlessProfilerTurn()

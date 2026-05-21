@@ -5,14 +5,8 @@ import {
   isClaudeAISubscriber,
 } from './auth.js'
 import { getGlobalConfig } from './config.js'
-import { isEnvTruthy } from './envUtils.js'
 
 export function hasConsoleBillingAccess(): boolean {
-  // Check if cost reporting is disabled via environment variable
-  if (isEnvTruthy(process.env.DISABLE_COST_WARNINGS)) {
-    return false
-  }
-
   const isSubscriber = isClaudeAISubscriber()
 
   // This might be wrong if user is signed into Max but also using an API key, but

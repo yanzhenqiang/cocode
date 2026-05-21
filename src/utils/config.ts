@@ -28,7 +28,6 @@ import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
 import type { MemoryType } from './memory/types.js'
 import { normalizePathForConfigKey } from './path.js'
-import { getEssentialTrafficOnlyReason } from './privacyLevel.js'
 import { getManagedFilePath } from './settings/managedPath.js'
 import type { ThemeSetting } from './theme.js'
 import { PRIMARY_PROJECT_INSTRUCTION_FILE } from './projectInstructions.js'
@@ -1816,25 +1815,8 @@ export function formatAutoUpdaterDisabledReason(
 }
 
 export function getAutoUpdaterDisabledReason(): AutoUpdaterDisabledReason | null {
-  if (process.env.NODE_ENV === 'development') {
-    return { type: 'development' }
-  }
-  if (isEnvTruthy(process.env.DISABLE_AUTOUPDATER)) {
-    return { type: 'env', envVar: 'DISABLE_AUTOUPDATER' }
-  }
-  const essentialTrafficEnvVar = getEssentialTrafficOnlyReason()
-  if (essentialTrafficEnvVar) {
-    return { type: 'env', envVar: essentialTrafficEnvVar }
-  }
-  const config = getGlobalConfig()
-  if (
-    config.autoUpdates === false &&
-    (config.installMethod !== 'native' ||
-      config.autoUpdatesProtectedForNative !== true)
-  ) {
-    return { type: 'config' }
-  }
-  return null
+  // Auto-updater disabled in this build
+  return { type: 'development' }
 }
 
 export function getOrCreateUserID(): string {
