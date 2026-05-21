@@ -21,7 +21,6 @@ import { countCharInString } from './stringUtils.js'
 import { count, uniq } from './array.js'
 import { getFsImplementation } from './fsOperations.js'
 import { readdir, stat } from 'fs/promises'
-import type { IDESelection } from '../hooks/useIdeSelection.js'
 import { TODO_WRITE_TOOL_NAME } from '../tools/TodoWriteTool/constants.js'
 import { TASK_CREATE_TOOL_NAME } from '../tools/TaskCreateTool/constants.js'
 import { TASK_UPDATE_TOOL_NAME } from '../tools/TaskUpdateTool/constants.js'
@@ -35,7 +34,6 @@ import {
   isTodoV2Enabled,
 } from './tasks.js'
 import { getPlanFilePath, getPlan } from './plans.js'
-import { getConnectedIdeName } from './ide.js'
 import {
   filterInjectedMemoryFiles,
   getManagedAndUserConditionalRules,
@@ -172,8 +170,6 @@ import {
   isMcpInstructionsDeltaEnabled,
   type ClientSideInstruction,
 } from './mcpInstructionsDelta.js'
-import { CLAUDE_IN_CHROME_MCP_SERVER_NAME } from './claudeInChrome/common.js'
-import { CHROME_TOOL_SEARCH_INSTRUCTIONS } from './claudeInChrome/prompt.js'
 import type { MCPServerConnection } from '../services/mcp/types.js'
 import type {
   HookEvent,
@@ -744,7 +740,7 @@ export type TeamContextAttachment = {
 export async function getAttachments(
   input: string | null,
   toolUseContext: ToolUseContext,
-  ideSelection: IDESelection | null,
+  _ideSelection: null,
   queuedCommands: QueuedCommand[],
   messages?: Message[],
   querySource?: QuerySource,
@@ -1575,8 +1571,8 @@ export function getMcpInstructionsDeltaAttachment(
     isToolSearchToolAvailable(tools)
   ) {
     clientSide.push({
-      serverName: CLAUDE_IN_CHROME_MCP_SERVER_NAME,
-      block: CHROME_TOOL_SEARCH_INSTRUCTIONS,
+      serverName: 'claude-in-chrome',
+      block: '',
     })
   }
 
@@ -1613,35 +1609,11 @@ function getOutputStyleAttachment(): Attachment[] {
 }
 
 async function getSelectedLinesFromIDE(
-  ideSelection: IDESelection | null,
-  toolUseContext: ToolUseContext,
+  _ideSelection: null,
+  _toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
-  const ideName = getConnectedIdeName(toolUseContext.options.mcpClients)
-  if (
-    !ideName ||
-    ideSelection?.lineStart === undefined ||
-    !ideSelection.text ||
-    !ideSelection.filePath
-  ) {
-    return []
-  }
-
-  const appState = toolUseContext.getAppState()
-  if (isFileReadDenied(ideSelection.filePath, appState.toolPermissionContext)) {
-    return []
-  }
-
-  return [
-    {
-      type: 'selected_lines_in_ide',
-      ideName,
-      lineStart: ideSelection.lineStart,
-      lineEnd: ideSelection.lineStart + ideSelection.lineCount - 1,
-      filename: ideSelection.filePath,
-      content: ideSelection.text,
-      displayPath: relative(getCwd(), ideSelection.filePath),
-    },
-  ]
+  // IDE selection feature removed
+  return []
 }
 
 /**
@@ -1863,7 +1835,7 @@ async function getNestedMemoryAttachmentsForFile(
 }
 
 async function getOpenedFileFromIDE(
-  ideSelection: IDESelection | null,
+  _ideSelection: null,
   toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
   if (!ideSelection?.filePath || ideSelection.text) {
@@ -2874,26 +2846,8 @@ export function parseAtMentionedFileLines(
 async function getDiagnosticAttachments(
   toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
-  // Diagnostics are only useful if the agent has the Bash tool to act on them
-  if (
-    !toolUseContext.options.tools.some(t => toolMatchesName(t, BASH_TOOL_NAME))
-  ) {
-    return []
-  }
-
-  // Get new diagnostics from the tracker (IDE diagnostics via MCP)
-  const newDiagnostics = await diagnosticTracker.getNewDiagnosticsCompat()
-  if (newDiagnostics.length === 0) {
-    return []
-  }
-
-  return [
-    {
-      type: 'diagnostics',
-      files: newDiagnostics,
-      isNew: true,
-    },
-  ]
+  // IDE diagnostics have been removed
+  return []
 }
 
 /**
@@ -2957,7 +2911,7 @@ async function getLSPDiagnosticAttachments(
 export async function* getAttachmentMessages(
   input: string | null,
   toolUseContext: ToolUseContext,
-  ideSelection: IDESelection | null,
+  _ideSelection: null,
   queuedCommands: QueuedCommand[],
   messages?: Message[],
   querySource?: QuerySource,

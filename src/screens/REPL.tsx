@@ -51,7 +51,7 @@ import { type Command, type CommandResultDisplay, type ResumeEntrypoint, getComm
 import type { PromptInputMode, QueuedCommand, VimMode } from '../types/textInputTypes.js';
 import { MessageSelector } from '../components/MessageSelector.js';
 import { selectableUserMessagesFilter, messagesAfterAreOnlySynthetic } from '../utils/messageFilters.js';
-import { useIdeLogging } from '../hooks/useIdeLogging.js';
+
 import { PermissionRequest, type ToolUseConfirm } from '../components/permissions/PermissionRequest.js';
 import { ElicitationDialog } from '../components/mcp/ElicitationDialog.js';
 import { PromptDialog } from '../components/hooks/PromptDialog.js';
@@ -128,7 +128,6 @@ import { getScratchpadDir, isScratchpadEnabled } from '../utils/permissions/file
 import { WEB_FETCH_TOOL_NAME } from '../tools/WebFetchTool/prompt.js';
 import { SLEEP_TOOL_NAME } from '../tools/SleepTool/prompt.js';
 import { clearSpeculativeChecks } from '../tools/BashTool/bashPermissions.js';
-import type { AutoUpdaterResult } from '../utils/autoUpdater.js';
 import { getGlobalConfig, saveGlobalConfig, getGlobalConfigWriteCount } from '../utils/config.js';
 import { hasConsoleBillingAccess } from '../utils/billing.js';
 import { logEvent, type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 'src/services/analytics/index.js';
@@ -164,7 +163,7 @@ import type { ScopedMcpServerConfig } from '../services/mcp/types.js';
 import { randomUUID, type UUID } from 'crypto';
 import { processSessionStartHooks } from '../utils/sessionStart.js';
 import { executeSessionEndHooks, getSessionEndHookTimeoutMs } from '../utils/hooks.js';
-import { type IDESelection, useIdeSelection } from '../hooks/useIdeSelection.js';
+
 import { getTools, assembleToolPool } from '../tools.js';
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js';
 import { resolveAgentTools } from '../tools/AgentTool/agentToolUtils.js';
@@ -204,8 +203,8 @@ const useScheduledTasks = require('../hooks/useScheduledTasks.js').useScheduledT
 import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js';
 import { useTaskListWatcher } from '../hooks/useTaskListWatcher.js';
 import type { SandboxAskCallback, NetworkHostPattern } from '../utils/sandbox/sandbox-adapter.js';
-import { type IDEExtensionInstallationStatus, closeOpenDiffs, getConnectedIdeClient, type IdeType } from '../utils/ide.js';
-import { useIDEIntegration } from '../hooks/useIDEIntegration.js';
+import { type IDEExtensionInstallationStatus, type IdeType } from '../utils/ide.js';
+
 import exit from '../commands/exit/index.js';
 import { ExitFlow } from '../components/ExitFlow.js';
 import { getCurrentWorktreeSession } from '../utils/worktree.js';
@@ -216,7 +215,7 @@ import { startBackgroundSession } from '../tasks/LocalMainSessionTask.js';
 import { useSessionBackgrounding } from '../hooks/useSessionBackgrounding.js';
 import { diagnosticTracker } from '../services/diagnosticTracking.js';
 import { handleSpeculationAccept, type ActiveSpeculationState } from '../services/PromptSuggestion/speculation.js';
-import { IdeOnboardingDialog } from '../components/IdeOnboardingDialog.js';
+
 import { EffortCallout, shouldShowEffortCallout } from '../components/EffortCallout.js';
 import type { EffortValue } from '../utils/effort.js';
 import { RemoteCallout } from '../components/RemoteCallout.js';
@@ -235,7 +234,7 @@ import { usePostCompactSurvey } from 'src/components/FeedbackSurvey/usePostCompa
 import { FeedbackSurvey } from 'src/components/FeedbackSurvey/FeedbackSurvey.js';
 import { useInstallMessages } from 'src/hooks/notifs/useInstallMessages.js';
 import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
-import { useChromeExtensionNotification } from 'src/hooks/useChromeExtensionNotification.js';
+
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
 import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
 
@@ -265,7 +264,7 @@ import { AwsAuthStatusBox } from '../components/AwsAuthStatusBox.js';
 import { useRateLimitWarningNotification } from 'src/hooks/notifs/useRateLimitWarningNotification.js';
 import { useDeprecationWarningNotification } from 'src/hooks/notifs/useDeprecationWarningNotification.js';
 import { useNpmDeprecationNotification } from 'src/hooks/notifs/useNpmDeprecationNotification.js';
-import { useIDEStatusIndicator } from 'src/hooks/notifs/useIDEStatusIndicator.js';
+
 import { useModelMigrationNotifications } from 'src/hooks/notifs/useModelMigrationNotifications.js';
 import { useCanSwitchToExistingSubscription } from 'src/hooks/notifs/useCanSwitchToExistingSubscription.js';
 import { useTeammateLifecycleNotification } from 'src/hooks/notifs/useTeammateShutdownNotification.js';
@@ -548,7 +547,6 @@ export type Props = {
   initialAgentColor?: AgentColorName;
   mcpClients?: MCPServerConnection[];
   dynamicMcpConfig?: Record<string, ScopedMcpServerConfig>;
-  autoConnectIdeFlag?: boolean;
   strictMcpConfig?: boolean;
   systemPrompt?: string;
   appendSystemPrompt?: string;
@@ -588,7 +586,6 @@ export function REPL({
   initialAgentColor,
   mcpClients: initialMcpClients,
   dynamicMcpConfig: initialDynamicMcpConfig,
-  autoConnectIdeFlag,
   strictMcpConfig = false,
   systemPrompt: customSystemPrompt,
   appendSystemPrompt,
@@ -727,11 +724,7 @@ export function REPL({
   const mcpClients = useMergedClients(initialMcpClients, mcp.clients);
 
   // IDE integration
-  const [ideSelection, setIDESelection] = useState<IDESelection | undefined>(undefined);
-  const [ideToInstallExtension, setIDEToInstallExtension] = useState<IdeType | null>(null);
-  const [ideInstallationStatus, setIDEInstallationStatus] = useState<IDEExtensionInstallationStatus | null>(null);
-  const [showIdeOnboarding, setShowIdeOnboarding] = useState(false);
-  // Dead code elimination: model switch callout state (internal-only)
+
   const [showModelSwitchCallout, setShowModelSwitchCallout] = useState(() => {
     if ("external" === 'ant') {
       return shouldShowAntModelSwitch();
@@ -744,11 +737,6 @@ export function REPL({
   // notifications
   useModelMigrationNotifications();
   useCanSwitchToExistingSubscription();
-  useIDEStatusIndicator({
-    ideSelection,
-    mcpClients,
-    ideInstallationStatus
-  });
   useMcpConnectivityStatus({
     mcpClients
   });
@@ -762,7 +750,7 @@ export function REPL({
   useNpmDeprecationNotification();
   useAntOrgWarningNotification();
   useInstallMessages();
-  useChromeExtensionNotification();
+
   useOfficialMarketplaceNotification();
   useLspInitializationNotification();
   useTeammateLifecycleNotification();
@@ -837,8 +825,8 @@ export function REPL({
   // Filter out all commands if disableSlashCommands is true
   const commands = useMemo(() => disableSlashCommands ? [] : mergedCommands, [disableSlashCommands, mergedCommands]);
   const renderCommands = useMemo(() => disableSlashCommands ? [] : renderMergedCommands, [disableSlashCommands, renderMergedCommands]);
-  useIdeLogging(isRemoteSession ? EMPTY_MCP_CLIENTS : mcp.clients);
-  useIdeSelection(isRemoteSession ? EMPTY_MCP_CLIENTS : mcp.clients, setIDESelection);
+
+
   const [streamMode, setStreamMode] = useState<SpinnerMode>('responding');
   // Ref mirror so onSubmit can read the latest value without adding
   // streamMode to its deps. streamMode flips between
@@ -984,20 +972,6 @@ export function REPL({
   // True when user is actively typing — defers interrupt dialogs so keystrokes
   // don't accidentally dismiss or answer a permission prompt the user hasn't read yet.
   const [isPromptInputActive, setIsPromptInputActive] = React.useState(false);
-  const [autoUpdaterResult, setAutoUpdaterResult] = useState<AutoUpdaterResult | null>(null);
-  useEffect(() => {
-    if (autoUpdaterResult?.notifications) {
-      autoUpdaterResult.notifications.forEach(notification => {
-        addNotification({
-          key: 'auto-updater-notification',
-          text: notification,
-          priority: 'low'
-        });
-      });
-    }
-  }, [autoUpdaterResult, addNotification]);
-
-  // tmux + fullscreen + `mouse off`: one-time hint that wheel won't scroll.
   // We no longer mutate tmux's session-scoped mouse option (it poisoned
   // sibling panes); tmux users already know this tradeoff from vim/less.
   useEffect(() => {
@@ -1722,18 +1696,6 @@ export function REPL({
   // Frustration detection: show transcript sharing prompt after detecting frustrated messages
   const frustrationDetection = useFrustrationDetection(messages, isLoading, hasActivePrompt, feedbackSurvey.state !== 'closed' || postCompactSurvey.state !== 'closed' || memorySurvey.state !== 'closed');
 
-  // Initialize IDE integration
-  useIDEIntegration({
-    autoConnectIdeFlag,
-    ideToInstallExtension,
-    setDynamicMcpConfig,
-    setShowIdeOnboarding,
-    setIDEInstallationState: setIDEInstallationStatus
-  });
-  useFileHistorySnapshotInit(initialFileHistorySnapshots, fileHistory, fileHistoryState => setAppState(prev => ({
-    ...prev,
-    fileHistory: fileHistoryState
-  })));
   const resume = useCallback(async (sessionId: UUID, log: LogOption, entrypoint: ResumeEntrypoint) => {
     const resumeStart = performance.now();
     try {
@@ -2046,9 +2008,6 @@ export function REPL({
     if (allowDialogsWithAnimation && idleReturnPending) return 'idle-return';
     if (feature('ULTRAPLAN') && allowDialogsWithAnimation && !isLoading && ultraplanPendingChoice) return 'ultraplan-choice';
     if (feature('ULTRAPLAN') && allowDialogsWithAnimation && !isLoading && ultraplanLaunchPending) return 'ultraplan-launch';
-
-    // Onboarding dialogs (special conditions)
-    if (allowDialogsWithAnimation && showIdeOnboarding) return 'ide-onboarding';
 
     // Model switch callout (internal-only, eliminated from external builds)
     if ("external" === 'ant' && allowDialogsWithAnimation && showModelSwitchCallout) return 'model-switch';
@@ -2434,8 +2393,7 @@ export function REPL({
         // memoized output. initialMcpClients is a prop (session-constant).
         mcpClients: mergeClients(initialMcpClients, s.mcp.clients),
         mcpResources: s.mcp.resources,
-        ideInstallationStatus: ideInstallationStatus,
-        isNonInteractiveSession: false,
+            isNonInteractiveSession: false,
         dynamicMcpConfig,
         theme,
         agentDefinitions: allowedAgentTypes ? {
@@ -2487,8 +2445,7 @@ export function REPL({
         void sendNotification(opts, terminal);
       },
       onChangeDynamicMcpConfig,
-      onInstallIDEExtension: setIDEToInstallExtension,
-      nestedMemoryAttachmentTriggers: new Set<string>(),
+        nestedMemoryAttachmentTriggers: new Set<string>(),
       loadedNestedMemoryPaths: loadedNestedMemoryPathsRef.current,
       dynamicSkillDirTriggers: new Set<string>(),
       discoveredSkillNames: discoveredSkillNamesRef.current,
@@ -2532,7 +2489,7 @@ export function REPL({
       contentReplacementState: contentReplacementStateRef.current,
       syncToolResultReplacements
     };
-  }, [commands, combinedInitialTools, mainThreadAgentDefinition, debug, initialMcpClients, ideInstallationStatus, dynamicMcpConfig, theme, allowedAgentTypes, store, setAppState, reverify, addNotification, setMessages, onChangeDynamicMcpConfig, resume, requestPrompt, disabled, customSystemPrompt, appendSystemPrompt, setConversationId, syncToolResultReplacements]);
+  }, [commands, combinedInitialTools, mainThreadAgentDefinition, debug, initialMcpClients, dynamicMcpConfig, theme, allowedAgentTypes, store, setAppState, reverify, addNotification, setMessages, onChangeDynamicMcpConfig, resume, requestPrompt, disabled, customSystemPrompt, appendSystemPrompt, setConversationId, syncToolResultReplacements]);
 
   // Session backgrounding (Ctrl+B to background/foreground)
   const handleBackgroundQuery = useCallback(() => {
@@ -2676,11 +2633,7 @@ export function REPL({
     // render that captured this closure (same pattern as computeTools).
     if (shouldQuery) {
       const freshClients = mergeClients(initialMcpClients, store.getState().mcp.clients);
-      void diagnosticTracker.handleQueryStart(freshClients);
-      const ideClient = getConnectedIdeClient(freshClients);
-      if (ideClient) {
-        void closeOpenDiffs(ideClient);
-      }
+      // IDE integration has been removed
     }
 
     // Mark onboarding as complete when any user message is sent to Claude
@@ -3408,7 +3361,7 @@ export function REPL({
     }
     if (submitsNow) {
       setInputMode('prompt');
-      setIDESelection(undefined);
+
       setSubmitCount(_ => _ + 1);
       helpers.clearBuffer();
       tipPickedThisTurnRef.current = false;
@@ -3552,7 +3505,7 @@ export function REPL({
       messages: messagesRef.current,
       mainLoopModel,
       pastedContents,
-      ideSelection,
+
       setUserInputOnProcessing,
       setAbortController,
       abortController,
@@ -3585,7 +3538,7 @@ export function REPL({
     // isLoading is read at the !isLoading checks above for input-clearing
     // and submitCount gating. It's derived from isQueryActive || isExternalLoading,
     // so including it here ensures the closure captures the fresh value.
-    isLoading, isExternalLoading, inputMode, commands, setInputValue, setInputMode, setPastedContents, setSubmitCount, setIDESelection, setToolJSX, getToolUseContext,
+    isLoading, isExternalLoading, inputMode, commands, setInputValue, setInputMode, setPastedContents, setSubmitCount, setToolJSX, getToolUseContext,
     // messages is read via messagesRef.current inside the callback to
     // keep onSubmit stable across message updates (see L2384/L2400/L2662).
     // Without this, each setMessages call (~30× per turn) recreates
@@ -3593,7 +3546,7 @@ export function REPL({
     // messages array in downstream closures (PromptInput, handleAutoRunIssue).
     // Heap analysis showed ~9 REPL scopes and ~15 messages array versions
     // accumulating after #20174/#20175, all traced to this dep.
-    mainLoopModel, pastedContents, ideSelection, setUserInputOnProcessing, setAbortController, addNotification, onQuery, stashedPrompt, setStashedPrompt, setAppState, onBeforeQuery, canUseTool, remoteSession, setMessages, awaitPendingHooks, repinScroll]);
+    mainLoopModel, pastedContents, setUserInputOnProcessing, setAbortController, addNotification, onQuery, stashedPrompt, setStashedPrompt, setAppState, onBeforeQuery, canUseTool, remoteSession, setMessages, awaitPendingHooks, repinScroll]);
 
   // Callback for when user submits input while viewing a teammate's transcript
   const onAgentSubmit = useCallback(async (input: string, task: InProcessTeammateTaskState | LocalAgentTaskState, helpers: PromptInputHelpers) => {
@@ -3912,7 +3865,7 @@ export function REPL({
       getToolUseContext,
       messages,
       mainLoopModel,
-      ideSelection,
+
       setUserInputOnProcessing,
       setAbortController,
       onQuery,
@@ -3924,7 +3877,7 @@ export function REPL({
       setMessages,
       queuedCommands
     });
-  }, [queryGuard, commands, setToolJSX, getToolUseContext, messages, mainLoopModel, ideSelection, setUserInputOnProcessing, canUseTool, setAbortController, onQuery, addNotification, setAppState, onBeforeQuery]);
+  }, [queryGuard, commands, setToolJSX, getToolUseContext, messages, mainLoopModel, setUserInputOnProcessing, canUseTool, setAbortController, onQuery, addNotification, setAppState, onBeforeQuery]);
   useQueueProcessor({
     executeQueuedInput,
     hasActiveLocalJsxUI: isShowingLocalJSXCommand,
@@ -4834,7 +4787,7 @@ export function REPL({
               resetHistory: () => { }
             });
           }} />}
-          {focusedInputDialog === 'ide-onboarding' && <IdeOnboardingDialog onDone={() => setShowIdeOnboarding(false)} installationStatus={ideInstallationStatus} />}
+
           {"external" === 'ant' && focusedInputDialog === 'model-switch' && AntModelSwitchCallout && <AntModelSwitchCallout onDone={(selection: string, modelAlias?: string) => {
             setShowModelSwitchCallout(false);
             if (selection === 'switch' && modelAlias) {
@@ -4931,7 +4884,7 @@ export function REPL({
             {"external" === 'ant' && skillImprovementSurvey.suggestion && <SkillImprovementSurvey isOpen={skillImprovementSurvey.isOpen} skillName={skillImprovementSurvey.suggestion.skillName} updates={skillImprovementSurvey.suggestion.updates} handleSelect={skillImprovementSurvey.handleSelect} inputValue={inputValue} setInputValue={setInputValue} />}
             {showIssueFlagBanner && <IssueFlagBanner />}
             { }
-            <PromptInput debug={debug} ideSelection={ideSelection} hasSuppressedDialogs={!!hasSuppressedDialogs} isLocalJSXCommandActive={isShowingLocalJSXCommand} getToolUseContext={getToolUseContext} toolPermissionContext={toolPermissionContext} setToolPermissionContext={setToolPermissionContext} apiKeyStatus={apiKeyStatus} commands={renderCommands} agents={agentDefinitions.activeAgents} isLoading={isLoading} onExit={handleExit} verbose={verbose} messages={messages} onAutoUpdaterResult={setAutoUpdaterResult} autoUpdaterResult={autoUpdaterResult} input={inputValue} onInputChange={setInputValue} mode={inputMode} onModeChange={setInputMode} stashedPrompt={stashedPrompt} setStashedPrompt={setStashedPrompt} submitCount={submitCount} onShowMessageSelector={handleShowMessageSelector} onMessageActionsEnter={
+            <PromptInput debug={debug} hasSuppressedDialogs={!!hasSuppressedDialogs} isLocalJSXCommandActive={isShowingLocalJSXCommand} getToolUseContext={getToolUseContext} toolPermissionContext={toolPermissionContext} setToolPermissionContext={setToolPermissionContext} apiKeyStatus={apiKeyStatus} commands={renderCommands} agents={agentDefinitions.activeAgents} isLoading={isLoading} onExit={handleExit} verbose={verbose} messages={messages} input={inputValue} onInputChange={setInputValue} mode={inputMode} onModeChange={setInputMode} stashedPrompt={stashedPrompt} setStashedPrompt={setStashedPrompt} submitCount={submitCount} onShowMessageSelector={handleShowMessageSelector} onMessageActionsEnter={
               // Works during isLoading — edit cancels first; uuid selection survives appends.
               feature('MESSAGE_ACTIONS') && isFullscreenEnvEnabled() && !disableMessageActions ? enterMessageActions : undefined} mcpClients={mcpClients} pastedContents={pastedContents} setPastedContents={setPastedContents} vimMode={vimMode} setVimMode={setVimMode} showBashesDialog={showBashesDialog} setShowBashesDialog={setShowBashesDialog} onSubmit={onSubmit} onAgentSubmit={onAgentSubmit} isSearchingHistory={isSearchingHistory} setIsSearchingHistory={setIsSearchingHistory} helpOpen={isHelpOpen} setHelpOpen={setIsHelpOpen} insertTextRef={feature('VOICE_MODE') ? insertTextRef : undefined} voiceInterimRange={voice.interimRange} />
             <SessionBackgroundHint onBackgroundSession={handleBackgroundSession} isLoading={isLoading} />

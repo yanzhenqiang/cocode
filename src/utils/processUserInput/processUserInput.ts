@@ -15,7 +15,6 @@ import {
   type LocalJSXCommandContext,
 } from '../../commands.js'
 import type { CanUseToolFn } from '../../hooks/useCanUseTool.js'
-import type { IDESelection } from '../../hooks/useIdeSelection.js'
 import type { SetToolJSXFn, ToolUseContext } from '../../Tool.js'
 import type {
   AssistantMessage,
@@ -89,7 +88,6 @@ export async function processUserInput({
   setToolJSX,
   context,
   pastedContents,
-  ideSelection,
   messages,
   setUserInputOnProcessing,
   uuid,
@@ -112,7 +110,6 @@ export async function processUserInput({
   setToolJSX: SetToolJSXFn
   context: ProcessUserInputContext
   pastedContents?: Record<number, PastedContent>
-  ideSelection?: IDESelection
   messages?: Message[]
   setUserInputOnProcessing?: (prompt?: string) => void
   uuid?: string
@@ -156,8 +153,7 @@ export async function processUserInput({
     setToolJSX,
     context,
     pastedContents,
-    ideSelection,
-    messages,
+      messages,
     uuid,
     isAlreadyProcessing,
     querySource,
@@ -504,7 +500,7 @@ async function processUserInputBase(
         getAttachmentMessages(
           inputString,
           context,
-          ideSelection ?? null,
+          null,  // IDE selection removed
           [], // queuedCommands - handled by query.ts for mid-turn attachments
           messages,
           querySource,

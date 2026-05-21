@@ -58,13 +58,9 @@ import { logEvent } from '../analytics/index.js'
 import { sanitizeToolNameForAnalytics } from '../analytics/index.js'
 import {
   buildExtractAutoOnlyPrompt,
-  buildExtractCombinedPrompt,
 } from './prompts.js'
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const teamMemPaths = feature('TEAMMEM')
-  ? (require('../../memdir/teamMemPaths.js') as typeof import('../../memdir/teamMemPaths.js'))
-  : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 // ============================================================================
@@ -359,10 +355,6 @@ export function initExtractMemories(): void {
       return
     }
 
-    const teamMemoryEnabled = feature('TEAMMEM')
-      ? teamMemPaths!.isTeamMemoryEnabled()
-      : false
-
     const skipIndex = getFeatureValue_CACHED_MAY_BE_STALE(
       'tengu_moth_copse',
       false,
@@ -399,14 +391,7 @@ export function initExtractMemories(): void {
         await scanMemoryFiles(memoryDir, createAbortController().signal),
       )
 
-      const userPrompt =
-        feature('TEAMMEM') && teamMemoryEnabled
-          ? buildExtractCombinedPrompt(
-              newMessageCount,
-              existingMemories,
-              skipIndex,
-            )
-          : buildExtractAutoOnlyPrompt(
+      const userPrompt = buildExtractAutoOnlyPrompt(
               newMessageCount,
               existingMemories,
               skipIndex,
@@ -465,9 +450,6 @@ export function initExtractMemories(): void {
       const memoryPaths = writtenPaths.filter(
         p => basename(p) !== ENTRYPOINT_NAME,
       )
-      const teamCount = feature('TEAMMEM')
-        ? count(memoryPaths, teamMemPaths!.isTeamMemPath)
-        : 0
 
       // Log extraction event with usage from the forked agent
       logEvent('tengu_extract_memories_extraction', {
@@ -480,7 +462,6 @@ export function initExtractMemories(): void {
         turn_count: turnCount,
         files_written: writtenPaths.length,
         memories_saved: memoryPaths.length,
-        team_memories_saved: teamCount,
         duration_ms: Date.now() - startTime,
       })
 
@@ -489,9 +470,6 @@ export function initExtractMemories(): void {
       )
       if (memoryPaths.length > 0) {
         const msg = createMemorySavedMessage(memoryPaths)
-        if (feature('TEAMMEM')) {
-          msg.teamCount = teamCount
-        }
         appendSystemMessage?.(msg)
       }
     } catch (error) {

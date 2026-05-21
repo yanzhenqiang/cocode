@@ -29,12 +29,6 @@ import {
 } from './memoryFileDetection.js'
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const teamMemPaths = feature('TEAMMEM')
-  ? (require('../memdir/teamMemPaths.js') as typeof import('../memdir/teamMemPaths.js'))
-  : null
-const teamMemWatcher = feature('TEAMMEM')
-  ? (require('../services/teamMemorySync/watcher.js') as typeof import('../services/teamMemorySync/watcher.js'))
-  : null
 const memoryShapeTelemetry = feature('MEMORY_SHAPE_TELEMETRY')
   ? (require('../memdir/memoryShapeTelemetry.js') as typeof import('../memdir/memoryShapeTelemetry.js'))
   : null
@@ -131,8 +125,7 @@ export function isMemoryFileAccess(
   const filePath = getFilePathFromInput(toolName, toolInput)
   if (
     filePath &&
-    (isAutoMemFile(filePath) ||
-      (feature('TEAMMEM') && teamMemPaths!.isTeamMemFile(filePath)))
+    isAutoMemFile(filePath)
   ) {
     return true
   }
@@ -181,28 +174,6 @@ async function handleSessionFileAccess(
         break
       case FILE_WRITE_TOOL_NAME:
         logEvent('tengu_memdir_file_write', { ...subagentProps })
-        break
-    }
-  }
-
-  // Team memory access tracking
-  if (feature('TEAMMEM') && filePath && teamMemPaths!.isTeamMemFile(filePath)) {
-    logEvent('tengu_team_mem_accessed', {
-      tool: input.tool_name as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      ...subagentProps,
-    })
-
-    switch (input.tool_name) {
-      case FILE_READ_TOOL_NAME:
-        logEvent('tengu_team_mem_file_read', { ...subagentProps })
-        break
-      case FILE_EDIT_TOOL_NAME:
-        logEvent('tengu_team_mem_file_edit', { ...subagentProps })
-        teamMemWatcher?.notifyTeamMemoryWrite()
-        break
-      case FILE_WRITE_TOOL_NAME:
-        logEvent('tengu_team_mem_file_write', { ...subagentProps })
-        teamMemWatcher?.notifyTeamMemoryWrite()
         break
     }
   }

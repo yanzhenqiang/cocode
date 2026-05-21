@@ -4,10 +4,6 @@ import { getFsImplementation } from '../utils/fsOperations.js'
 import { getAutoMemPath, isAutoMemoryEnabled } from './paths.js'
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const teamMemPaths = feature('TEAMMEM')
-  ? (require('./teamMemPaths.js') as typeof import('./teamMemPaths.js'))
-  : null
-
 import { getKairosActive, getOriginalCwd } from '../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js'
 /* eslint-enable @typescript-eslint/no-require-imports */
@@ -103,9 +99,6 @@ export function truncateEntrypointContent(raw: string): EntrypointTruncation {
 }
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const teamMemPrompts = feature('TEAMMEM')
-  ? (require('./teamMemPrompts.js') as typeof import('./teamMemPrompts.js'))
-  : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 /**
@@ -424,7 +417,7 @@ export async function loadMemoryPrompt(): Promise<string | null> {
     false,
   )
 
-  // KAIROS daily-log mode takes precedence over TEAMMEM: the append-only
+  // KAIROS daily-log mode takes precedence over the removed team-memory feature: the append-only
   // log paradigm does not compose with team sync (which expects a shared
   // MEMORY.md that both sides read + write). Gating on `autoEnabled` here
   // means the !autoEnabled case falls through to the tengu_memdir_disabled
@@ -444,33 +437,6 @@ export async function loadMemoryPrompt(): Promise<string | null> {
     coworkExtraGuidelines && coworkExtraGuidelines.trim().length > 0
       ? [coworkExtraGuidelines]
       : undefined
-
-  if (feature('TEAMMEM')) {
-    if (teamMemPaths!.isTeamMemoryEnabled()) {
-      const autoDir = getAutoMemPath()
-      const teamDir = teamMemPaths!.getTeamMemPath()
-      // Harness guarantees these directories exist so the model can write
-      // without checking. The prompt text reflects this ("already exists").
-      // Only creating teamDir is sufficient: getTeamMemPath() is defined as
-      // join(getAutoMemPath(), 'team'), so recursive mkdir of the team dir
-      // creates the auto dir as a side effect. If the team dir ever moves
-      // out from under the auto dir, add a second ensureMemoryDirExists call
-      // for autoDir here.
-      await ensureMemoryDirExists(teamDir)
-      logMemoryDirCounts(autoDir, {
-        memory_type:
-          'auto' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      })
-      logMemoryDirCounts(teamDir, {
-        memory_type:
-          'team' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      })
-      return teamMemPrompts!.buildCombinedMemoryPrompt(
-        extraGuidelines,
-        skipIndex,
-      )
-    }
-  }
 
   if (autoEnabled) {
     const autoDir = getAutoMemPath()
@@ -497,11 +463,5 @@ export async function loadMemoryPrompt(): Promise<string | null> {
       !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY) &&
       getInitialSettings().autoMemoryEnabled === false,
   })
-  // Gate on the GB flag directly, not isTeamMemoryEnabled() — that function
-  // checks isAutoMemoryEnabled() first, which is definitionally false in this
-  // branch. We want "was this user in the team-memory cohort at all."
-  if (getFeatureValue_CACHED_MAY_BE_STALE('tengu_herring_clock', false)) {
-    logEvent('tengu_team_memdir_disabled', {})
-  }
   return null
 }

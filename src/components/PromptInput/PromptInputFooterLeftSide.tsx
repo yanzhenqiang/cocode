@@ -359,7 +359,7 @@ function ModeIndicator({
   const parts = [
   // Remote session indicator
   ...(remoteSessionUrl ? [<Link url={remoteSessionUrl} key="remote">
-            <Text color="ide">{figures.circleDouble} remote</Text>
+            <Text color="cyan">{figures.circleDouble} remote</Text>
           </Link>] : []),
   // BackgroundTaskStatus is NOT in parts — it renders as a Box sibling so
   // its click-target Box isn't nested inside the <Text wrap="truncate">

@@ -42,7 +42,7 @@ const featureFlags: Record<string, boolean> = {
   BUILTIN_EXPLORE_PLAN_AGENTS: true,  // Built-in Explore/Plan specialized subagents
   BUDDY: true,                        // Buddy mode for paired programming
   MONITOR_TOOL: true,                 // MCP server monitoring/streaming tool
-  TEAMMEM: true,                      // Team memory management
+  TEAMMEM: false,                     // Team memory management
   MESSAGE_ACTIONS: true,              // Message action buttons in the UI
 
   // ── Enabled: new activations ────────────────────────────────────────

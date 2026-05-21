@@ -845,10 +845,6 @@ export const SettingsSchema = lazySchema(() =>
         })
         .optional()
         .describe('Remote session configuration'),
-      autoUpdatesChannel: z
-        .enum(['latest', 'stable'])
-        .optional()
-        .describe('Release channel for auto-updates (latest or stable)'),
       ...(feature('LODESTONE')
         ? {
             disableDeepLinkRegistration: z

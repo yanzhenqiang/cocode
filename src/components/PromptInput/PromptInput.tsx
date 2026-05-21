@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useNotifications } from 'src/context/notifications.js';
 import { useCommandQueue } from 'src/hooks/useCommandQueue.js';
-import { type IDEAtMentioned, useIdeAtMentioned } from 'src/hooks/useIdeAtMentioned.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
 import { type AppState, useAppState, useAppStateStore, useSetAppState } from 'src/state/AppState.js';
 import type { FooterItem } from 'src/state/AppStateStore.js';
@@ -26,7 +25,6 @@ import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
 import { type HistoryMode, useArrowKeyHistory } from '../../hooks/useArrowKeyHistory.js';
 import { useDoublePress } from '../../hooks/useDoublePress.js';
 import { useHistorySearch } from '../../hooks/useHistorySearch.js';
-import type { IDESelection } from '../../hooks/useIdeSelection.js';
 import { useInputBuffer } from '../../hooks/useInputBuffer.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { usePromptSuggestion } from '../../hooks/usePromptSuggestion.js';
@@ -55,7 +53,6 @@ import type { PermissionMode } from '../../types/permissions.js';
 import type { BaseTextInputProps, PromptInputMode, VimMode } from '../../types/textInputTypes.js';
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 import { count } from '../../utils/array.js';
-import type { AutoUpdaterResult } from '../../utils/autoUpdater.js';
 import { Cursor } from '../../utils/Cursor.js';
 import { getGlobalConfig, type PastedContent, saveGlobalConfig } from '../../utils/config.js';
 import { logForDebugging } from '../../utils/debug.js';
@@ -125,7 +122,6 @@ import { useSwarmBanner } from './useSwarmBanner.js';
 import { isNonSpacePrintable, isVimModeEnabled } from './utils.js';
 type Props = {
   debug: boolean;
-  ideSelection: IDESelection | undefined;
   toolPermissionContext: ToolPermissionContext;
   setToolPermissionContext: (ctx: ToolPermissionContext) => void;
   apiKeyStatus: VerificationStatus;
@@ -134,8 +130,6 @@ type Props = {
   isLoading: boolean;
   verbose: boolean;
   messages: Message[];
-  onAutoUpdaterResult: (result: AutoUpdaterResult) => void;
-  autoUpdaterResult: AutoUpdaterResult | null;
   input: string;
   onInputChange: (value: string) => void;
   mode: PromptInputMode;
@@ -195,7 +189,6 @@ const PROMPT_FOOTER_LINES = 5;
 const MIN_INPUT_VIEWPORT_LINES = 3;
 function PromptInput({
   debug,
-  ideSelection,
   toolPermissionContext,
   setToolPermissionContext,
   apiKeyStatus,
@@ -204,8 +197,6 @@ function PromptInput({
   isLoading,
   verbose,
   messages,
-  onAutoUpdaterResult,
-  autoUpdaterResult,
   input,
   onInputChange,
   mode,
@@ -244,7 +235,6 @@ function PromptInput({
   // system, so treat them as a modal overlay here to stop navigation keys from
   // leaking into TextInput/footer handlers and stacking a second dialog.
   const isModalOverlayActive = useIsModalOverlayActive() || isLocalJSXCommandActive;
-  const [isAutoUpdating, setIsAutoUpdating] = useState(false);
   const [exitMessage, setExitMessage] = useState<{
     show: boolean;
     key?: string;
@@ -1317,22 +1307,6 @@ function PromptInput({
 
   // Insert the at-mentioned reference (the file and, optionally, a line range) when
   // we receive an at-mentioned notification the IDE.
-  const onIdeAtMentioned = function (atMentioned: IDEAtMentioned) {
-    logEvent('tengu_ext_at_mentioned', {});
-    let atMentionedText: string;
-    const relativePath = path.relative(getCwd(), atMentioned.filePath);
-    if (atMentioned.lineStart && atMentioned.lineEnd) {
-      atMentionedText = atMentioned.lineStart === atMentioned.lineEnd ? `@${relativePath}#L${atMentioned.lineStart} ` : `@${relativePath}#L${atMentioned.lineStart}-${atMentioned.lineEnd} `;
-    } else {
-      atMentionedText = `@${relativePath} `;
-    }
-    const cursorChar = input[cursorOffset - 1] ?? ' ';
-    if (!/\s/.test(cursorChar)) {
-      atMentionedText = ` ${atMentionedText}`;
-    }
-    insertTextAtCursor(atMentionedText);
-  };
-  useIdeAtMentioned(mcpClients, onIdeAtMentioned);
 
   // Handler for chat:undo - undo last edit
   const handleUndo = useCallback(() => {
@@ -2307,7 +2281,7 @@ function PromptInput({
             {textInputElement}
           </Box>
         </Box>}
-      <PromptInputFooter apiKeyStatus={apiKeyStatus} debug={debug} exitMessage={exitMessage} vimMode={isVimModeEnabled() ? vimMode : undefined} mode={mode} autoUpdaterResult={autoUpdaterResult} isAutoUpdating={isAutoUpdating} verbose={verbose} onAutoUpdaterResult={onAutoUpdaterResult} onChangeIsUpdating={setIsAutoUpdating} suggestions={suggestions} selectedSuggestion={selectedSuggestion} maxColumnWidth={maxColumnWidth} toolPermissionContext={effectiveToolPermissionContext} helpOpen={helpOpen} suppressHint={input.length > 0} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} bridgeSelected={bridgeSelected} tmuxSelected={tmuxSelected} teammateFooterIndex={teammateFooterIndex} ideSelection={ideSelection} mcpClients={mcpClients} isPasting={isPasting} isInputWrapped={isInputWrapped} messages={messages} isSearching={isSearchingHistory} historyQuery={historyQuery} setHistoryQuery={setHistoryQuery} historyFailedMatch={historyFailedMatch} onOpenTasksDialog={isFullscreenEnvEnabled() ? handleOpenTasksDialog : undefined} />
+      <PromptInputFooter apiKeyStatus={apiKeyStatus} debug={debug} exitMessage={exitMessage} vimMode={isVimModeEnabled() ? vimMode : undefined} mode={mode} verbose={verbose} suggestions={suggestions} selectedSuggestion={selectedSuggestion} maxColumnWidth={maxColumnWidth} toolPermissionContext={effectiveToolPermissionContext} helpOpen={helpOpen} suppressHint={input.length > 0} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} bridgeSelected={bridgeSelected} tmuxSelected={tmuxSelected} teammateFooterIndex={teammateFooterIndex} mcpClients={mcpClients} isPasting={isPasting} isInputWrapped={isInputWrapped} messages={messages} isSearching={isSearchingHistory} historyQuery={historyQuery} setHistoryQuery={setHistoryQuery} historyFailedMatch={historyFailedMatch} onOpenTasksDialog={isFullscreenEnvEnabled() ? handleOpenTasksDialog : undefined} />
       {isFullscreenEnvEnabled() ? null : autoModeOptInDialog}
       {isFullscreenEnvEnabled() ?
     // position=absolute takes zero layout height so the spinner
@@ -2323,11 +2297,9 @@ function PromptInput({
     // the most recent. Suppressed while the slash overlay or
     // auto-mode opt-in dialog is up by height=0 (NOT unmount) — this
     // Box renders later in tree order so it would paint over their
-    // bottom row. Keeping Notifications mounted prevents AutoUpdater's
-    // initial-check effect from re-firing on every slash-completion
-    // toggle (PR#22413).
+    // bottom row.
     <Box position="absolute" marginTop={briefOwnsGap ? -2 : -1} height={suggestions.length === 0 && !showAutoModeOptIn ? 1 : 0} width="100%" paddingLeft={2} paddingRight={1} flexDirection="column" justifyContent="flex-end" overflow="hidden">
-          <Notifications apiKeyStatus={apiKeyStatus} autoUpdaterResult={autoUpdaterResult} debug={debug} isAutoUpdating={isAutoUpdating} verbose={verbose} messages={messages} onAutoUpdaterResult={onAutoUpdaterResult} onChangeIsUpdating={setIsAutoUpdating} ideSelection={ideSelection} mcpClients={mcpClients} isInputWrapped={isInputWrapped} />
+          <Notifications apiKeyStatus={apiKeyStatus} debug={debug} verbose={verbose} messages={messages} mcpClients={mcpClients} isInputWrapped={isInputWrapped} />
         </Box> : null}
     </Box>;
 }
