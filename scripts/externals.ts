@@ -11,10 +11,6 @@ export const COMMON_EXTERNALS: string[] = [
   // Native image processing
   'sharp',
   // Cloud provider SDKs
-  '@aws-sdk/client-bedrock',
-  '@aws-sdk/client-bedrock-runtime',
-  '@aws-sdk/client-sts',
-  '@aws-sdk/credential-providers',
   '@azure/identity',
   'google-auth-library',
   // @vscode/ripgrep ships a platform-specific binary alongside its
@@ -40,10 +36,6 @@ export const SDK_ONLY_EXTERNALS: string[] = [
 // from transitive deps or installed by users who need that provider/protocol.
 export const OPTIONAL_RUNTIME_EXTERNALS: string[] = [
   // Cloud provider SDKs (dynamically imported per-provider)
-  '@aws-sdk/client-bedrock',
-  '@aws-sdk/client-bedrock-runtime',
-  '@aws-sdk/client-sts',
-  '@aws-sdk/credential-providers',
   '@azure/identity',
 ]
 
@@ -55,7 +47,6 @@ export const SDK_EXTERNALS: string[] = [...COMMON_EXTERNALS, ...SDK_ONLY_EXTERNA
 // These are small utilities that are fine to inline into the output bundle.
 export const INTENTIONALLY_BUNDLED: string[] = [
   // Anthropic provider variants (bundled, not the main SDK)
-  '@anthropic-ai/bedrock-sdk',
   '@anthropic-ai/foundry-sdk',
   '@anthropic-ai/sandbox-runtime',
   '@anthropic-ai/vertex-sdk',

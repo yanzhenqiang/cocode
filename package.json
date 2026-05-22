@@ -69,7 +69,6 @@
   },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "0.3.0",
-    "@anthropic-ai/bedrock-sdk": "0.29.1",
     "@anthropic-ai/foundry-sdk": "0.2.3",
     "@anthropic-ai/sandbox-runtime": "0.0.46",
     "@anthropic-ai/sdk": "0.91.1",
