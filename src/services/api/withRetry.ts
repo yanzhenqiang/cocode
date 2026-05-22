@@ -219,7 +219,6 @@ export async function* withRetry<T>(
       // Get a fresh client instance on first attempt or after authentication errors
       // - 401 for first-party API authentication failures
       // - 403 "OAuth token has been revoked" (another process refreshed the token)
-      // - Bedrock-specific auth errors (403 or CredentialsProviderError)
       // - Vertex-specific auth errors (credential refresh failures, 401)
       // - ECONNRESET/EPIPE: stale keep-alive socket; disable pooling and reconnect
       const isStaleConnection = isStaleConnectionError(lastError)
@@ -847,6 +846,6 @@ export function getRateLimitResetDelayMs(error: APIError): number | null {
     return Math.min(delayMs, PERSISTENT_RESET_CAP_MS)
   }
 
-  // bedrock, vertex, foundry, gemini — no standard reset header
+  // vertex, foundry, gemini — no standard reset header
   return null
 }

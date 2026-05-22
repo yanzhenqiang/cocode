@@ -246,7 +246,7 @@ export function resolveCacheProvider(
   if (provider === 'github') {
     return hints?.githubNativeAnthropic ? 'copilot-claude' : 'copilot'
   }
-  if (provider === 'firstParty' || provider === 'bedrock' || provider === 'vertex' || provider === 'foundry') {
+  if (provider === 'firstParty' || provider === 'vertex' || provider === 'foundry') {
     return 'anthropic'
   }
   if (provider === 'gemini') return 'gemini'

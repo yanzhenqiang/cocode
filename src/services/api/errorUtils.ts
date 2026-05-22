@@ -135,9 +135,9 @@ export function sanitizeAPIError(apiError: APIError): string {
  * After JSON round-tripping, the SDK's APIError loses its `.message` property.
  * The actual message lives at different nesting levels depending on the provider:
  *
- * - Bedrock/proxy: `{ error: { message: "..." } }`
  * - Standard Anthropic API: `{ error: { error: { message: "..." } } }`
  *   (the outer `.error` is the response body, the inner `.error` is the API error)
+ * - Some proxy / 3P providers: `{ error: { message: "..." } }`
  *
  * See also: `getErrorMessage` in `logging.ts` which handles the same shapes.
  */
@@ -164,7 +164,7 @@ function hasNestedError(value: unknown): value is NestedAPIError {
  *
  * Checks two nesting levels (deeper first for specificity):
  * 1. `error.error.error.message` — standard Anthropic API shape
- * 2. `error.error.message` — Bedrock shape
+ * 2. `error.error.message` — some proxy / 3P provider shape
  */
 function extractNestedErrorMessage(error: APIError): string | null {
   if (!hasNestedError(error)) {
@@ -185,7 +185,7 @@ function extractNestedErrorMessage(error: APIError): string | null {
     }
   }
 
-  // Bedrock shape: { error: { message } }
+  // Some proxy / 3P provider shape: { error: { message } }
   const msg = nested?.message
   if (typeof msg === 'string' && msg.length > 0) {
     const sanitized = sanitizeMessageHTML(msg)

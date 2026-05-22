@@ -256,7 +256,7 @@ type JsonArray = JsonValue[]
 /**
  * Assemble the extra body parameters for the API request, based on the
  * CLAUDE_CODE_EXTRA_BODY environment variable if present and on any beta
- * headers (primarily for Bedrock requests).
+ * headers.
  *
  * @param betaHeaders - An array of beta headers to include in the request.
  * @returns A JSON object representing the extra body parameters.
@@ -1168,8 +1168,8 @@ async function* queryModel(
   }
 
   // Add tool search beta header if enabled - required for defer_loading to be accepted
-  // Header differs by provider: 1P/Foundry use advanced-tool-use, Vertex/Bedrock use tool-search-tool
-  // For Bedrock, this header must go in extraBodyParams, not the betas array
+  // Header differs by provider: 1P/Foundry use advanced-tool-use, Vertex use tool-search-tool
+  // For some 3P providers, this header must go in extraBodyParams, not the betas array
   const toolSearchHeader = useToolSearch ? getToolSearchBetaHeader() : null
   if (toolSearchHeader) {
     if (!betas.includes(toolSearchHeader)) {
@@ -3377,7 +3377,7 @@ export function adjustParamsForNonStreaming<
 }
 
 function isMaxTokensCapEnabled(): boolean {
-  // 3P default: false (not validated on Bedrock/Vertex)
+  // 3P default: false (not validated on Vertex)
   return getFeatureValue_CACHED_MAY_BE_STALE('tengu_otk_slot_v1', false)
 }
 

@@ -55,11 +55,6 @@ const importRuntimeModule = new Function(
  * Direct API:
  * - ANTHROPIC_API_KEY: Required for direct API access
  *
- * AWS Bedrock:
- * - AWS credentials configured via aws-sdk defaults
- * - AWS_REGION or AWS_DEFAULT_REGION: Sets the AWS region for all models (default: us-east-1)
- * - ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION: Optional. Override AWS region specifically for the small fast model (Haiku)
- *
  * Foundry (Azure):
  * - ANTHROPIC_FOUNDRY_RESOURCE: Your Azure resource name (e.g., 'my-resource')
  *   For the full endpoint: https://{resource}.services.ai.azure.com/anthropic/v1/messages
@@ -375,7 +370,6 @@ export async function getAnthropicClient({
   }
   if (isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX)) {
     // Refresh GCP credentials if gcpAuthRefresh is configured and credentials are expired
-    // This is similar to how we handle AWS credential refresh for Bedrock
     if (!isEnvTruthy(process.env.CLAUDE_CODE_SKIP_VERTEX_AUTH)) {
       await refreshGcpCredentialsIfNeeded()
     }
@@ -520,7 +514,7 @@ function buildFetch(
 ): ClientOptions['fetch'] {
   // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
   const inner = fetchOverride ?? globalThis.fetch
-  // Only send to the first-party API — Bedrock/Vertex/Foundry don't log it
+  // Only send to the first-party API — 3P providers don't log it
   // and unknown headers risk rejection by strict proxies (inc-4029 class).
   const injectClientRequestId =
     getAPIProvider() === 'firstParty' && isFirstPartyAnthropicBaseUrl()
