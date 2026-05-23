@@ -941,10 +941,10 @@ export async function getAttachments(
   const mainThreadAttachments = isMainThread
     ? [
         maybe('ide_selection', async () =>
-          getSelectedLinesFromIDE(ideSelection, toolUseContext),
+          getSelectedLinesFromIDE(_ideSelection, toolUseContext),
         ),
         maybe('ide_opened_file', async () =>
-          getOpenedFileFromIDE(ideSelection, toolUseContext),
+          getOpenedFileFromIDE(_ideSelection, toolUseContext),
         ),
         maybe('output_style', async () =>
           Promise.resolve(getOutputStyleAttachment()),
@@ -1836,32 +1836,9 @@ async function getNestedMemoryAttachmentsForFile(
 
 async function getOpenedFileFromIDE(
   _ideSelection: null,
-  toolUseContext: ToolUseContext,
+  _toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
-  if (!ideSelection?.filePath || ideSelection.text) {
-    return []
-  }
-
-  const appState = toolUseContext.getAppState()
-  if (isFileReadDenied(ideSelection.filePath, appState.toolPermissionContext)) {
-    return []
-  }
-
-  // Get nested memory files
-  const nestedMemoryAttachments = await getNestedMemoryAttachmentsForFile(
-    ideSelection.filePath,
-    toolUseContext,
-    appState,
-  )
-
-  // Return nested memory attachments followed by the opened file attachment
-  return [
-    ...nestedMemoryAttachments,
-    {
-      type: 'opened_file_in_ide',
-      filename: ideSelection.filePath,
-    },
-  ]
+  return []
 }
 
 async function processAtMentionedFiles(
@@ -2921,7 +2898,7 @@ export async function* getAttachmentMessages(
   const attachments = await getAttachments(
     input,
     toolUseContext,
-    ideSelection,
+    _ideSelection,
     queuedCommands,
     messages,
     querySource,
