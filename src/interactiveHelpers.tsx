@@ -1,5 +1,4 @@
 import { feature } from 'bun:bundle';
-import { appendFileSync } from 'fs';
 import React from 'react';
 import { logEvent } from 'src/services/analytics/index.js';
 import { gracefulShutdown, gracefulShutdownSync } from 'src/utils/gracefulShutdown.js';
@@ -25,6 +24,7 @@ import { isEnvTruthy, isRunningOnHomespace } from './utils/envUtils.js';
 import { type FpsMetrics, FpsTracker } from './utils/fpsTracker.js';
 import { updateGithubRepoPathMapping } from './utils/githubRepoPathMapping.js';
 import { applyConfigEnvironmentVariables } from './utils/managedEnv.js';
+import { writeToStderr } from './utils/process.js';
 import { usesAnthropicAccountFlow } from './utils/model/providers.js';
 import type { PermissionMode } from './utils/permissions/PermissionMode.js';
 import { getBaseRenderOptions } from './utils/renderOptions.js';
@@ -97,10 +97,15 @@ export function showSetupDialog<T = void>(root: Root, renderer: (done: (result: 
  * Handles the common epilogue: start deferred prefetches, wait for exit, graceful shutdown.
  */
 export async function renderAndRun(root: Root, element: React.ReactNode): Promise<void> {
+  writeToStderr('[DEBUG] renderAndRun: root.render called\n');
   root.render(element);
+  writeToStderr('[DEBUG] renderAndRun: startDeferredPrefetches\n');
   startDeferredPrefetches();
+  writeToStderr('[DEBUG] renderAndRun: waiting for root.waitUntilExit\n');
   await root.waitUntilExit();
+  writeToStderr('[DEBUG] renderAndRun: root.waitUntilExit resolved\n');
   await gracefulShutdown(0);
+
 }
 export async function showSetupScreens(root: Root, permissionMode: PermissionMode, allowDangerouslySkipPermissions: boolean, commands?: Command[], claudeInChrome?: boolean, devChannels?: ChannelEntry[]): Promise<boolean> {
   if ("production" === 'test' || isEnvTruthy(false) || process.env.IS_DEMO // Skip onboarding in demo mode
