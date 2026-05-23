@@ -98,10 +98,8 @@ import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { getVisibleAgentTasks, useCoordinatorTaskCount } from '../CoordinatorAgentStatus.js';
 import { getEffortNotificationText } from '../EffortIndicator.js';
 import { getFastIconString } from '../FastIcon.js';
-import { GlobalSearchDialog } from '../GlobalSearchDialog.js';
 import { HistorySearchDialog } from '../HistorySearchDialog.js';
 import { ModelPicker } from '../ModelPicker.js';
-import { QuickOpenDialog } from '../QuickOpenDialog.js';
 import TextInput from '../TextInput.js';
 import { ThinkingToggle } from '../ThinkingToggle.js';
 import { BackgroundTasksDialog } from '../tasks/BackgroundTasksDialog.js';
@@ -406,8 +404,6 @@ function PromptInput({
   const [isPasting, setIsPasting] = useState(false);
   const [isExternalEditorActive, setIsExternalEditorActive] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
-  const [showQuickOpen, setShowQuickOpen] = useState(false);
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [showFastModePicker, setShowFastModePicker] = useState(false);
   const [showThinkingToggle, setShowThinkingToggle] = useState(false);
@@ -1706,28 +1702,6 @@ function PromptInput({
     isActive: helpOpen
   });
 
-  // Quick Open / Global Search. Hook calls are unconditional (Rules of Hooks);
-  // the handler body is feature()-gated so the setState calls and component
-  // references get tree-shaken in external builds.
-  const quickSearchActive = feature('QUICK_SEARCH') ? !isModalOverlayActive : false;
-  useKeybinding('app:quickOpen', () => {
-    if (feature('QUICK_SEARCH')) {
-      setShowQuickOpen(true);
-      setHelpOpen(false);
-    }
-  }, {
-    context: 'Global',
-    isActive: quickSearchActive
-  });
-  useKeybinding('app:globalSearch', () => {
-    if (feature('QUICK_SEARCH')) {
-      setShowGlobalSearch(true);
-      setHelpOpen(false);
-    }
-  }, {
-    context: 'Global',
-    isActive: quickSearchActive
-  });
   useKeybinding('history:search', () => {
     if (feature('HISTORY_PICKER')) {
       setShowHistoryPicker(true);
@@ -1877,7 +1851,7 @@ function PromptInput({
     // Skip all input handling when a full-screen dialog is open. These dialogs
     // render via early return, but hooks run unconditionally — so without this
     // guard, Escape inside a dialog leaks to the double-press message-selector.
-    if (showTeamsDialog || showQuickOpen || showGlobalSearch || showHistoryPicker) {
+    if (showTeamsDialog || showHistoryPicker) {
       return;
     }
 
@@ -2144,12 +2118,6 @@ function PromptInput({
       const cursorChar = input[cursorOffset - 1] ?? ' ';
       insertTextAtCursor(/\s/.test(cursorChar) ? text : ` ${text}`);
     };
-    if (showQuickOpen) {
-      return <QuickOpenDialog onDone={() => setShowQuickOpen(false)} onInsert={insertWithSpacing} />;
-    }
-    if (showGlobalSearch) {
-      return <GlobalSearchDialog onDone={() => setShowGlobalSearch(false)} onInsert={insertWithSpacing} />;
-    }
   }
   if (feature('HISTORY_PICKER') && showHistoryPicker) {
     return <HistorySearchDialog initialQuery={input} onSelect={entry => {

@@ -2,10 +2,6 @@ import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { extraUsage as extraUsageCommand } from 'src/commands/extra-usage/index.js';
-import {
-  getUsageDescriptor,
-  resolveActiveUsageId,
-} from 'src/commands/usage/index.js';
 import { formatCost } from 'src/cost-tracker.js';
 import { getSubscriptionType } from 'src/utils/auth.js';
 import { getActiveProviderProfile } from 'src/utils/providerProfiles.js';
@@ -274,21 +270,16 @@ function AnthropicUsage(): React.ReactNode {
 }
 export function Usage(): React.ReactNode {
   const provider = getAPIProvider();
-  const activeProfile = getActiveProviderProfile();
-  const usageDescriptor = getUsageDescriptor(resolveActiveUsageId(process.env, {
-    activeProfileProvider: activeProfile?.provider,
-    providerCategory: provider,
-  }));
   if (provider === 'codex') {
     return <CodexUsage />;
   }
-  if (usageDescriptor.resolvedId === 'minimax' && usageDescriptor.supported) {
+  if (provider === 'minimax') {
     return <MiniMaxUsage />;
   }
-  if (usageDescriptor.resolvedId === 'anthropic' && usageDescriptor.supported) {
+  if (provider === 'anthropic' || provider === 'firstParty') {
     return <AnthropicUsage />;
   }
-  return <UnsupportedUsage providerLabel={usageDescriptor.activeLabel} />;
+  return <UnsupportedUsage providerLabel={provider} />;
 }
 type ExtraUsageSectionProps = {
   extraUsage: ExtraUsage;

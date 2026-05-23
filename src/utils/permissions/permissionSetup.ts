@@ -52,7 +52,6 @@ import {
 import { AGENT_TOOL_NAME } from '../../tools/AgentTool/constants.js'
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
 /* eslint-enable @typescript-eslint/no-require-imports */
-import { POWERSHELL_TOOL_NAME } from '../../tools/PowerShellTool/toolName.js'
 import { getToolsForDefaultPreset, parseToolPreset } from '../../tools.js'
 import {
   getFsImplementation,
@@ -156,80 +155,9 @@ export function isDangerousBashPermission(
  * PowerShell is case-insensitive, so rule content is lowercased before matching.
  */
 export function isDangerousPowerShellPermission(
-  toolName: string,
-  ruleContent: string | undefined,
+  _toolName: string,
+  _ruleContent: string | undefined,
 ): boolean {
-  if (toolName !== POWERSHELL_TOOL_NAME) {
-    return false
-  }
-
-  // Tool-level allow (PowerShell with no content, or PowerShell(*)) - allows ALL commands
-  if (ruleContent === undefined || ruleContent === '') {
-    return true
-  }
-
-  const content = ruleContent.trim().toLowerCase()
-
-  // Standalone wildcard (*) matches everything
-  if (content === '*') {
-    return true
-  }
-
-  // PS-specific cmdlet names. CROSS_PLATFORM_CODE_EXEC is shared with bash.
-  const patterns: readonly string[] = [
-    ...CROSS_PLATFORM_CODE_EXEC,
-    // Nested PS + shells launchable from PS
-    'pwsh',
-    'powershell',
-    'cmd',
-    'wsl',
-    // String/scriptblock evaluators
-    'iex',
-    'invoke-expression',
-    'icm',
-    'invoke-command',
-    // Process spawners
-    'start-process',
-    'saps',
-    'start',
-    'start-job',
-    'sajb',
-    'start-threadjob', // bundled PS 6.1+; takes -ScriptBlock like Start-Job
-    // Event/session code exec
-    'register-objectevent',
-    'register-engineevent',
-    'register-wmievent',
-    'register-scheduledjob',
-    'new-pssession',
-    'nsn', // alias
-    'enter-pssession',
-    'etsn', // alias
-    // .NET escape hatches
-    'add-type', // Add-Type -TypeDefinition '<C#>' → P/Invoke
-    'new-object', // New-Object -ComObject WScript.Shell → .Run()
-  ]
-
-  for (const pattern of patterns) {
-    // patterns stored lowercase; content lowercased above
-    if (content === pattern) return true
-    if (content === `${pattern}:*`) return true
-    if (content === `${pattern}*`) return true
-    if (content === `${pattern} *`) return true
-    if (content.startsWith(`${pattern} -`) && content.endsWith('*')) return true
-    // .exe — goes on the FIRST word. `python` → `python.exe`.
-    // `npm run` → `npm.exe run` (npm.exe is the real Windows binary name).
-    // A rule like `PowerShell(npm.exe run:*)` needs to match `npm run`.
-    const sp = pattern.indexOf(' ')
-    const exe =
-      sp === -1
-        ? `${pattern}.exe`
-        : `${pattern.slice(0, sp)}.exe${pattern.slice(sp)}`
-    if (content === exe) return true
-    if (content === `${exe}:*`) return true
-    if (content === `${exe}*`) return true
-    if (content === `${exe} *`) return true
-    if (content.startsWith(`${exe} -`) && content.endsWith('*')) return true
-  }
   return false
 }
 
@@ -364,12 +292,9 @@ export function isOverlyBroadBashAllowRule(
  * { toolName: 'PowerShell' } with no ruleContent.
  */
 export function isOverlyBroadPowerShellAllowRule(
-  ruleValue: PermissionRuleValue,
+  _ruleValue: PermissionRuleValue,
 ): boolean {
-  return (
-    ruleValue.toolName === POWERSHELL_TOOL_NAME &&
-    ruleValue.ruleContent === undefined
-  )
+  return false
 }
 
 /**
@@ -429,7 +354,7 @@ export function findOverlyBroadPowerShellPermissions(
       overlyBroad.push({
         ruleValue: rule.ruleValue,
         source: rule.source,
-        ruleDisplay: `${POWERSHELL_TOOL_NAME}(*)`,
+        ruleDisplay: `PowerShell(*)`,
         sourceDisplay: formatPermissionSource(rule.source),
       })
     }
@@ -441,7 +366,7 @@ export function findOverlyBroadPowerShellPermissions(
       overlyBroad.push({
         ruleValue: parsed,
         source: 'cliArg',
-        ruleDisplay: `${POWERSHELL_TOOL_NAME}(*)`,
+        ruleDisplay: `PowerShell(*)`,
         sourceDisplay: '--allowed-tools',
       })
     }

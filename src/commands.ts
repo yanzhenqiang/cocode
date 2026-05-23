@@ -7,7 +7,6 @@ import goodClaude from './commands/good-claude/index.js'
 import issue from './commands/issue/index.js'
 import feedback from './commands/feedback/index.js'
 import clear from './commands/clear/index.js'
-import color from './commands/color/index.js'
 import commit from './commands/commit.js'
 import commitMessage from './commands/commit-message/index.js'
 import copy from './commands/copy/index.js'
@@ -18,11 +17,9 @@ import config from './commands/config/index.js'
 import { context, contextNonInteractive } from './commands/context/index.js'
 import cost from './commands/cost/index.js'
 import diff from './commands/diff/index.js'
-import dream from './commands/dream/index.js'
 import ctx_viz from './commands/ctx_viz/index.js'
 import doctor from './commands/doctor/index.js'
 import onboardGithub from './commands/onboard-github/index.js'
-import knowledge from './commands/knowledge/index.js'
 import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import ide from './commands/ide/index.js'
@@ -59,10 +56,7 @@ const agentsPlatform =
 import securityReview from './commands/security-review.js'
 import bughunter from './commands/bughunter/index.js'
 import terminalSetup from './commands/terminalSetup/index.js'
-import usage from './commands/usage/index.js'
 import theme from './commands/theme/index.js'
-import logo from './commands/logo/index.js'
-import vim from './commands/vim/index.js'
 import { feature } from 'bun:bundle'
 import { isBuddyEnabled } from './buddy/feature.js'
 // Dead code elimination: conditional imports
@@ -155,7 +149,6 @@ import antTrace from './commands/ant-trace/index.js'
 import perfIssue from './commands/perf-issue/index.js'
 import sandboxToggle from './commands/sandbox-toggle/index.js'
 import chrome from './commands/chrome/index.js'
-import stickers from './commands/stickers/index.js'
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'
@@ -274,7 +267,6 @@ const COMMANDS = memoize((): Command[] => [
   cacheStats,
   chrome,
   clear,
-  color,
   compact,
   commitMessage,
   config,
@@ -284,7 +276,6 @@ const COMMANDS = memoize((): Command[] => [
   contextNonInteractive,
   cost,
   diff,
-  dream,
   doctor,
   effort,
   exit,
@@ -295,7 +286,6 @@ const COMMANDS = memoize((): Command[] => [
   ide,
   init,
   keybindings,
-  knowledge,
   lsp,
   installGitHubApp,
   mcp,
@@ -317,10 +307,8 @@ const COMMANDS = memoize((): Command[] => [
   stats,
   status,
   statusline,
-  stickers,
   tag,
   theme,
-  logo,
   feedback,
   review,
   ultrareview,
@@ -331,9 +319,7 @@ const COMMANDS = memoize((): Command[] => [
   extraUsage,
   extraUsageNonInteractive,
   rateLimitOptions,
-  usage,
   usageReport,
-  vim,
   ...(webCmd ? [webCmd] : []),
   ...(forkCmd ? [forkCmd] : []),
   ...(buddy ? [buddy] : []),
@@ -638,18 +624,13 @@ export const REMOTE_SAFE_COMMANDS: Set<Command> = new Set([
   clear, // Clear screen
   help, // Show help
   theme, // Change terminal theme
-  logo, // Change startup logo color scheme
-  color, // Change agent color
-  vim, // Toggle vim mode
   cost, // Show session cost (local cost tracking)
-  usage, // Show usage info
   copy, // Copy last message
   btw, // Quick note
   feedback, // Send feedback
   plan, // Plan mode toggle
   keybindings, // Keybinding management
   statusline, // Status line toggle
-  stickers, // Stickers
   mobile, // Mobile QR code
 ])
 

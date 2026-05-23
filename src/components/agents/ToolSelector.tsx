@@ -14,7 +14,7 @@ import { FileWriteTool } from 'src/tools/FileWriteTool/FileWriteTool.js';
 import { GlobTool } from 'src/tools/GlobTool/GlobTool.js';
 import { GrepTool } from 'src/tools/GrepTool/GrepTool.js';
 import { ListMcpResourcesTool } from 'src/tools/ListMcpResourcesTool/ListMcpResourcesTool.js';
-import { NotebookEditTool } from 'src/tools/NotebookEditTool/NotebookEditTool.js';
+;
 import { ReadMcpResourceTool } from 'src/tools/ReadMcpResourceTool/ReadMcpResourceTool.js';
 import { TaskOutputTool } from 'src/tools/TaskOutputTool/TaskOutputTool.js';
 import { TaskStopTool } from 'src/tools/TaskStopTool/TaskStopTool.js';
@@ -54,7 +54,7 @@ function getToolBuckets(): ToolBuckets {
     },
     EDIT: {
       name: 'Edit tools',
-      toolNames: new Set([FileEditTool.name, FileWriteTool.name, NotebookEditTool.name])
+      toolNames: new Set([FileEditTool.name, FileWriteTool.name])
     },
     EXECUTION: {
       name: 'Execution tools',

@@ -50,12 +50,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       // File navigation. cmd+ bindings only fire on kitty-protocol terminals;
       // ctrl+shift is the portable fallback.
       ...(feature('QUICK_SEARCH')
-        ? {
-            'ctrl+shift+f': 'app:globalSearch' as const,
-            'cmd+shift+f': 'app:globalSearch' as const,
-            'ctrl+shift+p': 'app:quickOpen' as const,
-            'cmd+shift+p': 'app:quickOpen' as const,
-          }
+        ? {}
         : {}),
       ...(feature('TERMINAL_PANEL') ? { 'meta+j': 'app:toggleTerminal' } : {}),
     },
@@ -67,7 +62,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       // ctrl+x chord prefix avoids shadowing readline editing keys (ctrl+a/b/e/f/...).
       'ctrl+x ctrl+k': 'chat:killAgents',
       [MODE_CYCLE_KEY]: 'chat:cycleMode',
-      'meta+p': 'chat:modelPicker',
       'meta+o': 'chat:fastMode',
       'meta+t': 'chat:thinkingToggle',
       enter: 'chat:submit',
