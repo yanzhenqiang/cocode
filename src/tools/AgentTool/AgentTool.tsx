@@ -16,7 +16,6 @@ import { checkRemoteAgentEligibility, formatPreconditionError, getRemoteTaskSess
 import { assembleToolPool } from '../../tools.js';
 import { asAgentId } from '../../types/ids.js';
 import { runWithAgentContext } from '../../utils/agentContext.js';
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 import { getCwd, runWithCwdOverride } from '../../utils/cwd.js';
 import { logForDebugging } from '../../utils/debug.js';
 import { isEnvTruthy } from '../../utils/envUtils.js';
@@ -34,8 +33,6 @@ import { sleep } from '../../utils/sleep.js';
 import { buildEffectiveSystemPrompt } from '../../utils/systemPrompt.js';
 import { asSystemPrompt } from '../../utils/systemPromptType.js';
 import { getTaskOutputPath } from '../../utils/task/diskOutput.js';
-import { getParentSessionId, isTeammate } from '../../utils/teammate.js';
-import { isInProcessTeammate } from '../../utils/teammateContext.js';
 import { teleportToRemote } from '../../utils/teleport.js';
 import { getAssistantMessageContentLength } from '../../utils/tokens.js';
 import { createAgentId } from '../../utils/uuid.js';
@@ -47,7 +44,6 @@ import { basename, dirname } from 'path';
 import { BASH_TOOL_NAME } from '../BashTool/toolName.js';
 import { BackgroundHint } from '../BashTool/UI.js';
 import { FILE_READ_TOOL_NAME } from '../FileReadTool/prompt.js';
-import { spawnTeammate } from '../shared/spawnMultiAgent.js';
 import { setAgentColor } from './agentColorManager.js';
 import { agentToolResultSchema, classifyHandoffIfNeeded, emitTaskProgress, extractPartialResult, finalizeAgentTool, getLastToolUseName, runAsyncAgentLifecycle } from './agentToolUtils.js';
 import { GENERAL_PURPOSE_AGENT } from './built-in/generalPurposeAgent.js';
@@ -91,15 +87,9 @@ const baseInputSchema = lazySchema(() => z.object({
   run_in_background: z.boolean().optional().describe('Set to true to run this agent in the background. You will be notified when it completes.')
 }));
 
-// Full schema combining base + multi-agent params + isolation
+// Full schema combining base params + isolation
 const fullInputSchema = lazySchema(() => {
-  // Multi-agent parameters
-  const multiAgentInputSchema = z.object({
-    name: z.string().optional().describe('Name for the spawned agent. Makes it addressable via SendMessage({to: name}) while running.'),
-    team_name: z.string().optional().describe('Team name for spawning. Uses current team context if omitted.'),
-    mode: permissionModeSchema().optional().describe('Permission mode for spawned teammate (e.g., "plan" to require plan approval).')
-  });
-  return baseInputSchema().merge(multiAgentInputSchema).extend({
+  return baseInputSchema().extend({
     isolation: ("external" === 'ant' ? z.enum(['worktree', 'remote']) : z.enum(['worktree'])).optional().describe("external" === 'ant' ? 'Isolation mode. "worktree" creates a temporary git worktree so the agent works on an isolated copy of the repo. "remote" launches the agent in a remote CCR environment (always runs in background).' : 'Isolation mode. "worktree" creates a temporary git worktree so the agent works on an isolated copy of the repo.'),
     cwd: z.string().optional().describe('Absolute path to run the agent in. Overrides the working directory for all filesystem and shell operations within this agent. Mutually exclusive with isolation: "worktree".')
   });
@@ -134,9 +124,6 @@ type InputSchema = ReturnType<typeof inputSchema>;
 // subagent_type is optional; call() defaults it to general-purpose when the
 // fork gate is off, or routes to the fork path when the gate is on.
 type AgentToolInput = z.infer<ReturnType<typeof baseInputSchema>> & {
-  name?: string;
-  team_name?: string;
-  mode?: z.infer<ReturnType<typeof permissionModeSchema>>;
   isolation?: 'worktree' | 'remote';
   cwd?: string;
 };
@@ -160,29 +147,7 @@ export const outputSchema = lazySchema(() => {
 type OutputSchema = ReturnType<typeof outputSchema>;
 type Output = z.input<OutputSchema>;
 
-// Private type for teammate spawn results - excluded from exported schema for dead code elimination
-// The 'teammate_spawned' status string is only included when ENABLE_AGENT_SWARMS is true
-type TeammateSpawnedOutput = {
-  status: 'teammate_spawned';
-  prompt: string;
-  teammate_id: string;
-  agent_id: string;
-  agent_type?: string;
-  model?: string;
-  name: string;
-  color?: string;
-  tmux_session_name: string;
-  tmux_window_name: string;
-  tmux_pane_id: string;
-  team_name?: string;
-  is_splitpane?: boolean;
-  plan_mode_required?: boolean;
-};
-
-// Combined output type including both public and internal types
-// Note: TeammateSpawnedOutput type is fine - TypeScript types are erased at compile time
 // Private type for remote-launched results — excluded from exported schema
-// like TeammateSpawnedOutput for dead code elimination purposes. Exported
 // for UI.tsx to do proper discriminated-union narrowing instead of ad-hoc casts.
 export type RemoteLaunchedOutput = {
   status: 'remote_launched';
@@ -351,23 +316,7 @@ export const AgentTool = buildTool({
     };
   },
   mapToolResultToToolResultBlockParam(data, toolUseID) {
-    // Multi-agent spawn result
     const internalData = data as InternalOutput;
-    if (typeof internalData === 'object' && internalData !== null && 'status' in internalData && internalData.status === 'teammate_spawned') {
-      const spawnData = internalData as TeammateSpawnedOutput;
-      return {
-        tool_use_id: toolUseID,
-        type: 'tool_result',
-        content: [{
-          type: 'text',
-          text: `Spawned successfully.
-agent_id: ${spawnData.teammate_id}
-name: ${spawnData.name}
-team_name: ${spawnData.team_name}
-The agent is now running and will receive instructions via mailbox.`
-        }]
-      };
-    }
     if ('status' in internalData && internalData.status === 'remote_launched') {
       const r = internalData;
       return {
@@ -440,13 +389,3 @@ duration_ms: ${data.totalDurationMs}</usage>`
   renderToolUseErrorMessage,
   renderGroupedToolUse: renderGroupedAgentToolUse
 } satisfies ToolDef<InputSchema, Output, Progress>);
-function resolveTeamName(input: {
-  team_name?: string;
-}, appState: {
-  teamContext?: {
-    teamName: string;
-  };
-}): string | undefined {
-  if (!isAgentSwarmsEnabled()) return undefined;
-  return input.team_name || appState.teamContext?.teamName;
-}
