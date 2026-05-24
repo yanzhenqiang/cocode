@@ -160,6 +160,7 @@ export function CollapsedReadSearchContent({
   const toolUseIds = getToolUseIdsFromCollapsedGroup(message);
   const anyError = toolUseIds.some(id => lookups.erroredToolUseIDs.has(id));
   const hasMemoryOps = memorySearchCount > 0 || memoryReadCount > 0 || memoryWriteCount > 0;
+  const hasTeamMemoryOps = false;
 
   // Track the max seen counts so they only ever increase. The debounce timer
   // causes extra re-renders at arbitrary times; during a brief "invisible window"

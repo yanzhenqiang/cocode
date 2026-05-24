@@ -1,6 +1,5 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
 import { toolMatchesName, type Tool, type Tools } from './Tool.js'
-import { AgentTool } from './tools/AgentTool/AgentTool.js'
 import { SkillTool } from './tools/SkillTool/SkillTool.js'
 import { BashTool } from './tools/BashTool/BashTool.js'
 import { FileEditTool } from './tools/FileEditTool/FileEditTool.js'
@@ -171,7 +170,6 @@ export function getToolsForDefaultPreset(): string[] {
  */
 export function getAllBaseTools(): Tools {
   return [
-    AgentTool,
     TaskOutputTool,
     BashTool,
     // Ant-native builds have bfs/ugrep embedded in the bun binary (same ARGV0
@@ -263,14 +261,14 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
       return filterToolsByDenyRules(replSimple, permissionContext)
     }
     const simpleTools: Tool[] = [BashTool, FileReadTool, FileEditTool]
-    // When coordinator mode is also active, include AgentTool and TaskStopTool
+    // When coordinator mode is also active, include TaskStopTool
     // so the coordinator gets Task+TaskStop (via useMergedTools filtering) and
     // workers get Bash/Read/Edit (via filterToolsForAgent filtering).
     if (
       feature('COORDINATOR_MODE') &&
       coordinatorModeModule?.isCoordinatorMode()
     ) {
-      simpleTools.push(AgentTool, TaskStopTool)
+      simpleTools.push(TaskStopTool)
       const sendMessageTool = getSendMessageTool()
       if (sendMessageTool) simpleTools.push(sendMessageTool)
     }

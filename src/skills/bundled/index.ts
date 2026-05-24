@@ -1,4 +1,5 @@
 import { feature } from 'bun:bundle'
+import { registerAgentSkill } from './agent.js'
 import { registerBatchSkill } from './batch.js'
 import { registerDebugSkill } from './debug.js'
 import { registerKeybindingsSkill } from './keybindings.js'
@@ -16,6 +17,7 @@ import { registerUpdateConfigSkill } from './updateConfig.js'
  * 3. Import and call that function here
  */
 export function initBundledSkills(): void {
+  registerAgentSkill()
   registerUpdateConfigSkill()
   registerKeybindingsSkill()
   registerDebugSkill()
