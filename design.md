@@ -375,7 +375,60 @@ tmux kill-session -t cocode-test
 
 tmux session 模型对于 cocode 完全可行。cocode 在独立 tmux session 中运行正常，输入输出都可以通过 tmux 命令控制。
 
-## 10. 端到端功能测试（E2E）
+## 10. 前置冒烟测试（必过）
+
+### 测试目标
+
+验证最基本的 cocode + tmux 集成链路可用：**tmux 拉起主 agent → send-keys 发送 prompt → 主 agent 正常响应**。这是后续所有 E2E 测试的前置条件，此测试不通过则无需继续。
+
+### 前置条件
+
+- tmux 已安装且 tmux server 运行中
+- `cocode.sh` 可执行，位于 `/Users/zhoukangjia/workspace/`
+- API 环境变量已配置（或通过 `cocode.sh` 内置导出）
+
+### 测试步骤
+
+```bash
+# 1. 拉起主 agent
+tmux new -s main -d "cd /Users/zhoukangjia/workspace && ./cocode.sh"
+sleep 5
+
+# 2. 验证主 agent session 存活
+tmux has-session -t main || { echo "FAIL: main session 未创建"; exit 1; }
+
+# 3. 发送一条简单 prompt
+tmux send-keys -t main "你好，请回复'收到'两个字" Enter
+
+# 4. 等待并捕获输出
+sleep 10
+OUTPUT=$(tmux capture-pane -t main -p)
+
+# 5. 验证主 agent 有响应（输出非空且包含预期内容）
+echo "$OUTPUT" | grep -q "收到" || { echo "FAIL: 主 agent 未响应 prompt"; exit 1; }
+
+echo "PASS: 前置冒烟测试通过"
+
+# 6. 清理
+tmux kill-session -t main
+```
+
+### 通过标准
+
+- `tmux has-session -t main` 返回 0（主 agent 成功启动）
+- `tmux capture-pane -t main -p` 输出非空且包含对 prompt 的响应（如"收到"）
+
+### 失败排查
+
+| 失败点 | 可能原因 | 排查命令 |
+|--------|---------|---------|
+| main session 不存在 | cocode.sh 启动失败 | `tmux capture-pane -t main -p` 看报错 |
+| 无响应 | API key 无效或网络问题 | 检查 cocode 输出是否有 API error |
+| 无响应 | 模型加载慢 | 增大 sleep 时间再试 |
+
+---
+
+## 11. 端到端功能测试（E2E）
 
 ### 测试目标
 
@@ -384,6 +437,7 @@ tmux session 模型对于 cocode 完全可行。cocode 在独立 tmux session �
 
 ### 前置条件
 
+- **前置冒烟测试已通过**
 - tmux 已安装且 tmux server 运行中
 - `cocode.sh` 可执行，位于 `/Users/zhoukangjia/workspace/`
 - API 环境变量已配置（或通过 `cocode.sh` 内置导出）
