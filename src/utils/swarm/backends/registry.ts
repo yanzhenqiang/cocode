@@ -10,7 +10,6 @@ import {
 } from './detection.js'
 import { createInProcessBackend } from './InProcessBackend.js'
 import { getPreferTmuxOverIterm2 } from './it2Setup.js'
-import { createPaneBackendExecutor } from './PaneBackendExecutor.js'
 import { getTeammateModeFromSnapshot } from './teammateModeSnapshot.js'
 import type {
   BackendDetectionResult,
@@ -39,12 +38,6 @@ let backendsRegistered = false
  * Cached in-process backend instance.
  */
 let cachedInProcessBackend: TeammateExecutor | null = null
-
-/**
- * Cached pane backend executor instance.
- * Wraps the detected PaneBackend to provide TeammateExecutor interface.
- */
-let cachedPaneBackendExecutor: TeammateExecutor | null = null
 
 /**
  * Tracks whether spawn fell back to in-process mode because no pane backend
@@ -425,29 +418,8 @@ export function getInProcessBackend(): TeammateExecutor {
 export async function getTeammateExecutor(
   preferInProcess: boolean = false,
 ): Promise<TeammateExecutor> {
-  if (preferInProcess && isInProcessEnabled()) {
-    logForDebugging('[BackendRegistry] Using in-process executor')
-    return getInProcessBackend()
-  }
-
-  // Return pane backend executor
-  logForDebugging('[BackendRegistry] Using pane backend executor')
-  return getPaneBackendExecutor()
-}
-
-/**
- * Gets the PaneBackendExecutor instance.
- * Creates and caches the instance on first call, detecting the appropriate pane backend.
- */
-async function getPaneBackendExecutor(): Promise<TeammateExecutor> {
-  if (!cachedPaneBackendExecutor) {
-    const detection = await detectAndGetBackend()
-    cachedPaneBackendExecutor = createPaneBackendExecutor(detection.backend)
-    logForDebugging(
-      `[BackendRegistry] Created PaneBackendExecutor wrapping ${detection.backend.type}`,
-    )
-  }
-  return cachedPaneBackendExecutor
+  logForDebugging('[BackendRegistry] Using in-process executor')
+  return getInProcessBackend()
 }
 
 /**
@@ -458,7 +430,6 @@ export function resetBackendDetection(): void {
   cachedBackend = null
   cachedDetectionResult = null
   cachedInProcessBackend = null
-  cachedPaneBackendExecutor = null
   backendsRegistered = false
   inProcessFallbackActive = false
 }
