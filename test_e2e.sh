@@ -107,8 +107,8 @@ fi
 
 # Step 2: 发送初始 Prompt（触发 Skill 拉起 Subagent）
 echo "Step 2: 发送 prompt 触发 Skill..."
-tmux send-keys -t main "/agent 创建一个 Explore subagent，任务是'列出当前目录下所有文件'" Enter
-sleep 25
+tmux send-keys -t main "/agent 使用 Explore agent 列出当前目录文件" Enter
+sleep 45
 
 # 验证点 2.1
 OUTPUT=$(tmux capture-pane -t main -p)
