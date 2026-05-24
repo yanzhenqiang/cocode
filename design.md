@@ -304,6 +304,26 @@ tmux send-keys -t "$PARENT" "任务完成，结果在 /tmp/result.txt" Enter
 
 ## 8. 架构哲学
 
+### 小步快跑：最小改动 + 即时验证
+
+**原则**：每次只做最小化的代码改动，改完后立即跑测试验证，通过后再进行下一步。
+
+**Why**: 本次重构涉及 runtime、通信层、生命周期管理等多个模块，改动面大、耦合性强。小步快跑可以：
+- 将大重构拆成多个可独立验证的步骤
+- 每一步失败时，调试范围被限制在最小改动内
+- 随时可回退到上一个稳定状态，降低重构风险
+
+**How to apply**（对应迁移路径的 4 个阶段）：
+
+| 阶段 | 最小改动范围 | 验证测试 |
+|------|-------------|---------|
+| 阶段 1 | CLI 新增 `--system-prompt-file`、`--prompt-file` 参数 | 手动跑 `cocode --system-prompt-file x.json --prompt-file y.md`，验证进程正常启动 |
+| 阶段 2 | AgentTool 新增 `isolation: 'tmux-session'` 分支，内嵌路径保留 | 跑 E2E 测试 Step 1~3.1：spawn subagent session，验证主/子 session 并存 |
+| 阶段 3 | TmuxMessenger 封装 + SendMessageTool 路由 | 跑 E2E 测试 Step 3.3~3.5：验证环境变量注入、子 agent 任务执行、结果回推 |
+| 阶段 4 | 默认走 session 路径，删除内嵌 `runAgent()` | 跑完整 E2E 测试（含 3.6~3.7），验证 `/agent_view`、kill 生命周期、主 agent 不受影响 |
+
+**红线**：不提交未经测试的代码；不在一个步骤里同时修改调用方和被调用方。
+
 ### TS 只建通道，Prompt 管语义
 
 本方案的核心设计原则：**TS 代码只负责建立通信的可能性，所有通信语义交给 system prompt 管理。**
