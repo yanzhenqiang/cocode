@@ -56,24 +56,6 @@ export function buildEffectiveSystemPrompt({
   if (overrideSystemPrompt) {
     return asSystemPrompt([overrideSystemPrompt])
   }
-  // Coordinator mode: use coordinator prompt instead of default
-  // Use inline env check instead of coordinatorModule to avoid circular
-  // dependency issues during test module loading.
-  if (
-    feature('COORDINATOR_MODE') &&
-    isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
-    !mainThreadAgentDefinition
-  ) {
-    // Lazy require to avoid circular dependency at module load time
-    const { getCoordinatorSystemPrompt } =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js')
-    return asSystemPrompt([
-      getCoordinatorSystemPrompt(),
-      ...(appendSystemPrompt ? [appendSystemPrompt] : []),
-    ])
-  }
-
   const agentSystemPrompt = mainThreadAgentDefinition
     ? isBuiltInAgent(mainThreadAgentDefinition)
       ? mainThreadAgentDefinition.getSystemPrompt({

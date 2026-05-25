@@ -38,7 +38,7 @@ const featureFlags: Record<string, boolean> = {
   MCP_SKILLS: false,              // Dynamic MCP skill discovery (src/skills/mcpSkills.ts not mirrored; enabling this causes "fetchMcpSkillsForClient is not a function" when MCP servers with resources connect — see #856)
 
   // ── Enabled: upstream defaults ──────────────────────────────────────
-  COORDINATOR_MODE: true,             // Multi-agent coordinator with worker delegation
+  COORDINATOR_MODE: false,            // Multi-agent coordinator with worker delegation (deprecated, replaced by /agent skill)
   BUILTIN_EXPLORE_PLAN_AGENTS: true,  // Built-in Explore/Plan specialized subagents
   BUDDY: true,                        // Buddy mode for paired programming
   MONITOR_TOOL: true,                 // MCP server monitoring/streaming tool

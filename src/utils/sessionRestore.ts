@@ -49,7 +49,6 @@ import {
   recordContentReplacement,
   resetSessionFilePointer,
   restoreSessionMetadata,
-  saveMode,
   saveWorktreeState,
 } from './sessionStorage.js'
 import { isTodoV2Enabled } from './tasks.js'
@@ -249,25 +248,12 @@ export function restoreAgentFromSession(
  * agents (from --agents flag) are merged back in.
  */
 export async function refreshAgentDefinitionsForModeSwitch(
-  modeWasSwitched: boolean,
-  currentCwd: string,
-  cliAgents: AgentDefinition[],
+  _modeWasSwitched: boolean,
+  _currentCwd: string,
+  _cliAgents: AgentDefinition[],
   currentAgentDefinitions: AgentDefinitionsResult,
 ): Promise<AgentDefinitionsResult> {
-  if (!feature('COORDINATOR_MODE') || !modeWasSwitched) {
-    return currentAgentDefinitions
-  }
-
-  // Re-derive agent definitions after mode switch so built-in agents
-  // reflect the new coordinator/normal mode
-  getAgentDefinitionsWithOverrides.cache.clear?.()
-  const freshAgentDefs = await getAgentDefinitionsWithOverrides(currentCwd)
-  const freshAllAgents = [...freshAgentDefs.allAgents, ...cliAgents]
-  return {
-    ...freshAgentDefs,
-    allAgents: freshAllAgents,
-    activeAgents: getActiveAgentsFromList(freshAllAgents),
-  }
+  return currentAgentDefinitions
 }
 
 /**
@@ -281,14 +267,6 @@ export type ProcessedResume = {
   agentColor: AgentColorName | undefined
   restoredAgentDef: AgentDefinition | undefined
   initialState: AppState
-}
-
-/**
- * Subset of the coordinator mode module API needed for session resume.
- */
-type CoordinatorModeApi = {
-  matchSessionMode(mode?: string): string | undefined
-  isCoordinatorMode(): boolean
 }
 
 /**
@@ -415,7 +393,6 @@ export async function processResumedConversation(
     includeAttribution?: boolean
   },
   context: {
-    modeApi: CoordinatorModeApi | null
     mainThreadAgentDefinition: AgentDefinition | undefined
     agentDefinitions: AgentDefinitionsResult
     currentCwd: string
@@ -423,15 +400,6 @@ export async function processResumedConversation(
     initialState: AppState
   },
 ): Promise<ProcessedResume> {
-  // Match coordinator/normal mode to the resumed session
-  let modeWarning: string | undefined
-  if (feature('COORDINATOR_MODE')) {
-    modeWarning = context.modeApi?.matchSessionMode(result.mode)
-    if (modeWarning) {
-      result.messages.push(createSystemMessage(modeWarning, 'warning'))
-    }
-  }
-
   // Reuse the resumed session's ID unless --fork-session is specified
   if (!opts.forkSession) {
     const sid = opts.sessionIdOverride ?? result.sessionId
@@ -510,11 +478,6 @@ export async function processResumedConversation(
       context.agentDefinitions,
     )
 
-  // Persist the current mode so future resumes know what mode this session was in
-  if (feature('COORDINATOR_MODE')) {
-    saveMode(context.modeApi?.isCoordinatorMode() ? 'coordinator' : 'normal')
-  }
-
   // Compute initial state before render (per CLAUDE.md guidelines)
   const restoredAttribution = opts.includeAttribution
     ? computeRestoredAttributionState(result)
@@ -525,7 +488,7 @@ export async function processResumedConversation(
   )
   void updateSessionName(result.agentName)
   const refreshedAgentDefs = await refreshAgentDefinitionsForModeSwitch(
-    !!modeWarning,
+    false,
     context.currentCwd,
     context.cliAgents,
     context.agentDefinitions,

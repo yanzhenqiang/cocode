@@ -80,7 +80,6 @@ export {
   ALL_AGENT_DISALLOWED_TOOLS,
   CUSTOM_AGENT_DISALLOWED_TOOLS,
   ASYNC_AGENT_ALLOWED_TOOLS,
-  COORDINATOR_MODE_ALLOWED_TOOLS,
 } from './constants/tools.js'
 import { feature } from 'bun:bundle'
 // Dead code elimination: conditional import for OVERFLOW_TEST_TOOL
@@ -97,9 +96,6 @@ const TerminalCaptureTool = feature('TERMINAL_PANEL')
   : null
 const WebBrowserTool = feature('WEB_BROWSER_TOOL')
   ? require('./tools/WebBrowserTool/WebBrowserTool.js').WebBrowserTool
-  : null
-const coordinatorModeModule = feature('COORDINATOR_MODE')
-  ? (require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js'))
   : null
 const SnipTool = feature('HISTORY_SNIP')
   ? require('./tools/SnipTool/SnipTool.js').SnipTool
@@ -243,29 +239,9 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
     // return REPL instead of the raw primitives. Matches the non-bare path
     // below which also hides REPL_ONLY_TOOLS when REPL is enabled.
     if (isReplModeEnabled() && REPLTool) {
-      const replSimple: Tool[] = [REPLTool]
-      if (
-        feature('COORDINATOR_MODE') &&
-        coordinatorModeModule?.isCoordinatorMode()
-      ) {
-        const sendMessageTool = getSendMessageTool()
-        if (sendMessageTool) replSimple.push(TaskStopTool, sendMessageTool)
-      }
-      return filterToolsByDenyRules(replSimple, permissionContext)
+      return filterToolsByDenyRules([REPLTool], permissionContext)
     }
-    const simpleTools: Tool[] = [BashTool, FileReadTool, FileEditTool]
-    // When coordinator mode is also active, include TaskStopTool
-    // so the coordinator gets Task+TaskStop (via useMergedTools filtering) and
-    // workers get Bash/Read/Edit (via filterToolsForAgent filtering).
-    if (
-      feature('COORDINATOR_MODE') &&
-      coordinatorModeModule?.isCoordinatorMode()
-    ) {
-      simpleTools.push(TaskStopTool)
-      const sendMessageTool = getSendMessageTool()
-      if (sendMessageTool) simpleTools.push(sendMessageTool)
-    }
-    return filterToolsByDenyRules(simpleTools, permissionContext)
+    return filterToolsByDenyRules([BashTool, FileReadTool, FileEditTool], permissionContext)
   }
 
   // Get all base tools and filter out special tools that get added conditionally
