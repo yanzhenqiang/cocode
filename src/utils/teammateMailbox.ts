@@ -12,7 +12,6 @@ import { join } from 'path'
 import { z } from 'zod/v4'
 import { TEAMMATE_MESSAGE_TAG } from '../constants/xml.js'
 import { PermissionModeSchema } from '../entrypoints/sdk/coreSchemas.js'
-import { SEND_MESSAGE_TOOL_NAME } from '../tools/SendMessageTool/constants.js'
 import type { Message } from '../types/message.js'
 import { generateRequestId } from './agentId.js'
 import { count } from './array.js'
@@ -1156,28 +1155,6 @@ export function getLastPeerDmSummary(messages: Message[]): string | undefined {
       break
     }
 
-    if (msg.type !== 'assistant') continue
-    for (const block of msg.message.content) {
-      if (
-        block.type === 'tool_use' &&
-        block.name === SEND_MESSAGE_TOOL_NAME &&
-        typeof block.input === 'object' &&
-        block.input !== null &&
-        'to' in block.input &&
-        typeof block.input.to === 'string' &&
-        block.input.to !== '*' &&
-        block.input.to.toLowerCase() !== TEAM_LEAD_NAME.toLowerCase() &&
-        'message' in block.input &&
-        typeof block.input.message === 'string'
-      ) {
-        const to = block.input.to
-        const summary =
-          'summary' in block.input && typeof block.input.summary === 'string'
-            ? block.input.summary
-            : block.input.message.slice(0, 80)
-        return `[to ${to}] ${summary}`
-      }
-    }
   }
   return undefined
 }

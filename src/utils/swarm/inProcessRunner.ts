@@ -48,7 +48,6 @@ import type { CustomAgentDefinition } from '../../tools/AgentTool/loadAgentsDir.
 import { runAgent } from '../../tools/AgentTool/runAgent.js'
 import { awaitClassifierAutoApproval } from '../../tools/BashTool/bashPermissions.js'
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
-import { SEND_MESSAGE_TOOL_NAME } from '../../tools/SendMessageTool/constants.js'
 import { TASK_CREATE_TOOL_NAME } from '../../tools/TaskCreateTool/constants.js'
 import { TASK_GET_TOOL_NAME } from '../../tools/TaskGetTool/constants.js'
 import { TASK_LIST_TOOL_NAME } from '../../tools/TaskListTool/constants.js'
@@ -981,7 +980,6 @@ export async function runInProcessTeammate(
       ? [
           ...new Set([
             ...agentDefinition.tools,
-            SEND_MESSAGE_TOOL_NAME,
             TASK_CREATE_TOOL_NAME,
             TASK_GET_TOOL_NAME,
             TASK_LIST_TOOL_NAME,

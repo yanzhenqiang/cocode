@@ -7,7 +7,6 @@ import { GLOB_TOOL_NAME } from '../../tools/GlobTool/prompt.js'
 import { GREP_TOOL_NAME } from '../../tools/GrepTool/prompt.js'
 import { LIST_MCP_RESOURCES_TOOL_NAME } from '../../tools/ListMcpResourcesTool/prompt.js'
 import { LSP_TOOL_NAME } from '../../tools/LSPTool/prompt.js'
-import { SEND_MESSAGE_TOOL_NAME } from '../../tools/SendMessageTool/constants.js'
 import { SLEEP_TOOL_NAME } from '../../tools/SleepTool/prompt.js'
 import { TASK_CREATE_TOOL_NAME } from '../../tools/TaskCreateTool/constants.js'
 import { TASK_GET_TOOL_NAME } from '../../tools/TaskGetTool/constants.js'
@@ -73,7 +72,6 @@ const SAFE_YOLO_ALLOWLISTED_TOOLS = new Set([
   ASK_USER_QUESTION_TOOL_NAME,
   ENTER_PLAN_MODE_TOOL_NAME,
   EXIT_PLAN_MODE_TOOL_NAME,
-  SEND_MESSAGE_TOOL_NAME,
   // Workflow orchestration — subagents go through canUseTool individually
   ...(WORKFLOW_TOOL_NAME ? [WORKFLOW_TOOL_NAME] : []),
   // Misc safe
