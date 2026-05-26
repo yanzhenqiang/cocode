@@ -1,62 +1,54 @@
 # Cocode
 
-Cocode is an open-source coding-agent CLI for cloud and local model providers.
+Cocode is a coding-agent CLI for cloud and local model providers.
 
-Use OpenAI-compatible APIs, Gemini, GitHub Models, Codex, Ollama, and other supported backends with one terminal-first workflow: prompts, tools, agents, MCP, slash commands, and streaming output.
+## Development Workflow
 
-## Install
+After every code change, run this sequence:
 
 ```bash
-npm install -g @gitlawb/cocode
+# 1. Bump version in package.json
+# 2. Rebuild and reinstall globally
+npm run build
+npm link
+
+# 3. Run smoke test
+npm run smoke
+
+# 4. If smoke passes, commit
+git add -A
+git commit -m "describe your change"
 ```
 
-## Start
+## Environment Setup
+
+Copy API credentials from `cocode.sh`:
+
+```bash
+source <(sed '/^exec /d' cocode.sh)
+```
+
+Then run:
 
 ```bash
 cocode
 ```
 
-Inside Cocode:
+## Build
 
-- run `/provider` for guided provider setup and saved profiles
-- run `/onboard-github` for GitHub Models onboarding
-
-## Quick Setup
-
-### OpenAI
+Requires Node.js ≥22. Uses esbuild (no Bun needed):
 
 ```bash
-export CLAUDE_CODE_USE_OPENAI=1
-export OPENAI_API_KEY=sk-your-key-here
-export OPENAI_MODEL=gpt-4o
-
-cocode
+npm install
+npm run build
 ```
 
-### Ollama
+Output: `dist/cli.mjs`
+
+## Smoke Test
 
 ```bash
-export CLAUDE_CODE_USE_OPENAI=1
-export OPENAI_BASE_URL=http://localhost:11434/v1
-export OPENAI_MODEL=qwen2.5-coder:7b
-
-cocode
+bash test_smoke.sh
 ```
 
-## Development
-
-```bash
-bun install
-bun run build
-node dist/cli.mjs
-```
-
-Run tests:
-
-```bash
-bun test
-```
-
-## License
-
-See [LICENSE](LICENSE).
+Requires `tmux` and a valid API key in environment.
