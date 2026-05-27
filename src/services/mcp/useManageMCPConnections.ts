@@ -47,7 +47,6 @@ import {
 import type { AppState } from 'src/state/AppState.js'
 import type { PluginError } from 'src/types/plugin.js'
 import { logForDebugging } from 'src/utils/debug.js'
-import { getAllowedChannels } from '../../bootstrap/state.js'
 import { useNotifications } from '../../context/notifications.js'
 import {
   useAppState,
@@ -57,20 +56,6 @@ import {
 import { errorMessage } from '../../utils/errors.js'
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { logMCPDebug, logMCPError } from '../../utils/log.js'
-import { enqueue } from '../../utils/messageQueueManager.js'
-import {
-  CHANNEL_PERMISSION_METHOD,
-  ChannelMessageNotificationSchema,
-  ChannelPermissionNotificationSchema,
-  findChannelEntry,
-  gateChannelServer,
-  wrapChannelMessage,
-} from './channelNotification.js'
-import {
-  type ChannelPermissionCallbacks,
-  createChannelPermissionCallbacks,
-  isChannelPermissionRelayEnabled,
-} from './channelPermissions.js'
 import {
   clearClaudeAIMcpConfigsCache,
   fetchClaudeAIMcpConfigsIfEligible,
@@ -151,40 +136,6 @@ export function useManageMCPConnections(
   // Track active reconnection attempts to allow cancellation
   const reconnectTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
 
-  // Dedup the --channels blocked warning per skip kind so that a user who
-  // sees "run /login" (auth skip), logs in, then hits the policy gate
-  // gets a second toast.
-  const channelWarnedKindsRef = useRef<
-    Set<'disabled' | 'auth' | 'policy' | 'marketplace' | 'allowlist'>
-  >(new Set())
-  // Channel permission callbacks — constructed once, stable ref. Stored in
-  // AppState so interactiveHandler can subscribe. The pending Map lives inside
-  // the closure (not module-level, not AppState — functions-in-state is brittle).
-  const channelPermCallbacksRef = useRef<ChannelPermissionCallbacks | null>(
-    null,
-  )
-  // Store callbacks in AppState so interactiveHandler.ts can reach them via
-  // ctx.toolUseContext.getAppState(). One-time set — the ref is stable.
-  useEffect(() => {
-    const callbacks = channelPermCallbacksRef.current
-    if (!callbacks) return
-    // GrowthBook runtime gate — separate from channels so channels can
-    // ship without this. Checked at mount; mid-session flips need restart.
-    // If off, callbacks never go into AppState → interactiveHandler sees
-    // undefined → never sends → intercept has nothing pending → "yes tbxkq"
-    // flows to Claude as normal chat. One gate, full disable.
-    if (!isChannelPermissionRelayEnabled()) return
-    setAppState(prev => {
-      if (prev.channelPermissionCallbacks === callbacks) return prev
-      return { ...prev, channelPermissionCallbacks: callbacks }
-    })
-    return () => {
-      setAppState(prev => {
-        if (prev.channelPermissionCallbacks === undefined) return prev
-        return { ...prev, channelPermissionCallbacks: undefined }
-      })
-    }
-  }, [setAppState])
   const { addNotification } = useNotifications()
 
   // Batched MCP state updates: queue individual server updates and flush them
