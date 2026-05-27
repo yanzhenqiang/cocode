@@ -174,10 +174,6 @@ type Props = {
     setInputWithCursor: (value: string, cursor: number) => void;
     cursorOffset: number;
   } | null>;
-  voiceInterimRange?: {
-    start: number;
-    end: number;
-  } | null;
 };
 
 // Bottom slot has maxHeight="50%"; reserve lines for footer, border, status.
@@ -221,8 +217,7 @@ function PromptInput({
   setHelpOpen,
   hasSuppressedDialogs,
   isLocalJSXCommandActive = false,
-  insertTextRef,
-  voiceInterimRange
+  insertTextRef
 }: Props): React.ReactNode {
   const mainLoopModel = useMainLoopModel();
   // A local-jsx command (e.g., /mcp while agent is running) renders a full-
@@ -667,17 +662,6 @@ function PromptInput({
       });
     }
 
-    // Dim interim voice dictation text
-    if (voiceInterimRange) {
-      highlights.push({
-        start: voiceInterimRange.start,
-        end: voiceInterimRange.end,
-        color: undefined,
-        dimColor: true,
-        priority: 1
-      });
-    }
-
     // Rainbow highlighting for ultrathink keyword (per-character cycling colors)
     if (isUltrathinkEnabled()) {
       for (const trigger of thinkTriggers) {
@@ -734,7 +718,7 @@ function PromptInput({
       }
     }
     return highlights;
-  }, [isSearchingHistory, historyQuery, historyMatch, historyFailedMatch, cursorOffset, btwTriggers, imageRefPositions, memberMentionHighlights, slashCommandTriggers, tokenBudgetTriggers, slackChannelTriggers, displayedValue, voiceInterimRange, thinkTriggers, ultraplanTriggers, ultrareviewTriggers, buddyTriggers]);
+  }, [isSearchingHistory, historyQuery, historyMatch, historyFailedMatch, cursorOffset, btwTriggers, imageRefPositions, memberMentionHighlights, slashCommandTriggers, tokenBudgetTriggers, slackChannelTriggers, displayedValue, thinkTriggers, ultraplanTriggers, ultrareviewTriggers, buddyTriggers]);
   const {
     addNotification,
     removeNotification
