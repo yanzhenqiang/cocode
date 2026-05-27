@@ -1,4 +1,3 @@
-import { feature } from 'bun:bundle'
 import { chmod, mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
 import {
@@ -29,10 +28,6 @@ function getSessionsDir(): string {
  * Gated so the env-var string is DCE'd from external builds.
  */
 function envSessionKind(): SessionKind | undefined {
-  if (feature('BG_SESSIONS')) {
-    const k = process.env.CLAUDE_CODE_SESSION_KIND
-    if (k === 'bg' || k === 'daemon' || k === 'daemon-worker') return k
-  }
   return undefined
 }
 
@@ -83,16 +78,6 @@ export async function registerSession(): Promise<boolean> {
         startedAt: Date.now(),
         kind,
         entrypoint: process.env.CLAUDE_CODE_ENTRYPOINT,
-        ...(feature('UDS_INBOX')
-          ? { messagingSocketPath: process.env.CLAUDE_CODE_MESSAGING_SOCKET }
-          : {}),
-        ...(feature('BG_SESSIONS')
-          ? {
-              name: process.env.CLAUDE_CODE_SESSION_NAME,
-              logPath: process.env.CLAUDE_CODE_SESSION_LOG,
-              agent: process.env.CLAUDE_CODE_AGENT,
-            }
-          : {}),
       }),
     )
     // --resume / /resume mutates getSessionId() via switchSession. Without
@@ -152,12 +137,11 @@ export async function updateSessionBridgeId(
  * status-change effect — a dropped write just means ps falls back to
  * transcript-tail derivation for one refresh.
  */
-export async function updateSessionActivity(patch: {
+export async function updateSessionActivity(_patch: {
   status?: SessionStatus
   waitingFor?: string
 }): Promise<void> {
-  if (!feature('BG_SESSIONS')) return
-  await updatePidFile({ ...patch, updatedAt: Date.now() })
+  return
 }
 
 /**

@@ -615,16 +615,12 @@ export async function buildYoloSystemPrompt(
   const includeBashPromptRules = feature('BASH_CLASSIFIER')
     ? !usingExternal
     : false
-  const includePowerShellGuidance = feature('POWERSHELL_AUTO_MODE')
-    ? !usingExternal
-    : false
   const allowDescriptions = [
     ...(includeBashPromptRules ? getBashPromptAllowDescriptions(context) : []),
     ...(autoMode?.allow ?? []),
   ]
   const denyDescriptions = [
     ...(includeBashPromptRules ? getBashPromptDenyDescriptions(context) : []),
-    ...(includePowerShellGuidance ? POWERSHELL_DENY_GUIDANCE : []),
     ...(autoMode?.soft_deny ?? []),
   ]
 
@@ -1507,16 +1503,6 @@ function isJsonlTranscriptEnabled(): boolean {
  * Guarded at definition for DCE — with external:false, the string content
  * is absent from external builds (same pattern as the .txt requires above).
  */
-const POWERSHELL_DENY_GUIDANCE: readonly string[] = feature(
-  'POWERSHELL_AUTO_MODE',
-)
-  ? [
-      'PowerShell Download-and-Execute: `iex (iwr ...)`, `Invoke-Expression (Invoke-WebRequest ...)`, `Invoke-Expression (New-Object Net.WebClient).DownloadString(...)`, and any pipeline feeding remote content into `Invoke-Expression`/`iex` fall under "Code from External" — same as `curl | bash`.',
-      'PowerShell Irreversible Destruction: `Remove-Item -Recurse -Force`, `rm -r -fo`, `Clear-Content`, and `Set-Content` truncation of pre-existing files fall under "Irreversible Local Destruction" — same as `rm -rf` and `> file`.',
-      'PowerShell Persistence: modifying `$PROFILE` (any of the four profile paths), `Register-ScheduledTask`, `New-Service`, writing to registry Run keys (`HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` or the HKLM equivalent), and WMI event subscriptions fall under "Unauthorized Persistence" — same as `.bashrc` edits and cron jobs.',
-      'PowerShell Elevation: `Start-Process -Verb RunAs`, `-ExecutionPolicy Bypass`, and disabling AMSI/Defender (`Set-MpPreference -DisableRealtimeMonitoring`) fall under "Security Weaken".',
-    ]
-  : []
 
 type AutoModeOutcome =
   | 'success'

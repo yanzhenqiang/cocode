@@ -39,7 +39,6 @@ function computeShimmerSegments(
   }
   return { before, shimmer, after };
 }
-import { feature } from 'bun:bundle';
 import { getKairosActive, getUserMsgOptIn } from '../bootstrap/state.js';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js';
 import { isEnvTruthy } from '../utils/envUtils.js';
@@ -101,17 +100,10 @@ export function SpinnerWithVerb(props: Props): React.ReactNode {
   // prop isn't threaded here, so replicate the gate from the store —
   // teammate view needs the real spinner (which shows teammate status).
   const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
-  // Hoisted to mount-time — this component re-renders at animation framerate.
-  const briefEnvEnabled = feature('KAIROS') || feature('KAIROS_BRIEF') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  useMemo(() => isEnvTruthy(process.env.CLAUDE_CODE_BRIEF), []) : false;
-
-  // Runtime gate mirrors isBriefEnabled() but inlined — importing from
-  // BriefTool.ts would leak tool-name strings into external builds. Single
-  // spinner instance → hooks stay unconditional (two subs, negligible).
-  if ((feature('KAIROS') || feature('KAIROS_BRIEF')) && (getKairosActive() || getUserMsgOptIn() && (briefEnvEnabled || getFeatureValue_CACHED_MAY_BE_STALE('tengu_kairos_brief', false))) && isBriefOnly && !viewingAgentTaskId) {
-    return <BriefSpinner mode={props.mode} overrideMessage={props.overrideMessage} />;
-  }
+  // Brief mode removed — KAIROS/KAIROS_BRIEF are false in external builds.
+  // BriefSpinner branch is dead code; always render the standard spinner.
+  void isBriefOnly;
+  void viewingAgentTaskId;
   return <SpinnerWithVerbInner {...props} />;
 }
 function SpinnerWithVerbInner({

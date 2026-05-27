@@ -56,7 +56,6 @@ import securityReview from './commands/security-review.js'
 import bughunter from './commands/bughunter/index.js'
 import terminalSetup from './commands/terminalSetup/index.js'
 import theme from './commands/theme/index.js'
-import { feature } from 'bun:bundle'
 // Dead code elimination: conditional imports
 /* eslint-disable @typescript-eslint/no-require-imports */
 const forceSnip = feature('HISTORY_SNIP')
@@ -81,11 +80,7 @@ const ultraplan = feature('ULTRAPLAN')
   ? require('./commands/ultraplan.js').default
   : null
 const torch = feature('TORCH') ? require('./commands/torch.js').default : null
-const peersCmd = feature('UDS_INBOX')
-  ? (
-      require('./commands/peers/index.js') as typeof import('./commands/peers/index.js')
-    ).default
-  : null
+const peersCmd = null
 const forkCmd = feature('FORK_SUBAGENT')
   ? (
       require('./commands/fork/index.js') as typeof import('./commands/fork/index.js')
@@ -509,16 +504,8 @@ export function clearCommandsCache(): void {
  * separately.
  */
 export function getMcpSkillCommands(
-  mcpCommands: readonly Command[],
+  _mcpCommands: readonly Command[],
 ): readonly Command[] {
-  if (feature('MCP_SKILLS')) {
-    return mcpCommands.filter(
-      cmd =>
-        cmd.type === 'prompt' &&
-        cmd.loadedFrom === 'mcp' &&
-        !cmd.disableModelInvocation,
-    )
-  }
   return []
 }
 

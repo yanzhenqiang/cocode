@@ -1,5 +1,4 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
-import { feature } from 'bun:bundle'
 import { readFile, stat } from 'fs/promises'
 import { dirname } from 'path'
 import {
@@ -201,12 +200,10 @@ import {
   resetSessionFilePointer,
   doesMessageExistInSession,
   findUnresolvedToolUse,
-  recordAttributionSnapshot,
   saveAgentSetting,
   saveAiGeneratedTitle,
   restoreSessionMetadata,
 } from 'src/utils/sessionStorage.js'
-import { incrementPromptCount } from 'src/utils/commitAttribution.js'
 import {
   setupSdkMcpClients,
   connectToServer,
@@ -768,15 +765,6 @@ export async function runHeadless(
 
   // Callback for when a permission prompt is shown
   const onPermissionPrompt = (details: RequiresActionDetails) => {
-    if (feature('COMMIT_ATTRIBUTION')) {
-      setAppState(prev => ({
-        ...prev,
-        attribution: {
-          ...prev.attribution,
-          permissionPromptCount: prev.attribution.permissionPromptCount + 1,
-        },
-      }))
-    }
     notifySessionStateChanged('requires_action', details)
   }
 
@@ -2461,19 +2449,6 @@ function runHeadlessStreaming(
     }
   }
 
-  // Set up UDS inbox callback so the query loop is kicked off
-  // when a message arrives via the UDS socket in headless mode.
-  if (feature('UDS_INBOX')) {
-    /* eslint-disable @typescript-eslint/no-require-imports */
-    const { setOnEnqueue } = require('../utils/udsMessaging.js')
-    /* eslint-enable @typescript-eslint/no-require-imports */
-    setOnEnqueue(() => {
-      if (!inputClosed) {
-        void run()
-      }
-    })
-  }
-
   // Cron scheduler: runs scheduled_tasks.json tasks in SDK/-p mode.
   // Mirrors REPL's useScheduledTasks hook. Fired prompts enqueue + kick
   // off run() directly — unlike REPL, there's no queue subscriber here
@@ -2606,16 +2581,6 @@ function runHeadlessStreaming(
 
       if (message.type === 'control_request') {
         if (message.request.subtype === 'interrupt') {
-          // Track escapes for attribution (internal-only feature)
-          if (feature('COMMIT_ATTRIBUTION')) {
-            setAppState(prev => ({
-              ...prev,
-              attribution: {
-                ...prev.attribution,
-                escapeCount: prev.attribution.escapeCount + 1,
-              },
-            }))
-          }
           if (abortController) {
             abortController.abort()
           }
@@ -3738,18 +3703,6 @@ function runHeadlessStreaming(
         uuid: message.uuid,
         priority: message.priority,
       })
-      // Increment prompt count for attribution tracking and save snapshot
-      // The snapshot persists promptCount so it survives compaction
-      if (feature('COMMIT_ATTRIBUTION')) {
-        setAppState(prev => ({
-          ...prev,
-          attribution: incrementPromptCount(prev.attribution, snapshot => {
-            void recordAttributionSnapshot(snapshot).catch(error => {
-              logForDebugging(`Attribution: Failed to save snapshot: ${error}`)
-            })
-          }),
-        }))
-      }
       void run()
     }
     inputClosed = true
@@ -4302,10 +4255,6 @@ function handleChannelEnable(
       response: { subtype: 'error', request_id: requestId, error },
     })
 
-  if (!(feature('KAIROS') || feature('KAIROS_CHANNELS'))) {
-    return respondError('channels feature not available in this build')
-  }
-
   // Only a 'connected' client has .capabilities and .client to register the
   // handler on. The pool spread at the call site matches mcp_status.
   const connection = connectionPool.find(
@@ -4417,7 +4366,6 @@ function handleChannelEnable(
 function reregisterChannelHandlerAfterReconnect(
   connection: MCPServerConnection,
 ): void {
-  if (!(feature('KAIROS') || feature('KAIROS_CHANNELS'))) return
   if (connection.type !== 'connected') return
 
   const gate = gateChannelServer(

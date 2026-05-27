@@ -1,4 +1,3 @@
-import { feature } from 'bun:bundle'
 import type { UUID } from 'crypto'
 import { relative } from 'path'
 import { getCwd } from 'src/utils/cwd.js'
@@ -52,27 +51,8 @@ import {
 import { jsonStringify } from './slowOperations.js'
 import type { ContentReplacementRecord } from './toolResultStorage.js'
 
-// Dead code elimination: internal-only tool names are conditionally required so
-// their strings don't leak into external builds. Static imports always bundle.
-/* eslint-disable @typescript-eslint/no-require-imports */
-const BRIEF_TOOL_NAME: string | null =
-  feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).BRIEF_TOOL_NAME
-    : null
-const LEGACY_BRIEF_TOOL_NAME: string | null =
-  feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).LEGACY_BRIEF_TOOL_NAME
-    : null
-const SEND_USER_FILE_TOOL_NAME: string | null = feature('KAIROS')
-  ? (
-      require('../tools/SendUserFileTool/prompt.js') as typeof import('../tools/SendUserFileTool/prompt.js')
-    ).SEND_USER_FILE_TOOL_NAME
-  : null
-/* eslint-enable @typescript-eslint/no-require-imports */
+// KAIROS/KAIROS_BRIEF are false in external builds — brief/send-user-file
+// tool names removed.
 
 // Hard cap for reconstructed resume payloads before REPL boot. 8 MiB keeps
 // resume bounded well below the multi-GB failure mode we saw while leaving
@@ -429,11 +409,8 @@ function isTerminalToolResult(
     if (msg.type !== 'assistant') continue
     for (const b of msg.message.content) {
       if (b.type === 'tool_use' && b.id === toolUseId) {
-        return (
-          b.name === BRIEF_TOOL_NAME ||
-          b.name === LEGACY_BRIEF_TOOL_NAME ||
-          b.name === SEND_USER_FILE_TOOL_NAME
-        )
+        // KAIROS/KAIROS_BRIEF are false — brief/send-user-file tools never exist.
+        return false
       }
     }
   }
@@ -553,30 +530,12 @@ export async function loadConversationForResume(
     let sessionId: UUID | undefined
 
     if (source === undefined) {
-      // --continue: most recent session, skipping live --bg/daemon sessions
-      // that are actively writing their own transcript.
-      const logsPromise = loadMessageLogs()
-      let skip = new Set<string>()
-      if (feature('BG_SESSIONS')) {
-        try {
-          const { listAllLiveSessions } = await import('./udsClient.js')
-          const live = await listAllLiveSessions()
-          skip = new Set(
-            live.flatMap(s =>
-              s.kind && s.kind !== 'interactive' && s.sessionId
-                ? [s.sessionId]
-                : [],
-            ),
-          )
-        } catch {
-          // UDS unavailable — treat all sessions as continuable
-        }
-      }
-      const logs = await logsPromise
+      // --continue: most recent session
+      const logs = await loadMessageLogs()
       log =
         logs.find(l => {
           const id = getSessionIdFromLog(l)
-          return !id || !skip.has(id)
+          return !id || true
         }) ?? null
     } else if (sourceJsonlFile) {
       // --resume with a .jsonl path (cli/print.ts routes on suffix).

@@ -21,16 +21,8 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 const version = pkg.version
 
 // Feature flags for the open build.
+// Any flag not listed here defaults to false.
 const featureFlags: Record<string, boolean> = {
-  BRIDGE_MODE: false,
-  ABLATION_BASELINE: false,
-  CONTEXT_COLLAPSE: false,
-  COMMIT_ATTRIBUTION: false,
-  UDS_INBOX: false,
-  BG_SESSIONS: false,
-  WEB_BROWSER_TOOL: false,
-  CHICAGO_MCP: false,
-  MCP_SKILLS: false,
   BUILTIN_EXPLORE_PLAN_AGENTS: true,
   MONITOR_TOOL: true,
   MESSAGE_ACTIONS: true,

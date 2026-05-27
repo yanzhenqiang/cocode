@@ -1,4 +1,3 @@
-import { feature } from 'bun:bundle'
 import { z } from 'zod/v4'
 import { SandboxSettingsSchema } from '../../entrypoints/sandboxTypes.js'
 import { isEnvTruthy } from '../envUtils.js'
@@ -901,22 +900,7 @@ export const SettingsSchema = lazySchema(() =>
               ),
           }
         : {}),
-      ...(feature('KAIROS')
-        ? {
-            assistant: z
-              .boolean()
-              .optional()
-              .describe(
-                'Start Claude in assistant mode (custom system prompt, brief view, scheduled check-in skills)',
-              ),
-            assistantName: z
-              .string()
-              .optional()
-              .describe(
-                'Display name for the assistant, shown in the claude.ai session list',
-              ),
-          }
-        : {}),
+      // KAIROS settings removed — feature is false in external builds.
       // Teams/Enterprise opt-IN for channel notifications. Default OFF.
       // MCP servers that declare the claude/channel capability can push
       // inbound messages into the conversation; for managed orgs this only
@@ -951,16 +935,7 @@ export const SettingsSchema = lazySchema(() =>
             'plugins may push inbound messages. Undefined falls back to the default. ' +
             'Requires channelsEnabled: true.',
         ),
-      ...(feature('KAIROS') || feature('KAIROS_BRIEF')
-        ? {
-            defaultView: z
-              .enum(['chat', 'transcript'])
-              .optional()
-              .describe(
-                'Default transcript view: chat (SendUserMessage checkpoints only) or transcript (full)',
-              ),
-          }
-        : {}),
+      // defaultView setting removed — KAIROS/KAIROS_BRIEF are false in external builds.
       prefersReducedMotion: z
         .boolean()
         .optional()

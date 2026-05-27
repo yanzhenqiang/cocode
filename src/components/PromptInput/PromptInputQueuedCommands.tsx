@@ -1,4 +1,3 @@
-import { feature } from 'bun:bundle';
 import * as React from 'react';
 import { useMemo } from 'react';
 import { Box, Text } from 'src/ink.js';
@@ -72,13 +71,8 @@ function processQueuedCommands(queuedCommands: QueuedCommand[]): QueuedCommand[]
 function PromptInputQueuedCommandsImpl(): React.ReactNode {
   const queuedCommands = useCommandQueue();
   const viewingAgent = useAppState((s: AppState) => !!s.viewingAgentTaskId);
-  // Brief layout: dim queue items + skip the paddingX (brief messages
-  // already indent themselves). Gate mirrors the brief-spinner/message
-  // check elsewhere — no teammate-view override needed since this
-  // component early-returns when viewing a teammate.
-  const useBriefLayout = feature('KAIROS') || feature('KAIROS_BRIEF') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  useAppState((s_0: AppState) => s_0.isBriefOnly) : false;
+  // Brief layout removed — KAIROS/KAIROS_BRIEF are false in external builds.
+  const useBriefLayout = false;
 
   // createUserMessage mints a fresh UUID per call; without memoization, streaming
   // re-renders defeat Message's areMessagePropsEqual (compares uuid) → flicker.

@@ -1,9 +1,5 @@
-import { feature } from 'bun:bundle';
 import * as React from 'react';
 import { memo, type ReactNode, useMemo, useRef } from 'react';
-// Bridge module deleted — stubbed to no-ops
-const isBridgeEnabled = () => false;
-const getBridgeStatus = () => ({label: '' as string, color: 'gray' as string});
 import { useSetPromptOverlay } from '../../context/promptOverlayContext.js';
 import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
 import { useSettings } from '../../hooks/useSettings.js';
@@ -42,7 +38,6 @@ type Props = {
   isLoading: boolean;
   tasksSelected: boolean;
   teamsSelected: boolean;
-  bridgeSelected: boolean;
   tmuxSelected: boolean;
   teammateFooterIndex?: number;
   mcpClients?: MCPServerConnection[];
@@ -71,7 +66,6 @@ function PromptInputFooter({
   isLoading,
   tasksSelected,
   teamsSelected,
-  bridgeSelected,
   tmuxSelected,
   teammateFooterIndex,
   mcpClients,
@@ -134,47 +128,9 @@ function PromptInputFooter({
         <Box flexShrink={1} gap={1}>
           {isFullscreen ? null : <Notifications apiKeyStatus={apiKeyStatus} debug={debug} verbose={verbose} messages={messages} mcpClients={mcpClients} isInputWrapped={isInputWrapped} isNarrow={isNarrow} />}
           {"external" === 'ant' && isUndercover() && <Text dimColor>undercover</Text>}
-          <BridgeStatusIndicator bridgeSelected={bridgeSelected} />
         </Box>
       </Box>
       {"external" === 'ant' && <CoordinatorTaskPanel />}
     </>;
 }
 export default memo(PromptInputFooter);
-type BridgeStatusProps = {
-  bridgeSelected: boolean;
-};
-function BridgeStatusIndicator({
-  bridgeSelected
-}: BridgeStatusProps): React.ReactNode {
-  if (!feature('BRIDGE_MODE')) return null;
-
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const enabled = useAppState(s => s.replBridgeEnabled);
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const connected = useAppState(s_0 => s_0.replBridgeConnected);
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const sessionActive = useAppState(s_1 => s_1.replBridgeSessionActive);
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const reconnecting = useAppState(s_2 => s_2.replBridgeReconnecting);
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const explicit = useAppState(s_3 => s_3.replBridgeExplicit);
-
-  // Failed state is surfaced via notification (useReplBridge), not a footer pill.
-  if (!isBridgeEnabled() || !enabled) return null;
-  const status = getBridgeStatus({
-    error: undefined,
-    connected,
-    sessionActive,
-    reconnecting
-  });
-
-  // For implicit (config-driven) remote, only show the reconnecting state
-  if (!explicit && status.label !== 'Remote Control reconnecting') {
-    return null;
-  }
-  return <Text color={bridgeSelected ? 'background' : status.color} inverse={bridgeSelected} wrap="truncate">
-      {status.label}
-      {bridgeSelected && <Text dimColor> · Enter to view</Text>}
-    </Text>;
-}

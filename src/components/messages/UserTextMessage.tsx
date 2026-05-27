@@ -1,5 +1,4 @@
 import { c as _c } from "react-compiler-runtime";
-import { feature } from 'bun:bundle';
 import type { TextBlockParam } from '@anthropic-ai/sdk/resources/index.mjs';
 import * as React from 'react';
 import { NO_CONTENT_MESSAGE } from '../../constants/messages.js';
@@ -207,30 +206,6 @@ export function UserTextMessage(t0) {
         $[35] = t2;
       } else {
         t2 = $[35];
-      }
-      return t2;
-    }
-  }
-  if (feature("UDS_INBOX")) {
-    if (param.text.includes("<cross-session-message")) {
-      let t1;
-      if ($[36] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = require("./UserCrossSessionMessage.js");
-        $[36] = t1;
-      } else {
-        t1 = $[36];
-      }
-      const {
-        UserCrossSessionMessage
-      } = t1 as typeof import('./UserCrossSessionMessage.js');
-      let t2;
-      if ($[37] !== addMargin || $[38] !== param) {
-        t2 = <UserCrossSessionMessage addMargin={addMargin} param={param} />;
-        $[37] = addMargin;
-        $[38] = param;
-        $[39] = t2;
-      } else {
-        t2 = $[39];
       }
       return t2;
     }
