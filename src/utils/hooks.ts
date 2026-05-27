@@ -19,9 +19,7 @@ import {
 import { subprocessEnv } from './subprocessEnv.js'
 import { getPlatform } from './platform.js'
 import { findGitBashPath, windowsPathToPosixPath } from './windowsPaths.js'
-import { getCachedPowerShellPath } from './shell/powershellDetection.js'
 import { DEFAULT_HOOK_SHELL } from './shell/shellProvider.js'
-import { buildPowerShellArgs } from './shell/powershellProvider.js'
 import {
   loadPluginOptions,
   substituteUserConfigVariables,
@@ -912,12 +910,9 @@ function processHookJSONOutput({
 }
 
 /**
- * Execute a command-based hook using bash or PowerShell.
+ * Execute a command-based hook using bash.
  *
- * Shell resolution: hook.shell → 'bash'. PowerShell hooks spawn pwsh
- * with -NoProfile -NonInteractive -Command and skip bash-specific prep
- * (POSIX path conversion, .sh auto-prepend, CLAUDE_CODE_SHELL_PREFIX).
- * See docs/design/ps-shell-selection.md §5.1.
+ * Shell resolution: hook.shell → 'bash'.
  */
 async function execCommandHook(
   hook: HookCommand & { type: 'command' },
@@ -954,17 +949,8 @@ async function execCommandHook(
   const isWindows = getPlatform() === 'windows'
 
   // --
-  // Per-hook shell selection (phase 1 of docs/design/ps-shell-selection.md).
-  // Resolution order: hook.shell → DEFAULT_HOOK_SHELL. The defaultShell
-  // fallback (settings.defaultShell) is phase 2 — not wired yet.
-  //
-  // The bash path is the historical default and stays unchanged. The
-  // PowerShell path deliberately skips the Windows-specific bash
-  // accommodations (cygpath conversion, .sh auto-prepend, POSIX-quoted
-  // SHELL_PREFIX).
+  // Per-hook shell selection. Resolution order: hook.shell → DEFAULT_HOOK_SHELL.
   const shellType = hook.shell ?? DEFAULT_HOOK_SHELL
-
-  const isPowerShell = shellType === 'powershell'
 
   // --
   // Windows bash path: hooks run via Git Bash (Cygwin), NOT cmd.exe.
@@ -976,14 +962,8 @@ async function execCommandHook(
   // windowsPathToPosixPath() is pure-JS regex conversion (no cygpath shell-out):
   // C:\Users\foo -> /c/Users/foo, UNC preserved, slashes flipped. Memoized
   // (LRU-500) so repeated calls are cheap.
-  //
-  // PowerShell path: use native paths — skip the conversion entirely.
-  // PowerShell expects Windows paths on Windows (and native paths on
-  // Unix where pwsh is also available).
   const toHookPath =
-    isWindows && !isPowerShell
-      ? (p: string) => windowsPathToPosixPath(p)
-      : (p: string) => p
+    isWindows ? (p: string) => windowsPathToPosixPath(p) : (p: string) => p
 
   // Set CLAUDE_PROJECT_DIR to the stable project root (not the worktree path).
   // getProjectRoot() is never updated when entering a worktree, so hooks that
@@ -1031,21 +1011,16 @@ async function execCommandHook(
     }
   }
 
-  // On Windows (bash only), auto-prepend `bash` for .sh scripts so they
-  // execute instead of opening in the default file handler. PowerShell
-  // runs .ps1 files natively — no prepend needed.
-  if (isWindows && !isPowerShell && command.trim().match(/\.sh(\s|$|")/)) {
+  // On Windows, auto-prepend `bash` for .sh scripts so they
+  // execute instead of opening in the default file handler.
+  if (isWindows && command.trim().match(/\.sh(\s|$|")/)) {
     if (!command.trim().startsWith('bash ')) {
       command = `bash ${command}`
     }
   }
 
-  // CLAUDE_CODE_SHELL_PREFIX wraps the command via POSIX quoting
-  // (formatShellPrefixCommand uses shell-quote). This makes no sense for
-  // PowerShell — see design §8.1. For now PS hooks ignore the prefix;
-  // a CLAUDE_CODE_PS_SHELL_PREFIX (or shell-aware prefix) is a follow-up.
   const finalCommand =
-    !isPowerShell && process.env.CLAUDE_CODE_SHELL_PREFIX
+    process.env.CLAUDE_CODE_SHELL_PREFIX
       ? formatShellPrefixCommand(process.env.CLAUDE_CODE_SHELL_PREFIX, command)
       : command
 
@@ -1085,12 +1060,8 @@ async function execCommandHook(
 
   // CLAUDE_ENV_FILE points to a .sh file that the hook writes env var
   // definitions into; getSessionEnvironmentScript() concatenates them and
-  // bashProvider injects the content into bash commands. A PS hook would
-  // naturally write PS syntax ($env:FOO = 'bar'), which bash can't parse.
-  // Skip for PS — consistent with how .sh prepend and SHELL_PREFIX are
-  // already bash-only above.
+  // bashProvider injects the content into bash commands.
   if (
-    !isPowerShell &&
     (hookEvent === 'SessionStart' ||
       hookEvent === 'Setup' ||
       hookEvent === 'CwdChanged' ||
@@ -1113,50 +1084,18 @@ async function execCommandHook(
   }
 
   // --
-  // Spawn. Two completely separate paths:
-  //
-  //   Bash: spawn(cmd, [], { shell: <gitBashPath | true> }) — the shell
-  //   option makes Node pass the whole string to the shell for parsing.
-  //
-  //   PowerShell: spawn(pwshPath, ['-NoProfile', '-NonInteractive',
-  //   '-Command', cmd]) — explicit argv, no shell option. -NoProfile
-  //   skips user profile scripts (faster, deterministic).
-  //   -NonInteractive fails fast instead of prompting.
-  //
-  // The Git Bash hard-exit in findGitBashPath() is still in place for
-  // bash hooks. PowerShell hooks never call it, so a Windows user with
-  // only pwsh and shell: 'powershell' on every hook could in theory run
-  // without Git Bash — but init.ts still calls setShellIfWindows() on
-  // startup, which will exit first. Relaxing that is phase 1 of the
-  // design's implementation order (separate PR).
-  let child: ChildProcessWithoutNullStreams
-  if (shellType === 'powershell') {
-    const pwshPath = await getCachedPowerShellPath()
-    if (!pwshPath) {
-      throw new Error(
-        `Hook "${hook.command}" has shell: 'powershell' but no PowerShell ` +
-          `executable (pwsh or powershell) was found on PATH. Install ` +
-          `PowerShell, or remove "shell": "powershell" to use bash.`,
-      )
-    }
-    child = spawn(pwshPath, buildPowerShellArgs(finalCommand), {
-      env: envVars,
-      cwd: safeCwd,
-      // Prevent visible console window on Windows (no-op on other platforms)
-      windowsHide: true,
-    }) as ChildProcessWithoutNullStreams
-  } else {
-    // On Windows, use Git Bash explicitly (cmd.exe can't run bash syntax).
-    // On other platforms, shell: true uses /bin/sh.
-    const shell = isWindows ? findGitBashPath() : true
-    child = spawn(finalCommand, [], {
-      env: envVars,
-      cwd: safeCwd,
-      shell,
-      // Prevent visible console window on Windows (no-op on other platforms)
-      windowsHide: true,
-    }) as ChildProcessWithoutNullStreams
-  }
+  // Spawn. Bash: spawn(cmd, [], { shell: <gitBashPath | true> }) — the shell
+  // option makes Node pass the whole string to the shell for parsing.
+  // On Windows, use Git Bash explicitly (cmd.exe can't run bash syntax).
+  // On other platforms, shell: true uses /bin/sh.
+  const shell = isWindows ? findGitBashPath() : true
+  const child = spawn(finalCommand, [], {
+    env: envVars,
+    cwd: safeCwd,
+    shell,
+    // Prevent visible console window on Windows (no-op on other platforms)
+    windowsHide: true,
+  }) as ChildProcessWithoutNullStreams
 
   // Hooks use pipe mode — stdout must be streamed into JS so we can parse
   // the first response line to detect async hooks ({"async": true}).
@@ -1929,10 +1868,8 @@ export async function getMatchingHooks(
             ): m is MatchedHook & { hook: HookCommand & { type: 'command' } } =>
               m.hook.type === 'command',
           )
-          // shell is part of identity: {command:'echo x', shell:'bash'}
-          // and {command:'echo x', shell:'powershell'} are distinct hooks,
-          // not duplicates. Default to 'bash' so legacy configs (no shell
-          // field) still dedup against explicit shell:'bash'.
+          // shell is part of identity. Default to 'bash' so legacy configs
+          // (no shell field) still dedup against explicit shell:'bash'.
           .map(m => [
             hookDedupKey(
               m,
