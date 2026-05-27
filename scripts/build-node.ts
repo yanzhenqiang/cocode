@@ -22,11 +22,8 @@ const version = pkg.version
 
 // Feature flags for the open build.
 const featureFlags: Record<string, boolean> = {
-  VOICE_MODE: false,
   KAIROS: false,
   BRIDGE_MODE: false,
-  DAEMON: false,
-  AGENT_TRIGGERS: false,
   ABLATION_BASELINE: false,
   CONTEXT_COLLAPSE: false,
   COMMIT_ATTRIBUTION: false,
@@ -34,13 +31,9 @@ const featureFlags: Record<string, boolean> = {
   BG_SESSIONS: false,
   WEB_BROWSER_TOOL: false,
   CHICAGO_MCP: false,
-  COWORKER_TYPE_TELEMETRY: false,
   MCP_SKILLS: false,
-  COORDINATOR_MODE: false,
   BUILTIN_EXPLORE_PLAN_AGENTS: true,
-  BUDDY: true,
   MONITOR_TOOL: true,
-  TEAMMEM: false,
   MESSAGE_ACTIONS: true,
   DUMP_SYSTEM_PROMPT: true,
   CACHED_MICROCOMPACT: true,
@@ -116,14 +109,6 @@ const importMetaDirPlugin: esbuild.Plugin = {
 
 // Shared plugin logic extracted from bun-bundle-shim
 const internalFeatureStubModules = new Map([
-  [
-    '../daemon/workerRegistry.js',
-    'export async function runDaemonWorker() { throw new Error("Daemon worker is unavailable in the open build."); }',
-  ],
-  [
-    '../daemon/main.js',
-    'export async function daemonMain() { throw new Error("Daemon mode is unavailable in the open build."); }',
-  ],
   [
     '../cli/bg.js',
     `
@@ -275,7 +260,7 @@ const bundleShimPlugin: esbuild.Plugin = {
   name: 'bun-bundle-shim',
   setup(build) {
     build.onResolve(
-      { filter: /^\.\.\/(daemon\/workerRegistry|daemon\/main|cli\/bg|cli\/handlers\/templateJobs|environment-runner\/main|self-hosted-runner\/main)\.js$/ },
+      { filter: /^\.\.\/(cli\/bg|cli\/handlers\/templateJobs|environment-runner\/main|self-hosted-runner\/main)\.js$/ },
       args => {
         if (!internalFeatureStubModules.has(args.path)) return undefined
         return {
