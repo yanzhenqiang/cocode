@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { clearTrustedDeviceTokenCache } from '../../bridge/trustedDevice.js';
+// Bridge module deleted — clearTrustedDeviceTokenCache stubbed
+const clearTrustedDeviceTokenCache = () => Promise.resolve()
 import { Text } from '../../ink.js';
 import { refreshGrowthBookAfterAuthChange } from '../../services/analytics/growthbook.js';
 import { getGroveNoticeConfig, getGroveSettings } from '../../services/api/grove.js';

@@ -3,7 +3,12 @@ import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs
 import { randomUUID } from 'crypto'
 import { logForDebugging } from 'src/utils/debug.js'
 import { getAllowedChannels } from '../../../bootstrap/state.js'
-import type { BridgePermissionCallbacks } from '../../../bridge/bridgePermissionCallbacks.js'
+// Bridge module deleted — inline type stub
+type BridgePermissionCallbacks = {
+  sendRequest: (id: string, tool: string, input: Record<string, unknown>) => void;
+  onResponse: (id: string, cb: (response: {status: string; output?: unknown; error?: unknown}) => void) => () => void;
+  cancelRequest: (id: string) => void;
+}
 import { getTerminalFocused } from '../../../ink/terminal-focus-state.js'
 import {
   CHANNEL_PERMISSION_REQUEST_METHOD,

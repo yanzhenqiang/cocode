@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
-import { REMOTE_CONTROL_DISCONNECTED_MSG } from '../bridge/types.js';
+// Bridge module deleted
+const REMOTE_CONTROL_DISCONNECTED_MSG = 'Remote control disconnected';
 import type { Command } from '../commands.js';
 import { DIAMOND_OPEN } from '../constants/figures.js';
 import { getRemoteSessionUrl } from '../constants/product.js';

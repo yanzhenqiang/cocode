@@ -2202,19 +2202,6 @@ async function run(): Promise<CommanderCommand> {
         throw e;
       }
 
-      // Now that trust is established and GrowthBook has auth headers,
-      // resolve the --remote-control / --rc entitlement gate.
-      if (feature('BRIDGE_MODE') && remoteControlOption !== undefined) {
-        const {
-          getBridgeDisabledReason
-        } = await import('./bridge/bridgeEnabled.js');
-        const disabledReason = await getBridgeDisabledReason();
-        remoteControl = disabledReason === null;
-        if (disabledReason) {
-          process.stderr.write(chalk.yellow(`${disabledReason}\n--rc flag ignored.\n`));
-        }
-      }
-
       // Check for pending agent memory snapshot updates (only for --agent mode, internal-only)
       if (feature('AGENT_MEMORY_SNAPSHOT') && mainThreadAgentDefinition && isCustomAgent(mainThreadAgentDefinition) && mainThreadAgentDefinition.memory && mainThreadAgentDefinition.pendingSnapshotUpdate) {
         const agentDef = mainThreadAgentDefinition;
@@ -2246,15 +2233,6 @@ async function run(): Promise<CommanderCommand> {
         resetUserCache();
         // Refresh GrowthBook after login to get updated feature flags (e.g., for claude.ai MCPs)
         refreshGrowthBookAfterAuthChange();
-        // Clear any stale trusted device token then enroll for Remote Control.
-        // Both self-gate on tengu_sessions_elevated_auth_enforcement internally
-        // — enrollTrustedDevice() via checkGate_CACHED_OR_BLOCKING (awaits
-        // the GrowthBook reinit above), clearTrustedDeviceToken() via the
-        // sync cached check (acceptable since clear is idempotent).
-        void import('./bridge/trustedDevice.js').then(m => {
-          m.clearTrustedDeviceToken();
-          return m.enrollTrustedDevice();
-        });
       }
 
       const orgValidation = await validateForceLoginOrg();
@@ -2874,14 +2852,6 @@ async function run(): Promise<CommanderCommand> {
     const initialIsBriefOnly = feature('KAIROS') || feature('KAIROS_BRIEF') ? getUserMsgOptIn() : false;
     const fullRemoteControl = remoteControl || getRemoteControlAtStartup() || kairosEnabled;
     let ccrMirrorEnabled = false;
-    if (feature('CCR_MIRROR') && !fullRemoteControl) {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const {
-        isCcrMirrorEnabled
-      } = require('./bridge/bridgeEnabled.js') as typeof import('./bridge/bridgeEnabled.js');
-      /* eslint-enable @typescript-eslint/no-require-imports */
-      ccrMirrorEnabled = isCcrMirrorEnabled();
-    }
     const initialState: AppState = {
       settings: getInitialSettings(),
       tasks: {},
@@ -4267,19 +4237,6 @@ async function run(): Promise<CommanderCommand> {
   // would throw inside isClaudeAISubscriber → getGlobalConfig and return
   // false via the try/catch — but not before paying ~65ms of side effects
   // (25ms settings Zod parse + 40ms sync `security` keychain subprocess).
-  // The dynamic visibility never worked; the command was always hidden.
-  if (feature('BRIDGE_MODE')) {
-    program.command('remote-control', {
-      hidden: true
-    }).alias('rc').description('Connect your local environment for remote-control sessions via claude.ai/code').action(async () => {
-      // Unreachable — cli.tsx fast-path handles this command before main.tsx loads.
-      // If somehow reached, delegate to bridgeMain.
-      const {
-        bridgeMain
-      } = await import('./bridge/bridgeMain.js');
-      await bridgeMain(process.argv.slice(3));
-    });
-  }
   if (feature('KAIROS')) {
     program.command('assistant [sessionId]').description('Attach the REPL as a client to a running bridge session. Discovers sessions via API if no sessionId given.').action(() => {
       // Argv rewriting above should have consumed `assistant [id]`

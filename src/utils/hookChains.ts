@@ -1007,23 +1007,7 @@ export async function executeWarmRemoteCapacityAction(args: {
     }
   }
 
-  // MVP safety guard: if the REPL bridge is not active, skip warm-up instead
-  // of touching remote APIs. This keeps the action side-effect free when the
-  // session is local-only.
-  try {
-    const { getReplBridgeHandle } = await import('../bridge/replBridgeHandle.js')
-    if (!getReplBridgeHandle()) {
-      return {
-        status: 'skipped',
-        reason: 'Bridge is not active; warm_remote_capacity is a safe no-op',
-      }
-    }
-  } catch {
-    return {
-      status: 'skipped',
-      reason: 'Bridge status unavailable; warm_remote_capacity skipped',
-    }
-  }
+  // Bridge module deleted — warm_remote_capacity always runs locally
 
   // We keep warm_remote_capacity conservative in MVP:
   // 1) verify remote prerequisites,

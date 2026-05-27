@@ -3,7 +3,42 @@ import { c as _c } from "react-compiler-runtime";
 import { Box, Text } from '../ink.js';
 import * as React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { computeGlimmerIndex, computeShimmerSegments, SHIMMER_INTERVAL_MS } from '../bridge/bridgeStatusUtil.js';
+import { getGraphemeSegmenter } from '../utils/intl.js';
+
+// Bridge module deleted — inline stubs for shimmer functions
+const SHIMMER_INTERVAL_MS = 150;
+function computeGlimmerIndex(tick: number, messageWidth: number): number {
+  const cycleLength = messageWidth + 20;
+  return messageWidth + 10 - (tick % cycleLength);
+}
+function computeShimmerSegments(
+  text: string,
+  glimmerIndex: number,
+): { before: string; shimmer: string; after: string } {
+  const messageWidth = stringWidth(text);
+  const shimmerStart = glimmerIndex - 1;
+  const shimmerEnd = glimmerIndex + 1;
+  if (shimmerStart >= messageWidth || shimmerEnd < 0) {
+    return { before: text, shimmer: '', after: '' };
+  }
+  const clampedStart = Math.max(0, shimmerStart);
+  let colPos = 0;
+  let before = '';
+  let shimmer = '';
+  let after = '';
+  for (const { segment } of getGraphemeSegmenter().segment(text)) {
+    const segWidth = stringWidth(segment);
+    if (colPos + segWidth <= clampedStart) {
+      before += segment;
+    } else if (colPos > shimmerEnd) {
+      after += segment;
+    } else {
+      shimmer += segment;
+    }
+    colPos += segWidth;
+  }
+  return { before, shimmer, after };
+}
 import { feature } from 'bun:bundle';
 import { getKairosActive, getUserMsgOptIn } from '../bootstrap/state.js';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js';

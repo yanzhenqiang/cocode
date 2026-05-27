@@ -46,7 +46,8 @@ import { injectUserMessageToTeammate, getAllInProcessTeammateTasks } from '../ta
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 import { registerLeaderToolUseConfirmQueue, unregisterLeaderToolUseConfirmQueue, registerLeaderSetToolPermissionContext, unregisterLeaderSetToolPermissionContext } from '../utils/swarm/leaderPermissionBridge.js';
 import { useLogMessages } from '../hooks/useLogMessages.js';
-import { useReplBridge } from '../hooks/useReplBridge.js';
+// useReplBridge deleted with bridge module — stub sendBridgeResult
+const useReplBridge = () => ({ sendBridgeResult: () => {} });
 import { type Command, type CommandResultDisplay, type ResumeEntrypoint, getCommandName, isCommandEnabled } from '../commands.js';
 import type { PromptInputMode, QueuedCommand, VimMode } from '../types/textInputTypes.js';
 import { MessageSelector } from '../components/MessageSelector.js';

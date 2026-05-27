@@ -32,12 +32,7 @@ import { getManagedFilePath } from './settings/managedPath.js'
 import type { ThemeSetting } from './theme.js'
 import { PRIMARY_PROJECT_INSTRUCTION_FILE } from './projectInstructions.js'
 
-/* eslint-disable @typescript-eslint/no-require-imports */
-const ccrAutoConnect = feature('CCR_AUTO_CONNECT')
-  ? (require('../bridge/bridgeEnabled.js') as typeof import('../bridge/bridgeEnabled.js'))
-  : null
-
-/* eslint-enable @typescript-eslint/no-require-imports */
+// Bridge module deleted — ccrAutoConnect no longer needed
 import type { ImageDimensions } from './imageResizer.js'
 import type { ModelOption } from './model/modelOptions.js'
 import { jsonParse, jsonStringify } from './slowOperations.js'

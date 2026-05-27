@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { isBridgeEnabled } from '../bridge/bridgeEnabled.js';
+const isBridgeEnabled = () => false;
 import { Box, Text } from '../ink.js';
 import { getClaudeAIOAuthTokens } from '../utils/auth.js';
 import { getGlobalConfig, saveGlobalConfig } from '../utils/config.js';

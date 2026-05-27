@@ -3,7 +3,16 @@ import type {
   SDKPartialAssistantMessage,
   StdoutMessage,
 } from 'src/entrypoints/sdk/controlTypes.js'
-import { decodeJwtExpiry } from '../../bridge/jwtUtils.js'
+// Bridge module deleted — inline decodeJwtExpiry
+function decodeJwtExpiry(token: string): number | null {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1] || '', 'base64').toString());
+    if (payload && typeof payload === 'object' && 'exp' in payload && typeof payload.exp === 'number') {
+      return payload.exp;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
 import { logForDebugging } from '../../utils/debug.js'
 import { logForDiagnosticsNoPII } from '../../utils/diagLogs.js'
 import { errorMessage, getErrnoCode } from '../../utils/errors.js'

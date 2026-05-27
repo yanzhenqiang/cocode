@@ -15,7 +15,8 @@ import { permissionModeTitle, permissionModeFromString, toExternalPermissionMode
 import { getAutoModeEnabledState, hasAutoModeOptInAnySource, transitionPlanAutoMode } from '../../utils/permissions/permissionSetup.js';
 import { logError } from '../../utils/log.js';
 import { logEvent, type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 'src/services/analytics/index.js';
-import { isBridgeEnabled } from '../../bridge/bridgeEnabled.js';
+// Bridge module deleted — stubbed to no-ops
+const isBridgeEnabled = () => false;
 import { ThemePicker } from '../ThemePicker.js';
 import { useAppState, useSetAppState, useAppStateStore } from '../../state/AppState.js';
 import { ModelPicker } from '../ModelPicker.js';

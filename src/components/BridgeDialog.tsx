@@ -4,7 +4,11 @@ import { toString as qrToString } from 'qrcode';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { getOriginalCwd } from '../bootstrap/state.js';
-import { buildActiveFooterText, buildIdleFooterText, FAILED_FOOTER_TEXT, getBridgeStatus } from '../bridge/bridgeStatusUtil.js';
+// Bridge module deleted — inline stubs
+const FAILED_FOOTER_TEXT = 'Something went wrong, please try again';
+const buildActiveFooterText = (url: string) => `Continue coding in the Claude app or ${url}`;
+const buildIdleFooterText = (url: string) => `Code everywhere with the Claude app or ${url}`;
+const getBridgeStatus = () => ({label: '' as string, color: 'gray' as string});
 import { BRIDGE_FAILED_INDICATOR, BRIDGE_READY_INDICATOR } from '../constants/figures.js';
 import { useRegisterOverlay } from '../context/overlayContext.js';
 // eslint-disable-next-line custom-rules/prefer-use-keybindings -- raw 'd' key for disconnect, not a configurable keybinding action

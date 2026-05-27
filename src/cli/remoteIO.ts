@@ -2,7 +2,8 @@ import type { StdoutMessage } from 'src/entrypoints/sdk/controlTypes.js'
 import { PassThrough } from 'stream'
 import { URL } from 'url'
 import { getSessionId } from '../bootstrap/state.js'
-import { getPollIntervalConfig } from '../bridge/pollConfig.js'
+// Bridge module deleted — inline stub for getPollIntervalConfig
+const getPollIntervalConfig = () => ({ session_keepalive_interval_v2_ms: 0 } as {session_keepalive_interval_v2_ms: number})
 import { registerCleanup } from '../utils/cleanupRegistry.js'
 import { setCommandLifecycleListener } from '../utils/commandLifecycle.js'
 import { isDebugMode, logForDebugging } from '../utils/debug.js'

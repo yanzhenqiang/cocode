@@ -1,7 +1,12 @@
 import type { Notification } from 'src/context/notifications.js'
 import { isTeammate, isPlanModeRequired } from '../utils/teammate.js'
 import type { TodoList } from 'src/utils/todo/types.js'
-import type { BridgePermissionCallbacks } from '../bridge/bridgePermissionCallbacks.js'
+// Bridge module deleted — inline type stub
+type BridgePermissionCallbacks = {
+  sendRequest: (id: string, tool: string, input: Record<string, unknown>) => void;
+  onResponse: (id: string, cb: (response: {status: string; output?: unknown; error?: unknown}) => void) => () => void;
+  cancelRequest: (id: string) => void;
+}
 import type { Command } from '../commands.js'
 import type { ChannelPermissionCallbacks } from '../services/mcp/channelPermissions.js'
 import type { ElicitationRequestEvent } from '../services/mcp/elicitationHandler.js'
