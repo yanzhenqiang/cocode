@@ -1,6 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { BoundedUUIDSet } from '../bridge/bridgeMessaging.js'
 import type { ToolUseConfirm } from '../components/permissions/PermissionRequest.js'
+
+// Inline BoundedUUIDSet (was in deleted bridge/bridgeMessaging.ts)
+class BoundedUUIDSet {
+  private readonly capacity: number
+  private readonly ring: (string | undefined)[]
+  private readonly set = new Set<string>()
+  private writeIdx = 0
+
+  constructor(capacity: number) {
+    this.capacity = capacity
+    this.ring = new Array<string | undefined>(capacity)
+  }
+
+  add(uuid: string): void {
+    if (this.set.has(uuid)) return
+    const evicted = this.ring[this.writeIdx]
+    if (evicted !== undefined) {
+      this.set.delete(evicted)
+    }
+    this.ring[this.writeIdx] = uuid
+    this.set.add(uuid)
+    this.writeIdx = (this.writeIdx + 1) % this.capacity
+  }
+
+  has(uuid: string): boolean {
+    return this.set.has(uuid)
+  }
+}
 import type { SpinnerMode } from '../components/Spinner/types.js'
 import {
   type RemotePermissionResponse,

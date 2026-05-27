@@ -11,9 +11,7 @@ import type { FooterItem } from 'src/state/AppStateStore.js';
 import { getCwd } from 'src/utils/cwd.js';
 import { isQueuedCommandEditable, popAllEditable } from 'src/utils/messageQueueManager.js';
 import stripAnsi from 'strip-ansi';
-import { companionReservedColumns } from '../../buddy/CompanionSprite.js';
-import { isBuddyEnabled } from '../../buddy/feature.js';
-import { findBuddyTriggerPositions, useBuddyNotification } from '../../buddy/useBuddyNotification.js';
+// Buddy module deleted — all related functions stubbed to no-ops
 import { FastModePicker } from '../../commands/fast/fast.js';
 import { isUltrareviewEnabled } from '../../commands/review/ultrareviewEnabled.js';
 import { getNativeCSIuTerminalDisplayName } from '../../commands/terminalSetup/terminalSetup.js';
@@ -309,7 +307,7 @@ function PromptInput({
   const {
     companion: _companion,
     companionMuted
-  } = isBuddyEnabled() ? getGlobalConfig() : {
+  } = {
     companion: undefined,
     companionMuted: undefined
   };
@@ -520,7 +518,7 @@ function PromptInput({
   const ultraplanTriggers = useMemo(() => feature('ULTRAPLAN') && !ultraplanSessionUrl && !ultraplanLaunching ? findUltraplanTriggerPositions(displayedValue) : [], [displayedValue, ultraplanSessionUrl, ultraplanLaunching]);
   const ultrareviewTriggers = useMemo(() => isUltrareviewEnabled() ? findUltrareviewTriggerPositions(displayedValue) : [], [displayedValue]);
   const btwTriggers = useMemo(() => findBtwTriggerPositions(displayedValue), [displayedValue]);
-  const buddyTriggers = useMemo(() => findBuddyTriggerPositions(displayedValue), [displayedValue]);
+  const buddyTriggers = useMemo(() => [] as {start: number, end: number, style: string}[], [displayedValue]);
   const slashCommandTriggers = useMemo(() => {
     const positions = findSlashCommandPositions(displayedValue);
     // Only highlight valid commands
@@ -1771,9 +1769,8 @@ function PromptInput({
       }
       switch (footerItemSelected) {
         case 'companion':
-          if (isBuddyEnabled()) {
-            selectFooterItem(null);
-            void onSubmit('/buddy');
+          if (false) {
+            // buddy disabled
           }
           break;
         case 'tasks':
@@ -1965,14 +1962,13 @@ function PromptInput({
       timeoutMs: 12_000
     });
   }, [effortNotificationText, addNotification, removeNotification]);
-  useBuddyNotification();
-  const companionSpeaking = isBuddyEnabled() ?
-  useAppState(s => s.companionReaction !== undefined) : false;
+  // useBuddyNotification() removed with buddy module
+  const companionSpeaking = false;
   const {
     columns,
     rows
   } = useTerminalSize();
-  const textInputColumns = columns - 3 - companionReservedColumns(columns, companionSpeaking);
+  const textInputColumns = columns - 3 - 0; // companionReservedColumns removed with buddy
 
   // POC: click-to-position-cursor. Mouse tracking is only enabled inside
   // <AlternateScreen>, so this is dormant in the normal main-screen REPL.

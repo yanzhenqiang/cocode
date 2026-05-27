@@ -271,9 +271,12 @@ const WebBrowserPanelModule = feature('WEB_BROWSER_TOOL') ? require('../tools/We
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { IssueFlagBanner } from '../components/PromptInput/IssueFlagBanner.js';
 import { useIssueFlagBanner } from '../hooks/useIssueFlagBanner.js';
-import { CompanionSprite, CompanionFloatingBubble, MIN_COLS_FOR_FULL_SPRITE } from '../buddy/CompanionSprite.js';
-import { isBuddyEnabled } from '../buddy/feature.js';
-import { fireCompanionObserver } from '../buddy/observer.js';
+// Buddy module deleted — all related functions stubbed to no-ops
+const MIN_COLS_FOR_FULL_SPRITE = 80;
+const isBuddyEnabled = () => false;
+const fireCompanionObserver = () => {};
+const CompanionSprite = () => null;
+const CompanionFloatingBubble = () => null;
 import { DevBar } from '../components/DevBar.js';
 // Session manager removed - using AppState now
 import type { RemoteSessionConfig } from '../remote/RemoteSessionManager.js';
