@@ -69,16 +69,7 @@ const getCachedMCConfigForFRC = feature('CACHED_MICROCOMPACT')
     ).getCachedMCConfig
   : null
 
-const BRIEF_PROACTIVE_SECTION: string | null =
-  feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).BRIEF_PROACTIVE_SECTION
-    : null
-const briefToolModule =
-  feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (require('../tools/BriefTool/BriefTool.js') as typeof import('../tools/BriefTool/BriefTool.js'))
-    : null
+const briefToolModule = null
 const DISCOVER_SKILLS_TOOL_NAME: string | null = feature(
   'EXPERIMENTAL_SKILL_SEARCH',
 )
@@ -513,9 +504,6 @@ export async function getSystemPrompt(
           ),
         ]
       : []),
-    ...(feature('KAIROS') || feature('KAIROS_BRIEF')
-      ? [systemPromptSection('brief', () => getBriefSection())]
-      : []),
   ]
 
   const resolvedDynamicSections =
@@ -806,12 +794,3 @@ Old tool results will be automatically cleared from context to free up space. Th
 
 const SUMMARIZE_TOOL_RESULTS_SECTION = `When working with tool results, write down any important information you might need later in your response, as the original tool result may be cleared later.`
 
-function getBriefSection(): string | null {
-  if (!(feature('KAIROS') || feature('KAIROS_BRIEF'))) return null
-  if (!BRIEF_PROACTIVE_SECTION) return null
-  // Whenever the tool is available, the model is told to use it. The
-  // /brief toggle and --brief flag now only control the isBriefOnly
-  // display filter — they no longer gate model-facing behavior.
-  if (!briefToolModule?.isBriefEnabled()) return null
-  return BRIEF_PROACTIVE_SECTION
-}

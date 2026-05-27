@@ -22,7 +22,6 @@ const version = pkg.version
 
 // Feature flags for the open build.
 const featureFlags: Record<string, boolean> = {
-  KAIROS: false,
   BRIDGE_MODE: false,
   ABLATION_BASELINE: false,
   CONTEXT_COLLAPSE: false,
