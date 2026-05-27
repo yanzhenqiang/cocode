@@ -878,7 +878,7 @@ export const SettingsSchema = lazySchema(() =>
               ),
           }
         : {}),
-      ...(feature('PROACTIVE') || feature('KAIROS')
+      ...(false
         ? {
             minSleepDurationMs: z
               .number()

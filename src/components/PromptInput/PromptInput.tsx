@@ -1753,9 +1753,6 @@ function PromptInput({
       }
       switch (footerItemSelected) {
         case 'companion':
-          if (false) {
-            // buddy disabled
-          }
           break;
         case 'tasks':
           if (isTeammateMode) {

@@ -1043,7 +1043,7 @@ async function run(): Promise<CommanderCommand> {
     // apply as normal. REPL-typed messages already default to 'next'
     // priority (messageQueueManager.enqueue) so they drain mid-turn between
     // tool calls. SendUserMessage (BriefTool) is enabled via the brief env
-    // var. SleepTool stays disabled (its isEnabled() gates on proactive).
+    // var. SleepTool stays disabled.
     // kairosEnabled is computed once here and reused at the
     // getAssistantSystemPromptAddendum() call site further down.
     //
@@ -1067,7 +1067,7 @@ async function run(): Promise<CommanderCommand> {
     // isAssistantMode() is true for them too. --agent-id being set
     // means we ARE a spawned teammate (extractTeammateOptions runs
     // ~170 lines later so check the raw commander option) — don't
-    // re-init the team or override teammateMode/proactive/brief.
+    // re-init the team or override teammateMode/brief.
     !(options as {
       agentId?: unknown;
     }).agentId && kairosGate) {
@@ -1829,10 +1829,6 @@ async function run(): Promise<CommanderCommand> {
     let inputPrompt = await getInputPrompt(effectivePrompt, (inputFormat ?? 'text') as 'text' | 'stream-json');
     profileCheckpoint('action_after_input_prompt');
 
-    // Activate proactive mode BEFORE getTools() so SleepTool.isEnabled()
-    // (which returns isProactiveActive()) passes and Sleep is included.
-    // The later REPL-path maybeActivateProactive() calls are idempotent.
-    maybeActivateProactive(options);
     let tools = getTools(toolPermissionContext);
 
     profileCheckpoint('action_tools_loaded');
@@ -2138,8 +2134,7 @@ async function run(): Promise<CommanderCommand> {
     // the assistant installer writes defaultView:'chat' to settings.local.json
     // which would otherwise leak into --print sessions in the same directory.
     // Runs right after maybeActivateBrief() so all startup opt-in paths fire
-    // BEFORE any isBriefEnabled() read below (proactive prompt's
-    // briefVisibility). A persisted 'chat' after a GB kill-switch falls
+    // BEFORE any isBriefEnabled() read below. A persisted 'chat' after a GB kill-switch falls
     // through (entitlement fails).
     if ((feature('KAIROS') || feature('KAIROS_BRIEF')) && !getIsNonInteractiveSession() && !getUserMsgOptIn() && getInitialSettings().defaultView === 'chat') {
       /* eslint-disable @typescript-eslint/no-require-imports */
@@ -2150,15 +2145,6 @@ async function run(): Promise<CommanderCommand> {
       if (isBriefEntitled()) {
         setUserMsgOptIn(true);
       }
-    }
-    if ((feature('PROACTIVE') || feature('KAIROS')) && ((options as {
-      proactive?: boolean;
-    }).proactive || isEnvTruthy(process.env.CLAUDE_CODE_PROACTIVE))) {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const briefVisibility = feature('KAIROS') || feature('KAIROS_BRIEF') ? (require('./tools/BriefTool/BriefTool.js') as typeof import('./tools/BriefTool/BriefTool.js')).isBriefEnabled() ? 'Call SendUserMessage at checkpoints to mark where things stand.' : 'The user will see any text you output.' : 'The user will see any text you output.';
-      /* eslint-enable @typescript-eslint/no-require-imports */
-      const proactivePrompt = `\n# Proactive Mode\n\nYou are in proactive mode. Take initiative — explore, act, and make progress without waiting for instructions.\n\nStart by briefly greeting the user.\n\nYou will receive periodic <tick> prompts. These are check-ins. Do whatever seems most useful, or call Sleep if there's nothing to do. ${briefVisibility}`;
-      appendSystemPrompt = appendSystemPrompt ? `${appendSystemPrompt}\n\n${proactivePrompt}` : proactivePrompt;
     }
     if (feature('KAIROS') && kairosEnabled && assistantModule) {
       const assistantAddendum = assistantModule.getAssistantSystemPromptAddendum();
@@ -3051,7 +3037,6 @@ async function run(): Promise<CommanderCommand> {
         if (loaded.restoredAgentDef) {
           mainThreadAgentDefinition = loaded.restoredAgentDef;
         }
-        maybeActivateProactive(options);
         maybeActivateBrief(options);
         logEvent('tengu_continue', {
           success: true,
@@ -3655,7 +3640,6 @@ async function run(): Promise<CommanderCommand> {
         contentReplacements: undefined
       } : undefined);
       if (resumeData) {
-        maybeActivateProactive(options);
         maybeActivateBrief(options);
         await launchRepl(root, {
           getFpsMetrics,
@@ -3687,7 +3671,6 @@ async function run(): Promise<CommanderCommand> {
     } else {
       const pendingHookMessages = hooksPromise && hookMessages.length === 0 ? hooksPromise : undefined;
       profileCheckpoint('action_after_hooks');
-      maybeActivateProactive(options);
       maybeActivateBrief(options);
       // If launched via a deep link, show a provenance banner so the user
       // knows the session originated externally. Linux xdg-open and
@@ -3746,9 +3729,6 @@ async function run(): Promise<CommanderCommand> {
   }
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     program.addOption(new Option('--enable-auto-mode', 'Opt in to auto mode').hideHelp());
-  }
-  if (feature('PROACTIVE') || feature('KAIROS')) {
-    program.addOption(new Option('--proactive', 'Start in proactive autonomous mode'));
   }
   if (feature('UDS_INBOX')) {
     program.addOption(new Option('--messaging-socket-path <path>', 'Unix domain socket path for the UDS messaging server (defaults to a tmp path)'));
@@ -4498,17 +4478,6 @@ async function logTenguInit({
     });
   } catch (error) {
     logError(error);
-  }
-}
-function maybeActivateProactive(options: unknown): void {
-  if ((feature('PROACTIVE') || feature('KAIROS')) && ((options as {
-    proactive?: boolean;
-  }).proactive || isEnvTruthy(process.env.CLAUDE_CODE_PROACTIVE))) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const proactiveModule = require('./proactive/index.js');
-    if (!proactiveModule.isProactiveActive()) {
-      proactiveModule.activateProactive('command');
-    }
   }
 }
 function maybeActivateBrief(options: unknown): void {

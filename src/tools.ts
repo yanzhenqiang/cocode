@@ -14,7 +14,7 @@ import { BriefTool } from './tools/BriefTool/BriefTool.js'
 const REPLTool = null
 const SuggestBackgroundPRTool = null
 const SleepTool =
-  feature('PROACTIVE') || feature('KAIROS')
+  false
     ? require('./tools/SleepTool/SleepTool.js').SleepTool
     : null
 const cronTools = [

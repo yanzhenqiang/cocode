@@ -23,7 +23,6 @@ const version = pkg.version
 // Feature flags for the open build.
 const featureFlags: Record<string, boolean> = {
   VOICE_MODE: false,
-  PROACTIVE: false,
   KAIROS: false,
   BRIDGE_MODE: false,
   DAEMON: false,

@@ -59,10 +59,6 @@ import theme from './commands/theme/index.js'
 import { feature } from 'bun:bundle'
 // Dead code elimination: conditional imports
 /* eslint-disable @typescript-eslint/no-require-imports */
-const proactive =
-  feature('PROACTIVE') || feature('KAIROS')
-    ? require('./commands/proactive.js').default
-    : null
 const briefCommand =
   feature('KAIROS') || feature('KAIROS_BRIEF')
     ? require('./commands/brief.js').default
@@ -70,10 +66,6 @@ const briefCommand =
 const assistantCommand = feature('KAIROS')
   ? require('./commands/assistant/index.js').default
   : null
-const remoteControlServerCommand =
-  feature('DAEMON')
-    ? require('./commands/remoteControlServer/index.js').default
-    : null
 const forceSnip = feature('HISTORY_SNIP')
   ? require('./commands/force-snip.js').default
   : null
@@ -309,10 +301,8 @@ const COMMANDS = memoize((): Command[] => [
   usageReport,
   ...(webCmd ? [webCmd] : []),
   ...(forkCmd ? [forkCmd] : []),
-  ...(proactive ? [proactive] : []),
   ...(briefCommand ? [briefCommand] : []),
   ...(assistantCommand ? [assistantCommand] : []),
-  ...(remoteControlServerCommand ? [remoteControlServerCommand] : []),
   thinkback,
   thinkbackPlay,
   permissions,
