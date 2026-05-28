@@ -96,10 +96,10 @@ if [ -n "$AGENT_SESSION" ]; then
     fail "3.2 PARENT_SESSION 未正确注入"
   fi
 
-  if echo "$ENV_OUTPUT" | grep -q "AGENT_TYPE=Explore"; then
-    pass "3.3 AGENT_TYPE=Explore 注入正确"
+  if echo "$ENV_OUTPUT" | grep -q "AGENT_ID=$AGENT_SESSION"; then
+    pass "3.3 AGENT_ID 注入正确"
   else
-    fail "3.3 AGENT_TYPE 未正确注入"
+    fail "3.3 AGENT_ID 未正确注入"
   fi
 
   # 3.4 子 Agent 独立执行委托任务
@@ -156,15 +156,40 @@ fi
 | 2.1 Skill 调用响应 | 主 agent 屏幕出现 agent/spawn/session 相关输出 | 必过 |
 | 3.1 Subagent 创建 | `agent-*` session 出现 | 必过 |
 | 3.2 环境变量 | `PARENT_SESSION=main` | 必过 |
-| 3.3 Agent 类型 | `AGENT_TYPE=Explore` | 必过 |
+| 3.3 Agent ID | `AGENT_ID=agent-*` | 必过 |
 | 3.4 任务执行 | 子 agent pane 有任务执行痕迹 | 必过 |
 | 3.5 生命周期 | kill subagent 不影响 main | 必过 |
 | 3.6 主 agent 存活 | 子 agent kill 后 main 仍存活 | 必过 |
+
+## 回归测试：复杂任务场景
+
+以下场景曾在旧版本中导致 `cocode.sh` 崩溃（`--prompt-file` 参数未加引号 + `set -e`）。
+
+### 场景：启动 agent 计算代码行数
+
+```bash
+# 在主 agent 中发送：
+/agent 启动一个新的 agent 计算 cocode 的不同功能的代码行数
+```
+
+**预期行为**：
+- 主 agent 调用 spawn-agent 创建子 session
+- 子 agent 正常启动，使用 Glob/Bash 统计代码行数
+- 主 agent 不崩溃，cocode.sh 继续运行
+- 子 agent 工作目录为 `.cocode/agents/<session-name>/`
+
+**历史问题**：
+旧版本使用 `cocode --prompt-file $PROMPT_FILE`，当 `$PROMPT_FILE` 包含空格或 `--prompt-file` 解析失败时，cocode 以非零码退出，`cocode.sh` 中的 `set -e` 导致整个 shell 崩溃。
+
+**修复方案**：
+- 删除 `--prompt-file` CLI flag
+- spawn-agent 先启动 `cocode`（无参数），再用 `tmux send-keys` 发送 prompt
 
 ## 失败排查
 
 | 失败点 | 可能原因 | 排查命令 |
 |--------|---------|---------|
-| 3.1 subagent 未创建 | skill 未触发或 AgentTool 未走 session 路径 | 检查主 agent 输出是否有 spawn 日志 |
-| 3.4 未执行任务 | 子 agent 启动失败 | `tmux capture-pane -t <agent-session> -p` 看报错 |
+| 3.1 subagent 未创建 | skill 未触发或 spawn-agent 未找到 | 检查主 agent 输出是否有 spawn 日志 |
+| 3.4 未执行任务 | 子 agent 启动失败或 tmux send-keys 未生效 | `tmux capture-pane -t <agent-session> -p` 看报错 |
 | 3.6 主 agent 被连带 kill | session 命名冲突或进程树关系错误 | `pstree -p` 查看父子进程关系 |
+| cocode.sh 崩溃 | spawn-agent 中 cocode 以非零码退出 | 检查 `set -e` 和 cocode 退出原因 |
