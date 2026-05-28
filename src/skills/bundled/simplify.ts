@@ -1,4 +1,4 @@
-import { AGENT_TOOL_NAME } from '../../tools/AgentTool/constants.js'
+import { SKILL_TOOL_NAME } from '../../tools/SkillTool/constants.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
 const SIMPLIFY_PROMPT = `# Simplify: Code Review and Cleanup
@@ -11,7 +11,7 @@ Run \`git diff\` (or \`git diff HEAD\` if there are staged changes) to see what 
 
 ## Phase 2: Launch Three Review Agents in Parallel
 
-Use the ${AGENT_TOOL_NAME} tool to launch all three agents concurrently in a single message. Pass each agent the full diff so it has the complete context.
+Invoke the \`/agent\` skill via the ${SKILL_TOOL_NAME} tool to launch each review agent. Spawn all three agents concurrently in a single message block. Pass each agent the full diff so it has the complete context.
 
 ### Agent 1: Code Reuse Review
 

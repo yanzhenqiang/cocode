@@ -27,11 +27,23 @@ import { getTaskOutputPath } from '../../utils/task/diskOutput.js'
 import { getParentSessionId } from '../../utils/teammate.js'
 import { reconstructForSubagentResume } from '../../utils/toolResultStorage.js'
 import { runAsyncAgentLifecycle } from './agentToolUtils.js'
-import { GENERAL_PURPOSE_AGENT } from './built-in/generalPurposeAgent.js'
+import type { AgentDefinition } from './loadAgentsDir.js'
 import { FORK_AGENT, isForkSubagentEnabled } from './forkSubagent.js'
 import type { AgentDefinition } from './loadAgentsDir.js'
 import { isBuiltInAgent } from './loadAgentsDir.js'
 import { runAgent } from './runAgent.js'
+
+// Inline fallback agent definition for resumed sessions where the original
+// agent type is no longer registered (e.g. after built-in agent cleanup).
+const GENERAL_PURPOSE_AGENT: AgentDefinition = {
+  agentType: 'general-purpose',
+  whenToUse:
+    'General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks.',
+  source: 'built-in',
+  baseDir: 'built-in',
+  getSystemPrompt: () =>
+    `You are an agent for Cocode, an open-source coding agent and CLI. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but don't leave it half-done.`,
+}
 
 export type ResumeAgentResult = {
   agentId: string

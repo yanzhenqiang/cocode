@@ -26,10 +26,9 @@ import { buildSubagentLookups, createAssistantMessage, EMPTY_LOOKUPS } from '../
 import type { ModelAlias } from '../../utils/model/aliases.js';
 import { getMainLoopModel, parseUserSpecifiedModel, renderModelName } from '../../utils/model/model.js';
 import type { Theme, ThemeName } from '../../utils/theme.js';
-import type { outputSchema, Progress, RemoteLaunchedOutput } from './AgentTool.js';
-import { inputSchema } from './AgentTool.js';
+import type { outputSchema, Progress, RemoteLaunchedOutput } from './agentToolTypes.js';
+import { inputSchema } from './agentToolTypes.js';
 import { getAgentColor } from './agentColorManager.js';
-import { GENERAL_PURPOSE_AGENT } from './built-in/generalPurposeAgent.js';
 const MAX_PROGRESS_MESSAGES_TO_SHOW = 3;
 
 /**
@@ -764,7 +763,7 @@ export function userFacingName(input: Partial<{
   name: string;
   team_name: string;
 }> | undefined): string {
-  if (input?.subagent_type && input.subagent_type !== GENERAL_PURPOSE_AGENT.agentType) {
+  if (input?.subagent_type && input.subagent_type !== "general-purpose") {
     // Display "worker" agents as "Agent" for cleaner UI
     if (input.subagent_type === 'worker') {
       return 'Agent';
@@ -867,5 +866,5 @@ export function extractLastToolInfo(progressMessages: ProgressMessage<Progress>[
   return null;
 }
 function isCustomSubagentType(subagentType: string | undefined): subagentType is string {
-  return !!subagentType && subagentType !== GENERAL_PURPOSE_AGENT.agentType && subagentType !== 'worker';
+  return !!subagentType && subagentType !== "general-purpose" && subagentType !== 'worker';
 }

@@ -1,5 +1,4 @@
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
-import { AGENT_TOOL_NAME } from '../../tools/AgentTool/constants.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
 const AGENT_SKILL_PROMPT = `You are an agent orchestrator. Your job is to spawn and manage subagents running in independent tmux sessions.

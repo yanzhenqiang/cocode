@@ -26,7 +26,6 @@ import {
   getTeamName,
 } from '../../utils/teammate.js'
 import { writeToMailbox } from '../../utils/teammateMailbox.js'
-import { VERIFICATION_AGENT_TYPE } from '../AgentTool/constants.js'
 import { TASK_UPDATE_TOOL_NAME } from './constants.js'
 import { DESCRIPTION, PROMPT } from './prompt.js'
 
@@ -394,7 +393,7 @@ export const TaskUpdateTool = buildTool({
     }
 
     if (verificationNudgeNeeded) {
-      resultContent += `\n\nNOTE: You just closed out 3+ tasks and none of them was a verification step. Before writing your final summary, spawn the verification agent (subagent_type="${VERIFICATION_AGENT_TYPE}"). You cannot self-assign PARTIAL by listing caveats in your summary — only the verifier issues a verdict.`
+      resultContent += `\n\nNOTE: You just closed out 3+ tasks and none of them was a verification step. Before writing your final summary, use the /verify skill. You cannot self-assign PARTIAL by listing caveats in your summary — only the verifier issues a verdict.`
     }
 
     return {

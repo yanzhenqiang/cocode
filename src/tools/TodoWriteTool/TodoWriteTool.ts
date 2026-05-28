@@ -6,7 +6,6 @@ import { buildTool, type ToolDef } from '../../Tool.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { isTodoV2Enabled } from '../../utils/tasks.js'
 import { TodoListSchema } from '../../utils/todo/types.js'
-import { VERIFICATION_AGENT_TYPE } from '../AgentTool/constants.js'
 import { TODO_WRITE_TOOL_NAME } from './constants.js'
 import { DESCRIPTION, PROMPT } from './prompt.js'
 
@@ -104,7 +103,7 @@ export const TodoWriteTool = buildTool({
   mapToolResultToToolResultBlockParam({ verificationNudgeNeeded }, toolUseID) {
     const base = `Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable`
     const nudge = verificationNudgeNeeded
-      ? `\n\nNOTE: You just closed out 3+ tasks and none of them was a verification step. Before writing your final summary, spawn the verification agent (subagent_type="${VERIFICATION_AGENT_TYPE}"). You cannot self-assign PARTIAL by listing caveats in your summary \u2014 only the verifier issues a verdict.`
+      ? `\n\nNOTE: You just closed out 3+ tasks and none of them was a verification step. Before writing your final summary, use the /verify skill. You cannot self-assign PARTIAL by listing caveats in your summary \u2014 only the verifier issues a verdict.`
       : ''
     return {
       tool_use_id: toolUseID,
