@@ -138,8 +138,6 @@ const nativeStubModules = [
   'plist',
   'cacache',
   'fuse',
-  'code-excerpt',
-  'stack-utils',
 ]
 
 const nativeStubContents = `
@@ -344,7 +342,7 @@ const sdkMissingModules = [
   '@anthropic-ai/sandbox-runtime',
   'audio-capture-napi', 'audio-capture.node',
   'image-processor-napi', 'modifiers-napi', 'url-handler-napi', 'color-diff-napi',
-  'asciichart', 'plist', 'cacache', 'fuse', 'code-excerpt', 'stack-utils',
+  'asciichart', 'plist', 'cacache', 'fuse',
 ]
 
 function scanSdkRequireImports() {
