@@ -19,7 +19,8 @@ Spawn a subagent when:
 
 2. **Write the prompt to a temp file** (avoids shell escaping issues):
    \`\`\`bash
-   PROMPT_FILE="/tmp/cocode/prompts/\${SESSION_NAME}.txt"
+   TMP="\${TMPDIR:-/tmp}"
+   PROMPT_FILE="$TMP/cocode/prompts/\${SESSION_NAME}.txt"
    mkdir -p "$(dirname "$PROMPT_FILE")"
    cat > "$PROMPT_FILE" << 'EOF'
    <your prompt here>

@@ -1,6 +1,6 @@
 {
   "name": "@yanzhenqiang/cocode",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Cocode opens coding-agent workflows to any LLM — OpenAI, Gemini, DeepSeek, Ollama, and 200+ models",
   "type": "module",
   "bin": {
