@@ -23,7 +23,7 @@ import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
 import { jsonParse, jsonStringify } from './slowOperations.js'
 import type { BackendType } from './swarm/backends/types.js'
-import { TEAM_LEAD_NAME } from './swarm/constants.js'
+const TEAM_LEAD_NAME = 'team-lead'
 import { sanitizePathComponent } from './tasks.js'
 import { getAgentName, getTeammateColor, getTeamName } from './teammate.js'
 

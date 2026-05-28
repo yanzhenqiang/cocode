@@ -231,7 +231,6 @@ import {
   isTeamLead,
 } from './teammate.js'
 import { isInProcessTeammate } from './teammateContext.js'
-import { removeTeammateFromTeamFile } from './swarm/teamHelpers.js'
 import { unassignTeammateTasks } from './tasks.js'
 export const TODO_REMINDER_CONFIG = {
   TURNS_SINCE_WRITE: 10,
@@ -3596,62 +3595,6 @@ async function getTeammateMailboxAttachments(
     logForDebugging(
       `[MailboxBridge] marked ${unreadMessages.length} non-structured message(s) as read for agent="${agentName}" team="${teamName || 'default'}"`,
     )
-  }
-
-  // Process shutdown_approved messages - remove teammates from team file
-  // This mirrors what useInboxPoller does in interactive mode (lines 546-606)
-  // In -p mode, useInboxPoller doesn't run, so we must handle this here
-  if (teamLeadStatus && teamName) {
-    for (const m of allMessages) {
-      const shutdownApproval = isShutdownApproved(m.text)
-      if (shutdownApproval) {
-        const teammateToRemove = shutdownApproval.from
-        logForDebugging(
-          `[SwarmMailbox] Processing shutdown_approved from ${teammateToRemove}`,
-        )
-
-        // Find the teammate ID by name
-        const teammateId = appState.teamContext?.teammates
-          ? Object.entries(appState.teamContext.teammates).find(
-              ([, t]) => t.name === teammateToRemove,
-            )?.[0]
-          : undefined
-
-        if (teammateId) {
-          // Remove from team file
-          removeTeammateFromTeamFile(teamName, {
-            agentId: teammateId,
-            name: teammateToRemove,
-          })
-          logForDebugging(
-            `[SwarmMailbox] Removed ${teammateToRemove} from team file`,
-          )
-
-          // Unassign tasks owned by this teammate
-          await unassignTeammateTasks(
-            teamName,
-            teammateId,
-            teammateToRemove,
-            'shutdown',
-          )
-
-          // Remove from teamContext in AppState
-          toolUseContext.setAppState(prev => {
-            if (!prev.teamContext?.teammates) return prev
-            if (!(teammateId in prev.teamContext.teammates)) return prev
-            const { [teammateId]: _, ...remainingTeammates } =
-              prev.teamContext.teammates
-            return {
-              ...prev,
-              teamContext: {
-                ...prev.teamContext,
-                teammates: remainingTeammates,
-              },
-            }
-          })
-        }
-      }
-    }
   }
 
   // Mark AppState inbox messages as processed LAST, after attachment is built

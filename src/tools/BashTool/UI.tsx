@@ -19,8 +19,6 @@ import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
 import type { ThemeName } from '../../utils/theme.js';
 import type { BashProgress, BashToolInput, Out } from './BashTool.js';
 import BashToolResultMessage from './BashToolResultMessage.js';
-import { extractBashCommentLabel } from './commentLabel.js';
-import { parseSedEditCommand } from './sedEditParser.js';
 
 // Constants for command display
 const MAX_COMMAND_DISPLAY_LINES = 2;
@@ -96,18 +94,10 @@ export function renderToolUseMessage(input: Partial<BashToolInput>, {
     return null;
   }
 
-  // Render sed in-place edits like file edits (show file path only)
-  const sedInfo = parseSedEditCommand(command);
-  if (sedInfo) {
-    return verbose ? sedInfo.filePath : getDisplayPath(sedInfo.filePath);
-  }
   if (!verbose) {
     const lines = command.split('\n');
     if (isFullscreenEnvEnabled()) {
-      const label = extractBashCommentLabel(command);
-      if (label) {
-        return label.length > MAX_COMMAND_DISPLAY_CHARS ? label.slice(0, MAX_COMMAND_DISPLAY_CHARS) + '…' : label;
-      }
+      // Comment label extraction removed — bash commands display as-is.
     }
     const needsLineTruncation = lines.length > MAX_COMMAND_DISPLAY_LINES;
     const needsCharTruncation = command.length > MAX_COMMAND_DISPLAY_CHARS;

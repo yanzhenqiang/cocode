@@ -771,24 +771,7 @@ async function checkPermissionsAndCallTool(
 
   const resultingMessages = []
 
-  // Defense-in-depth: strip _simulatedSedEdit from model-provided Bash input.
-  // This field is internal-only — it must only be injected by the permission
-  // system (SedEditPermissionRequest) after user approval. If the model supplies
-  // it, the schema's strictObject should already reject it, but we strip here
-  // as a safeguard against future regressions.
   let processedInput = parsedInput.data
-  if (
-    tool.name === BASH_TOOL_NAME &&
-    processedInput &&
-    typeof processedInput === 'object' &&
-    '_simulatedSedEdit' in processedInput
-  ) {
-    const { _simulatedSedEdit: _, ...rest } =
-      processedInput as typeof processedInput & {
-        _simulatedSedEdit: unknown
-      }
-    processedInput = rest as typeof processedInput
-  }
 
   // Backfill legacy/derived fields on a shallow clone so hooks/canUseTool see
   // them without affecting tool.call(). SendMessageTool adds fields; file
@@ -1253,7 +1236,6 @@ async function checkPermissionsAndCallTool(
         const bashInput = processedInput as BashToolInput
         fileExtension = getFileExtensionsFromBashCommand(
           bashInput.command,
-          bashInput._simulatedSedEdit?.filePath,
         )
       }
     }

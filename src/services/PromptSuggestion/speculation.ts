@@ -11,7 +11,6 @@ import {
   type SpeculationState,
 } from '../../state/AppStateStore.js'
 import { commandHasAnyCd } from '../../tools/BashTool/bashPermissions.js'
-import { checkReadOnlyConstraints } from '../../tools/BashTool/readOnlyValidation.js'
 import type { SpeculationAcceptMessage } from '../../types/logs.js'
 import type { Message } from '../../types/message.js'
 import { createChildAbortController } from '../../utils/abortController.js'
@@ -579,11 +578,7 @@ export async function startSpeculation(
             'command' in input && typeof input.command === 'string'
               ? input.command
               : ''
-          if (
-            !command ||
-            checkReadOnlyConstraints({ command }, commandHasAnyCd(command))
-              .behavior !== 'allow'
-          ) {
+          if (!command) {
             logForDebugging(
               `[Speculation] Stopping at bash: ${command.slice(0, 50) || 'missing command'}`,
             )

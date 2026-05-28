@@ -10,14 +10,10 @@ import { sanitizeToolNameForAnalytics } from '../../../services/analytics/index.
 import { useAppState } from '../../../state/AppState.js';
 import { BashTool } from '../../../tools/BashTool/BashTool.js';
 import { getFirstWordPrefix, getSimpleCommandPrefix } from '../../../tools/BashTool/bashPermissions.js';
-import { getDestructiveCommandWarning } from '../../../tools/BashTool/destructiveCommandWarning.js';
-import { parseSedEditCommand } from '../../../tools/BashTool/sedEditParser.js';
-import { shouldUseSandbox } from '../../../tools/BashTool/shouldUseSandbox.js';
 import { getCompoundCommandPrefixesStatic } from '../../../utils/bash/prefix.js';
 import { createPromptRuleContent, generateGenericDescription, getBashPromptAllowDescriptions, isClassifierPermissionsEnabled } from '../../../utils/permissions/bashClassifier.js';
 import { extractRules } from '../../../utils/permissions/PermissionUpdate.js';
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js';
-import { SandboxManager } from '../../../utils/sandbox/sandbox-adapter.js';
 import { Select } from '../../CustomSelect/select.js';
 import { ShimmerChar } from '../../Spinner/ShimmerChar.js';
 import { useShimmerAnimation } from '../../Spinner/useShimmerAnimation.js';
@@ -27,7 +23,6 @@ import { PermissionDialog } from '../PermissionDialog.js';
 import { PermissionExplainerContent, usePermissionExplainerUI } from '../PermissionExplanation.js';
 import type { PermissionRequestProps } from '../PermissionRequest.js';
 import { PermissionRuleExplanation } from '../PermissionRuleExplanation.js';
-import { SedEditPermissionRequest } from '../SedEditPermissionRequest/SedEditPermissionRequest.js';
 import { useShellPermissionFeedback } from '../useShellPermissionFeedback.js';
 import { logUnaryPermissionEvent } from '../utils.js';
 import { bashToolUseOptions } from './bashToolUseOptions.js';
@@ -69,7 +64,7 @@ function ClassifierCheckingSubtitle() {
   return t2;
 }
 export function BashPermissionRequest(props) {
-  const $ = _c(21);
+  const $ = _c(12);
   const {
     toolUseConfirm,
     toolUseContext,
@@ -80,54 +75,32 @@ export function BashPermissionRequest(props) {
   } = props;
   let command;
   let description;
-  let t0;
   if ($[0] !== toolUseConfirm.input) {
     ({
       command,
       description
     } = BashTool.inputSchema.parse(toolUseConfirm.input));
-    t0 = parseSedEditCommand(command);
     $[0] = toolUseConfirm.input;
     $[1] = command;
     $[2] = description;
-    $[3] = t0;
   } else {
     command = $[1];
     description = $[2];
-    t0 = $[3];
-  }
-  const sedInfo = t0;
-  if (sedInfo) {
-    let t1;
-    if ($[4] !== onDone || $[5] !== onReject || $[6] !== sedInfo || $[7] !== toolUseConfirm || $[8] !== toolUseContext || $[9] !== verbose || $[10] !== workerBadge) {
-      t1 = <SedEditPermissionRequest toolUseConfirm={toolUseConfirm} toolUseContext={toolUseContext} onDone={onDone} onReject={onReject} verbose={verbose} workerBadge={workerBadge} sedInfo={sedInfo} />;
-      $[4] = onDone;
-      $[5] = onReject;
-      $[6] = sedInfo;
-      $[7] = toolUseConfirm;
-      $[8] = toolUseContext;
-      $[9] = verbose;
-      $[10] = workerBadge;
-      $[11] = t1;
-    } else {
-      t1 = $[11];
-    }
-    return t1;
   }
   let t1;
-  if ($[12] !== command || $[13] !== description || $[14] !== onDone || $[15] !== onReject || $[16] !== toolUseConfirm || $[17] !== toolUseContext || $[18] !== verbose || $[19] !== workerBadge) {
+  if ($[3] !== command || $[4] !== description || $[5] !== onDone || $[6] !== onReject || $[7] !== toolUseConfirm || $[8] !== toolUseContext || $[9] !== verbose || $[10] !== workerBadge) {
     t1 = <BashPermissionRequestInner toolUseConfirm={toolUseConfirm} toolUseContext={toolUseContext} onDone={onDone} onReject={onReject} verbose={verbose} workerBadge={workerBadge} command={command} description={description} />;
-    $[12] = command;
-    $[13] = description;
-    $[14] = onDone;
-    $[15] = onReject;
-    $[16] = toolUseConfirm;
-    $[17] = toolUseContext;
-    $[18] = verbose;
-    $[19] = workerBadge;
-    $[20] = t1;
+    $[3] = command;
+    $[4] = description;
+    $[5] = onDone;
+    $[6] = onReject;
+    $[7] = toolUseConfirm;
+    $[8] = toolUseContext;
+    $[9] = verbose;
+    $[10] = workerBadge;
+    $[11] = t1;
   } else {
-    t1 = $[20];
+    t1 = $[11];
   }
   return t1;
 }
@@ -266,20 +239,9 @@ function BashPermissionRequestInner({
   // extraction). React Compiler can't auto-memoize imported functions (can't
   // prove side-effect freedom), so this useMemo still guards against any
   // re-render source (e.g. Inner state updates). Same pattern as PR#20730.
-  const {
-    destructiveWarning: destructiveWarning_0,
-    sandboxingEnabled: sandboxingEnabled_0,
-    isSandboxed: isSandboxed_0
-  } = useMemo(() => {
-    const destructiveWarning = getFeatureValue_CACHED_MAY_BE_STALE('tengu_destructive_command_warning', false) ? getDestructiveCommandWarning(command) : null;
-    const sandboxingEnabled = SandboxManager.isSandboxingEnabled();
-    const isSandboxed = sandboxingEnabled && shouldUseSandbox(toolUseConfirm.input);
-    return {
-      destructiveWarning,
-      sandboxingEnabled,
-      isSandboxed
-    };
-  }, [command, toolUseConfirm.input]);
+  const destructiveWarning_0 = null;
+  const sandboxingEnabled_0 = false;
+  const isSandboxed_0 = false;
   const unaryEvent = useMemo<UnaryEvent>(() => ({
     completion_type: 'tool_use_single',
     language_name: 'none'

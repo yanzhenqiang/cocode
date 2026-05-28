@@ -14,7 +14,6 @@ import { isEnvTruthy } from './envUtils.js'
 import { getErrnoCode } from './errors.js'
 import { readFileSync } from './fileRead.js'
 import { safeParseJSON } from './json.js'
-import { readTeamFileAsync } from './swarm/teamHelpers.js'
 import { getAgentName, getTeamName, getTeammateColor } from './teammate.js'
 import { writeToMailbox } from './teammateMailbox.js'
 import { logOTelEvent } from './telemetry/events.js'
@@ -884,16 +883,8 @@ export async function executeNotifyTeamAction(args: {
   const senderColor = runtime.senderColor ?? getTeammateColor()
   const { summary, body } = buildNotifyTeamMessage(action, rule, event)
 
-  const teamFile = await readTeamFileAsync(teamName)
-  if (!teamFile) {
-    return {
-      status: 'skipped',
-      reason: `Team file not found for team ${teamName}`,
-    }
-  }
-
-  const memberNames = teamFile.members.map(member => member.name)
-  const recipients = resolveRecipients(action.recipients, memberNames, senderName)
+  // Swarm/team file system removed — notify_team action is no longer supported.
+  const recipients = resolveRecipients(action.recipients, [], senderName)
 
   if (recipients.length === 0) {
     return {

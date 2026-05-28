@@ -36,14 +36,10 @@ import { getTaskOutputPath } from '../../utils/task/diskOutput.js';
 import { TaskOutput } from '../../utils/task/TaskOutput.js';
 import { isOutputLineTruncated } from '../../utils/terminal.js';
 import { buildLargeToolResultMessage, ensureToolResultsDir, generatePreview, getToolResultPath, PREVIEW_SIZE_BYTES } from '../../utils/toolResultStorage.js';
-import { userFacingName as fileEditUserFacingName } from '../FileEditTool/UI.js';
 import { trackGitOperations } from '../shared/gitOperationTracking.js';
 import { bashToolHasPermission, commandHasAnyCd, matchWildcardPattern, permissionRuleExtractPrefix } from './bashPermissions.js';
 import { interpretCommandResult } from './commandSemantics.js';
 import { getDefaultTimeoutMs, getMaxTimeoutMs, getSimplePrompt } from './prompt.js';
-import { checkReadOnlyConstraints } from './readOnlyValidation.js';
-import { parseSedEditCommand } from './sedEditParser.js';
-import { shouldUseSandbox } from './shouldUseSandbox.js';
 import { BASH_TOOL_NAME } from './toolName.js';
 import { BackgroundHint, renderToolResultMessage, renderToolUseErrorMessage, renderToolUseMessage, renderToolUseProgressMessage, renderToolUseQueuedMessage } from './UI.js';
 import { buildImageToolResult, isImageOutput, resetCwdIfOutsideProject, resizeShellImageOutput, stdErrAppendShellResetMessage, stripEmptyLines } from './utils.js';
@@ -239,28 +235,19 @@ For commands that are harder to parse at a glance (piped commands, obscure flags
   run_in_background: semanticBoolean(z.boolean().optional()).describe(`Set to true to run this command in the background. Use Read to read the output later.`),
   dangerouslyDisableSandbox: semanticBoolean(z.boolean().optional()).describe('Set this to true to dangerously override sandbox mode and run commands without sandboxing.'),
   _dangerouslyDisableSandboxApproved: z.boolean().optional().describe('Internal: user-approved sandbox override'),
-  _simulatedSedEdit: z.object({
-    filePath: z.string(),
-    newContent: z.string()
-  }).optional().describe('Internal: pre-computed sed edit result from preview')
 }));
 
 // Always omit internal-only fields from the model-facing schema.
-// _simulatedSedEdit is set by SedEditPermissionRequest after the user approves a
-// sed edit preview; exposing it would let the model bypass permission checks and
-// the sandbox by pairing an innocuous command with an arbitrary file write.
-// dangerouslyDisableSandbox is also omitted because sandbox escape must be tied
+// dangerouslyDisableSandbox is omitted because sandbox escape must be tied
 // to trusted user/internal provenance, not model-controlled tool input.
 // Also conditionally remove run_in_background when background tasks are disabled.
 const inputSchema = lazySchema(() => isBackgroundTasksDisabled ? fullInputSchema().omit({
   run_in_background: true,
   dangerouslyDisableSandbox: true,
-  _dangerouslyDisableSandboxApproved: true,
-  _simulatedSedEdit: true
+  _dangerouslyDisableSandboxApproved: true
 }) : fullInputSchema().omit({
   dangerouslyDisableSandbox: true,
-  _dangerouslyDisableSandboxApproved: true,
-  _simulatedSedEdit: true
+  _dangerouslyDisableSandboxApproved: true
 }));
 type InputSchema = ReturnType<typeof inputSchema>;
 
@@ -352,76 +339,6 @@ export function detectBlockedSleepPattern(command: string): string | null {
  * - Prefix patterns: "npm run test:*"
  */
 
-type SimulatedSedEditResult = {
-  data: Out;
-};
-type SimulatedSedEditContext = Pick<ToolUseContext, 'readFileState' | 'updateFileHistoryState'>;
-
-/**
- * Applies a simulated sed edit directly instead of running sed.
- * This is used by the permission dialog to ensure what the user previews
- * is exactly what gets written to the file.
- */
-async function applySedEdit(simulatedEdit: {
-  filePath: string;
-  newContent: string;
-}, toolUseContext: SimulatedSedEditContext, parentMessage?: AssistantMessage): Promise<SimulatedSedEditResult> {
-  const {
-    filePath,
-    newContent
-  } = simulatedEdit;
-  const absoluteFilePath = expandPath(filePath);
-  const fs = getFsImplementation();
-
-  // Read original content for VS Code notification
-  const encoding = detectFileEncoding(absoluteFilePath);
-  let originalContent: string;
-  try {
-    originalContent = await fs.readFile(absoluteFilePath, {
-      encoding
-    });
-  } catch (e) {
-    if (isENOENT(e)) {
-      return {
-        data: {
-          stdout: '',
-          stderr: `sed: ${filePath}: No such file or directory\nExit code 1`,
-          interrupted: false
-        }
-      };
-    }
-    throw e;
-  }
-
-  // Track file history before making changes (for undo support)
-  if (fileHistoryEnabled() && parentMessage) {
-    await fileHistoryTrackEdit(toolUseContext.updateFileHistoryState, absoluteFilePath, parentMessage.uuid);
-  }
-
-  // Detect line endings and write new content
-  const endings = detectLineEndings(absoluteFilePath);
-  writeTextContent(absoluteFilePath, newContent, encoding, endings);
-
-  // Notify VS Code about the file change
-  notifyVscodeFileUpdated(absoluteFilePath, originalContent, newContent);
-
-  // Update read timestamp to invalidate stale writes
-  toolUseContext.readFileState.set(absoluteFilePath, {
-    content: newContent,
-    timestamp: getFileModificationTime(absoluteFilePath),
-    offset: undefined,
-    limit: undefined
-  });
-
-  // Return success result matching sed output format (sed produces no output on success)
-  return {
-    data: {
-      stdout: '',
-      stderr: '',
-      interrupted: false
-    }
-  };
-}
 export const BashTool = buildTool({
   name: BASH_TOOL_NAME,
   searchHint: 'execute shell commands',
@@ -439,10 +356,8 @@ export const BashTool = buildTool({
   isConcurrencySafe(input) {
     return this.isReadOnly?.(input) ?? false;
   },
-  isReadOnly(input) {
-    const compoundCommandHasCd = commandHasAnyCd(input.command);
-    const result = checkReadOnlyConstraints(input, compoundCommandHasCd);
-    return result.behavior === 'allow';
+  isReadOnly() {
+    return false;
   },
   toAutoClassifierInput(input) {
     return input.command;
@@ -490,21 +405,8 @@ export const BashTool = buildTool({
     if (!input) {
       return 'Bash';
     }
-    // Render sed in-place edits as file edits
-    if (input.command) {
-      const sedInfo = parseSedEditCommand(input.command);
-      if (sedInfo) {
-        return fileEditUserFacingName({
-          file_path: sedInfo.filePath,
-          old_string: 'x'
-        });
-      }
-    }
-    // Env var FIRST: shouldUseSandbox → splitCommand_DEPRECATED → shell-quote's
-    // `new RegExp` per call. userFacingName runs per-render for every bash
-    // message in history; with ~50 msgs + one slow-to-tokenize command, this
-    // exceeds the shimmer tick → transition abort → infinite retry (#21605).
-    return isEnvTruthy(process.env.CLAUDE_CODE_BASH_SANDBOX_SHOW_INDICATOR) && shouldUseSandbox(input) ? 'SandboxedBash' : 'Bash';
+    // Sandbox indicator removed — only AI classifiers and user rules are used.
+    return 'Bash';
   },
   getToolUseSummary(input) {
     if (!input?.command) {
@@ -629,11 +531,6 @@ export const BashTool = buildTool({
     };
   },
   async call(input: BashToolInput, toolUseContext, _canUseTool?: CanUseToolFn, parentMessage?: AssistantMessage, onProgress?: ToolCallProgress<BashProgress>) {
-    // Handle simulated sed edit - apply directly instead of running sed
-    // This ensures what the user previewed is exactly what gets written
-    if (input._simulatedSedEdit) {
-      return applySedEdit(input._simulatedSedEdit, toolUseContext, parentMessage);
-    }
     const {
       abortController,
       getAppState,
@@ -900,7 +797,7 @@ async function* runShellCommand({
       }
     },
     preventCwdChanges,
-    shouldUseSandbox: shouldUseSandbox(input),
+    shouldUseSandbox: false,
     shouldAutoBackground
   });
 

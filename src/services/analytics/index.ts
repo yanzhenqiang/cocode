@@ -142,7 +142,6 @@ export function getFileExtensionForAnalytics(
 /** No-op: telemetry is disabled. */
 export function getFileExtensionsFromBashCommand(
 	_command: string,
-	_simulatedSedEditFilePath?: string,
 ): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS | undefined {
 	return undefined
 }

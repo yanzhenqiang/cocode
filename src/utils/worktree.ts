@@ -42,7 +42,12 @@ import {
   getRelativeSettingsFilePathForSource,
 } from './settings/settings.js'
 import { sleep } from './sleep.js'
-import { isInITerm2 } from './swarm/backends/detection.js'
+function isInITerm2(): boolean {
+  const termProgram = process.env.TERM_PROGRAM
+  const hasItermSessionId = !!process.env.ITERM_SESSION_ID
+  const terminalIsITerm = process.env.TERMINAL === 'iTerm.app'
+  return termProgram === 'iTerm.app' || hasItermSessionId || terminalIsITerm
+}
 
 const VALID_WORKTREE_SLUG_SEGMENT = /^[a-zA-Z0-9._-]+$/
 const MAX_WORKTREE_SLUG_LENGTH = 64

@@ -10,7 +10,6 @@ import { WebFetchTool } from './tools/WebFetchTool/WebFetchTool.js'
 import { TaskStopTool } from './tools/TaskStopTool/TaskStopTool.js'
 // Dead code elimination: conditional import for internal-only tools
 /* eslint-disable @typescript-eslint/no-require-imports */
-const REPLTool = null
 const SuggestBackgroundPRTool = null
 const SleepTool =
   false
@@ -91,12 +90,6 @@ import { hasEmbeddedSearchTools } from './utils/embeddedTools.js'
 import { isEnvTruthy } from './utils/envUtils.js'
 import { isAgentSwarmsEnabled } from './utils/agentSwarmsEnabled.js'
 import { isWorktreeModeEnabled } from './utils/worktreeModeEnabled.js'
-import {
-  REPL_TOOL_NAME,
-  REPL_ONLY_TOOLS,
-  isReplModeEnabled,
-} from './tools/REPLTool/constants.js'
-export { REPL_ONLY_TOOLS }
 
 /**
  * Predefined tool presets that can be used with --tools flag
@@ -165,7 +158,7 @@ export function getAllBaseTools(): Tools {
     // TeamCreateTool and TeamDeleteTool removed — agent spawning is now handled
     // by the /agent Skill with tmux-session isolation.
     ...(VerifyPlanExecutionTool ? [VerifyPlanExecutionTool] : []),
-    ...(process.env.USER_TYPE === 'ant' && REPLTool ? [REPLTool] : []),
+    // REPLTool removed
     ...(WorkflowTool ? [WorkflowTool] : []),
     ...(SleepTool ? [SleepTool] : []),
     ...(cronTools ?? []),
@@ -203,12 +196,6 @@ export function filterToolsByDenyRules<
 export const getTools = (permissionContext: ToolPermissionContext): Tools => {
   // Simple mode: only Bash, Read, and Edit tools
   if (isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
-    // --bare + REPL mode: REPL wraps Bash/Read/Edit/etc inside the VM, so
-    // return REPL instead of the raw primitives. Matches the non-bare path
-    // below which also hides REPL_ONLY_TOOLS when REPL is enabled.
-    if (isReplModeEnabled() && REPLTool) {
-      return filterToolsByDenyRules([REPLTool], permissionContext)
-    }
     return filterToolsByDenyRules([BashTool, FileReadTool, FileEditTool], permissionContext)
   }
 
@@ -224,19 +211,6 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
   // Filter out tools that are denied by the deny rules
   let allowedTools = filterToolsByDenyRules(tools, permissionContext)
 
-  // When REPL mode is enabled, hide primitive tools from direct use.
-  // They're still accessible inside REPL via the VM context.
-  if (isReplModeEnabled()) {
-    const replEnabled = allowedTools.some(tool =>
-      toolMatchesName(tool, REPL_TOOL_NAME),
-    )
-    if (replEnabled) {
-      allowedTools = allowedTools.filter(
-        tool => !REPL_ONLY_TOOLS.has(tool.name),
-      )
-    }
-  }
-
   // Filter out any null/undefined tools that might have slipped through
   // (defensive check against initialization timing issues)
   allowedTools = allowedTools.filter(Boolean)
@@ -249,7 +223,7 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
  * Assemble the full tool pool for a given permission context and MCP tools.
  *
  * This is the single source of truth for combining built-in tools with MCP tools.
- * Both REPL.tsx (via useMergedTools hook) and runAgent.ts (for coordinator workers)
+ * Both runAgent.ts (for coordinator workers) and REPL.tsx (via useMergedTools hook)
  * use this function to ensure consistent tool pool assembly.
  *
  * The function:

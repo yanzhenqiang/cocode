@@ -107,9 +107,9 @@ async function loadDiffData(file_path: string, edits: FileEdit[]): Promise<DiffD
   const valid = edits.filter(e => e.old_string != null && e.new_string != null);
   const single = valid.length === 1 ? valid[0]! : undefined;
 
-  // SedEditPermissionRequest passes the entire file as old_string. Scanning for
-  // a needle ≥ CHUNK_SIZE allocates O(needle) for the overlap buffer — skip the
-  // file read entirely and diff the inputs we already have.
+  // When old_string is the entire file (≥ CHUNK_SIZE), scanning for the needle
+  // allocates O(needle) for the overlap buffer — skip the file read entirely and
+  // diff the inputs we already have.
   if (single && single.old_string.length >= CHUNK_SIZE) {
     return diffToolInputsOnly(file_path, [single]);
   }

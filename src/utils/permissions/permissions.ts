@@ -8,15 +8,12 @@ import {
 } from '../../services/mcp/mcpStringUtils.js'
 import type { Tool, ToolPermissionContext, ToolUseContext } from '../../Tool.js'
 import { AGENT_TOOL_NAME } from '../../tools/AgentTool/constants.js'
-import { shouldUseSandbox } from '../../tools/BashTool/shouldUseSandbox.js'
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
-import { REPL_TOOL_NAME } from '../../tools/REPLTool/constants.js'
 import type { AssistantMessage } from '../../types/message.js'
 import { extractOutputRedirections } from '../bash/commands.js'
 import { logForDebugging } from '../debug.js'
 import { AbortError, toError } from '../errors.js'
 import { logError } from '../log.js'
-import { SandboxManager } from '../sandbox/sandbox-adapter.js'
 import {
   getSettingSourceDisplayNameLowercase,
   SETTING_SOURCES,
@@ -560,14 +557,11 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
       // Before running the auto mode classifier, check if acceptEdits mode would
       // allow this action. This avoids expensive classifier API calls for safe
       // operations like file edits in the working directory.
-      // Skip for Agent and REPL — their checkPermissions returns 'allow' for
-      // acceptEdits mode, which would silently bypass the classifier. REPL
-      // code can contain VM escapes between inner tool calls; the classifier
-      // must see the glue JavaScript, not just the inner tool calls.
+      // Skip for Agent — its checkPermissions returns 'allow' for
+      // acceptEdits mode, which would silently bypass the classifier.
       if (
         result.behavior === 'ask' &&
-        tool.name !== AGENT_TOOL_NAME &&
-        tool.name !== REPL_TOOL_NAME
+        tool.name !== AGENT_TOOL_NAME
       ) {
         try {
           const parsedInput = tool.inputSchema.parse(input)
@@ -1058,23 +1052,14 @@ export async function checkRuleBasedPermissions(
   // 1b. Entire tool has an ask rule
   const askRule = getAskRuleForTool(appState.toolPermissionContext, tool)
   if (askRule) {
-    const canSandboxAutoAllow =
-      tool.name === BASH_TOOL_NAME &&
-      SandboxManager.isSandboxingEnabled() &&
-      SandboxManager.isAutoAllowBashIfSandboxedEnabled() &&
-      shouldUseSandbox(input)
-
-    if (!canSandboxAutoAllow) {
-      return {
-        behavior: 'ask',
-        decisionReason: {
-          type: 'rule',
-          rule: askRule,
-        },
-        message: createPermissionRequestMessage(tool.name),
-      }
+    return {
+      behavior: 'ask',
+      decisionReason: {
+        type: 'rule',
+        rule: askRule,
+      },
+      message: createPermissionRequestMessage(tool.name),
     }
-    // Fall through to let tool.checkPermissions handle command-specific rules
   }
 
   // 1c. Tool-specific permission check (e.g. bash subcommand rules)
@@ -1150,26 +1135,14 @@ async function hasPermissionsToUseToolInner(
   // 1b. Check if the entire tool should always ask for permission
   const askRule = getAskRuleForTool(appState.toolPermissionContext, tool)
   if (askRule) {
-    // When autoAllowBashIfSandboxed is on, sandboxed commands skip the ask rule and
-    // auto-allow via Bash's checkPermissions. Commands that won't be sandboxed (excluded
-    // commands, dangerouslyDisableSandbox) still need to respect the ask rule.
-    const canSandboxAutoAllow =
-      tool.name === BASH_TOOL_NAME &&
-      SandboxManager.isSandboxingEnabled() &&
-      SandboxManager.isAutoAllowBashIfSandboxedEnabled() &&
-      shouldUseSandbox(input)
-
-    if (!canSandboxAutoAllow) {
-      return {
-        behavior: 'ask',
-        decisionReason: {
-          type: 'rule',
-          rule: askRule,
-        },
-        message: createPermissionRequestMessage(tool.name),
-      }
+    return {
+      behavior: 'ask',
+      decisionReason: {
+        type: 'rule',
+        rule: askRule,
+      },
+      message: createPermissionRequestMessage(tool.name),
     }
-    // Fall through to let Bash's checkPermissions handle command-specific rules
   }
 
   // 1c. Ask the tool implementation for a permission result
