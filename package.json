@@ -4,7 +4,8 @@
   "description": "Cocode opens coding-agent workflows to any LLM — OpenAI, Gemini, DeepSeek, Ollama, and 200+ models",
   "type": "module",
   "bin": {
-    "cocode": "./bin/cocode"
+    "cocode": "./bin/cocode",
+    "spawn-agent": "./bin/spawn-agent"
   },
   "exports": {
     "./package.json": "./package.json",

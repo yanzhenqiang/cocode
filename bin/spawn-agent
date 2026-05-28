@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ $# -lt 2 ]; then
+    echo "Usage: spawn-agent <session-name> <task-description>" >&2
+    exit 1
+fi
+
+SESSION_NAME="$1"
+shift
+PROMPT="$*"
+
+# Create agent workspace in current project
+AGENT_DIR="$(pwd)/.cocode/agents/$SESSION_NAME"
+mkdir -p "$AGENT_DIR"
+
+# Write prompt file
+printf '%s\n' "$PROMPT" > "$AGENT_DIR/prompt.txt"
+
+# Get parent tmux session
+PARENT=$(tmux display-message -p '#S' 2>/dev/null || echo "unknown")
+
+# Launch tmux session with the agent
+# Inherits current env (API keys, etc.)
+tmux new-session -d -s "$SESSION_NAME" \
+  -e "PARENT_SESSION=$PARENT" \
+  -e "AGENT_ID=$SESSION_NAME" \
+  "cd '$AGENT_DIR' && cocode --prompt-file prompt.txt"
+
+echo "Spawned: $SESSION_NAME"
+echo "Workspace: $AGENT_DIR"

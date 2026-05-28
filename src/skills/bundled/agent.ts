@@ -1,46 +1,24 @@
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
-const AGENT_SKILL_PROMPT = `You are an agent orchestrator. Your job is to spawn and manage subagents running in independent tmux sessions.
+const AGENT_SKILL_PROMPT = `Spawn a subagent in an independent tmux session with its own workspace.
 
-## When to spawn a subagent
+Each agent gets a dedicated directory at \`$(pwd)/.cocode/agents/<session-name>/\` containing its prompt and working files.
 
-Spawn a subagent when:
-- The task is self-contained and can run in parallel
-- The task would clutter the main context window with raw output
-- The task requires a different working directory or isolation
+## How to spawn an agent
 
-## How to spawn a subagent
+Run the \`spawn-agent\` command:
 
-1. **Generate a unique session name**:
-   \`\`\`bash
-   SESSION_NAME="agent-$(uuidgen | tr -d '-')"
-   \`\`\`
+\`\`\`bash
+SESSION_NAME="agent-$(uuidgen | tr -d '-')"
+spawn-agent "$SESSION_NAME" "<task description>"
+\`\`\`
 
-2. **Write the prompt to a temp file** (avoids shell escaping issues):
-   \`\`\`bash
-   TMP="\${TMPDIR:-/tmp}"
-   PROMPT_FILE="$TMP/cocode/prompts/\${SESSION_NAME}.txt"
-   mkdir -p "$(dirname "$PROMPT_FILE")"
-   cat > "$PROMPT_FILE" << 'EOF'
-   <your prompt here>
-   EOF
-   \`\`\`
-
-3. **Create the tmux session** with the cocode process:
-   \`\`\`bash
-   PARENT=$(tmux display-message -p '#S')
-   tmux new-session -d -s "$SESSION_NAME" \
-     -e "PARENT_SESSION=$PARENT" \
-     -e "AGENT_TYPE=Explore" \
-     -e "AGENT_ID=$SESSION_NAME" \
-     bash -lc "cocode --prompt-file \"$PROMPT_FILE\""
-   \`\`\`
-
-4. **Verify the session was created**:
-   \`\`\`bash
-   tmux has-session -t "$SESSION_NAME" && echo "Spawned: $SESSION_NAME"
-   \`\`\`
+The \`spawn-agent\` script will:
+1. Create \`$(pwd)/.cocode/agents/$SESSION_NAME/\`
+2. Write the task description to \`prompt.txt\`
+3. Launch a tmux session running cocode with that prompt
+4. Set \`PARENT_SESSION\` and \`AGENT_ID\` environment variables
 
 ## How to communicate with a running subagent
 
@@ -53,7 +31,8 @@ Spawn a subagent when:
 
 Subagents are independent cocode processes. They:
 - Run in their own tmux session with a full-screen pane
-- Can use all tools (Bash, Read, Edit, etc.)
+- Work inside \`$(pwd)/.cocode/agents/<session-name>/\`
+- Inherit the parent's environment (API keys, etc.)
 - Can communicate back to the parent via \`tmux send-keys -t "$PARENT_SESSION"\`
 - Automatically exit when their task is complete (the tmux session disappears)
 
@@ -72,7 +51,7 @@ export function registerAgentSkill(): void {
     getPromptForCommand: async (args) => {
       return [
         { type: 'text', text: AGENT_SKILL_PROMPT },
-        { type: 'text', text: `\\n## User Request\\n\\n${args}` },
+        { type: 'text', text: `\n## User Request\n\n${args}` },
       ]
     },
   })
