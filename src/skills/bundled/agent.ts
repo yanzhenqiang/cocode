@@ -13,12 +13,16 @@ Run the \`spawn-agent\` command:
 SESSION_NAME="agent-$(uuidgen | tr -d '-')"
 spawn-agent "$SESSION_NAME" "<task description>"
 \`\`\`
+TODO: Support fork-mode subagents that inherit the parent's full conversation
+context (history, file state, etc.). When fork mode is available, use
+\`cocode --continue <parent-session-id>\` instead of a fresh cocode process.
 
 The \`spawn-agent\` script will:
 1. Create \`$(pwd)/.cocode/agents/$SESSION_NAME/\`
 2. Write the task description to \`prompt.txt\`
-3. Launch a tmux session running cocode with that prompt
-4. Set \`PARENT_SESSION\` and \`AGENT_ID\` environment variables
+3. Launch a tmux session running cocode
+4. Send the prompt to the agent via tmux
+5. Set \`PARENT_SESSION\` and \`AGENT_ID\` environment variables
 
 ## How to communicate with a running subagent
 

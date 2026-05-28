@@ -14,18 +14,21 @@ PROMPT="$*"
 AGENT_DIR="$(pwd)/.cocode/agents/$SESSION_NAME"
 mkdir -p "$AGENT_DIR"
 
-# Write prompt file
+# Write prompt file (for reference)
 printf '%s\n' "$PROMPT" > "$AGENT_DIR/prompt.txt"
 
 # Get parent tmux session
 PARENT=$(tmux display-message -p '#S' 2>/dev/null || echo "unknown")
 
-# Launch tmux session with the agent
-# Inherits current env (API keys, etc.)
+# Launch tmux session with the agent (no initial prompt)
 tmux new-session -d -s "$SESSION_NAME" \
   -e "PARENT_SESSION=$PARENT" \
   -e "AGENT_ID=$SESSION_NAME" \
-  "cd '$AGENT_DIR' && cocode --prompt-file prompt.txt"
+  "cd '$AGENT_DIR' && cocode"
+
+# Send the prompt via tmux
+sleep 2
+tmux send-keys -t "$SESSION_NAME" "$PROMPT" Enter
 
 echo "Spawned: $SESSION_NAME"
 echo "Workspace: $AGENT_DIR"
