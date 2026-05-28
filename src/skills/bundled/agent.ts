@@ -34,7 +34,7 @@ Spawn a subagent when:
      -e "PARENT_SESSION=$PARENT" \
      -e "AGENT_TYPE=Explore" \
      -e "AGENT_ID=$SESSION_NAME" \
-     "cocode --prompt-file $PROMPT_FILE"
+     bash -lc "cocode --prompt-file \"$PROMPT_FILE\""
    \`\`\`
 
 4. **Verify the session was created**:
