@@ -86,14 +86,6 @@ export async function setup(
   // Scripted calls don't receive injected messages and don't use swarm teammates.
   // Explicit --messaging-socket-path is the escape hatch (per #23222 gate pattern).
 
-  // Teammate snapshot — SIMPLE-only gate (no escape hatch, swarm not used in bare)
-  if (!isBareMode() && isAgentSwarmsEnabled()) {
-    const { captureTeammateModeSnapshot } = await import(
-      './utils/swarm/backends/teammateModeSnapshot.js'
-    )
-    captureTeammateModeSnapshot()
-  }
-
   // Terminal backup restoration — interactive only. Print mode doesn't
   // interact with terminal settings; the next interactive session will
   // detect and restore any interrupted setup.

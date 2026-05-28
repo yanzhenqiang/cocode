@@ -52,7 +52,10 @@ export function useSwarmBanner(): SwarmBannerInfo {
   const [insideTmux, setInsideTmux] = React.useState<boolean | null>(null)
 
   React.useEffect(() => {
-    void isInsideTmux().then(setInsideTmux)
+    const result = isInsideTmux()
+    if (result && typeof result.then === 'function') {
+      void result.then(setInsideTmux)
+    }
   }, [])
 
   const state = store.getState()

@@ -63,15 +63,12 @@ import { getSessionIngressAuthToken } from './utils/sessionIngressAuth.js';
 import { settingsChangeDetector } from './utils/settings/changeDetector.js';
 import { skillChangeDetector } from './utils/skills/skillChangeDetector.js';
 import { jsonParse, writeFileSync_DEPRECATED } from './utils/slowOperations.js';
-import { computeInitialTeamContext } from './utils/swarm/reconnection.js';
 import { initializeWarningHandler } from './utils/warningHandler.js';
 import { isWorktreeModeEnabled } from './utils/worktreeModeEnabled.js';
 
 // Lazy require to avoid circular dependency: teammate.ts -> AppState.tsx -> ... -> main.tsx
 /* eslint-disable @typescript-eslint/no-require-imports */
 const getTeammateUtils = () => require('./utils/teammate.js') as typeof import('./utils/teammate.js');
-const getTeammatePromptAddendum = () => require('./utils/swarm/teammatePromptAddendum.js') as typeof import('./utils/swarm/teammatePromptAddendum.js');
-const getTeammateModeSnapshot = () => require('./utils/swarm/backends/teammateModeSnapshot.js') as typeof import('./utils/swarm/backends/teammateModeSnapshot.js');
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { relative, resolve } from 'path';
 import { isAnalyticsDisabled } from 'src/services/analytics/config.js';
@@ -1149,9 +1146,7 @@ async function run(): Promise<CommanderCommand> {
 
       // Set teammate mode CLI override if provided
       // This must be done before setup() captures the snapshot
-      if (teammateOpts.teammateMode) {
-        getTeammateModeSnapshot().setCliTeammateModeOverride?.(teammateOpts.teammateMode);
-      }
+      // Swarm subsystem removed in v0.12.9; teammateMode override is no-op.
     }
 
     // Extract remote sdk options
@@ -1318,11 +1313,7 @@ async function run(): Promise<CommanderCommand> {
       }
     }
 
-    // Add teammate-specific system prompt addendum for tmux teammates
-    if (isAgentSwarmsEnabled() && storedTeammateOpts?.agentId && storedTeammateOpts?.agentName && storedTeammateOpts?.teamName) {
-      const addendum = getTeammatePromptAddendum().TEAMMATE_SYSTEM_PROMPT_ADDENDUM;
-      appendSystemPrompt = appendSystemPrompt ? `${appendSystemPrompt}\n\n${addendum}` : addendum;
-    }
+    // Teammate prompt addendum removed with swarm subsystem (v0.12.9).
     const {
       mode: permissionMode,
       notification: permissionModeNotification
@@ -2698,8 +2689,7 @@ async function run(): Promise<CommanderCommand> {
       ...(isAdvisorEnabled() && advisorModel && {
         advisorModel
       }),
-      // Compute teamContext synchronously to avoid useEffect setState during render.
-      teamContext: computeInitialTeamContext?.()
+      // teamContext removed with swarm subsystem (v0.12.9).
     };
 
     // Add CLI initial prompt to history
