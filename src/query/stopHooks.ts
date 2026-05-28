@@ -54,7 +54,7 @@ import { isBareMode } from '../utils/envUtils.js'
 import {
   createCacheSafeParams,
   saveCacheSafeParams,
-} from '../utils/forkedAgent.js'
+} from '../utils/backgroundQuery.js'
 
 type StopHookResult = {
   blockingErrors: Message[]

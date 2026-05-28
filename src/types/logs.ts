@@ -85,10 +85,9 @@ export type LastPromptMessage = {
 }
 
 /**
- * Periodic fork-generated summary of what the agent is currently doing.
- * Written every min(5 steps, 2min) by forking the main thread mid-turn so
- * `claude ps` can show something more useful than the last user prompt
- * (which is often "ok go" or "fix it").
+ * Legacy periodic summary of what the agent is currently doing.
+ * No longer generated; kept in the type union for backwards compatibility
+ * with existing session files.
  */
 export type TaskSummaryMessage = {
   type: 'task-summary'

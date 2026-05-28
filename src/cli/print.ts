@@ -168,7 +168,7 @@ import {
   logSuggestionOutcome,
   type PromptVariant,
 } from 'src/services/PromptSuggestion/promptSuggestion.js'
-import { getLastCacheSafeParams } from 'src/utils/forkedAgent.js'
+import { getLastCacheSafeParams } from 'src/utils/backgroundQuery.js'
 import { getAccountInformation } from 'src/utils/auth.js'
 import { OAuthService } from 'src/services/oauth/index.js'
 import { installOAuthTokens } from 'src/cli/handlers/auth.js'
@@ -899,7 +899,7 @@ export async function runHeadless(
   // Drain any in-flight memory extraction before shutdown. The response is
   // already flushed above, so this adds no user-visible latency — it just
   // delays process exit so gracefulShutdownSync's 5s failsafe doesn't kill
-  // the forked agent mid-flight. Gated by isExtractModeActive so the
+  // the background agent mid-flight. Gated by isExtractModeActive so the
   // tengu_slate_thimble flag controls non-interactive extraction end-to-end.
   if (feature('EXTRACT_MEMORIES') && isExtractModeActive()) {
     await extractMemoriesModule!.drainPendingExtraction()
@@ -3519,7 +3519,7 @@ function runHeadlessStreaming(
           })()
         } else if (message.request.subtype === 'side_question') {
           // Same fire-and-forget pattern as generate_session_title above —
-          // the forked agent's API roundtrip must not block the stdin loop.
+          // the background agent's API roundtrip must not block the stdin loop.
           //
           // The snapshot captured by stopHooks (for querySource === 'sdk')
           // holds the exact systemPrompt/userContext/systemContext/messages
@@ -3542,7 +3542,7 @@ function runHeadlessStreaming(
                     ...saved,
                     // If the last turn was interrupted, the snapshot holds an
                     // already-aborted controller; createChildAbortController in
-                    // createSubagentContext would propagate it and the fork
+                    // createSubagentContext would propagate it and the subagent
                     // would die before sending a request. The controller is
                     // not part of the cache key — swapping in a fresh one is
                     // safe. Same guard as generate_session_title above.

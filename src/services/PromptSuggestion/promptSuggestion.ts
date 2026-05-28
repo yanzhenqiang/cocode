@@ -8,8 +8,8 @@ import { toError } from '../../utils/errors.js'
 import {
   type CacheSafeParams,
   createCacheSafeParams,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import type { REPLHookContext } from '../../utils/hooks/postSamplingHooks.js'
 import { logError } from '../../utils/log.js'
 import {
@@ -262,7 +262,7 @@ export async function generateSuggestion(
   //   - skipTranscript (client-side only)
   //   - skipCacheWrite (controls cache_control markers, not the cache key)
   //   - canUseTool (client-side permission check)
-  const result = await runForkedAgent({
+  const result = await runBackgroundQuery({
     promptMessages: [createUserMessage({ content: prompt })],
     cacheSafeParams, // Don't override tools/thinking settings - busts cache
     canUseTool,

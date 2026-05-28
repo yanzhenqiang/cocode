@@ -52,7 +52,7 @@ import { createAgentId } from './uuid.js'
  * inherited toolUseContext.options.thinkingConfig — but can be inadvertently
  * changed if the fork sets maxOutputTokens, which clamps budget_tokens in
  * claude.ts (but only for older models that do not use adaptive thinking).
- * See the maxOutputTokens doc on ForkedAgentParams.
+ * See the maxOutputTokens doc on BackgroundQueryParams.
  */
 export type CacheSafeParams = {
   /** System prompt - must match parent for cache hits */
@@ -80,7 +80,7 @@ export function getLastCacheSafeParams(): CacheSafeParams | null {
   return lastCacheSafeParams
 }
 
-export type ForkedAgentParams = {
+export type BackgroundQueryParams = {
   /** Messages to start the forked query loop with */
   promptMessages: Message[]
   /** Cache-safe parameters that must match the parent query */
@@ -112,7 +112,7 @@ export type ForkedAgentParams = {
   skipCacheWrite?: boolean
 }
 
-export type ForkedAgentResult = {
+export type BackgroundQueryResult = {
   /** All messages yielded during the query loop */
   messages: Message[]
   /** Accumulated usage across all API calls in the loop */
@@ -121,7 +121,7 @@ export type ForkedAgentResult = {
 
 /**
  * Creates CacheSafeParams from REPLHookContext.
- * Use this helper when forking from a post-sampling hook context.
+ * Use this helper when spawning a background query from a post-sampling hook context.
  *
  * To override specific fields (e.g., toolUseContext with cloned file state),
  * spread the result and override: `{ ...createCacheSafeParams(context), toolUseContext: clonedContext }`
@@ -173,7 +173,7 @@ export function createGetAppStateWithAllowedTools(
 /**
  * Result from preparing a forked command context.
  */
-export type PreparedForkedContext = {
+export type PreparedQueryContext = {
   /** Skill content with args replaced */
   skillContent: string
   /** Modified getAppState with allowed tools */
@@ -188,11 +188,11 @@ export type PreparedForkedContext = {
  * Prepares the context for executing a forked command/skill.
  * This handles the common setup that both SkillTool and slash commands need.
  */
-export async function prepareForkedCommandContext(
+export async function prepareCommandContext(
   command: PromptCommand,
   args: string,
   context: ToolUseContext,
-): Promise<PreparedForkedContext> {
+): Promise<PreparedQueryContext> {
   // Get skill content with $ARGUMENTS replaced
   const skillPrompt = await command.getPromptForCommand(args, context)
   const skillContent = skillPrompt
@@ -297,7 +297,7 @@ export type SubagentContextOverrides = {
   /** When true, canUseTool must always be called even when hooks auto-approve.
    *  Used by speculation for overlay file path rewriting. */
   requireCanUseTool?: boolean
-  /** Override replacement state — used by resumeAgentBackground to thread
+  /** Override replacement state — used by async agent resumption to thread
    * state reconstructed from the resumed sidechain so the same results
    * are re-replaced (prompt cache stability). */
   contentReplacementState?: ContentReplacementState
@@ -471,7 +471,7 @@ export function createSubagentContext(
  *
  * @example
  * ```typescript
- * const result = await runForkedAgent({
+ * const result = await runBackgroundQuery({
  *   promptMessages: [createUserMessage({ content: userPrompt })],
  *   cacheSafeParams: {
  *     systemPrompt,
@@ -486,7 +486,7 @@ export function createSubagentContext(
  * })
  * ```
  */
-export async function runForkedAgent({
+export async function runBackgroundQuery({
   promptMessages,
   cacheSafeParams,
   canUseTool,
@@ -498,7 +498,7 @@ export async function runForkedAgent({
   onMessage,
   skipTranscript,
   skipCacheWrite,
-}: ForkedAgentParams): Promise<ForkedAgentResult> {
+}: BackgroundQueryParams): Promise<BackgroundQueryResult> {
   const startTime = Date.now()
   const outputMessages: Message[] = []
   let totalUsage: NonNullableUsage = { ...EMPTY_USAGE }
@@ -530,7 +530,7 @@ export async function runForkedAgent({
   if (agentId) {
     await recordSidechainTranscript(initialMessages, agentId).catch(err =>
       logForDebugging(
-        `Forked agent [${forkLabel}] failed to record initial transcript: ${err}`,
+        `Background query [${forkLabel}] failed to record initial transcript: ${err}`,
       ),
     )
     // Track the last recorded message UUID for parent chain continuity
@@ -571,13 +571,13 @@ export async function runForkedAgent({
       }
 
       logForDebugging(
-        `Forked agent [${forkLabel}] received message: type=${message.type}`,
+        `Background query [${forkLabel}] received message: type=${message.type}`,
       )
 
       outputMessages.push(message as Message)
       onMessage?.(message as Message)
 
-      // Record transcript for recordable message types (same pattern as runAgent.ts)
+      // Record transcript for recordable message types (same pattern as agent tasks)
       const msg = message as Message
       if (
         agentId &&
@@ -588,7 +588,7 @@ export async function runForkedAgent({
         await recordSidechainTranscript([msg], agentId, lastRecordedUuid).catch(
           err =>
             logForDebugging(
-              `Forked agent [${forkLabel}] failed to record transcript: ${err}`,
+              `Background query [${forkLabel}] failed to record transcript: ${err}`,
             ),
         )
         if (msg.type !== 'progress') {
@@ -597,20 +597,20 @@ export async function runForkedAgent({
       }
     }
   } finally {
-    // Release cloned file state cache memory (same pattern as runAgent.ts)
+    // Release cloned file state cache memory (same pattern as agent tasks)
     isolatedToolUseContext.readFileState.clear()
-    // Release the cloned fork context messages
+    // Release the cloned background query context messages
     initialMessages.length = 0
   }
 
   logForDebugging(
-    `Forked agent [${forkLabel}] finished: ${outputMessages.length} messages, types=[${outputMessages.map(m => m.type).join(', ')}], totalUsage: input=${totalUsage.input_tokens} output=${totalUsage.output_tokens} cacheRead=${totalUsage.cache_read_input_tokens} cacheCreate=${totalUsage.cache_creation_input_tokens}`,
+    `Background query [${forkLabel}] finished: ${outputMessages.length} messages, types=[${outputMessages.map(m => m.type).join(', ')}], totalUsage: input=${totalUsage.input_tokens} output=${totalUsage.output_tokens} cacheRead=${totalUsage.cache_read_input_tokens} cacheCreate=${totalUsage.cache_creation_input_tokens}`,
   )
 
   const durationMs = Date.now() - startTime
 
-  // Log the fork query metrics with full NonNullableUsage
-  logForkAgentQueryEvent({
+  // Log the background query metrics with full NonNullableUsage
+  logBackgroundQueryEvent({
     forkLabel,
     querySource,
     durationMs,
@@ -628,7 +628,7 @@ export async function runForkedAgent({
 /**
  * Logs the tengu_fork_agent_query event with full NonNullableUsage fields.
  */
-function logForkAgentQueryEvent({
+function logBackgroundQueryEvent({
   forkLabel,
   querySource,
   durationMs,

@@ -45,7 +45,7 @@ export type InProcessTeammateTaskState = TaskStateBase & {
 
   // State
   error?: string
-  result?: AgentToolResult // Reuse existing type since teammates run via runAgent()
+  result?: AgentToolResult // Reuse existing type since teammates use the same result shape
   progress?: AgentProgress
 
   // Conversation history for zoomed view (NOT mailbox messages)

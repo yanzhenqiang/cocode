@@ -61,8 +61,8 @@ export function useScheduledTasks({
     if (!isKairosCronEnabled()) return
 
     // System-generated — hidden from queue preview and transcript UI.
-    // In brief mode, executeForkedSlashCommand runs as a background
-    // subagent and returns no visible messages. In normal mode,
+    // In brief mode, slash commands run as background subagents
+    // and return no visible messages. In normal mode,
     // isMeta is only propagated for plain-text prompts (via
     // processTextPrompt); slash commands like /context:fork do not
     // forward isMeta, so their messages remain visible in the

@@ -391,7 +391,7 @@ async function* queryLoop(
     // cleanly. No-ops when contentReplacementState is undefined (feature off).
     // Persist only for querySources that read records back on resume: agentId
     // routes to sidechain file (AgentTool resume) or session file (/resume).
-    // Ephemeral runForkedAgent callers (agent_summary etc.) don't persist.
+    // Ephemeral runBackgroundQuery callers (agent_summary etc.) don't persist.
     const persistReplacements =
       querySource.startsWith('agent:') ||
       querySource.startsWith('repl_main_thread')

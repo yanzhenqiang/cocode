@@ -4,213 +4,34 @@ import { setPromptId } from 'src/bootstrap/state.js';
 import { builtInCommandNames, type Command, type CommandBase, findCommand, getCommand, getCommandName, hasCommand, type PromptCommand } from 'src/commands.js';
 import { NO_CONTENT_MESSAGE } from 'src/constants/messages.js';
 import type { SetToolJSXFn, ToolUseContext } from 'src/Tool.js';
-import type { AssistantMessage, AttachmentMessage, Message, NormalizedUserMessage, ProgressMessage, UserMessage } from 'src/types/message.js';
+import type { AttachmentMessage, UserMessage } from 'src/types/message.js';
 import { addInvokedSkill, getSessionId } from '../../bootstrap/state.js';
 import { COMMAND_MESSAGE_TAG, COMMAND_NAME_TAG } from '../../constants/xml.js';
 import type { CanUseToolFn } from '../../hooks/useCanUseTool.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, type AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED, logEvent } from '../../services/analytics/index.js';
-import { getDumpPromptsPath } from '../../services/api/dumpPrompts.js';
 import { buildPostCompactMessages } from '../../services/compact/compact.js';
 import { resetMicrocompactState } from '../../services/compact/microCompact.js';
-import type { Progress as AgentProgress } from '../../tools/AgentTool/AgentTool.js';
-import { runAgent } from '../../tools/AgentTool/runAgent.js';
-import { renderToolUseProgressMessage } from '../../tools/AgentTool/UI.js';
 import type { CommandResultDisplay } from '../../types/command.js';
-import { createAbortController } from '../abortController.js';
 import { getAgentContext } from '../agentContext.js';
 import { createAttachmentMessage, getAttachmentMessages } from '../attachments.js';
-import { logForDebugging } from '../debug.js';
-import { isEnvTruthy } from '../envUtils.js';
 import { AbortError, MalformedCommandError } from '../errors.js';
-import { getDisplayPath } from '../file.js';
-import { extractResultText, prepareForkedCommandContext } from '../forkedAgent.js';
 import { getFsImplementation } from '../fsOperations.js';
 import { isFullscreenEnvEnabled } from '../fullscreen.js';
 import { toArray } from '../generators.js';
 import { registerSkillHooks } from '../hooks/registerSkillHooks.js';
 import { logError } from '../log.js';
-import { enqueuePendingNotification } from '../messageQueueManager.js';
-import { createCommandInputMessage, createSyntheticUserCaveatMessage, createSystemMessage, createUserInterruptionMessage, createUserMessage, formatCommandInputTags, isCompactBoundaryMessage, isSystemLocalCommandMessage, normalizeMessages, prepareUserContent } from '../messages.js';
-import type { ModelAlias } from '../model/aliases.js';
+import { createCommandInputMessage, createSyntheticUserCaveatMessage, createSystemMessage, createUserInterruptionMessage, createUserMessage, formatCommandInputTags, isCompactBoundaryMessage, isSystemLocalCommandMessage, prepareUserContent } from '../messages.js';
 import { parseToolListFromCLI } from '../permissions/permissionSetup.js';
-import { hasPermissionsToUseTool } from '../permissions/permissions.js';
 import { isOfficialMarketplaceName, parsePluginIdentifier } from '../plugins/pluginIdentifier.js';
 import { isRestrictedToPluginOnly, isSourceAdminTrusted } from '../settings/pluginOnlyPolicy.js';
 import { parseSlashCommand } from '../slashCommandParsing.js';
-import { sleep } from '../sleep.js';
 import { recordSkillUsage } from '../suggestions/skillUsageTracking.js';
 import { logOTelEvent, redactIfDisabled } from '../telemetry/events.js';
 import { buildPluginCommandTelemetryFields } from '../telemetry/pluginTelemetry.js';
-import { getAssistantMessageContentLength } from '../tokens.js';
-import { createAgentId } from '../uuid.js';
-import { getWorkload } from '../workloadContext.js';
 import type { ProcessUserInputBaseResult, ProcessUserInputContext } from './processUserInput.js';
 type SlashCommandResult = ProcessUserInputBaseResult & {
   command: Command;
 };
-
-// Poll interval and deadline for MCP settle before launching a background
-// forked subagent. MCP servers typically connect within 1-3s of startup;
-// 10s headroom covers slow SSE handshakes.
-const MCP_SETTLE_POLL_MS = 200;
-const MCP_SETTLE_TIMEOUT_MS = 10_000;
-
-/**
- * Executes a slash command with context: fork in a sub-agent.
- */
-async function executeForkedSlashCommand(command: CommandBase & PromptCommand, args: string, context: ProcessUserInputContext, precedingInputBlocks: ContentBlockParam[], setToolJSX: SetToolJSXFn, canUseTool: CanUseToolFn): Promise<SlashCommandResult> {
-  const agentId = createAgentId();
-  const pluginMarketplace = command.pluginInfo ? parsePluginIdentifier(command.pluginInfo.repository).marketplace : undefined;
-  logEvent('tengu_slash_command_forked', {
-    command_name: command.name as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    invocation_trigger: 'user-slash' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    ...(command.pluginInfo && {
-      _PROTO_plugin_name: command.pluginInfo.pluginManifest.name as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      ...(pluginMarketplace && {
-        _PROTO_marketplace_name: pluginMarketplace as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED
-      }),
-      ...buildPluginCommandTelemetryFields(command.pluginInfo)
-    })
-  });
-  const {
-    skillContent,
-    modifiedGetAppState,
-    baseAgent,
-    promptMessages
-  } = await prepareForkedCommandContext(command, args, context);
-
-  // Merge skill's effort into the agent definition so runAgent applies it
-  const agentDefinition = command.effort !== undefined ? {
-    ...baseAgent,
-    effort: command.effort
-  } : baseAgent;
-  logForDebugging(`Executing forked slash command /${command.name} with agent ${agentDefinition.agentType}`);
-
-  // Assistant mode: fire-and-forget. Launch subagent in background, return
-  // immediately, re-enqueue the result as an isMeta prompt when done.
-  // Without this, N scheduled tasks on startup = N serial (subagent + main
-  // agent turn) cycles blocking user input. With this, N subagents run in
-  // parallel and results trickle into the queue as they finish.
-  //
-  // Gated on kairosEnabled (not CLAUDE_CODE_BRIEF) because the closed loop
-  // depends on assistant-mode invariants: scheduled_tasks.json exists,
-  // the main agent knows to pipe results through SendUserMessage, and
-  // isMeta prompts are hidden. Outside assistant mode, context:fork commands
-  // are user-invoked skills (/commit etc.) that should run synchronously
-  // with the progress UI.
-  // KAIROS background forked commands removed — KAIROS is false in external builds.
-
-  // Collect messages from the forked agent
-  const agentMessages: Message[] = [];
-
-  // Build progress messages for the agent progress UI
-  const progressMessages: ProgressMessage<AgentProgress>[] = [];
-  const parentToolUseID = `forked-command-${command.name}`;
-  let toolUseCounter = 0;
-
-  // Helper to create a progress message from an agent message
-  const createProgressMessage = (message: AssistantMessage | NormalizedUserMessage): ProgressMessage<AgentProgress> => {
-    toolUseCounter++;
-    return {
-      type: 'progress',
-      data: {
-        message,
-        type: 'agent_progress',
-        prompt: skillContent,
-        agentId
-      },
-      parentToolUseID,
-      toolUseID: `${parentToolUseID}-${toolUseCounter}`,
-      timestamp: new Date().toISOString(),
-      uuid: randomUUID()
-    };
-  };
-
-  // Helper to update progress display using agent progress UI
-  const updateProgress = (): void => {
-    setToolJSX({
-      jsx: renderToolUseProgressMessage(progressMessages, {
-        tools: context.options.tools,
-        verbose: false
-      }),
-      shouldHidePromptInput: false,
-      shouldContinueAnimation: true,
-      showSpinner: true
-    });
-  };
-
-  // Show initial "Initializing…" state
-  updateProgress();
-
-  // Run the sub-agent
-  try {
-    for await (const message of runAgent({
-      agentDefinition,
-      promptMessages,
-      toolUseContext: {
-        ...context,
-        getAppState: modifiedGetAppState
-      },
-      canUseTool,
-      isAsync: false,
-      querySource: 'agent:custom',
-      model: command.model as ModelAlias | undefined,
-      availableTools: context.options.tools
-    })) {
-      agentMessages.push(message);
-      const normalizedNew = normalizeMessages([message]);
-
-      // Add progress message for assistant messages (which contain tool uses)
-      if (message.type === 'assistant') {
-        // Increment token count in spinner for assistant messages
-        const contentLength = getAssistantMessageContentLength(message);
-        if (contentLength > 0) {
-          context.setResponseLength(len => len + contentLength);
-        }
-        const normalizedMsg = normalizedNew[0];
-        if (normalizedMsg && normalizedMsg.type === 'assistant') {
-          progressMessages.push(createProgressMessage(message));
-          updateProgress();
-        }
-      }
-
-      // Add progress message for user messages (which contain tool results)
-      if (message.type === 'user') {
-        const normalizedMsg = normalizedNew[0];
-        if (normalizedMsg && normalizedMsg.type === 'user') {
-          progressMessages.push(createProgressMessage(normalizedMsg));
-          updateProgress();
-        }
-      }
-    }
-  } finally {
-    // Clear the progress display
-    setToolJSX(null);
-  }
-  let resultText = extractResultText(agentMessages, 'Command completed');
-  logForDebugging(`Forked slash command /${command.name} completed with agent ${agentId}`);
-
-  // Prepend debug log for ant users so it appears inside the command output
-  if ("external" === 'ant') {
-    resultText = `[internal] API calls: ${getDisplayPath(getDumpPromptsPath(agentId))}\n${resultText}`;
-  }
-
-  // Return the result as a user message (simulates the agent's output)
-  const messages: UserMessage[] = [createUserMessage({
-    content: prepareUserContent({
-      inputString: `/${getCommandName(command)} ${args}`.trim(),
-      precedingInputBlocks
-    })
-  }), createUserMessage({
-    content: `<local-command-stdout>\n${resultText}\n</local-command-stdout>`
-  })];
-  return {
-    messages,
-    shouldQuery: false,
-    command,
-    resultText
-  };
-}
 
 /**
  * Determines if a string looks like a valid command name.
@@ -641,10 +462,6 @@ async function getMessagesForSlashCommand(commandName: string, args: string, set
       case 'prompt':
         {
           try {
-            // Check if command should run as forked sub-agent
-            if (command.context === 'fork') {
-              return await executeForkedSlashCommand(command, args, context, precedingInputBlocks, setToolJSX, canUseTool ?? hasPermissionsToUseTool);
-            }
             return await getMessagesForPromptSlashCommand(command, args, context, precedingInputBlocks, imageContentBlocks, uuid);
           } catch (e) {
             // Handle abort errors specially to show proper "Interrupted" message
@@ -747,7 +564,7 @@ async function getMessagesForPromptSlashCommand(command: CommandBase & PromptCom
 
   // Register skill hooks if defined. Under ["hooks"]-only (skills not locked),
   // user skills still load and reach this point — block hook REGISTRATION here
-  // where source is known. Mirrors the agent frontmatter gate in runAgent.ts.
+  // where source is known. Mirrors the agent frontmatter gate in agent tasks.
   const hooksAllowedForThisSkill = !isRestrictedToPluginOnly('hooks') || isSourceAdminTrusted(command.source);
   if (command.hooks && hooksAllowedForThisSkill) {
     const sessionId = getSessionId();

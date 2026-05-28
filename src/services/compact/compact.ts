@@ -45,8 +45,8 @@ import { hasExactErrorMessage } from '../../utils/errors.js'
 import { cacheToObject } from '../../utils/fileStateCache.js'
 import {
   type CacheSafeParams,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import {
   executePostCompactHooks,
   executePreCompactHooks,
@@ -1172,7 +1172,7 @@ async function streamCompactSummary({
         // creating a thinking config mismatch that invalidates the cache.
         // The streaming fallback path (below) can safely set maxOutputTokensOverride
         // since it doesn't share cache with the main thread.
-        const result = await runForkedAgent({
+        const result = await runBackgroundQuery({
           promptMessages: [summaryRequest],
           cacheSafeParams,
           canUseTool: createCompactCanUseTool(),

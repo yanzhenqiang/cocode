@@ -409,7 +409,7 @@ export function startBackgroundSession({
 
         bgMessages.push(event)
 
-        // Per-message write (matches runAgent.ts pattern) — gives live
+        // Per-message write (matches agent task pattern) — gives live
         // TaskOutput progress and keeps the transcript file current even if
         // /clear re-links the symlink mid-run.
         void recordSidechainTranscript([event], taskId, lastRecordedUuid).catch(

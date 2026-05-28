@@ -13,8 +13,8 @@
 import type { REPLHookContext } from '../../utils/hooks/postSamplingHooks.js'
 import {
   createCacheSafeParams,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import {
   createUserMessage,
   createMemorySavedMessage,
@@ -221,7 +221,7 @@ Sessions since last consolidation (${sessionIds.length}):
 ${sessionIds.map(id => `- ${id}`).join('\n')}`
       const prompt = buildConsolidationPrompt(memoryRoot, transcriptDir, extra)
 
-      const result = await runForkedAgent({
+      const result = await runBackgroundQuery({
         promptMessages: [createUserMessage({ content: prompt })],
         cacheSafeParams: createCacheSafeParams(context),
         canUseTool: createAutoMemCanUseTool(memoryRoot),

@@ -1,6 +1,6 @@
 // Pure (non-React) kill helpers for LocalShellTask.
-// Extracted so runAgent.ts can kill agent-scoped bash tasks without pulling
-// React/Ink into its module graph (same rationale as guards.ts).
+// Extracted so agent tasks can kill agent-scoped bash tasks without pulling
+// React/Ink into their module graph (same rationale as guards.ts).
 
 import type { AppState } from '../../state/AppState.js'
 import type { AgentId } from '../../types/ids.js'
@@ -47,7 +47,7 @@ export function killTask(taskId: string, setAppState: SetAppStateFn): void {
 
 /**
  * Kill all running bash tasks spawned by a given agent.
- * Called from runAgent.ts finally block so background processes don't outlive
+ * Called from agent task finally blocks so background processes don't outlive
  * the agent that started them (prevents 10-day fake-logs.sh zombies).
  */
 export function killShellTasksForAgent(

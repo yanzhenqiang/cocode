@@ -36,7 +36,6 @@ import { buildPluginCommandTelemetryFields } from 'src/utils/telemetry/pluginTel
 import { z } from 'zod/v4'
 import {
   addInvokedSkill,
-  clearInvokedSkillsForAgent,
   getSessionId,
 } from '../../bootstrap/state.js'
 import { COMMAND_MESSAGE_TAG } from '../../constants/xml.js'
@@ -48,18 +47,12 @@ import {
 } from '../../services/analytics/index.js'
 import { getAgentContext } from '../../utils/agentContext.js'
 import { errorMessage } from '../../utils/errors.js'
-import {
-  extractResultText,
-  prepareForkedCommandContext,
-} from '../../utils/forkedAgent.js'
 import { parseFrontmatter } from '../../utils/frontmatterParser.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { createUserMessage, normalizeMessages } from '../../utils/messages.js'
 import type { ModelAlias } from '../../utils/model/aliases.js'
 import { resolveSkillModelOverride } from '../../utils/model/model.js'
 import { recordSkillUsage } from '../../utils/suggestions/skillUsageTracking.js'
-import { createAgentId } from '../../utils/uuid.js'
-import { runAgent } from '../AgentTool/runAgent.js'
 import {
   getToolUseIDFromParentMessage,
   tagMessagesWithToolUseID,
@@ -115,179 +108,6 @@ const remoteSkillModules = feature('EXPERIMENTAL_SKILL_SEARCH')
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-/**
- * Executes a skill in a forked sub-agent context.
- * This runs the skill prompt in an isolated agent with its own token budget.
- */
-async function executeForkedSkill(
-  command: Command & { type: 'prompt' },
-  commandName: string,
-  args: string | undefined,
-  context: ToolUseContext,
-  canUseTool: CanUseToolFn,
-  parentMessage: AssistantMessage,
-  onProgress?: ToolCallProgress<Progress>,
-): Promise<ToolResult<Output>> {
-  const startTime = Date.now()
-  const agentId = createAgentId()
-  const isBuiltIn = builtInCommandNames().has(commandName)
-  const isOfficialSkill = isOfficialMarketplaceSkill(command)
-  const isBundled = command.source === 'bundled'
-  const forkedSanitizedName =
-    isBuiltIn || isBundled || isOfficialSkill ? commandName : 'custom'
-
-  const wasDiscoveredField =
-    feature('EXPERIMENTAL_SKILL_SEARCH') &&
-    remoteSkillModules!.isSkillSearchEnabled()
-      ? {
-          was_discovered:
-            context.discoveredSkillNames?.has(commandName) ?? false,
-        }
-      : {}
-  const pluginMarketplace = command.pluginInfo
-    ? parsePluginIdentifier(command.pluginInfo.repository).marketplace
-    : undefined
-  const queryDepth = context.queryTracking?.depth ?? 0
-  const parentAgentId = getAgentContext()?.agentId
-  logEvent('tengu_skill_tool_invocation', {
-    command_name:
-      forkedSanitizedName as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    // _PROTO_skill_name routes to the privileged skill_name BQ column
-    // (unredacted, all users); command_name stays in additional_metadata as
-    // the redacted variant for general-access dashboards.
-    _PROTO_skill_name:
-      commandName as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-    execution_context:
-      'fork' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    invocation_trigger: (queryDepth > 0
-      ? 'nested-skill'
-      : 'claude-proactive') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    query_depth: queryDepth,
-    ...(parentAgentId && {
-      parent_agent_id:
-        parentAgentId as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    }),
-    ...wasDiscoveredField,
-    ...(process.env.USER_TYPE === 'ant' && {
-      skill_name:
-        commandName as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      skill_source:
-        command.source as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      ...(command.loadedFrom && {
-        skill_loaded_from:
-          command.loadedFrom as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      }),
-      ...(command.kind && {
-        skill_kind:
-          command.kind as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      }),
-    }),
-    ...(command.pluginInfo && {
-      // _PROTO_* routes to PII-tagged plugin_name/marketplace_name BQ columns
-      // (unredacted, all users); plugin_name/plugin_repository stay in
-      // additional_metadata as redacted variants.
-      _PROTO_plugin_name: command.pluginInfo.pluginManifest
-        .name as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      ...(pluginMarketplace && {
-        _PROTO_marketplace_name:
-          pluginMarketplace as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      }),
-      plugin_name: (isOfficialSkill
-        ? command.pluginInfo.pluginManifest.name
-        : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      plugin_repository: (isOfficialSkill
-        ? command.pluginInfo.repository
-        : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      ...buildPluginCommandTelemetryFields(command.pluginInfo),
-    }),
-  })
-
-  const { modifiedGetAppState, baseAgent, promptMessages, skillContent } =
-    await prepareForkedCommandContext(command, args || '', context)
-
-  // Merge skill's effort into the agent definition so runAgent applies it
-  const agentDefinition =
-    command.effort !== undefined
-      ? { ...baseAgent, effort: command.effort }
-      : baseAgent
-
-  // Collect messages from the forked agent
-  const agentMessages: Message[] = []
-
-  logForDebugging(
-    `SkillTool executing forked skill ${commandName} with agent ${agentDefinition.agentType}`,
-  )
-
-  try {
-    // Run the sub-agent
-    for await (const message of runAgent({
-      agentDefinition,
-      promptMessages,
-      toolUseContext: {
-        ...context,
-        getAppState: modifiedGetAppState,
-      },
-      canUseTool,
-      isAsync: false,
-      querySource: 'agent:custom',
-      model: command.model as ModelAlias | undefined,
-      availableTools: context.options.tools,
-      override: { agentId },
-    })) {
-      agentMessages.push(message)
-
-      // Report progress for tool uses (like AgentTool does)
-      if (
-        (message.type === 'assistant' || message.type === 'user') &&
-        onProgress
-      ) {
-        const normalizedNew = normalizeMessages([message])
-        for (const m of normalizedNew) {
-          const hasToolContent = m.message.content.some(
-            c => c.type === 'tool_use' || c.type === 'tool_result',
-          )
-          if (hasToolContent) {
-            onProgress({
-              toolUseID: `skill_${parentMessage.message.id}`,
-              data: {
-                message: m,
-                type: 'skill_progress',
-                prompt: skillContent,
-                agentId,
-              },
-            })
-          }
-        }
-      }
-    }
-
-    const resultText = extractResultText(
-      agentMessages,
-      'Skill execution completed',
-    )
-    // Release message memory after extracting result
-    agentMessages.length = 0
-
-    const durationMs = Date.now() - startTime
-    logForDebugging(
-      `SkillTool forked skill ${commandName} completed in ${durationMs}ms`,
-    )
-
-    return {
-      data: {
-        success: true,
-        commandName,
-        status: 'forked',
-        agentId,
-        result: resultText,
-      },
-    }
-  } finally {
-    // Release skill content from invokedSkills state
-    clearInvokedSkillsForAgent(agentId)
-  }
-}
-
 export const inputSchema = lazySchema(() =>
   z.object({
     skill: z
@@ -298,9 +118,8 @@ export const inputSchema = lazySchema(() =>
 )
 type InputSchema = ReturnType<typeof inputSchema>
 
-export const outputSchema = lazySchema(() => {
-  // Output schema for inline skills (default)
-  const inlineOutputSchema = z.object({
+export const outputSchema = lazySchema(() =>
+  z.object({
     success: z.boolean().describe('Whether the skill is valid'),
     commandName: z.string().describe('The name of the skill'),
     allowedTools: z
@@ -308,22 +127,8 @@ export const outputSchema = lazySchema(() => {
       .optional()
       .describe('Tools allowed by this skill'),
     model: z.string().optional().describe('Model override if specified'),
-    status: z.literal('inline').optional().describe('Execution status'),
-  })
-
-  // Output schema for forked skills
-  const forkedOutputSchema = z.object({
-    success: z.boolean().describe('Whether the skill completed successfully'),
-    commandName: z.string().describe('The name of the skill'),
-    status: z.literal('forked').describe('Execution status'),
-    agentId: z
-      .string()
-      .describe('The ID of the sub-agent that executed the skill'),
-    result: z.string().describe('The result from the forked skill execution'),
-  })
-
-  return z.union([inlineOutputSchema, forkedOutputSchema])
-})
+  }),
+)
 type OutputSchema = ReturnType<typeof outputSchema>
 
 export type Output = z.input<OutputSchema>
@@ -628,19 +433,6 @@ export const SkillTool: Tool<InputSchema, Output, Progress> = buildTool({
     // Track skill usage for ranking
     recordSkillUsage(commandName)
 
-    // Check if skill should run as a forked sub-agent
-    if (command?.type === 'prompt' && command.context === 'fork') {
-      return executeForkedSkill(
-        command,
-        commandName,
-        args,
-        context,
-        canUseTool,
-        parentMessage,
-        onProgress,
-      )
-    }
-
     // Process the skill with optional args
     const { processPromptSlashCommand } = await import(
       'src/utils/processUserInput/processSlashCommand.js'
@@ -854,16 +646,6 @@ export const SkillTool: Tool<InputSchema, Output, Progress> = buildTool({
     result: Output,
     toolUseID: string,
   ): ToolResultBlockParam {
-    // Handle forked skill result
-    if ('status' in result && result.status === 'forked') {
-      return {
-        type: 'tool_result' as const,
-        tool_use_id: toolUseID,
-        content: `Skill "${result.commandName}" completed (forked execution).\n\nResult:\n${result.result}`,
-      }
-    }
-
-    // Inline skill result (default)
     return {
       type: 'tool_result' as const,
       tool_use_id: toolUseID,
@@ -1109,7 +891,7 @@ async function executeRemoteSkill(
     SKILL_TOOL_NAME,
   )
   return {
-    data: { success: true, commandName, status: 'inline' },
+    data: { success: true, commandName },
     newMessages: tagMessagesWithToolUseID(
       [createUserMessage({ content: finalContent, isMeta: true })],
       toolUseID,

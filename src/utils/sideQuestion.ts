@@ -2,14 +2,14 @@
  * Side Question ("/btw") feature - allows asking quick questions without
  * interrupting the main agent context.
  *
- * Uses runForkedAgent to leverage prompt caching from the parent context
+ * Uses runBackgroundQuery to leverage prompt caching from the parent context
  * while keeping the side question response separate from main conversation.
  */
 
 import { formatAPIError } from '../services/api/errorUtils.js'
 import type { NonNullableUsage } from '../services/api/logging.js'
 import type { Message, SystemAPIErrorMessage } from '../types/message.js'
-import { type CacheSafeParams, runForkedAgent } from './forkedAgent.js'
+import { type CacheSafeParams, runBackgroundQuery } from './backgroundQuery.js'
 import { createUserMessage, extractTextContent } from './messages.js'
 
 // Pattern to detect "/btw" at start of input (case-insensitive, word boundary)
@@ -77,7 +77,7 @@ Simply answer the question with the information you have.</system-reminder>
 
 ${question}`
 
-  const agentResult = await runForkedAgent({
+  const agentResult = await runBackgroundQuery({
     promptMessages: [createUserMessage({ content: wrappedQuestion })],
     // Do NOT override thinkingConfig — thinking is part of the API cache key,
     // and diverging from the main thread's config busts the prompt cache.

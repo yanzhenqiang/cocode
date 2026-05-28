@@ -5,7 +5,7 @@
  * It runs once at the end of each complete query loop (when the model produces
  * a final response with no tool calls) via handleStopHooks in stopHooks.ts.
  *
- * Uses the forked agent pattern (runForkedAgent) — a perfect fork of the main
+ * Uses the forked agent pattern (runBackgroundQuery) — a perfect fork of the main
  * conversation that shares the parent's prompt cache.
  *
  * State is closure-scoped inside initExtractMemories() rather than module-level,
@@ -45,8 +45,8 @@ import { count, uniq } from '../../utils/array.js'
 import { logForDebugging } from '../../utils/debug.js'
 import {
   createCacheSafeParams,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import type { REPLHookContext } from '../../utils/hooks/postSamplingHooks.js'
 import {
   createMemorySavedMessage,
@@ -385,7 +385,7 @@ export function initExtractMemories(): void {
               skipIndex,
             )
 
-      const result = await runForkedAgent({
+      const result = await runBackgroundQuery({
         promptMessages: [createUserMessage({ content: userPrompt })],
         cacheSafeParams,
         canUseTool,

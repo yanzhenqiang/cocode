@@ -383,9 +383,9 @@ export function isPersistError(
  * Main thread: REPL provisions once, never resets — stale entries after
  * /clear, rewind, resume, or compact are never looked up (tool_use_ids are
  * UUIDs) so they're harmless. Subagents: createSubagentContext clones the
- * parent's state by default (cache-sharing forks like agentSummary need
- * identical decisions), or resumeAgentBackground threads one reconstructed
- * from sidechain records.
+ * parent's state by default (cache-sharing subagents need identical
+ * decisions), or async agent resumption threads one reconstructed from
+ * sidechain records.
  */
 export type ContentReplacementState = {
   seenIds: Set<string>
@@ -940,7 +940,7 @@ export async function enforceToolResultBudget(
  * applies enforcement, and fires an optional transcript-write callback
  * for new replacements. The caller (query.ts) owns the persistence gate
  * — it passes a callback only for querySources that read records back on
- * resume (repl_main_thread*, agent:*); ephemeral runForkedAgent callers
+ * resume (repl_main_thread*, agent:*); ephemeral runBackgroundQuery callers
  * (agentSummary, sessionMemory, /btw, compact) pass undefined.
  *
  * @returns messages with replacements applied, or the input array unchanged
@@ -1017,10 +1017,10 @@ export function reconstructContentReplacementState(
 
 /**
  * AgentTool-resume variant: encapsulates the feature-flag gate + parent
- * gap-fill so both AgentTool.call and resumeAgentBackground share one
- * implementation. Returns undefined when parentState is undefined (feature
- * off); otherwise reconstructs from sidechain records with parent's live
- * replacements filling gaps for fork-inherited mustReapply entries.
+ * gap-fill so AgentTool.call shares one implementation. Returns undefined
+ * when parentState is undefined (feature off); otherwise reconstructs from
+ * sidechain records with parent's live replacements filling gaps for
+ * inherited mustReapply entries.
  *
  * Kept out of AgentTool.tsx — that file is at the feature() DCE complexity
  * cliff and cannot tolerate even +1 net source line without silently

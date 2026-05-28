@@ -7,8 +7,7 @@
  */
 
 import type { Tool, ToolUseContext } from '../../Tool.js'
-import type { BuiltInAgentDefinition } from '../../tools/AgentTool/loadAgentsDir.js'
-import { runAgent } from '../../tools/AgentTool/runAgent.js'
+import { runBackgroundQuery } from '../../utils/backgroundQuery.js'
 import { FILE_EDIT_TOOL_NAME } from '../../tools/FileEditTool/constants.js'
 import {
   FileReadTool,
@@ -90,21 +89,6 @@ export function registerMagicDoc(filePath: string): void {
     trackedMagicDocs.set(filePath, {
       path: filePath,
     })
-  }
-}
-
-/**
- * Create Magic Docs agent definition
- */
-function getMagicDocsAgent(): BuiltInAgentDefinition {
-  return {
-    agentType: 'magic-docs',
-    whenToUse: 'Update Magic Docs',
-    tools: [FILE_EDIT_TOOL_NAME], // Only allow Edit
-    model: 'sonnet',
-    source: 'built-in',
-    baseDir: 'built-in',
-    getSystemPrompt: () => '', // Will use override systemPrompt
   }
 }
 
@@ -191,24 +175,20 @@ async function updateMagicDoc(
     }
   }
 
-  // Run Magic Docs update using runAgent with forked context
-  for await (const _message of runAgent({
-    agentDefinition: getMagicDocsAgent(),
+  // Run Magic Docs update using runBackgroundQuery with isolated context
+  await runBackgroundQuery({
     promptMessages: [createUserMessage({ content: userPrompt })],
-    toolUseContext: clonedToolUseContext,
-    canUseTool,
-    isAsync: true,
-    forkContextMessages: messages,
-    querySource: 'magic_docs',
-    override: {
+    cacheSafeParams: {
       systemPrompt,
       userContext,
       systemContext,
+      toolUseContext: clonedToolUseContext,
+      forkContextMessages: messages,
     },
-    availableTools: clonedToolUseContext.options.tools,
-  })) {
-    // Just consume - let it run to completion
-  }
+    canUseTool,
+    querySource: 'magic_docs',
+    forkLabel: 'magic_docs',
+  })
 }
 
 /**

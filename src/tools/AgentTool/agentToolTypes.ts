@@ -3,8 +3,6 @@ import { isEnvTruthy } from '../../utils/envUtils.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import type { AgentToolProgress, ShellProgress } from '../../types/tools.js'
 import { agentToolResultSchema } from './agentToolUtils.js'
-import { isForkSubagentEnabled } from './forkSubagent.js'
-
 // Check if background tasks are disabled at module load time
 const isBackgroundTasksDisabled =
   // eslint-disable-next-line custom-rules/no-process-env-top-level -- Intentional: schema must be defined at module load
@@ -35,7 +33,7 @@ export const inputSchema = lazySchema(() => {
   const schema = fullInputSchema().omit({
     cwd: true,
   })
-  return isBackgroundTasksDisabled || isForkSubagentEnabled() ? schema.omit({
+  return isBackgroundTasksDisabled ? schema.omit({
     run_in_background: true,
   }) : schema
 })

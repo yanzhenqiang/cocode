@@ -103,7 +103,6 @@ import type {
   HookEvent,
   SDKAssistantMessageError,
 } from 'src/entrypoints/agentSdkTypes.js'
-import { areExplorePlanAgentsEnabled } from 'src/tools/AgentTool/builtInAgents.js'
 import { AGENT_TOOL_NAME } from 'src/tools/AgentTool/constants.js'
 import { ASK_USER_QUESTION_TOOL_NAME } from 'src/tools/AskUserQuestionTool/prompt.js'
 import { BashTool } from 'src/tools/BashTool/BashTool.js'
@@ -5499,4 +5498,48 @@ export function wrapCommandText(
     default:
       return `The user sent a new message while you were working:\n${raw}\n\nIMPORTANT: After completing your current task, you MUST address the user's message above. Do not ignore it.`
   }
+}
+
+/**
+ * Filters out assistant messages with incomplete tool calls (tool uses without results).
+ * This prevents API errors when sending messages with orphaned tool calls.
+ */
+export function filterIncompleteToolCalls(messages: Message[]): Message[] {
+  // Build a set of tool use IDs that have results
+  const toolUseIdsWithResults = new Set<string>()
+
+  for (const message of messages) {
+    if (message?.type === 'user') {
+      const userMessage = message as UserMessage
+      const content = userMessage.message.content
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          if (block.type === 'tool_result' && block.tool_use_id) {
+            toolUseIdsWithResults.add(block.tool_use_id)
+          }
+        }
+      }
+    }
+  }
+
+  // Filter out assistant messages that contain tool calls without results
+  return messages.filter(message => {
+    if (message?.type === 'assistant') {
+      const assistantMessage = message as AssistantMessage
+      const content = assistantMessage.message.content
+      if (Array.isArray(content)) {
+        // Check if this assistant message has any tool uses without results
+        const hasIncompleteToolCall = content.some(
+          block =>
+            block.type === 'tool_use' &&
+            block.id &&
+            !toolUseIdsWithResults.has(block.id),
+        )
+        // Exclude messages with incomplete tool calls
+        return !hasIncompleteToolCall
+      }
+    }
+    // Keep all non-assistant messages and assistant messages without tool calls
+    return true
+  })
 }

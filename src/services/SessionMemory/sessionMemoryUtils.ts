@@ -1,6 +1,6 @@
 /**
  * Session Memory utility functions that can be imported without circular dependencies.
- * These are separate from the main sessionMemory.ts to avoid importing runAgent.
+ * These are separate from the main sessionMemory.ts to avoid heavy transitive imports.
  */
 
 import { isFsInaccessible } from '../../utils/errors.js'

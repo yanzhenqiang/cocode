@@ -291,8 +291,8 @@ export type ToolUseContext = {
    * budget. When present, query.ts applies the aggregate tool result budget.
    * Main thread: REPL provisions once (never resets — stale UUID keys
    * are inert). Subagents: createSubagentContext clones the parent's state
-   * by default (cache-sharing forks need identical decisions), or
-   * resumeAgentBackground threads one reconstructed from sidechain records.
+   * by default (cache-sharing subagents need identical decisions), or
+   * async agents thread one reconstructed from sidechain records.
    */
   contentReplacementState?: ContentReplacementState
   /**
@@ -305,9 +305,9 @@ export type ToolUseContext = {
   ) => void
   /**
    * Parent's rendered system prompt bytes, frozen at turn start.
-   * Used by fork subagents to share the parent's prompt cache — re-calling
-   * getSystemPrompt() at fork-spawn time can diverge (GrowthBook cold→warm)
-   * and bust the cache. See forkSubagent.ts.
+   * Used by background query contexts to share the parent's prompt cache —
+   * re-calling getSystemPrompt() at spawn time can diverge (GrowthBook cold→warm)
+   * and bust the cache.
    */
   renderedSystemPrompt?: SystemPrompt
 }

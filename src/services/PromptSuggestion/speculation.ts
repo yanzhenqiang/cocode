@@ -26,8 +26,8 @@ import {
 import {
   type CacheSafeParams,
   createCacheSafeParams,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import { formatDuration, formatNumber } from '../../utils/format.js'
 import type { REPLHookContext } from '../../utils/hooks/postSamplingHooks.js'
 import { logError } from '../../utils/log.js'
@@ -453,7 +453,7 @@ export async function startSpeculation(
   logForDebugging(`[Speculation] Starting speculation ${id}`)
 
   try {
-    const result = await runForkedAgent({
+    const result = await runBackgroundQuery({
       promptMessages: [createUserMessage({ content: suggestionText })],
       cacheSafeParams: cacheSafeParams ?? createCacheSafeParams(context),
       skipTranscript: true,

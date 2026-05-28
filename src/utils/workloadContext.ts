@@ -7,7 +7,7 @@
  * imported from CLI/SDK code paths that never end up in the browser build.
  *
  * WHY AsyncLocalStorage (not a global mutable slot):
- * void-detached background agents (executeForkedSlashCommand, AgentTool)
+ * void-detached background agents (processSlashCommand, AgentTool)
  * yield at their first await. The parent turn's synchronous continuation —
  * including any `finally` block — runs to completion BEFORE the detached
  * closure resumes. A global setWorkload('cron') at the top of the closure

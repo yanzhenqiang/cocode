@@ -21,8 +21,8 @@ import { count } from '../../utils/array.js'
 import {
   createCacheSafeParams,
   createSubagentContext,
-  runForkedAgent,
-} from '../../utils/forkedAgent.js'
+  runBackgroundQuery,
+} from '../../utils/backgroundQuery.js'
 import { getFsImplementation } from '../../utils/fsOperations.js'
 import {
   type REPLHookContext,
@@ -312,10 +312,10 @@ const extractSessionMemory = sequential(async function (
     memoryPath,
   )
 
-  // Run session memory extraction using runForkedAgent for prompt caching
-  // runForkedAgent creates an isolated context to prevent mutation of parent state
+  // Run session memory extraction using runBackgroundQuery for prompt caching
+  // runBackgroundQuery creates an isolated context to prevent mutation of parent state
   // Pass setupContext.readFileState so the forked agent can edit the memory file
-  await runForkedAgent({
+  await runBackgroundQuery({
     promptMessages: [createUserMessage({ content: userPrompt })],
     cacheSafeParams: createCacheSafeParams(context),
     canUseTool: createMemoryFileCanUseTool(memoryPath),
@@ -416,8 +416,8 @@ export async function manuallyExtractSessionMemory(
     ])
     const systemPrompt = asSystemPrompt(rawSystemPrompt)
 
-    // Run session memory extraction using runForkedAgent
-    await runForkedAgent({
+    // Run session memory extraction using runBackgroundQuery
+    await runBackgroundQuery({
       promptMessages: [createUserMessage({ content: userPrompt })],
       cacheSafeParams: {
         systemPrompt,

@@ -79,7 +79,7 @@ export function registerTask(task: TaskState, setAppState: SetAppState): void {
   setAppState(prev => {
     const existing = prev.tasks[task.id]
     isReplacement = existing !== undefined
-    // Carry forward UI-held state on re-register (resumeAgentBackground
+    // Carry forward UI-held state on re-register (async agent resumption
     // replaces the task; user's retain shouldn't reset). startTime keeps
     // the panel sort stable; messages + diskLoaded preserve the viewed
     // transcript across the replace (the user's just-appended prompt lives

@@ -1661,7 +1661,7 @@ function getHooksConfig(
   // Skip session hooks entirely when allowManagedHooksOnly is set —
   // this prevents frontmatter hooks from agents/skills from bypassing the policy.
   // strictPluginOnlyCustomization does NOT block here — it gates at the
-  // REGISTRATION sites (runAgent.ts:526 for agent frontmatter hooks) where
+  // REGISTRATION sites (agent task setup for frontmatter hooks) where
   // agentDefinition.source is known. A blanket block here would also kill
   // plugin-provided agents' frontmatter hooks, which is too broad.
   // Also skip if appState not provided (for backwards compatibility)

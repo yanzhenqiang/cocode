@@ -152,7 +152,6 @@ import { executeSessionEndHooks, getSessionEndHookTimeoutMs } from '../utils/hoo
 import { getTools, assembleToolPool } from '../tools.js';
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js';
 import { resolveAgentTools } from '../tools/AgentTool/agentToolUtils.js';
-import { resumeAgentBackground } from '../tools/AgentTool/resumeAgent.js';
 import { useMainLoopModel } from '../hooks/useMainLoopModel.js';
 import { useAppState, useSetAppState, useAppStateStore } from '../state/AppState.js';
 import type { ContentBlockParam, ImageBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs';
@@ -2527,10 +2526,8 @@ export function REPL({
 
     // Apply slash-command-scoped allowedTools (from skill frontmatter) to the
     // store once per turn. This also covers the reset: the next non-skill turn
-    // passes [] and clears it. Must run before the !shouldQuery gate: forked
-    // commands (executeForkedSlashCommand) return shouldQuery=false, and
-    // createGetAppStateWithAllowedTools in forkedAgent.ts reads this field, so
-    // stale skill tools would otherwise leak into forked agent permissions.
+    // passes [] and clears it. Must run before the !shouldQuery gate so
+    // background query contexts read the current allowed tools.
     // Previously this write was hidden inside getToolUseContext's getAppState
     // (~85 calls/turn); hoisting it here makes getAppState a pure read and stops
     // ephemeral contexts (permission dialog, BackgroundTasksDialog) from
@@ -3396,20 +3393,12 @@ export function REPL({
       if (task.status === 'running') {
         queuePendingMessage(task.id, input, setAppState);
       } else {
-        void resumeAgentBackground({
-          agentId: task.id,
-          prompt: input,
-          toolUseContext: getToolUseContext(messagesRef.current, [], new AbortController(), mainLoopModel),
-          canUseTool
-        }).catch(err => {
-          logForDebugging(`resumeAgentBackground failed: ${errorMessage(err)}`);
-          addNotification({
-            key: `resume-agent-failed-${task.id}`,
-            jsx: <Text color="error">
-              Failed to resume agent: {errorMessage(err)}
-            </Text>,
-            priority: 'low'
-          });
+        addNotification({
+          key: `resume-agent-unavailable-${task.id}`,
+          jsx: <Text color="warning">
+            Agent resumption is no longer supported.
+          </Text>,
+          priority: 'low'
         });
       }
     } else {

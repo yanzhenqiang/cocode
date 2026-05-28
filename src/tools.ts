@@ -223,8 +223,8 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
  * Assemble the full tool pool for a given permission context and MCP tools.
  *
  * This is the single source of truth for combining built-in tools with MCP tools.
- * Both runAgent.ts (for coordinator workers) and REPL.tsx (via useMergedTools hook)
- * use this function to ensure consistent tool pool assembly.
+ * REPL.tsx (via useMergedTools hook) uses this function to ensure consistent
+ * tool pool assembly.
  *
  * The function:
  * 1. Gets built-in tools via getTools() (respects mode filtering)

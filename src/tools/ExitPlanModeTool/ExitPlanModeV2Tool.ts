@@ -182,7 +182,7 @@ export const ExitPlanModeV2Tool: Tool<InputSchema, Output> = buildTool({
     return true
   },
   async validateInput(_input, { getAppState, options }) {
-    // Teammate AppState may show leader's mode (runAgent.ts skips override in
+    // Teammate AppState may show leader's mode (agent tasks skip override in
     // acceptEdits/bypassPermissions/auto); isPlanModeRequired() is the real source
     if (isTeammate()) {
       return { result: true }

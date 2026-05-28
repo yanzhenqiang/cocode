@@ -2311,8 +2311,8 @@ async function run(): Promise<CommanderCommand> {
           advisorModel
         }),
         // kairosEnabled gates the async fire-and-forget path in
-        // executeForkedSlashCommand (processSlashCommand.tsx:132) and
-        // AgentTool's shouldRunAsync. The REPL initialState sets this at
+        // processSlashCommand and AgentTool's shouldRunAsync. The REPL
+        // initialState sets this at
         // ~3459; headless was defaulting to false, so the daemon child's
         // scheduled tasks and Agent-tool calls ran synchronously — N
         // overdue cron tasks on spawn = N serial subagent turns blocking

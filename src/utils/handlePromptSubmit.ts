@@ -459,7 +459,7 @@ async function executeUserInput(params: ExecuteUserInputParams): Promise<void> {
     // Wrap the entire turn (processUserInput loop + onQuery) in an
     // AsyncLocalStorage context. This is the ONLY way to correctly
     // propagate workload across await boundaries: void-detached bg agents
-    // (executeForkedSlashCommand, AgentTool) capture the ALS context at
+    // (processSlashCommand, AgentTool) capture the ALS context at
     // invocation time, and every await inside them resumes in that
     // context — isolated from the parent's continuation. A process-global
     // mutable slot would be clobbered at the detached closure's first
