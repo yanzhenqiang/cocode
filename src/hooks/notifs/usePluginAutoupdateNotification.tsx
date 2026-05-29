@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { getIsRemoteMode } from '../../bootstrap/state.js';
 import { useNotifications } from '../../context/notifications.js';
 import { Text } from '../../ink.js';
 import { logForDebugging } from '../../utils/debug.js';
@@ -28,9 +27,6 @@ export function usePluginAutoupdateNotification() {
   let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
-      if (getIsRemoteMode()) {
-        return;
-      }
       const unsubscribe = onPluginsAutoUpdated(plugins => {
         logForDebugging(`Plugin autoupdate notification: ${plugins.length} plugin(s) updated`);
         setUpdatedPlugins(plugins);
@@ -49,9 +45,6 @@ export function usePluginAutoupdateNotification() {
   let t4;
   if ($[3] !== addNotification || $[4] !== updatedPlugins) {
     t3 = () => {
-      if (getIsRemoteMode()) {
-        return;
-      }
       if (updatedPlugins.length === 0) {
         return;
       }

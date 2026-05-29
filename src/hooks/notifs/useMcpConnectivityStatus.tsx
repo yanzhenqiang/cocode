@@ -3,7 +3,6 @@ import * as React from 'react';
 import { logError } from '../../utils/log.js';
 import { useEffect } from 'react';
 import { useNotifications } from 'src/context/notifications.js';
-import { getIsRemoteMode } from '../../bootstrap/state.js';
 import { Text } from '../../ink.js';
 import { hasClaudeAiMcpEverConnected } from '../../services/mcp/claudeai.js';
 import type { MCPServerConnection } from '../../services/mcp/types.js';
@@ -25,9 +24,6 @@ export function useMcpConnectivityStatus(t0) {
   if ($[0] !== addNotification || $[1] !== mcpClients) {
     t2 = () => {
       try {
-        if (getIsRemoteMode()) {
-          return;
-        }
         const failedLocalClients = mcpClients.filter(_temp);
         const failedClaudeAiClients = mcpClients.filter(_temp2);
         const needsAuthLocalServers = mcpClients.filter(_temp3);

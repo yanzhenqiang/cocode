@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useEffect, useMemo } from 'react';
-import { getIsRemoteMode } from '../../bootstrap/state.js';
 import { useNotifications } from '../../context/notifications.js';
 import { Text } from '../../ink.js';
 import { useAppState } from '../../state/AppState.js';
@@ -73,9 +72,6 @@ export function usePluginInstallationStatus() {
   let t1;
   if ($[9] !== addNotification || $[10] !== failedMarketplacesCount || $[11] !== failedPluginsCount || $[12] !== installationStatus || $[13] !== totalFailed) {
     t1 = () => {
-      if (getIsRemoteMode()) {
-        return;
-      }
       if (!installationStatus) {
         logForDebugging("No installation status to monitor");
         return;

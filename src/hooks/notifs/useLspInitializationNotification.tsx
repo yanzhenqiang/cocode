@@ -1,7 +1,7 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useInterval } from 'usehooks-ts';
-import { getIsRemoteMode, getIsScrollDraining } from '../../bootstrap/state.js';
+import { getIsScrollDraining } from '../../bootstrap/state.js';
 import { useNotifications } from '../../context/notifications.js';
 import { Text } from '../../ink.js';
 import { getInitializationStatus, getLspServerManager } from '../../services/lsp/manager.js';
@@ -78,9 +78,6 @@ export function useLspInitializationNotification() {
   let t2;
   if ($[4] !== addError) {
     t2 = () => {
-      if (getIsRemoteMode()) {
-        return;
-      }
       if (getIsScrollDraining()) {
         return;
       }
@@ -114,7 +111,7 @@ export function useLspInitializationNotification() {
   let t4;
   if ($[6] !== poll || $[7] !== shouldPoll) {
     t3 = () => {
-      if (getIsRemoteMode() || !shouldPoll) {
+      if (!shouldPoll) {
         return;
       }
       poll();
