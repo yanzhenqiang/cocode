@@ -5,7 +5,6 @@ import { Text } from '../../ink.js';
 import { refreshGrowthBookAfterAuthChange } from '../../services/analytics/growthbook.js';
 import { getGroveNoticeConfig, getGroveSettings } from '../../services/api/grove.js';
 import { clearPolicyLimitsCache } from '../../services/policyLimits/index.js';
-import { clearRemoteManagedSettingsCache } from '../../services/remoteManagedSettings/index.js';
 import { getClaudeAIOAuthTokens, removeApiKey } from '../../utils/auth.js';
 import { clearBetasCaches } from '../../utils/betas.js';
 import { saveGlobalConfig } from '../../utils/config.js';
@@ -57,9 +56,6 @@ export async function clearAuthRelatedCaches(): Promise<void> {
   // Clear Grove config cache
   getGroveNoticeConfig.cache?.clear?.();
   getGroveSettings.cache?.clear?.();
-
-  // Clear remotely managed settings cache
-  await clearRemoteManagedSettingsCache();
 
   // Clear policy limits cache
   await clearPolicyLimitsCache();

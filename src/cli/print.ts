@@ -5,7 +5,6 @@ import {
   downloadUserSettings,
   redownloadUserSettings,
 } from 'src/services/settingsSync/index.js'
-import { waitForRemoteManagedSettingsToLoad } from 'src/services/remoteManagedSettings/index.js'
 import { StructuredIO } from 'src/cli/structuredIO.js'
 import {
   type Command,
@@ -1586,17 +1585,11 @@ function runHeadlessStreaming(
       // Join point for user settings (fired at runHeadless entry) and managed
       // settings (fired in main.tsx preAction). downloadUserSettings() caches
       // its promise so this awaits the same in-flight request.
-      await Promise.all([
-        feature('DOWNLOAD_USER_SETTINGS') &&
-        false
-          ? withDiagnosticsTiming('headless_user_settings_download', () =>
-              downloadUserSettings(),
-            )
-          : Promise.resolve(),
-        withDiagnosticsTiming('headless_managed_settings_wait', () =>
-          waitForRemoteManagedSettingsToLoad(),
-        ),
-      ])
+      if (feature('DOWNLOAD_USER_SETTINGS') && false) {
+        await withDiagnosticsTiming('headless_user_settings_download', () =>
+          downloadUserSettings(),
+        )
+      }
 
       const pluginsInstalled = await installPluginsForHeadless()
 
