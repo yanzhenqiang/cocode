@@ -18,9 +18,8 @@ async function launchAndDone(args: string, context: Parameters<LocalJSXCommandCa
     });
   } else {
     // Precondition failures now return specific ContentBlockParam[] above.
-    // null only reaches here on teleport failure (PR mode) or non-github
-    // repo — both are CCR/repo connectivity issues.
-    onDone('Ultrareview failed to launch the remote session. Check that this is a GitHub repo and try again.', {
+    // null only reaches here on non-github repo.
+    onDone('Ultrareview failed to launch. Check that this is a GitHub repo and try again.', {
       display: 'system'
     });
   }

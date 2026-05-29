@@ -137,7 +137,7 @@ export class StructuredIO {
   private readonly pendingRequests = new Map<string, PendingRequest<unknown>>()
 
   // CCR external_metadata read back on worker start; null when the
-  // transport doesn't restore. Assigned by RemoteIO.
+  // transport doesn't restore.
   restoredWorkerState: Promise<SessionExternalMetadata | null> =
     Promise.resolve(null)
 
@@ -186,12 +186,12 @@ export class StructuredIO {
     }
   }
 
-  /** Flush pending internal events. No-op for non-remote IO. Overridden by RemoteIO. */
+  /** Flush pending internal events. No-op for local IO. */
   flushInternalEvents(): Promise<void> {
     return Promise.resolve()
   }
 
-  /** Internal-event queue depth. Overridden by RemoteIO; zero otherwise. */
+  /** Internal-event queue depth. Zero for local IO. */
   get internalEventsPending(): number {
     return 0
   }

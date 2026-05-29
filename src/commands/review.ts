@@ -42,7 +42,7 @@ const review: Command = {
   },
 }
 
-// /ultrareview is the ONLY entry point to the remote bughunter path —
+// /ultrareview entry point (legacy; remote path removed).
 // /review stays purely local. local-jsx type renders the overage permission
 // dialog when free reviews are exhausted.
 const ultrareview: Command = {
