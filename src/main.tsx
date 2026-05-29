@@ -2187,18 +2187,6 @@ async function run(): Promise<CommanderCommand> {
       },
       statusLineText: undefined,
       kairosEnabled,
-      replBridgeEnabled: false,
-      replBridgeExplicit: false,
-      replBridgeOutboundOnly: ccrMirrorEnabled,
-      replBridgeConnected: false,
-      replBridgeSessionActive: false,
-      replBridgeReconnecting: false,
-      replBridgeConnectUrl: undefined,
-      replBridgeSessionUrl: undefined,
-      replBridgeEnvironmentId: undefined,
-      replBridgeSessionId: undefined,
-      replBridgeError: undefined,
-      replBridgeInitialName: undefined,
       notifications: {
         current: null,
         queue: initialNotifications

@@ -328,11 +328,6 @@ function getInitialState(): State {
     sdkBetas: undefined,
     // Main thread agent type
     mainThreadAgentType: undefined,
-    ...(process.env.USER_TYPE === 'ant'
-      ? {
-          replBridgeActive: false,
-        }
-      : {}),
     // System prompt section cache state
     systemPromptSectionCache: new Map(),
     // Last date emitted to the model

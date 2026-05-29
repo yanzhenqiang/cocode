@@ -2,11 +2,6 @@ import type { Notification } from 'src/context/notifications.js'
 import { isTeammate, isPlanModeRequired } from '../utils/teammate.js'
 import type { TodoList } from 'src/utils/todo/types.js'
 // Bridge module deleted — inline type stub
-type BridgePermissionCallbacks = {
-  sendRequest: (id: string, tool: string, input: Record<string, unknown>) => void;
-  onResponse: (id: string, cb: (response: {status: string; output?: unknown; error?: unknown}) => void) => () => void;
-  cancelRequest: (id: string) => void;
-}
 import type { Command } from '../commands.js'
 import type { ChannelPermissionCallbacks } from '../services/mcp/channelPermissions.js'
 import type { ElicitationRequestEvent } from '../services/mcp/elicitationHandler.js'
@@ -121,28 +116,16 @@ export type AppState = DeepImmutable<{
   // mutation, consumers read this instead of re-calling isAssistantMode().
   kairosEnabled: boolean
   // Always-on bridge: desired state (controlled by /config or footer toggle)
-  replBridgeEnabled: boolean
   // Always-on bridge: true when activated via /remote-control command, false when config-driven
-  replBridgeExplicit: boolean
   // Outbound-only mode: forward events to CCR but reject inbound prompts/control
-  replBridgeOutboundOnly: boolean
   // Always-on bridge: env registered + session created (= "Ready")
-  replBridgeConnected: boolean
   // Always-on bridge: ingress WebSocket is open (= "Connected" - user on claude.ai)
-  replBridgeSessionActive: boolean
   // Always-on bridge: poll loop is in error backoff (= "Reconnecting")
-  replBridgeReconnecting: boolean
   // Always-on bridge: connect URL for Ready state (?bridge=envId)
-  replBridgeConnectUrl: string | undefined
   // Always-on bridge: session URL on claude.ai (set when connected)
-  replBridgeSessionUrl: string | undefined
   // Always-on bridge: IDs for debugging (shown in dialog when --verbose)
-  replBridgeEnvironmentId: string | undefined
-  replBridgeSessionId: string | undefined
   // Always-on bridge: error message when connection fails (shown in BridgeDialog)
-  replBridgeError: string | undefined
   // Always-on bridge: session name set via `/remote-control <name>` (used as session title)
-  replBridgeInitialName: string | undefined
 }> & {
   // Unified task state - excluded from DeepImmutable because TaskState contains function types
   tasks: { [taskId: string]: TaskState }
@@ -427,7 +410,6 @@ export type AppState = DeepImmutable<{
   // pushed to CCR external_metadata.is_ultraplan_mode by onChangeAppState.
   isUltraplanMode?: boolean
   // Always-on bridge: permission callbacks for bidirectional permission checks
-  replBridgePermissionCallbacks?: BridgePermissionCallbacks
   // Channel permission callbacks — permission prompts over Telegram/iMessage/etc.
   // Races against local UI + bridge + hooks + classifier via claim() in
   // interactiveHandler.ts. Constructed once in useManageMCPConnections.
@@ -459,18 +441,6 @@ export function getDefaultAppState(): AppState {
     viewSelectionMode: 'none',
     footerSelection: null,
     kairosEnabled: false,
-    replBridgeEnabled: false,
-    replBridgeExplicit: false,
-    replBridgeOutboundOnly: false,
-    replBridgeConnected: false,
-    replBridgeSessionActive: false,
-    replBridgeReconnecting: false,
-    replBridgeConnectUrl: undefined,
-    replBridgeSessionUrl: undefined,
-    replBridgeEnvironmentId: undefined,
-    replBridgeSessionId: undefined,
-    replBridgeError: undefined,
-    replBridgeInitialName: undefined,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
