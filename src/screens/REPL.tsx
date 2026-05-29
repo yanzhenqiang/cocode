@@ -57,7 +57,6 @@ import { PromptDialog } from '../components/hooks/PromptDialog.js';
 import type { PromptRequest, PromptResponse } from '../types/hooks.js';
 import PromptInput from '../components/PromptInput/PromptInput.js';
 import { PromptInputQueuedCommands } from '../components/PromptInput/PromptInputQueuedCommands.js';
-import { useAssistantHistory } from '../hooks/useAssistantHistory.js';
 import { SkillImprovementSurvey } from '../components/SkillImprovementSurvey.js';
 import { useSkillImprovementSurvey } from '../hooks/useSkillImprovementSurvey.js';
 import { useMoreRight } from '../moreright/useMoreRight.js';
