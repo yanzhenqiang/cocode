@@ -277,9 +277,9 @@ export function ExitPlanModePermissionRequest({
     const trimmedFeedback = planFeedback.trim();
     const acceptFeedback = trimmedFeedback || undefined;
 
-    // Ultraplan: reject locally, teleport the plan to CCR as a seed draft.
-    // Dialog dismisses immediately so the query loop unblocks; the teleport
-    // runs detached and its launch message lands via the command queue.
+    // Ultraplan: reject locally and route the plan as a seed draft.
+    // Dialog dismisses immediately so the query loop unblocks; the launch
+    // runs detached and its message lands via the command queue.
     if (value === 'ultraplan') {
       logEvent('tengu_plan_exit', {
         planLengthChars: currentPlan.length,
