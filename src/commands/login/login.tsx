@@ -2,10 +2,6 @@ import { feature } from 'bun:bundle'
 import * as React from 'react'
 
 import { resetCostState } from '../../bootstrap/state.js'
-import {
-  clearTrustedDeviceToken,
-  enrollTrustedDevice,
-} from '../../bridge/trustedDevice.js'
 import type { LocalJSXCommandContext } from '../../commands.js'
 import { ConfigurableShortcutHint } from '../../components/ConfigurableShortcutHint.js'
 import {
@@ -63,12 +59,6 @@ export async function call(
         void refreshPolicyLimits()
         resetUserCache()
         refreshGrowthBookAfterAuthChange()
-
-        // Clear any stale trusted device token from a previous account before
-        // re-enrolling to avoid sending the old token while enrollment is
-        // in flight.
-        clearTrustedDeviceToken()
-        void enrollTrustedDevice()
 
         resetBypassPermissionsCheck()
         const appState = context.getAppState()
