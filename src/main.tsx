@@ -2198,9 +2198,6 @@ async function run(): Promise<CommanderCommand> {
       },
       statusLineText: undefined,
       kairosEnabled,
-      remoteSessionUrl: undefined,
-      remoteConnectionStatus: 'connecting',
-      remoteBackgroundTaskCount: 0,
       replBridgeEnabled: false,
       replBridgeExplicit: false,
       replBridgeOutboundOnly: ccrMirrorEnabled,
@@ -2213,7 +2210,6 @@ async function run(): Promise<CommanderCommand> {
       replBridgeSessionId: undefined,
       replBridgeError: undefined,
       replBridgeInitialName: undefined,
-      showRemoteCallout: false,
       notifications: {
         current: null,
         queue: initialNotifications
@@ -2222,7 +2218,6 @@ async function run(): Promise<CommanderCommand> {
         queue: []
       },
       todos: {},
-      remoteAgentTaskSuggestions: [],
       fileHistory: {
         snapshots: [],
         trackedFiles: new Set(),

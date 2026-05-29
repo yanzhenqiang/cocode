@@ -467,10 +467,10 @@ function BriefSpinner(t0) {
 // working/idle/disconnected. See BriefSpinner's comment for the
 // Notifications overlay coupling.
 function _temp6(s_0) {
-  return count(Object.values(s_0.tasks), isBackgroundTask) + s_0.remoteBackgroundTaskCount;
+  return count(Object.values(s_0.tasks), isBackgroundTask);
 }
-function _temp5(s) {
-  return s.remoteConnectionStatus;
+function _temp5() {
+  return 'connected';
 }
 function _temp4() {
   return sample(getSpinnerVerbs()) ?? "Working";
@@ -526,10 +526,10 @@ export function BriefIdleStatus() {
   return t2;
 }
 function _temp8(s_0) {
-  return count(Object.values(s_0.tasks), isBackgroundTask) + s_0.remoteBackgroundTaskCount;
+  return count(Object.values(s_0.tasks), isBackgroundTask);
 }
-function _temp7(s) {
-  return s.remoteConnectionStatus;
+function _temp7() {
+  return 'connected';
 }
 export function Spinner() {
   const $ = _c(8);

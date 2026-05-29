@@ -120,22 +120,6 @@ export type AppState = DeepImmutable<{
   // Single source of truth - computed once in main.tsx before option
   // mutation, consumers read this instead of re-calling isAssistantMode().
   kairosEnabled: boolean
-  // Remote session URL for --remote mode (shown in footer indicator)
-  remoteSessionUrl: string | undefined
-  // Remote session WS state (`claude assistant` viewer). 'connected' means the
-  // live event stream is open; 'reconnecting' = transient WS drop, backoff
-  // in progress; 'disconnected' = permanent close or reconnects exhausted.
-  remoteConnectionStatus:
-    | 'connecting'
-    | 'connected'
-    | 'reconnecting'
-    | 'disconnected'
-  // `claude assistant`: count of background tasks (Agent calls, teammates,
-  // workflows) running inside the REMOTE daemon child. Event-sourced from
-  // system/task_started and system/task_notification on the WS. The local
-  // AppState.tasks is always empty in viewer mode — the tasks live in a
-  // different process.
-  remoteBackgroundTaskCount: number
   // Always-on bridge: desired state (controlled by /config or footer toggle)
   replBridgeEnabled: boolean
   // Always-on bridge: true when activated via /remote-control command, false when config-driven
@@ -159,8 +143,6 @@ export type AppState = DeepImmutable<{
   replBridgeError: string | undefined
   // Always-on bridge: session name set via `/remote-control <name>` (used as session title)
   replBridgeInitialName: string | undefined
-  // Always-on bridge: first-time remote dialog pending (set by /remote-control command)
-  showRemoteCallout: boolean
 }> & {
   // Unified task state - excluded from DeepImmutable because TaskState contains function types
   tasks: { [taskId: string]: TaskState }
@@ -224,7 +206,6 @@ export type AppState = DeepImmutable<{
   fileHistory: FileHistoryState
   attribution: AttributionState
   todos: { [agentId: string]: TodoList }
-  remoteAgentTaskSuggestions: { summary: string; task: string }[]
   notifications: {
     current: Notification | null
     queue: Notification[]
@@ -478,9 +459,6 @@ export function getDefaultAppState(): AppState {
     viewSelectionMode: 'none',
     footerSelection: null,
     kairosEnabled: false,
-    remoteSessionUrl: undefined,
-    remoteConnectionStatus: 'connecting',
-    remoteBackgroundTaskCount: 0,
     replBridgeEnabled: false,
     replBridgeExplicit: false,
     replBridgeOutboundOnly: false,
@@ -493,7 +471,6 @@ export function getDefaultAppState(): AppState {
     replBridgeSessionId: undefined,
     replBridgeError: undefined,
     replBridgeInitialName: undefined,
-    showRemoteCallout: false,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
@@ -525,7 +502,6 @@ export function getDefaultAppState(): AppState {
       needsRefresh: false,
     },
     todos: {},
-    remoteAgentTaskSuggestions: [],
     notifications: {
       current: null,
       queue: [],
