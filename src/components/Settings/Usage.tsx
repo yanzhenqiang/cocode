@@ -1,7 +1,7 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { extraUsage as extraUsageCommand } from 'src/commands/extra-usage/index.js';
+const extraUsageCommand = { isEnabled: () => false };
 import { formatCost } from 'src/cost-tracker.js';
 import { getSubscriptionType } from 'src/utils/auth.js';
 import { getActiveProviderProfile } from 'src/utils/providerProfiles.js';
