@@ -1143,8 +1143,8 @@ async function streamCompactSummary({
     'tengu_compact_cache_prefix',
     true,
   )
-  // Send keep-alive signals during compaction to prevent remote session
-  // WebSocket idle timeouts from dropping bridge connections. Compaction
+  // Send keep-alive signals during compaction to prevent session
+  // idle timeouts from dropping connections. Compaction
   // API calls can take 5-10+ seconds, during which no other messages
   // flow through the transport — without keep-alives, the server may
   // close the WebSocket for inactivity.

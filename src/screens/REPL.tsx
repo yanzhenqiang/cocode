@@ -893,8 +893,8 @@ export function REPL({
 
   // Wrapper for setIsExternalLoading that resets timing refs on transition
   // to true — SpinnerWithVerb reads these for elapsed time, so they must be
-  // reset for remote sessions / foregrounded tasks too (not just local
-  // queries, which reset them in onQuery). Without this, a remote-only
+  // reset for foregrounded tasks too (not just local queries, which
+  // reset them in onQuery). Without this, an external-loading-only
   // session would show ~56 years elapsed (Date.now() - 0).
   const setIsExternalLoading = React.useCallback((value: boolean) => {
     setIsExternalLoadingRaw(value);
@@ -3102,13 +3102,10 @@ export function REPL({
     // - When loading, the submitted input will be queued and handlePromptSubmit
     //   will clear the input field (onInputChange('')), which would clobber the
     //   restored stash. Defer restoration to after handlePromptSubmit (below).
-    //   Remote mode is exempt: it sends via WebSocket and returns early without
-    //   calling handlePromptSubmit, so there's no clobbering risk — restore eagerly.
     // In both deferred cases, the stash is restored after await handlePromptSubmit.
     const isSlashCommand = !speculationAccept && input.trim().startsWith('/');
     // Submit runs "now" (not queued) when not already loading, or when
-    // accepting speculation, or in remote mode (which sends via WS and
-    // returns early without calling handlePromptSubmit).
+    // accepting speculation.
     const submitsNow = !isLoading || speculationAccept;
     if (stashedPrompt !== undefined && !isSlashCommand && submitsNow) {
       setInputValue(stashedPrompt.text);
@@ -4439,7 +4436,7 @@ export function REPL({
             if (choice === 'cancel') return;
             // Command's onDone used display:'skip', so add the
             // echo here — gives immediate feedback before the
-            // ~5s teleportToRemote resolves.
+            // ~5s ultraplan launch resolves.
             setMessages(prev => [...prev, createCommandInputMessage(formatCommandInputTags('ultraplan', blurb))]);
             const appendStdout = (msg: string) => setMessages(prev => [...prev, createCommandInputMessage(`<${LOCAL_COMMAND_STDOUT_TAG}>${escapeXml(msg)}</${LOCAL_COMMAND_STDOUT_TAG}>`)]);
             // Defer the second message if a query is mid-turn

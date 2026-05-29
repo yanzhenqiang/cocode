@@ -410,10 +410,10 @@ export type AppState = DeepImmutable<{
   effortValue?: EffortValue
   // Set synchronously in launchUltraplan before the detached flow starts.
   // Prevents duplicate launches during the ~5s window before
-  // ultraplanSessionUrl is set by teleportToRemote. Cleared by launchDetached
+  // ultraplanSessionUrl is set. Cleared by launchDetached
   // once the URL is set or on failure.
   ultraplanLaunching?: boolean
-  // Active ultraplan CCR session URL. Set while the RemoteAgentTask runs;
+  // Active ultraplan CCR session URL. Set while the task runs;
   // truthy disables the keyword trigger + rainbow. Cleared when the poll
   // reaches terminal state.
   ultraplanSessionUrl?: string
