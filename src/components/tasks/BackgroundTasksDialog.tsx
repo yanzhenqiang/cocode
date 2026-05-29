@@ -17,7 +17,6 @@ import { LocalShellTask } from 'src/tasks/LocalShellTask/LocalShellTask.js';
 // Type import is erased at build time — safe even though module is ant-gated.
 import type { LocalWorkflowTaskState } from 'src/tasks/LocalWorkflowTask/LocalWorkflowTask.js';
 import type { MonitorMcpTaskState } from 'src/tasks/MonitorMcpTask/MonitorMcpTask.js';
-import { RemoteAgentTask, type RemoteAgentTaskState } from 'src/tasks/RemoteAgentTask/RemoteAgentTask.js';
 import { type BackgroundTaskState, isBackgroundTask, type TaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { intersperse } from 'src/utils/array.js';
@@ -38,7 +37,6 @@ import { AsyncAgentDetailDialog } from './AsyncAgentDetailDialog.js';
 import { BackgroundTask as BackgroundTaskComponent } from './BackgroundTask.js';
 import { DreamDetailDialog } from './DreamDetailDialog.js';
 import { InProcessTeammateDetailDialog } from './InProcessTeammateDetailDialog.js';
-import { RemoteSessionDetailDialog } from './RemoteSessionDetailDialog.js';
 import { ShellDetailDialog } from './ShellDetailDialog.js';
 type ViewState = {
   mode: 'list';
@@ -59,12 +57,6 @@ type ListItem = {
   label: string;
   status: string;
   task: DeepImmutable<LocalShellTaskState>;
-} | {
-  id: string;
-  type: 'remote_agent';
-  label: string;
-  status: string;
-  task: DeepImmutable<RemoteAgentTaskState>;
 } | {
   id: string;
   type: 'local_agent';
@@ -191,7 +183,6 @@ export function BackgroundTasksDialog({
       return bTime - aTime;
     });
     const bash = sorted.filter(item => item.type === 'local_bash');
-    const remote = sorted.filter(item_0 => item_0.type === 'remote_agent');
     // Exclude foregrounded task - it's being viewed in the main UI, not a background task
     const agent = sorted.filter(item_1 => item_1.type === 'local_agent' && item_1.id !== foregroundedTaskId);
     const workflows = sorted.filter(item_2 => item_2.type === 'local_workflow');
@@ -208,16 +199,16 @@ export function BackgroundTasksDialog({
     }] : [];
     return {
       bashTasks: bash,
-      remoteSessions: remote,
+      remoteSessions: [],
       agentTasks: agent,
       workflowTasks: workflows,
       mcpMonitors: monitorMcp,
       dreamTasks,
       teammateTasks: [...leaderItem, ...teammates],
       // Order MUST match JSX render order (teammates \u2192 bash \u2192 monitorMcp \u2192
-      // remote \u2192 agent \u2192 workflows \u2192 dream) so \u2193/\u2191 navigation moves the cursor
+      // agent \u2192 agent \u2192 workflows \u2192 dream) so \u2193/\u2191 navigation moves the cursor
       // visually downward.
-      allSelectableItems: [...leaderItem, ...teammates, ...bash, ...monitorMcp, ...remote, ...agent, ...workflows, ...dreamTasks]
+      allSelectableItems: [...leaderItem, ...teammates, ...bash, ...monitorMcp, ...agent, ...workflows, ...dreamTasks]
     };
   }, [typedTasks, foregroundedTaskId, showSpinnerTree]);
   const currentSelection = allSelectableItems[selectedIndex] ?? null;
@@ -279,12 +270,6 @@ export function BackgroundTasksDialog({
         killMonitorMcp(currentSelection_0.id, setAppState);
       } else if (currentSelection_0.type === 'dream' && currentSelection_0.status === 'running') {
         void killDreamTask(currentSelection_0.id);
-      } else if (currentSelection_0.type === 'remote_agent' && currentSelection_0.status === 'running') {
-        if (currentSelection_0.task.isUltraplan) {
-          void stopUltraplan(currentSelection_0.id, currentSelection_0.task.sessionId, setAppState);
-        } else {
-          void killRemoteAgentTask(currentSelection_0.id);
-        }
       }
     }
     if (e.key === 'f') {
@@ -315,10 +300,6 @@ export function BackgroundTasksDialog({
   async function killDreamTask(taskId_2: string): Promise<void> {
     await DreamTask.kill(taskId_2, setAppState);
   }
-  async function killRemoteAgentTask(taskId_3: string): Promise<void> {
-    await RemoteAgentTask.kill(taskId_3, setAppState);
-  }
-
   // Wrap onDone in useEffectEvent to get a stable reference that always calls
   // the current onDone callback without causing the effect to re-fire.
   const onDoneEvent = useEffectEventCompat(onDone);
@@ -377,8 +358,6 @@ export function BackgroundTasksDialog({
         return <ShellDetailDialog shell={task_0} onDone={onDone} onKillShell={() => void killShellTask(task_0.id)} onBack={goBackToList} key={`shell-${task_0.id}`} />;
       case 'local_agent':
         return <AsyncAgentDetailDialog agent={task_0} onDone={onDone} onKillAgent={() => void killAgentTask(task_0.id)} onBack={goBackToList} key={`agent-${task_0.id}`} />;
-      case 'remote_agent':
-        return <RemoteSessionDetailDialog session={task_0} onDone={onDone} toolUseContext={toolUseContext} onBack={goBackToList} onKill={task_0.status !== 'running' ? undefined : task_0.isUltraplan ? () => void stopUltraplan(task_0.id, task_0.sessionId, setAppState) : () => void killRemoteAgentTask(task_0.id)} key={`session-${task_0.id}`} />;
       case 'in_process_teammate':
         return <InProcessTeammateDetailDialog teammate={task_0} onDone={onDone} onKill={task_0.status === 'running' ? () => void killTeammateTask(task_0.id) : undefined} onBack={goBackToList} onForeground={task_0.status === 'running' ? () => {
           enterTeammateView(task_0.id, setAppState);
@@ -411,7 +390,7 @@ export function BackgroundTasksDialog({
               {runningAgentCount}{' '}
               {runningAgentCount !== 1 ? 'active agents' : 'active agent'}
             </Text>] : [])], index => <Text key={`separator-${index}`}> · </Text>);
-  const actions = [<KeyboardShortcutHint key="upDown" shortcut="↑/↓" action="select" />, <KeyboardShortcutHint key="enter" shortcut="Enter" action="view" />, ...(currentSelection?.type === 'in_process_teammate' && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="foreground" shortcut="f" action="foreground" />] : []), ...((currentSelection?.type === 'local_bash' || currentSelection?.type === 'local_agent' || currentSelection?.type === 'in_process_teammate' || currentSelection?.type === 'local_workflow' || currentSelection?.type === 'monitor_mcp' || currentSelection?.type === 'dream' || currentSelection?.type === 'remote_agent') && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="kill" shortcut="x" action="stop" />] : []), ...(agentTasks.some(t => t.status === 'running') ? [<KeyboardShortcutHint key="kill-all" shortcut={killAgentsShortcut} action="stop all agents" />] : []), <KeyboardShortcutHint key="esc" shortcut="←/Esc" action="close" />];
+  const actions = [<KeyboardShortcutHint key="upDown" shortcut="↑/↓" action="select" />, <KeyboardShortcutHint key="enter" shortcut="Enter" action="view" />, ...(currentSelection?.type === 'in_process_teammate' && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="foreground" shortcut="f" action="foreground" />] : []), ...((currentSelection?.type === 'local_bash' || currentSelection?.type === 'local_agent' || currentSelection?.type === 'in_process_teammate' || currentSelection?.type === 'local_workflow' || currentSelection?.type === 'monitor_mcp' || currentSelection?.type === 'dream') && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="kill" shortcut="x" action="stop" />] : []), ...(agentTasks.some(t => t.status === 'running') ? [<KeyboardShortcutHint key="kill-all" shortcut={killAgentsShortcut} action="stop all agents" />] : []), <KeyboardShortcutHint key="esc" shortcut="←/Esc" action="close" />];
   const handleCancel = () => onDone('Background tasks dialog dismissed', {
     display: 'system'
   });
@@ -496,14 +475,6 @@ function toListItem(task: BackgroundTaskState): ListItem {
         id: task.id,
         type: 'local_bash',
         label: task.kind === 'monitor' ? task.description : task.command,
-        status: task.status,
-        task
-      };
-    case 'remote_agent':
-      return {
-        id: task.id,
-        type: 'remote_agent',
-        label: task.title,
         status: task.status,
         task
       };

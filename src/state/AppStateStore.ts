@@ -418,7 +418,7 @@ export type AppState = DeepImmutable<{
   // reaches terminal state.
   ultraplanSessionUrl?: string
   // Approved ultraplan awaiting user choice (implement here vs fresh session).
-  // Set by RemoteAgentTask poll on approval; cleared by UltraplanChoiceDialog.
+  // Cleared by UltraplanChoiceDialog.
   ultraplanPendingChoice?: { plan: string; sessionId: string; taskId: string }
   // Pre-launch permission dialog. Set by /ultraplan (slash or keyword);
   // cleared by UltraplanLaunchDialog on choice.

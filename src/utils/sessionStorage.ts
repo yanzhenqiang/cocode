@@ -362,7 +362,7 @@ export async function deleteRemoteAgentMetadata(taskId: string): Promise<void> {
 
 /**
  * Scan the remote-agents/ directory for all persisted metadata files.
- * Used by restoreRemoteAgentTasks to reconnect to still-running CCR sessions.
+ * (Legacy; remote agent feature removed.)
  */
 export async function listRemoteAgentMetadata(): Promise<
   RemoteAgentMetadata[]
