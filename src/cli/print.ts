@@ -7,7 +7,6 @@ import {
 } from 'src/services/settingsSync/index.js'
 import { waitForRemoteManagedSettingsToLoad } from 'src/services/remoteManagedSettings/index.js'
 import { StructuredIO } from 'src/cli/structuredIO.js'
-import { RemoteIO } from 'src/cli/remoteIO.js'
 import {
   type Command,
   formatDescriptionWithSource,
@@ -185,7 +184,6 @@ import {
 import { createSyntheticOutputTool } from 'src/tools/SyntheticOutputTool/SyntheticOutputTool.js'
 import { parseSessionIdentifier } from 'src/utils/sessionUrl.js'
 import {
-  hydrateRemoteSession,
   hydrateFromCCRv2InternalEvents,
   resetSessionFilePointer,
   doesMessageExistInSession,
@@ -436,7 +434,7 @@ export async function runHeadless(
     appendSystemPrompt: string | undefined
     userSpecifiedModel: string | undefined
     fallbackModel: string | undefined
-    teleport: string | true | null | undefined
+  
     sdkUrl: string | undefined
     replayUserMessages: boolean | undefined
     includePartialMessages: boolean | undefined
@@ -631,7 +629,6 @@ export async function runHeadless(
     agentSetting: resumedAgentSetting,
   } = await loadInitialMessages(setAppState, {
     continue: options.continue,
-    teleport: options.teleport,
     resume: options.resume,
     resumeSessionAt: options.resumeSessionAt,
     forkSession: options.forkSession,
@@ -720,9 +717,7 @@ export async function runHeadless(
   const hasValidResumeSessionId =
     typeof options.resume === 'string' &&
     (Boolean(validateUuid(options.resume)) || options.resume.endsWith('.jsonl'))
-  const isUsingSdkUrl = Boolean(options.sdkUrl)
-
-  if (!inputPrompt && !hasValidResumeSessionId && !isUsingSdkUrl) {
+  if (!inputPrompt && !hasValidResumeSessionId) {
     process.stderr.write(
       `Error: Input must be provided either through stdin or as a prompt argument when using --print\n`,
     )
@@ -745,10 +740,7 @@ export async function runHeadless(
   )
   let filteredTools = [...tools, ...allowedMcpTools]
 
-  // When using SDK URL, always use stdio permission prompting to delegate to the SDK
-  const effectivePermissionPromptToolName = options.sdkUrl
-    ? 'stdio'
-    : options.permissionPromptToolName
+  const effectivePermissionPromptToolName = options.permissionPromptToolName
 
   // Callback for when a permission prompt is shown
   const onPermissionPrompt = (details: RequiresActionDetails) => {
@@ -1947,12 +1939,6 @@ function runHeadlessStreaming(
           }
 
           const input = command.value
-
-          if (structuredIO instanceof RemoteIO && command.mode === 'prompt') {
-            logEvent('tengu_bridge_message_received', {
-              is_repl: false,
-            })
-          }
 
           // Abort any in-flight suggestion generation and track acceptance
           suggestionState.abortController?.abort()
@@ -4248,7 +4234,7 @@ async function loadInitialMessages(
   setAppState: (f: (prev: AppState) => AppState) => void,
   options: {
     continue: boolean | undefined
-    teleport: string | true | null | undefined
+  
     resume: string | boolean | undefined
     resumeSessionAt: string | undefined
     forkSession: boolean | undefined
@@ -4302,45 +4288,6 @@ async function loadInitialMessages(
     }
   }
 
-  // Handle teleport in print mode
-  if (options.teleport) {
-    try {
-      if (!isPolicyAllowed('allow_remote_sessions')) {
-        throw new Error(
-          "Remote sessions are disabled by your organization's policy.",
-        )
-      }
-
-      logEvent('tengu_teleport_print', {})
-
-      if (typeof options.teleport !== 'string') {
-        throw new Error('No session ID provided for teleport')
-      }
-
-      const {
-        checkOutTeleportedSessionBranch,
-        processMessagesForTeleportResume,
-        teleportResumeCodeSession,
-        validateGitState,
-      } = await import('src/utils/teleport.js')
-      await validateGitState()
-      const teleportResult = await teleportResumeCodeSession(options.teleport)
-      const { branchError } = await checkOutTeleportedSessionBranch(
-        teleportResult.branch,
-      )
-      return {
-        messages: processMessagesForTeleportResume(
-          teleportResult.log,
-          branchError,
-        ),
-      }
-    } catch (error) {
-      logError(error)
-      gracefulShutdownSync(1)
-      return { messages: [] }
-    }
-  }
-
   // Handle resume in print mode (accepts session ID or URL)
   // URLs are [internal-only]
   if (options.resume) {
@@ -4376,16 +4323,6 @@ async function loadInitialMessages(
             setMainLoopModelOverride(metadata.model)
           }
         }
-      } else if (
-        parsedSessionId.isUrl &&
-        parsedSessionId.ingressUrl &&
-        isEnvTruthy(process.env.ENABLE_SESSION_PERSISTENCE)
-      ) {
-        // v1: fetch session logs from Session Ingress
-        await hydrateRemoteSession(
-          parsedSessionId.sessionId,
-          parsedSessionId.ingressUrl,
-        )
       }
 
       // Load the conversation with the specified session ID
@@ -4511,10 +4448,7 @@ function getStructuredIO(
     inputStream = inputPrompt
   }
 
-  // Use RemoteIO if sdkUrl is provided, otherwise use regular StructuredIO
-  return options.sdkUrl
-    ? new RemoteIO(options.sdkUrl, inputStream, options.replayUserMessages)
-    : new StructuredIO(inputStream, options.replayUserMessages)
+  return new StructuredIO(inputStream, options.replayUserMessages)
 }
 
 /**

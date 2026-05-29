@@ -348,6 +348,7 @@ export function getClaudeTempDirName(): string {
 export const getClaudeTempDir = memoize(function getClaudeTempDir(): string {
   const baseTmpDir =
     process.env.CLAUDE_CODE_TMPDIR ||
+    process.env.TMPDIR ||
     (getPlatform() === 'windows' ? tmpdir() : '/tmp')
 
   // Resolve symlinks in the base temp directory (e.g., /tmp -> /private/tmp on macOS)

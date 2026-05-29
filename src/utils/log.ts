@@ -151,18 +151,8 @@ export function attachErrorLogSink(newSink: ErrorLogSink): void {
  * - Debug: Run `claude --debug` or `tail -f ~/.claude/debug/latest`
  * - In-memory: Call `getInMemoryErrors()` to get recent errors for the current session
  */
-const isHardFailMode = memoize((): boolean => {
-  return process.argv.includes('--hard-fail')
-})
-
 export function logError(error: unknown): void {
   const err = toError(error)
-  if (feature('HARD_FAIL') && isHardFailMode()) {
-    // biome-ignore lint/suspicious/noConsole:: intentional crash output
-    console.error('[HARD FAIL] logError called')
-    // eslint-disable-next-line custom-rules/no-process-exit
-    process.exit(1)
-  }
   try {
     // Check if error reporting should be disabled
     if (

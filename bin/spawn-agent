@@ -10,8 +10,11 @@ SESSION_NAME="$1"
 shift
 PROMPT="$*"
 
-# Create agent workspace in current project
-AGENT_DIR="$(pwd)/.cocode/agents/$SESSION_NAME"
+# Get host project directory (current directory when spawn-agent is invoked)
+HOST_DIR="$(pwd)"
+
+# Create agent workspace inside host project
+AGENT_DIR="$HOST_DIR/.cocode/agents/$SESSION_NAME"
 mkdir -p "$AGENT_DIR"
 
 # Write prompt file (for reference)
@@ -20,11 +23,18 @@ printf '%s\n' "$PROMPT" > "$AGENT_DIR/prompt.txt"
 # Get parent tmux session
 PARENT=$(tmux display-message -p '#S' 2>/dev/null || echo "unknown")
 
-# Launch tmux session with the agent (no initial prompt)
+# Launch tmux session with the agent.
+# Keep cwd in the host project directory so the subagent can work with project files.
+# Set TMPDIR to the agent workspace to avoid /tmp permission issues.
 tmux new-session -d -s "$SESSION_NAME" \
   -e "PARENT_SESSION=$PARENT" \
   -e "AGENT_ID=$SESSION_NAME" \
-  "cd '$AGENT_DIR' && cocode"
+  -e "AGENT_WORKSPACE=$AGENT_DIR" \
+  -e "TMPDIR=$AGENT_DIR/tmp" \
+  "cd '$HOST_DIR' && cocode"
+
+# Create tmp dir inside agent workspace
+mkdir -p "$AGENT_DIR/tmp"
 
 # Send the prompt via tmux
 sleep 2

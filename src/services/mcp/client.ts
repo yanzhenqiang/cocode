@@ -94,7 +94,6 @@ import {
   getWebSocketProxyUrl,
 } from '../../utils/proxy.js'
 import { recursivelySanitizeUnicode } from '../../utils/sanitization.js'
-import { getSessionIngressAuthToken } from '../../utils/sessionIngressAuth.js'
 import { subprocessEnv } from '../../utils/subprocessEnv.js'
 import {
   isPersistError,
@@ -606,7 +605,7 @@ export const connectToServer = memoize(
 
       // If we have the session ingress JWT, we will connect via the session ingress rather than
       // to remote MCP's directly.
-      const sessionIngressToken = getSessionIngressAuthToken()
+      const sessionIngressToken = undefined
 
       if (serverRef.type === 'sse') {
         // Create an auth provider for this server

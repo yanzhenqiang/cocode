@@ -72,6 +72,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       // ctrl+x ctrl+e is the readline-native edit-and-execute-command binding.
       'ctrl+x ctrl+e': 'chat:externalEditor',
       'ctrl+g': 'chat:externalEditor',
+      return: 'chat:submit',
       'ctrl+s': 'chat:stash',
       // Image paste shortcut (platform-specific key defined above)
       [IMAGE_PASTE_KEY]: 'chat:imagePaste',
@@ -105,6 +106,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       space: 'select:accept',
       // Save and close the config panel
       enter: 'settings:close',
+      return: 'settings:close',
       // Enter search mode
       '/': 'settings:search',
       // Retry loading usage data (only active on error)
@@ -117,6 +119,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       y: 'confirm:yes',
       n: 'confirm:no',
       enter: 'confirm:yes',
+      return: 'confirm:yes',
       escape: 'confirm:no',
       // Navigation for dialogs with lists
       up: 'confirm:previous',
@@ -160,6 +163,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       tab: 'historySearch:accept',
       'ctrl+c': 'historySearch:cancel',
       enter: 'historySearch:execute',
+      return: 'historySearch:execute',
     },
   },
   {
@@ -224,6 +228,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       right: 'footer:next',
       left: 'footer:previous',
       enter: 'footer:openSelected',
+      return: 'footer:openSelected',
       escape: 'footer:clearSelection',
     },
   },
@@ -246,6 +251,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       'meta+down': 'messageSelector:bottom',
       'shift+j': 'messageSelector:bottom',
       enter: 'messageSelector:select',
+      return: 'messageSelector:select',
     },
   },
   // PromptInput unmounts while cursor active — no key conflict.
@@ -271,6 +277,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
             'ctrl+c': 'messageActions:ctrlc' as const,
             // Mirror MESSAGE_ACTIONS. Not imported — would pull React/ink into this config module.
             enter: 'messageActions:enter' as const,
+            return: 'messageActions:enter' as const,
             c: 'messageActions:c' as const,
             p: 'messageActions:p' as const,
           },
@@ -287,6 +294,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       up: 'diff:previousFile',
       down: 'diff:nextFile',
       enter: 'diff:viewDetails',
+      return: 'diff:viewDetails',
       // Note: diff:back is handled by left arrow in detail mode
     },
   },
@@ -310,6 +318,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       'ctrl+n': 'select:next',
       'ctrl+p': 'select:previous',
       enter: 'select:accept',
+      return: 'select:accept',
       escape: 'select:cancel',
     },
   },

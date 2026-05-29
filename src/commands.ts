@@ -66,11 +66,6 @@ const workflowsCmd = feature('WORKFLOW_SCRIPTS')
       require('./commands/workflows/index.js') as typeof import('./commands/workflows/index.js')
     ).default
   : null
-const webCmd = feature('CCR_REMOTE_SETUP')
-  ? (
-      require('./commands/remote-setup/index.js') as typeof import('./commands/remote-setup/index.js')
-    ).default
-  : null
 const clearSkillIndexCache = feature('EXPERIMENTAL_SKILL_SEARCH')
   ? (
       require('./services/skillSearch/localSearch.js') as typeof import('./services/skillSearch/localSearch.js')
@@ -136,7 +131,6 @@ import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
 import outputStyle from './commands/output-style/index.js'
-import remoteEnv from './commands/remote-env/index.js'
 import upgrade from './commands/upgrade/index.js'
 import {
   extraUsage,
@@ -253,7 +247,6 @@ const COMMANDS = memoize((): Command[] => [
   model,
   onboardGithub,
   outputStyle,
-  remoteEnv,
   plugin,
   provider,
   pr_comments,
@@ -278,7 +271,6 @@ const COMMANDS = memoize((): Command[] => [
   extraUsageNonInteractive,
   rateLimitOptions,
   usageReport,
-  ...(webCmd ? [webCmd] : []),
   thinkback,
   thinkbackPlay,
   permissions,

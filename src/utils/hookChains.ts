@@ -999,66 +999,9 @@ export async function executeWarmRemoteCapacityAction(args: {
   }
 
   // Bridge module deleted — warm_remote_capacity always runs locally
-
-  // We keep warm_remote_capacity conservative in MVP:
-  // 1) verify remote prerequisites,
-  // 2) fetch selected environment metadata,
-  // 3) issue a lightweight environments list call as a controlled pre-warm path.
-  try {
-    const [{ checkBackgroundRemoteSessionEligibility }, { getEnvironmentSelectionInfo }, envApi] =
-      await Promise.all([
-        import('./background/remote/remoteSession.js'),
-        import('./teleport/environmentSelection.js'),
-        import('./teleport/environments.js'),
-      ])
-
-    const preconditions = await checkBackgroundRemoteSessionEligibility({
-      skipBundle: true,
-    })
-
-    if (preconditions.length > 0) {
-      return {
-        status: 'skipped',
-        reason: `Remote warm-up preconditions failed: ${preconditions
-          .map(item => item.type)
-          .join(', ')}`,
-      }
-    }
-
-    let selection = await getEnvironmentSelectionInfo()
-
-    if (
-      !selection.selectedEnvironment &&
-      action.createDefaultEnvironmentIfMissing === true
-    ) {
-      const created = await envApi.createDefaultCloudEnvironment(
-        'Cocode Self-Healing Warmup',
-      )
-      selection = {
-        availableEnvironments: [created],
-        selectedEnvironment: created,
-        selectedEnvironmentSource: null,
-      }
-    }
-
-    if (!selection.selectedEnvironment) {
-      return {
-        status: 'skipped',
-        reason: 'No eligible remote environment available for warm-up',
-      }
-    }
-
-    await envApi.fetchEnvironments()
-
-    return {
-      status: 'executed',
-      detail: `Remote warm-up checked environment ${selection.selectedEnvironment.environment_id}`,
-    }
-  } catch (error) {
-    return {
-      status: 'failed',
-      reason: `Remote warm-up failed: ${String(error)}`,
-    }
+  return {
+    status: 'skipped',
+    reason: 'Remote warm-up not available',
   }
 }
 

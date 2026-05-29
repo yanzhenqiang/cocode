@@ -96,13 +96,9 @@ export function showSetupDialog<T = void>(root: Root, renderer: (done: (result: 
  * Handles the common epilogue: start deferred prefetches, wait for exit, graceful shutdown.
  */
 export async function renderAndRun(root: Root, element: React.ReactNode): Promise<void> {
-  writeToStderr('[DEBUG] renderAndRun: root.render called\n');
   root.render(element);
-  writeToStderr('[DEBUG] renderAndRun: startDeferredPrefetches\n');
   startDeferredPrefetches();
-  writeToStderr('[DEBUG] renderAndRun: waiting for root.waitUntilExit\n');
   await root.waitUntilExit();
-  writeToStderr('[DEBUG] renderAndRun: root.waitUntilExit resolved\n');
   await gracefulShutdown(0);
 
 }

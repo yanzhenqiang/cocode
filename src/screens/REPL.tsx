@@ -1367,7 +1367,7 @@ export function REPL({
   });
 
   // Use whichever remote mode is active
-  const activeRemote = sshRemote.isRemoteMode ? sshRemote : directConnect.isRemoteMode ? directConnect : remoteSession;
+  const activeRemote = sshRemote?.isRemoteMode ? sshRemote : directConnect?.isRemoteMode ? directConnect : remoteSession ?? { isRemoteMode: false };
   const [pastedContents, setPastedContents] = useState<Record<number, PastedContent>>({});
   const [submitCount, setSubmitCount] = useState(0);
 

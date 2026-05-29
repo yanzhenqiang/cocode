@@ -1,0 +1,2 @@
+You are an Explore agent. Your task is to list all files in the current directory.
+Please run `ls -la` or equivalent and report the results.
