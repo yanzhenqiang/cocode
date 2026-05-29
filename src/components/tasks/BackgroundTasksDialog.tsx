@@ -162,7 +162,6 @@ export function BackgroundTasksDialog({
   // Memoize the sorted and categorized items together to ensure stable references
   const {
     bashTasks,
-    remoteSessions,
     agentTasks,
     teammateTasks,
     workflowTasks,
@@ -199,7 +198,6 @@ export function BackgroundTasksDialog({
     }] : [];
     return {
       bashTasks: bash,
-      remoteSessions: [],
       agentTasks: agent,
       workflowTasks: workflows,
       mcpMonitors: monitorMcp,
@@ -378,7 +376,7 @@ export function BackgroundTasksDialog({
     }
   }
   const runningBashCount = count(bashTasks, _ => _.status === 'running');
-  const runningAgentCount = count(remoteSessions, __0 => __0.status === 'running' || __0.status === 'pending') + count(agentTasks, __1 => __1.status === 'running');
+  const runningAgentCount = count(agentTasks, __0 => __0.status === 'running');
   const runningTeammateCount = count(teammateTasks, __2 => __2.status === 'running');
   const subtitle = intersperse([...(runningTeammateCount > 0 ? [<Text key="teammates">
               {runningTeammateCount}{' '}
@@ -404,7 +402,7 @@ export function BackgroundTasksDialog({
       <Dialog title="Background tasks" subtitle={<>{subtitle}</>} onCancel={handleCancel} color="background" inputGuide={renderInputGuide}>
         {allSelectableItems.length === 0 ? <Text dimColor>No tasks currently running</Text> : <Box flexDirection="column">
             {teammateTasks.length > 0 && <Box flexDirection="column">
-                {(bashTasks.length > 0 || remoteSessions.length > 0 || agentTasks.length > 0) && <Text dimColor>
+                {(bashTasks.length > 0 || agentTasks.length > 0) && <Text dimColor>
                     <Text bold>{'  '}Agents</Text> (
                     {count(teammateTasks, i => i.type !== 'leader')})
                   </Text>}
@@ -414,7 +412,7 @@ export function BackgroundTasksDialog({
               </Box>}
 
             {bashTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 ? 1 : 0}>
-                {(teammateTasks.length > 0 || remoteSessions.length > 0 || agentTasks.length > 0) && <Text dimColor>
+                {(teammateTasks.length > 0 || agentTasks.length > 0) && <Text dimColor>
                     <Text bold>{'  '}Shells</Text> ({bashTasks.length})
                   </Text>}
                 <Box flexDirection="column">
@@ -431,17 +429,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {remoteSessions.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 ? 1 : 0}>
-                <Text dimColor>
-                  <Text bold>{'  '}Remote agents</Text> ({remoteSessions.length}
-                  )
-                </Text>
-                <Box flexDirection="column">
-                  {remoteSessions.map(item_8 => <Item key={item_8.id} item={item_8} isSelected={item_8.id === currentSelection?.id} />)}
-                </Box>
-              </Box>}
-
-            {agentTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || remoteSessions.length > 0 ? 1 : 0}>
+            {agentTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 ? 1 : 0}>
                 <Text dimColor>
                   <Text bold>{'  '}Local agents</Text> ({agentTasks.length})
                 </Text>
@@ -450,7 +438,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {workflowTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || remoteSessions.length > 0 || agentTasks.length > 0 ? 1 : 0}>
+            {workflowTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 ? 1 : 0}>
                 <Text dimColor>
                   <Text bold>{'  '}Workflows</Text> ({workflowTasks.length})
                 </Text>
@@ -459,7 +447,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {dreamTasks_0.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || remoteSessions.length > 0 || agentTasks.length > 0 || workflowTasks.length > 0 ? 1 : 0}>
+            {dreamTasks_0.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 || workflowTasks.length > 0 ? 1 : 0}>
                 <Box flexDirection="column">
                   {dreamTasks_0.map(item_11 => <Item key={item_11.id} item={item_11} isSelected={item_11.id === currentSelection?.id} />)}
                 </Box>
