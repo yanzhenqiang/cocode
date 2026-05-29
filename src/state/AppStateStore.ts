@@ -115,17 +115,7 @@ export type AppState = DeepImmutable<{
   // Single source of truth - computed once in main.tsx before option
   // mutation, consumers read this instead of re-calling isAssistantMode().
   kairosEnabled: boolean
-  // Always-on bridge: desired state (controlled by /config or footer toggle)
-  // Always-on bridge: true when activated via /remote-control command, false when config-driven
   // Outbound-only mode: forward events to CCR but reject inbound prompts/control
-  // Always-on bridge: env registered + session created (= "Ready")
-  // Always-on bridge: ingress WebSocket is open (= "Connected" - user on claude.ai)
-  // Always-on bridge: poll loop is in error backoff (= "Reconnecting")
-  // Always-on bridge: connect URL for Ready state (?bridge=envId)
-  // Always-on bridge: session URL on claude.ai (set when connected)
-  // Always-on bridge: IDs for debugging (shown in dialog when --verbose)
-  // Always-on bridge: error message when connection fails (shown in BridgeDialog)
-  // Always-on bridge: session name set via `/remote-control <name>` (used as session title)
 }> & {
   // Unified task state - excluded from DeepImmutable because TaskState contains function types
   tasks: { [taskId: string]: TaskState }
@@ -409,7 +399,6 @@ export type AppState = DeepImmutable<{
   // Remote-harness side: set via set_permission_mode control_request,
   // pushed to CCR external_metadata.is_ultraplan_mode by onChangeAppState.
   isUltraplanMode?: boolean
-  // Always-on bridge: permission callbacks for bidirectional permission checks
   // Channel permission callbacks — permission prompts over Telegram/iMessage/etc.
   // Races against local UI + bridge + hooks + classifier via claim() in
   // interactiveHandler.ts. Constructed once in useManageMCPConnections.
