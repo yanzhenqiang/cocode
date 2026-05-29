@@ -278,13 +278,6 @@ function PromptInput({
   const store = useAppStateStore();
   const setAppState = useSetAppState();
   const tasks = useAppState(s => s.tasks);
-  const replBridgeConnected = useAppState(s => s.replBridgeConnected);
-  const replBridgeExplicit = useAppState(s => s.replBridgeExplicit);
-  const replBridgeReconnecting = useAppState(s => s.replBridgeReconnecting);
-  // Must match BridgeStatusIndicator's render condition (PromptInputFooter.tsx) —
-  // the pill returns null for implicit-and-not-reconnecting, so nav must too,
-  // otherwise bridge becomes an invisible selection stop.
-  const bridgeFooterVisible = replBridgeConnected && (replBridgeExplicit || replBridgeReconnecting);
   // Tmux pill (internal-only) — visible when there's an active tungsten session
   const hasTungstenSession = useAppState(s => "external" === 'ant' && s.tungstenActiveSession !== undefined);
   const tmuxFooterVisible = "external" === 'ant' && hasTungstenSession;
@@ -441,7 +434,7 @@ function PromptInput({
   // something is running.
   const tasksFooterVisible = (runningTaskCount > 0 || "external" === 'ant' && coordinatorTaskCount > 0) && !shouldHideTasksFooter(tasks, showSpinnerTree);
   const teamsFooterVisible = cachedTeams.length > 0;
-  const footerItems = useMemo(() => [tasksFooterVisible && 'tasks', tmuxFooterVisible && 'tmux', bagelFooterVisible && 'bagel', teamsFooterVisible && 'teams', bridgeFooterVisible && 'bridge', companionFooterVisible && 'companion'].filter(Boolean) as FooterItem[], [tasksFooterVisible, tmuxFooterVisible, bagelFooterVisible, teamsFooterVisible, bridgeFooterVisible, companionFooterVisible]);
+  const footerItems = useMemo(() => [tasksFooterVisible && 'tasks', tmuxFooterVisible && 'tmux', bagelFooterVisible && 'bagel', teamsFooterVisible && 'teams', companionFooterVisible && 'companion'].filter(Boolean) as FooterItem[], [tasksFooterVisible, tmuxFooterVisible, bagelFooterVisible, teamsFooterVisible, companionFooterVisible]);
 
   // Effective selection: null if the selected pill stopped rendering (bridge
   // disconnected, task finished). The derivation makes the UI correct
