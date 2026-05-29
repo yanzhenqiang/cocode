@@ -701,7 +701,7 @@ function shouldRetry(error: APIError): boolean {
   // credentials. Bypass x-should-retry:false — the server assumes we'd retry
   // the same bad key, but our key is fine.
   if (
-    isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) &&
+    false &&
     (error.status === 401 || error.status === 403)
   ) {
     return true

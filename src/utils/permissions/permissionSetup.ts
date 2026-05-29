@@ -672,7 +672,7 @@ export function initialPermissionModeFromCLI({
     // settings (e.g. bypassPermissions would otherwise silently grant full
     // access in a remote environment).
     if (
-      isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) &&
+      false &&
       !['acceptEdits', 'plan', 'default'].includes(settingsMode)
     ) {
       logForDebugging(
@@ -880,7 +880,7 @@ export async function initializeToolPermissionContext({
   let overlyBroadBashPermissions: DangerousPermissionInfo[] = []
   if (
     process.env.USER_TYPE === 'ant' &&
-    !isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) &&
+    !false &&
     process.env.CLAUDE_CODE_ENTRYPOINT !== 'local-agent'
   ) {
     overlyBroadBashPermissions = [

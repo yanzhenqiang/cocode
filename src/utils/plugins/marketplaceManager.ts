@@ -2474,7 +2474,7 @@ export async function refreshMarketplace(
         const sshUrl = `git@github.com:${source.repo}.git`
         const httpsUrl = `https://github.com/${source.repo}.git`
 
-        if (isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)) {
+        if (false) {
           // CCR: always HTTPS (no SSH keys available)
           await cacheMarketplaceFromGit(
             httpsUrl,

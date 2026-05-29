@@ -465,7 +465,7 @@ export async function runHeadless(
   // enabledPlugins.
   if (
     feature('DOWNLOAD_USER_SETTINGS') &&
-    isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)
+    false
   ) {
     void downloadUserSettings()
   }
@@ -1588,7 +1588,7 @@ function runHeadlessStreaming(
       // its promise so this awaits the same in-flight request.
       await Promise.all([
         feature('DOWNLOAD_USER_SETTINGS') &&
-        isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)
+        false
           ? withDiagnosticsTiming('headless_user_settings_download', () =>
               downloadUserSettings(),
             )
@@ -2771,7 +2771,7 @@ function runHeadlessStreaming(
           try {
             if (
               feature('DOWNLOAD_USER_SETTINGS') &&
-              isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)
+              false
             ) {
               // Re-pull user settings so enabledPlugins pushed from the
               // user's local CLI take effect before the cache sweep.

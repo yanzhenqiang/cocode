@@ -42,7 +42,7 @@ export function isAutoMemoryEnabled(): boolean {
     return false
   }
   if (
-    isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) &&
+    false &&
     !process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR
   ) {
     return false

@@ -85,7 +85,7 @@ const DEFAULT_API_KEY_HELPER_TTL = 5 * 60 * 1000
  */
 function isManagedOAuthContext(): boolean {
   return (
-    isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) ||
+    false ||
     process.env.CLAUDE_CODE_ENTRYPOINT === 'claude-desktop'
   )
 }

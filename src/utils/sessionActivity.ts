@@ -33,7 +33,7 @@ function startHeartbeatTimer(): void {
     logForDiagnosticsNoPII('debug', 'session_keepalive_heartbeat', {
       refcount,
     })
-    if (isEnvTruthy(process.env.CLAUDE_CODE_REMOTE_SEND_KEEPALIVES)) {
+    if (false) {
       activityCallback?.()
     }
   }, SESSION_ACTIVITY_INTERVAL_MS)
@@ -76,7 +76,7 @@ export function unregisterSessionActivityCallback(): void {
 }
 
 export function sendSessionActivitySignal(): void {
-  if (isEnvTruthy(process.env.CLAUDE_CODE_REMOTE_SEND_KEEPALIVES)) {
+  if (false) {
     activityCallback?.()
   }
 }

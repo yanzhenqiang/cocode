@@ -804,7 +804,7 @@ function shouldDeferLspTool(tool: Tool): boolean {
 function getNonstreamingFallbackTimeoutMs(): number {
   const override = parseInt(process.env.API_TIMEOUT_MS || '', 10)
   if (override) return override
-  return isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) ? 120_000 : 300_000
+  return false ? 120_000 : 300_000
 }
 
 /**
