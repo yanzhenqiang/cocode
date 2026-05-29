@@ -840,7 +840,7 @@ export const SettingsSchema = lazySchema(() =>
           defaultEnvironmentId: z
             .string()
             .optional()
-            .describe('Default environment ID to use for remote sessions'),
+            .describe('Default environment ID'),
         })
         .optional()
         .describe('Remote session configuration'),

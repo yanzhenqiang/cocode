@@ -958,13 +958,6 @@ export async function executeWarmRemoteCapacityAction(args: {
     return { status: 'skipped', reason: 'aborted' }
   }
 
-  if (!isPolicyAllowed('allow_remote_sessions')) {
-    return {
-      status: 'skipped',
-      reason: 'Remote sessions are blocked by policy',
-    }
-  }
-
   if (runtime.onWarmRemoteCapacity) {
     try {
       const response = await runtime.onWarmRemoteCapacity({

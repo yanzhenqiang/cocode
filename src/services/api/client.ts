@@ -208,7 +208,6 @@ export async function getAnthropicClient({
       ? standardEffortToOpenAI(convertEffortValueToLevel(effortValue))
       : undefined
   const containerId = process.env.CLAUDE_CODE_CONTAINER_ID
-  const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
   const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
   const customHeaders = getCustomHeaders()
   const defaultHeaders: { [key: string]: string } = {
@@ -217,9 +216,6 @@ export async function getAnthropicClient({
     'X-Claude-Code-Session-Id': getSessionId(),
     ...customHeaders,
     ...(containerId ? { 'x-claude-remote-container-id': containerId } : {}),
-    ...(remoteSessionId
-      ? { 'x-claude-remote-session-id': remoteSessionId }
-      : {}),
     // SDK consumers can identify their app/library for backend analytics
     ...(clientApp ? { 'x-client-app': clientApp } : {}),
   }
