@@ -76,7 +76,7 @@ const FOREGROUND_529_RETRY_SOURCES = new Set<QuerySource>([
   // type-only). bash_classifier is internal-only; feature-gate so the string
   // tree-shakes out of external builds (excluded-strings.txt).
   'auto_mode',
-  ...(feature('BASH_CLASSIFIER') ? (['bash_classifier'] as const) : []),
+  ...([]),
 ])
 
 function shouldRetry529(querySource: QuerySource | undefined): boolean {

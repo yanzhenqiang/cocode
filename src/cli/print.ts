@@ -437,12 +437,7 @@ export async function runHeadless(
   // user settings a similar head start. The cached promise is joined in
   // installPluginsAndApplyMcpInBackground before plugin install reads
   // enabledPlugins.
-  if (
-    feature('DOWNLOAD_USER_SETTINGS') &&
-    false
-  ) {
-    void downloadUserSettings()
-  }
+  
 
   // In headless mode there is no React tree, so the useSettingsChange hook
   // never runs. Subscribe directly so that settings changes (including
@@ -1560,11 +1555,7 @@ function runHeadlessStreaming(
       // Join point for user settings (fired at runHeadless entry) and managed
       // settings (fired in main.tsx preAction). downloadUserSettings() caches
       // its promise so this awaits the same in-flight request.
-      if (feature('DOWNLOAD_USER_SETTINGS') && false) {
-        await withDiagnosticsTiming('headless_user_settings_download', () =>
-          downloadUserSettings(),
-        )
-      }
+      
 
       const pluginsInstalled = await installPluginsForHeadless()
 

@@ -275,9 +275,7 @@ async function dispatchHookChainFromHookRuntime(args: {
   toolUseContext?: ToolUseContext
 }): Promise<void> {
   try {
-    if (!feature('HOOK_CHAINS')) {
-      return
-    }
+    return
 
     const { dispatchHookChainsForEvent } = await import('./hookChains.js')
 

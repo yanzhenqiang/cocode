@@ -48,7 +48,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       ...(feature('QUICK_SEARCH')
         ? {}
         : {}),
-      ...(feature('TERMINAL_PANEL') ? { 'meta+j': 'app:toggleTerminal' } : {}),
     },
   },
   {

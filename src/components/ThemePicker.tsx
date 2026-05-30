@@ -114,9 +114,7 @@ export function ThemePicker({
 
   const themeOptions = React.useMemo(
     () => [
-      ...(feature("AUTO_THEME")
-        ? [{ label: "Auto (match terminal)", value: "auto" as const }]
-        : []), { 
+      , { 
         label: "Dark mode",
         value: "dark" as const 
       }, { 

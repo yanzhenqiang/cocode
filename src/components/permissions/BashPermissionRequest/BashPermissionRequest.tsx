@@ -231,7 +231,7 @@ function BashPermissionRequestInner({
   // and only ever transitions true→false, so capturing the mount-time value is
   // sufficient — no latch/ref needed. The feature() ternary keeps the property
   // read out of external builds (forbidden-string check).
-  const [classifierWasChecking] = useState(feature('BASH_CLASSIFIER') ? !!toolUseConfirm.classifierCheckInProgress : false);
+  const [classifierWasChecking] = useState(false);
 
   // These derive solely from the tool input (fixed for the dialog lifetime).
   // The shimmer clock used to live in this component and re-render it at 20fps
@@ -277,7 +277,7 @@ function BashPermissionRequestInner({
   }, [toolUseConfirm]);
   useKeybinding('confirm:no', handleDismissCheckmark, {
     context: 'Confirmation',
-    isActive: feature('BASH_CLASSIFIER') ? !!toolUseConfirm.classifierAutoApproved : false
+    isActive: false
   });
   function onSelect(value_0: string) {
     // Map options to numeric values for analytics (strings not allowed in logEvent)
@@ -418,17 +418,17 @@ function BashPermissionRequestInner({
           <Box flexDirection="column">
             <PermissionRuleExplanation permissionResult={toolUseConfirm.permissionResult} toolType="command" />
             {destructiveWarning_0 && <Box marginBottom={1}>
-                <Text color="warning" dimColor={feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved : false}>
+                <Text color="warning" dimColor={false}>
                   {destructiveWarning_0}
                 </Text>
               </Box>}
-            <Text dimColor={feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved : false}>
+            <Text dimColor={false}>
               Do you want to proceed?
             </Text>
             <Select options={feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved ? options.map(o => ({
           ...o,
           disabled: true
-        })) : options : options} isDisabled={feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved : false} inlineDescriptions onChange={onSelect} onCancel={() => handleReject()} onFocus={handleFocus} onInputModeToggle={handleInputModeToggle} />
+        })) : options : options} isDisabled={false} inlineDescriptions onChange={onSelect} onCancel={() => handleReject()} onFocus={handleFocus} onInputModeToggle={handleInputModeToggle} />
           </Box>
           <Box justifyContent="space-between" marginTop={1}>
             <Text dimColor>
