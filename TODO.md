@@ -4,21 +4,18 @@ Stubs are stepping stones — each must eventually be **fully deleted** along wi
 
 ## Remaining Stubs
 
-### 1. `services/oauth/` (~1KB stub, was ~55KB) [Batch 50+51: 1146→auth.ts decoupled]
+### 1. `services/oauth/` (~1KB stub, was ~55KB) — 87→3 importers
 - **Files**: `index.ts`, `client.ts`, `getOauthProfile.ts`, `types.ts`
 - **✅ Done**: `utils/auth.ts` — OAuth imports replaced with inline stubs (Batch 51)
 - **✅ Done**: `services/api/client.ts` — checkAndRefreshOAuthTokenIfNeeded removed
 - **✅ Done**: `entrypoints/init.ts` — populateOAuthAccountInfoIfNeeded removed
-- **Remaining blockers**:
-  - `cli/handlers/auth.ts` — uses OAuthService, createAndStoreApiKey, etc (login deleted, handler is dead)
-  - `utils/config.ts` — OAuth account types
-  - `services/api/bootstrap.ts`, `codexOAuth.ts`, `grove.ts`, `usage.ts`, `firstTokenDate.ts`
-  - `services/mcp/auth.ts`, `claudeai.ts`, `client.ts`, `xaaIdpLogin.ts`
-  - `components/ConsoleOAuthFlow.tsx`, `LogoV2.tsx`, `MCPRemoteServerMenu.tsx` (compiled React)
-  - `utils/apiPreconnect.ts`, `betas.ts`, `env.ts`, `fastMode.ts`, `http.ts`
-  - `utils/plugins/marketplaceManager.ts`, `secureStorage/macOsKeychainHelpers.ts`
-  - `hooks/notifs/useCanSwitchToExistingSubscription.tsx` (compiled React)
-- **Next**: Clean `cli/handlers/auth.ts` → delete oauth stub
+- **✅ Done**: `cli/handlers/auth.ts` — replaced with simplified stub (Batch 52)
+- **✅ Done**: `utils/config.ts` — OAuth types replaced with local aliases (Batch 53)
+- **Only 3 compiled React files remain** (cannot edit):
+  - `cli/print.ts` — uses OAuthService
+  - `components/ConsoleOAuthFlow.tsx` — OAuth login UI
+  - `hooks/notifs/useCanSwitchToExistingSubscription.tsx`
+- **Status**: Stub cannot be fully deleted (compiled React blockers), but is now minimal
 
 ### 2. `services/PromptSuggestion/` (~1KB stub, was ~52KB)
 - **Files**: `promptSuggestion.ts`, `speculation.ts`
