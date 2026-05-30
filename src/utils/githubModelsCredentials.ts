@@ -1,6 +1,7 @@
 import { isBareMode, isEnvTruthy } from './envUtils.js'
 import { getSecureStorage } from './secureStorage/index.js'
-import { exchangeForCopilotToken } from '../services/github/deviceFlow.js'
+
+const exchangeForCopilotToken = async (): Promise<never> => { throw new Error('GitHub device flow removed') }
 
 /** JSON key in the shared Cocode secure storage blob. */
 export const GITHUB_MODELS_STORAGE_KEY = 'githubModels' as const

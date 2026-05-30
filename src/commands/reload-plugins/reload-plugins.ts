@@ -1,5 +1,4 @@
 import { feature } from 'bun:bundle'
-import { redownloadUserSettings } from '../../services/settingsSync/index.js'
 import type { LocalCommandCall } from '../../types/command.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 import { refreshActivePlugins } from '../../utils/plugins/refresh.js'

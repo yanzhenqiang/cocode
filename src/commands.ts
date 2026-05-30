@@ -12,7 +12,6 @@ import { context, contextNonInteractive } from './commands/context/index.js'
 import cost from './commands/cost/index.js'
 import diff from './commands/diff/index.js'
 import doctor from './commands/doctor/index.js'
-import onboardGithub from './commands/onboard-github/index.js'
 import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import init from './commands/init.js'
@@ -168,7 +167,6 @@ const COMMANDS = memoize((): Command[] => [
   mcp,
   memory,
   model,
-  onboardGithub,
   outputStyle,
   plugin,
   provider,
