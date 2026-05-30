@@ -11,8 +11,6 @@ import { Box, Text } from '../../ink.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
 import { getAutoMemPath, isAutoMemoryEnabled } from '../../memdir/paths.js';
 import { logEvent } from '../../services/analytics/index.js';
-import { isAutoDreamEnabled } from '../../services/autoDream/config.js';
-import { readLastConsolidatedAt } from '../../services/autoDream/consolidationLock.js';
 import { useAppState } from '../../state/AppState.js';
 import { getAgentMemoryDir } from '../../tools/AgentTool/agentMemory.js';
 import { openPath } from '../../utils/browser.js';
@@ -146,7 +144,7 @@ export function MemoryFileSelector(t0) {
   }
   const initialPath = t1;
   const [autoMemoryOn, setAutoMemoryOn] = useState(isAutoMemoryEnabled);
-  const [autoDreamOn, setAutoDreamOn] = useState(isAutoDreamEnabled);
+  const [autoDreamOn, setAutoDreamOn] = useState(false);
   const [showDreamRow] = useState(isAutoMemoryEnabled);
   const isDreamRunning = useAppState(_temp6);
   const [lastDreamAt, setLastDreamAt] = useState(null);
@@ -156,7 +154,7 @@ export function MemoryFileSelector(t0) {
       if (!showDreamRow) {
         return;
       }
-      readLastConsolidatedAt().then(setLastDreamAt);
+      Promise.resolve(null).then(setLastDreamAt);
     };
     $[4] = showDreamRow;
     $[5] = t2;

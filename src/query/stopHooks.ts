@@ -49,7 +49,6 @@ const jobClassifierModule = feature('TEMPLATES')
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 import type { QuerySource } from '../constants/querySource.js'
-import { executeAutoDream } from '../services/autoDream/autoDream.js'
 import { isBareMode } from '../utils/envUtils.js'
 import {
   createCacheSafeParams,
@@ -146,9 +145,6 @@ export async function* handleStopHooks(
         stopHookContext,
         toolUseContext.appendSystemMessage,
       )
-    }
-    if (!toolUseContext.agentId) {
-      void executeAutoDream(stopHookContext, toolUseContext.appendSystemMessage)
     }
   }
 

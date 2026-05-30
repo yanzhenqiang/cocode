@@ -7,7 +7,6 @@ import { useTerminalSize } from 'src/hooks/useTerminalSize.js';
 import { useAppState, useSetAppState } from 'src/state/AppState.js';
 import { enterTeammateView, exitTeammateView } from 'src/state/teammateViewHelpers.js';
 import type { ToolUseContext } from 'src/Tool.js';
-import { DreamTask, type DreamTaskState } from 'src/tasks/DreamTask/DreamTask.js';
 import { InProcessTeammateTask } from 'src/tasks/InProcessTeammateTask/InProcessTeammateTask.js';
 import type { InProcessTeammateTaskState } from 'src/tasks/InProcessTeammateTask/types.js';
 import type { LocalAgentTaskState } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
@@ -35,7 +34,6 @@ import { Dialog } from '../design-system/Dialog.js';
 import { KeyboardShortcutHint } from '../design-system/KeyboardShortcutHint.js';
 import { AsyncAgentDetailDialog } from './AsyncAgentDetailDialog.js';
 import { BackgroundTask as BackgroundTaskComponent } from './BackgroundTask.js';
-import { DreamDetailDialog } from './DreamDetailDialog.js';
 import { InProcessTeammateDetailDialog } from './InProcessTeammateDetailDialog.js';
 import { ShellDetailDialog } from './ShellDetailDialog.js';
 type ViewState = {
