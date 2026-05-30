@@ -1,7 +1,6 @@
 import Anthropic, { type ClientOptions } from '@anthropic-ai/sdk'
 import { randomUUID } from 'crypto'
 import {
-  checkAndRefreshOAuthTokenIfNeeded,
   getAnthropicApiKey,
   getApiKeyFromApiKeyHelper,
   getClaudeAIOAuthTokens,
@@ -235,12 +234,6 @@ export async function getAnthropicClient({
 
   const shouldUseFirstPartyAuth =
     shouldUseFirstPartyAnthropicAuth(providerOverride)
-
-  if (shouldUseFirstPartyAuth) {
-    logForDebugging('[API:auth] OAuth token check starting')
-    await checkAndRefreshOAuthTokenIfNeeded()
-    logForDebugging('[API:auth] OAuth token check complete')
-  }
 
   const isClaudeAiSubscriber =
     shouldUseFirstPartyAuth && isClaudeAISubscriber()
