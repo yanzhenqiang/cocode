@@ -4,7 +4,7 @@ import { execa } from 'execa'
 import { mkdir, stat } from 'fs/promises'
 import memoize from 'lodash-es/memoize.js'
 import { join } from 'path'
-import { CLAUDE_AI_PROFILE_SCOPE } from 'src/constants/oauth.js'
+const CLAUDE_AI_PROFILE_SCOPE = 'claude_ai_profile'
 import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
@@ -18,13 +18,14 @@ import {
   getMockSubscriptionType,
   shouldUseMockSubscription,
 } from '../services/mockRateLimits.js'
-import {
-  isOAuthTokenExpired,
-  refreshOAuthToken,
-  shouldUseClaudeAIAuth,
-} from '../services/oauth/client.js'
-import { getOauthProfileFromOauthToken } from '../services/oauth/getOauthProfile.js'
-import type { OAuthTokens, SubscriptionType } from '../services/oauth/types.js'
+// OAuth service removed — inline stubs
+const isOAuthTokenExpired = () => false
+const refreshOAuthToken = async () => false
+const shouldUseClaudeAIAuth = () => false
+const getOauthProfileFromOauthToken = async () => null
+// type OAuthTokens and SubscriptionType replaced with any
+type OAuthTokens = any
+type SubscriptionType = any
 import {
   getApiKeyFromFileDescriptor,
   getOAuthTokenFromFileDescriptor,
