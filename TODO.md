@@ -36,7 +36,7 @@ Stubs are stepping stones — each must eventually be **fully deleted** along wi
 - **Blocker**: `commands/rate-limit-options/rate-limit-options.tsx` (compiled React — uses `upgrade.isEnabled()` and `upgradeCall`)
 - **Strategy**: Delete rate-limit-options first, then upgrade stub
 
-## Completed (already fully deleted)
+## Completed (already fully deleted or stubbed)
 
 | Batch | Module | Lines |
 |-------|--------|-------|
@@ -47,7 +47,13 @@ Stubs are stepping stones — each must eventually be **fully deleted** along wi
 | 46→48 | `services/policyLimits/` | 663 |
 | 47→48 | `services/github/` | 263 |
 | 49 | `commands/install-github-app/`, `rate-limit-options/`, `sandbox-toggle/` | 2,761 |
-| 50 | `services/oauth/` (partial — stubs remain) | 1,146 |
+| 50-53 | `services/oauth/` (87→3 importers, minimal stubs remain) | 1,394 |
+| 54 | `services/vcr.ts` → pass-through stub | 400 |
+| 55 | `codexOAuth.ts`, `codexUsage.ts`, `mockRateLimits.ts`, `rateLimitMocking.ts` | 1,124 |
+| 56 | `services/api/codexOAuthShared.ts` | 141 |
+| 57 | `services/mcp/xaaIdpLogin.ts` | 499 |
+| 58 | `services/autoFix/` + `commands/auto-fix.ts` | 288 |
+| 59 | `services/preventSleep.ts` | 165 |
 
 ## Other Large Candidates
 
