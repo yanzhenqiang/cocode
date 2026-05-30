@@ -17,7 +17,6 @@ import help from './commands/help/index.js'
 import init from './commands/init.js'
 import keybindings from './commands/keybindings/index.js'
 import lsp from './commands/lsp/index.js'
-import installGitHubApp from './commands/install-github-app/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import mcp from './commands/mcp/index.js'
@@ -55,7 +54,6 @@ import {
   resetLimits,
   resetLimitsNonInteractive,
 } from './commands/reset-limits/index.js'
-import sandboxToggle from './commands/sandbox-toggle/index.js'
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'
@@ -82,7 +80,6 @@ import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
 import outputStyle from './commands/output-style/index.js'
-import rateLimitOptions from './commands/rate-limit-options/index.js'
 import statusline from './commands/statusline.js'
 import effort from './commands/effort/index.js'
 import stats from './commands/stats/index.js'
@@ -163,7 +160,6 @@ const COMMANDS = memoize((): Command[] => [
   init,
   keybindings,
   lsp,
-  installGitHubApp,
   mcp,
   memory,
   model,
@@ -186,7 +182,6 @@ const COMMANDS = memoize((): Command[] => [
   rewind,
   securityReview,
   terminalSetup,
-  rateLimitOptions,
   usageReport,
   thinkback,
   thinkbackPlay,
@@ -195,7 +190,6 @@ const COMMANDS = memoize((): Command[] => [
   privacySettings,
   hooks,
   exportCommand,
-  sandboxToggle,
   tasks,
   ...(process.env.USER_TYPE === 'ant' && !process.env.IS_DEMO
     ? INTERNAL_ONLY_COMMANDS
