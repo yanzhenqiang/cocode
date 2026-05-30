@@ -166,7 +166,6 @@ import { resetAutoModeOptInForDefaultOffer } from './migrations/resetAutoModeOpt
 import { resetProToOpusDefault } from './migrations/resetProToOpusDefault.js';
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { initializeLspServerManager } from './services/lsp/manager.js';
-import { shouldEnablePromptSuggestion } from './services/PromptSuggestion/promptSuggestion.js';
 import { type AppState, getDefaultAppState, IDLE_SPECULATION_STATE } from './state/AppStateStore.js';
 import { onChangeAppState } from './state/onChangeAppState.js';
 import { createStore } from './state/store.js';
@@ -2157,7 +2156,7 @@ async function run(): Promise<CommanderCommand> {
       },
       attribution: createEmptyAttributionState(),
       thinkingEnabled,
-      promptSuggestionEnabled: shouldEnablePromptSuggestion(),
+      promptSuggestionEnabled: false,
       sessionHooks: new Map(),
       inbox: {
         messages: []

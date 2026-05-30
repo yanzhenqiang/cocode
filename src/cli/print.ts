@@ -162,10 +162,6 @@ import {
   isBypassPermissionsModeDisabled,
   transitionPermissionMode,
 } from 'src/utils/permissions/permissionSetup.js'
-import {
-  logSuggestionOutcome,
-  type PromptVariant,
-} from 'src/services/PromptSuggestion/promptSuggestion.js'
 import { getLastCacheSafeParams } from 'src/utils/backgroundQuery.js'
 import { getAccountInformation } from 'src/utils/auth.js'
 import { OAuthService } from 'src/services/oauth/index.js'
@@ -982,7 +978,7 @@ function runHeadlessStreaming(
     lastEmitted: {
       text: string
       emittedAt: number
-      promptId: PromptVariant
+      promptId: string
       generationRequestId: string | null
     } | null
     pendingSuggestion: {
@@ -993,7 +989,7 @@ function runHeadlessStreaming(
     } | null
     pendingLastEmittedEntry: {
       text: string
-      promptId: PromptVariant
+      promptId: string
       generationRequestId: string | null
     } | null
   } = {
@@ -1915,13 +1911,7 @@ function runHeadlessStreaming(
                         | undefined
                     )?.text
               if (typeof inputText === 'string') {
-                logSuggestionOutcome(
-                  suggestionState.lastEmitted.text,
-                  inputText,
-                  suggestionState.lastEmitted.emittedAt,
-                  suggestionState.lastEmitted.promptId,
-                  suggestionState.lastEmitted.generationRequestId,
-                )
+                // logSuggestionOutcome removed (PromptSuggestion deleted)
               }
               suggestionState.lastEmitted = null
             }
