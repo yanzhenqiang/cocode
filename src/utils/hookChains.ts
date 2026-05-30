@@ -15,7 +15,6 @@ import { getErrnoCode } from './errors.js'
 import { readFileSync } from './fileRead.js'
 import { safeParseJSON } from './json.js'
 import { getAgentName, getTeamName, getTeammateColor } from './teammate.js'
-import { writeToMailbox } from './teammateMailbox.js'
 import { z } from 'zod/v4'
 
 type HookEvent = (typeof HOOK_EVENTS)[number]
@@ -925,23 +924,9 @@ export async function executeNotifyTeamAction(args: {
     }
   }
 
-  for (const recipient of recipients) {
-    await writeToMailbox(
-      recipient,
-      {
-        from: senderName,
-        text: body,
-        summary,
-        color: senderColor,
-        timestamp: new Date().toISOString(),
-      },
-      teamName,
-    )
-  }
-
   return {
-    status: 'executed',
-    detail: `Team notification sent to ${recipients.length} recipient(s)`,
+    status: 'skipped',
+    reason: 'Team mailbox system removed',
   }
 }
 

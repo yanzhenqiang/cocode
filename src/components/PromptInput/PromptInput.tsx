@@ -53,7 +53,6 @@ import { count } from '../../utils/array.js';
 import { Cursor } from '../../utils/Cursor.js';
 import { getGlobalConfig, type PastedContent, saveGlobalConfig } from '../../utils/config.js';
 import { logForDebugging } from '../../utils/debug.js';
-import { parseDirectMemberMessage, sendDirectMemberMessage } from '../../utils/directMemberMessage.js';
 import type { EffortLevel } from '../../utils/effort.js';
 import { env } from '../../utils/env.js';
 import { errorMessage } from '../../utils/errors.js';
@@ -83,7 +82,6 @@ import { syncTeammateMode } from '../../utils/swarm/teamHelpers.js';
 import type { TeamSummary } from '../../utils/teamDiscovery.js';
 import { getTeammateColor } from '../../utils/teammate.js';
 import { isInProcessTeammate } from '../../utils/teammateContext.js';
-import { writeToMailbox } from '../../utils/teammateMailbox.js';
 import type { TextHighlight } from '../../utils/textHighlighting.js';
 import type { Theme } from '../../utils/theme.js';
 import { findThinkingTriggerPositions, getRainbowColor, isUltrathinkEnabled } from '../../utils/thinking.js';
@@ -1001,31 +999,6 @@ function PromptInput({
       }
     }
 
-    // Handle @name direct message
-    if (isAgentSwarmsEnabled()) {
-      const directMessage = parseDirectMemberMessage(inputParam);
-      if (directMessage) {
-        const result = await sendDirectMemberMessage(directMessage.recipientName, directMessage.message, teamContext, writeToMailbox);
-        if (result.success) {
-          addNotification({
-            key: 'direct-message-sent',
-            text: `Sent to @${result.recipientName}`,
-            priority: 'immediate',
-            timeoutMs: 3000
-          });
-          trackAndSetInput('');
-          setCursorOffset(0);
-          clearBuffer();
-          resetHistory();
-          return;
-        } else if (result.error === 'no_team_context') {
-          // No team context - fall through to normal prompt submission
-        } else {
-          // Unknown recipient - fall through to normal prompt submission
-          // This allows e.g. "@utils explain this code" to be sent as a prompt
-        }
-      }
-    }
 
     // Allow submission if there are images attached, even without text
     if (inputParam.trim() === '' && !hasImages) {

@@ -18,10 +18,6 @@ import {
 import { formatAgentId, generateRequestId } from '../../utils/agentId.js'
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js'
 import { logForDebugging } from '../../utils/debug.js'
-import {
-  findInProcessTeammateTaskId,
-  setAwaitingPlanApproval,
-} from '../../utils/inProcessTeammateHelpers.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
 import {
@@ -29,14 +25,12 @@ import {
   getPlanFilePath,
   persistFileSnapshotIfRemote,
 } from '../../utils/plans.js'
-import { jsonStringify } from '../../utils/slowOperations.js'
 import {
   getAgentName,
   getTeamName,
   isPlanModeRequired,
   isTeammate,
 } from '../../utils/teammate.js'
-import { writeToMailbox } from '../../utils/teammateMailbox.js'
 import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from './constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_PROMPT } from './prompt.js'
@@ -247,58 +241,6 @@ export const ExitPlanModeV2Tool: Tool<InputSchema, Output> = buildTool({
     if (inputPlan !== undefined && filePath) {
       await writeFile(filePath, inputPlan, 'utf-8').catch(e => logError(e))
       void persistFileSnapshotIfRemote()
-    }
-
-    // Check if this is a teammate that requires leader approval
-    if (isTeammate() && isPlanModeRequired()) {
-      // Plan is required for plan_mode_required teammates
-      if (!plan) {
-        throw new Error(
-          `No plan file found at ${filePath}. Please write your plan to this file before calling ExitPlanMode.`,
-        )
-      }
-      const agentName = getAgentName() || 'unknown'
-      const teamName = getTeamName()
-      const requestId = generateRequestId(
-        'plan_approval',
-        formatAgentId(agentName, teamName || 'default'),
-      )
-
-      const approvalRequest = {
-        type: 'plan_approval_request',
-        from: agentName,
-        timestamp: new Date().toISOString(),
-        planFilePath: filePath,
-        planContent: plan,
-        requestId,
-      }
-
-      await writeToMailbox(
-        'team-lead',
-        {
-          from: agentName,
-          text: jsonStringify(approvalRequest),
-          timestamp: new Date().toISOString(),
-        },
-        teamName,
-      )
-
-      // Update task state to show awaiting approval (for in-process teammates)
-      const appState = context.getAppState()
-      const agentTaskId = findInProcessTeammateTaskId(agentName, appState)
-      if (agentTaskId) {
-        setAwaitingPlanApproval(agentTaskId, context.setAppState, true)
-      }
-
-      return {
-        data: {
-          plan,
-          isAgent: true,
-          filePath,
-          awaitingLeaderApproval: true,
-          requestId,
-        },
-      }
     }
 
     // Note: Background verification hook is registered in REPL.tsx AFTER context clear

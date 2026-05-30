@@ -690,7 +690,6 @@ const macroDefine = {
 const requireBanner = `import { createRequire as __cr } from 'module'; if (typeof require === 'undefined') { var require = __cr(import.meta.url); }`
 
 let cliSuccess = false
-let sdkSuccess = false
 
 try {
   // ── CLI Bundle Build ──────────────────────────────────────────────────────
@@ -725,71 +724,13 @@ try {
     console.log(`✓ Built cocode v${version} → dist/cli.mjs`)
   }
 
-  // ── SDK Bundle Build ──────────────────────────────────────────────────────
-  console.log('Building SDK bundle...')
-
-  const sdkResult = await esbuild.build({
-    entryPoints: ['./src/entrypoints/sdk/index.ts'],
-    outfile: './dist/sdk.mjs',
-    platform: 'node',
-    target: 'es2023',
-    format: 'esm',
-    bundle: true,
-    sourcemap: true,
-    minify: false,
-    define: {
-      ...macroDefine,
-      'MACRO.VERSION': JSON.stringify(version),
-      'MACRO.DISPLAY_VERSION': JSON.stringify(version),
-    },
-    external: SDK_EXTERNALS,
-    plugins: [importMetaDirPlugin, noTelemetryPlugin as unknown as esbuild.Plugin, sdkMissingStubPlugin],
-    jsx: 'automatic',
-    banner: {
-      js: requireBanner,
-    },
-  })
-
-  if (sdkResult.errors.length > 0) {
-    console.error('SDK Build failed:')
-    for (const err of sdkResult.errors) {
-      console.error(err)
-    }
-    process.exitCode = 1
-  } else {
-    sdkSuccess = true
-    console.log(`✓ Built SDK bundle → dist/sdk.mjs`)
-  }
-
 } finally {
   restoreModifiedFiles()
   console.log(`  🔄 feature-flags: pre-processed ${numModified} files (restored)`)
 }
 
-// ── Validate SDK bundle for React/Ink leakage ──────────────────────────────
-if (sdkSuccess) {
-  const sdkBundle = readFileSync('./dist/sdk.mjs', 'utf-8')
-  const reactInkPatterns = [
-    /from\s+["']react["']/,
-    /from\s+["']ink["']/,
-    /from\s+["']react\/jsx-dev-runtime["']/,
-  ]
-  const leaks: string[] = []
-  for (const pattern of reactInkPatterns) {
-    const match = sdkBundle.match(pattern)
-    if (match) leaks.push(match[0])
-  }
-  if (leaks.length > 0) {
-    console.error(`\n❌ SDK bundle contains React/Ink imports (must be stubbed):`)
-    for (const leak of leaks) console.error(`   - ${leak}`)
-    process.exitCode = 1
-  } else {
-    console.log(`✓ SDK bundle: no React/Ink leakage detected`)
-  }
-}
-
 // ── Validate external lists ──────────────────────────────────────────────
-if (cliSuccess && sdkSuccess) {
+if (cliSuccess) {
   console.log('\nValidating external lists...')
   const validation = spawnSync('npx', ['tsx', 'scripts/validate-externals.ts'], {
     stdio: 'inherit',

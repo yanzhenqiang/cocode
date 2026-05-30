@@ -22,10 +22,8 @@ import {
 import {
   getAgentId,
   getAgentName,
-  getTeammateColor,
   getTeamName,
 } from '../../utils/teammate.js'
-import { writeToMailbox } from '../../utils/teammateMailbox.js'
 import { TASK_UPDATE_TOOL_NAME } from './constants.js'
 import { DESCRIPTION, PROMPT } from './prompt.js'
 
@@ -270,30 +268,6 @@ export const TaskUpdateTool = buildTool({
 
     if (Object.keys(updates).length > 0) {
       await updateTask(taskListId, taskId, updates)
-    }
-
-    // Notify new owner via mailbox when ownership changes
-    if (updates.owner && isAgentSwarmsEnabled()) {
-      const senderName = getAgentName() || 'team-lead'
-      const senderColor = getTeammateColor()
-      const assignmentMessage = JSON.stringify({
-        type: 'task_assignment',
-        taskId,
-        subject: existingTask.subject,
-        description: existingTask.description,
-        assignedBy: senderName,
-        timestamp: new Date().toISOString(),
-      })
-      await writeToMailbox(
-        updates.owner,
-        {
-          from: senderName,
-          text: assignmentMessage,
-          timestamp: new Date().toISOString(),
-          color: senderColor,
-        },
-        taskListId,
-      )
     }
 
     // Add blocks if provided and not already present

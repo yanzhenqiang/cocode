@@ -22,31 +22,6 @@ export * from './sdk/runtimeTypes.js'
 
 // Re-export settings types (generated from settings JSON schema)
 export type { Settings } from './sdk/settingsTypes.generated.js'
-// Re-export tool types (all marked @internal until SDK API stabilizes)
-export * from './sdk/toolTypes.js'
-
-// ============================================================================
-// Functions — re-exported from the real SDK implementation
-// ============================================================================
-
-// Re-export function implementations from ./sdk.js
-export {
-  AbortError,
-  tool,
-  createSdkMcpServer,
-  query,
-  unstable_v2_createSession,
-  unstable_v2_resumeSession,
-  unstable_v2_prompt,
-  getSessionMessages,
-  listSessions,
-  getSessionInfo,
-  renameSession,
-  tagSession,
-  forkSession,
-  deleteSession,
-} from './sdk/index.js'
-
 // Import types needed for @internal function signatures kept below
 import type {
   AnyZodRawShape,

@@ -157,12 +157,6 @@ import {
 import { escapeRegExp } from './stringUtils.js'
 import { isTodoV2Enabled } from './tasks.js'
 
-// Lazy import to avoid circular dependency (teammateMailbox -> teammate -> ... -> messages)
-function getTeammateMailbox(): typeof import('./teammateMailbox.js') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require('./teammateMailbox.js')
-}
-
 import {
   isToolReferenceBlock,
   isToolSearchEnabledOptimistic,

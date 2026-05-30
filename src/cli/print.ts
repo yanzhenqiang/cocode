@@ -142,7 +142,7 @@ import {
   DEFAULT_OUTPUT_STYLE_NAME,
   getAllOutputStyles,
 } from 'src/constants/outputStyles.js'
-import { TEAMMATE_MESSAGE_TAG, TICK_TAG } from 'src/constants/xml.js'
+import { TICK_TAG } from 'src/constants/xml.js'
 import {
   getSettings_DEPRECATED,
   getSettingsWithSources,
@@ -303,18 +303,7 @@ import { installPluginsForHeadless } from '../utils/plugins/headlessPluginInstal
 import { refreshActivePlugins } from '../utils/plugins/refresh.js'
 import { loadAllPluginsCacheOnly } from '../utils/plugins/pluginLoader.js'
 import {
-  isTeamLead,
-  hasActiveInProcessTeammates,
-  hasWorkingInProcessTeammates,
-  waitForTeammatesToBecomeIdle,
 } from '../utils/teammate.js'
-import {
-  readUnreadMessages,
-  markMessagesAsRead,
-  isShutdownApproved,
-} from '../utils/teammateMailbox.js'
-import { removeTeammateFromTeamFile } from '../utils/swarm/teamHelpers.js'
-import { unassignTeammateTasks } from '../utils/tasks.js'
 import { getRunningTasks } from '../utils/task/framework.js'
 import { isBackgroundTask } from '../tasks/types.js'
 import { stopTask } from '../tasks/stopTask.js'
@@ -331,20 +320,6 @@ const extractMemoriesModule = feature('EXTRACT_MEMORIES')
   ? (require('../services/extractMemories/extractMemories.js') as typeof import('../services/extractMemories/extractMemories.js'))
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
-
-const SHUTDOWN_TEAM_PROMPT = `<system-reminder>
-You are running in non-interactive mode and cannot return a response to the user until your team is shut down.
-
-You MUST shut down your team before preparing your final response:
-1. Use requestShutdown to ask each team member to shut down gracefully
-2. Wait for shutdown approvals
-3. Use the cleanup operation to clean up the team
-4. Only then provide your final response to the user
-
-The user cannot receive your response until the team is completely shut down.
-</system-reminder>
-
-Shut down your team and prepare your final response for the user.`
 
 // Track message UUIDs received during the current session runtime
 const MAX_RECEIVED_UUIDS = 10_000
@@ -2219,189 +2194,18 @@ function runHeadlessStreaming(
       return
     }
 
-    // Check for unread teammate messages and process them
-    // This mirrors what useInboxPoller does in interactive REPL mode
-    // Poll until no more messages (teammates may still be working)
-    {
-      const currentAppState = getAppState()
-      const teamContext = currentAppState.teamContext
-
-      if (teamContext && isTeamLead(teamContext)) {
-        const agentName = 'team-lead'
-
-        // Poll for messages while teammates are active
-        // This is needed because teammates may send messages while we're waiting
-        // Keep polling until the team is shut down
-        const POLL_INTERVAL_MS = 500
-
-        while (true) {
-          // Check if teammates are still active
-          const refreshedState = getAppState()
-          const hasActiveTeammates =
-            hasActiveInProcessTeammates(refreshedState) ||
-            (refreshedState.teamContext &&
-              Object.keys(refreshedState.teamContext.teammates).length > 0)
-
-          if (!hasActiveTeammates) {
-            logForDebugging(
-              '[print.ts] No more active teammates, stopping poll',
-            )
-            break
-          }
-
-          const unread = await readUnreadMessages(
-            agentName,
-            refreshedState.teamContext?.teamName,
-          )
-
-          if (unread.length > 0) {
-            logForDebugging(
-              `[print.ts] Team-lead found ${unread.length} unread messages`,
-            )
-
-            // Mark as read immediately to avoid duplicate processing
-            await markMessagesAsRead(
-              agentName,
-              refreshedState.teamContext?.teamName,
-            )
-
-            // Process shutdown_approved messages - remove teammates from team file
-            // This mirrors what useInboxPoller does in interactive mode (lines 546-606)
-            const teamName = refreshedState.teamContext?.teamName
-            for (const m of unread) {
-              const shutdownApproval = isShutdownApproved(m.text)
-              if (shutdownApproval && teamName) {
-                const teammateToRemove = shutdownApproval.from
-                logForDebugging(
-                  `[print.ts] Processing shutdown_approved from ${teammateToRemove}`,
-                )
-
-                // Find the teammate ID by name
-                const teammateId = refreshedState.teamContext?.teammates
-                  ? Object.entries(refreshedState.teamContext.teammates).find(
-                      ([, t]) => t.name === teammateToRemove,
-                    )?.[0]
-                  : undefined
-
-                if (teammateId) {
-                  // Remove from team file
-                  removeTeammateFromTeamFile(teamName, {
-                    agentId: teammateId,
-                    name: teammateToRemove,
-                  })
-                  logForDebugging(
-                    `[print.ts] Removed ${teammateToRemove} from team file`,
-                  )
-
-                  // Unassign tasks owned by this teammate
-                  await unassignTeammateTasks(
-                    teamName,
-                    teammateId,
-                    teammateToRemove,
-                    'shutdown',
-                  )
-
-                  // Remove from teamContext in AppState
-                  setAppState(prev => {
-                    if (!prev.teamContext?.teammates) return prev
-                    if (!(teammateId in prev.teamContext.teammates)) return prev
-                    const { [teammateId]: _, ...remainingTeammates } =
-                      prev.teamContext.teammates
-                    return {
-                      ...prev,
-                      teamContext: {
-                        ...prev.teamContext,
-                        teammates: remainingTeammates,
-                      },
-                    }
-                  })
-                }
-              }
-            }
-
-            // Format messages same as useInboxPoller
-            const formatted = unread
-              .map(
-                (m: { from: string; text: string; color?: string }) =>
-                  `<${TEAMMATE_MESSAGE_TAG} teammate_id="${m.from}"${m.color ? ` color="${m.color}"` : ''}>\n${m.text}\n</${TEAMMATE_MESSAGE_TAG}>`,
-              )
-              .join('\n\n')
-
-            // Enqueue and process
-            enqueue({
-              mode: 'prompt',
-              value: formatted,
-              uuid: randomUUID(),
-            })
-            void run()
-            return // run() will come back here after processing
-          }
-
-          // No messages - check if we need to prompt for shutdown
-          // If input is closed and teammates are active, inject shutdown prompt once
-          if (inputClosed && !shutdownPromptInjected) {
-            shutdownPromptInjected = true
-            logForDebugging(
-              '[print.ts] Input closed with active teammates, injecting shutdown prompt',
-            )
-            enqueue({
-              mode: 'prompt',
-              value: SHUTDOWN_TEAM_PROMPT,
-              uuid: randomUUID(),
-            })
-            void run()
-            return // run() will come back here after processing
-          }
-
-          // Wait and check again
-          await sleep(POLL_INTERVAL_MS)
-        }
-      }
-    }
-
     if (inputClosed) {
-      // Check for active swarm that needs shutdown
-      const hasActiveSwarm = await (async () => {
-        // Wait for any working in-process team members to finish
-        const currentAppState = getAppState()
-        if (hasWorkingInProcessTeammates(currentAppState)) {
-          await waitForTeammatesToBecomeIdle(setAppState, currentAppState)
-        }
-
-        // Re-fetch state after potential wait
-        const refreshedAppState = getAppState()
-        const refreshedTeamContext = refreshedAppState.teamContext
-        const hasTeamMembersNotCleanedUp =
-          refreshedTeamContext &&
-          Object.keys(refreshedTeamContext.teammates).length > 0
-
-        return (
-          hasTeamMembersNotCleanedUp ||
-          hasActiveInProcessTeammates(refreshedAppState)
-        )
-      })()
-
-      if (hasActiveSwarm) {
-        // Team members are idle or pane-based - inject prompt to shut down team
-        enqueue({
-          mode: 'prompt',
-          value: SHUTDOWN_TEAM_PROMPT,
-          uuid: randomUUID(),
-        })
-        void run()
-      } else {
-        // Wait for any in-flight push suggestion before closing the output stream.
-        if (suggestionState.inflightPromise) {
-          await Promise.race([suggestionState.inflightPromise, sleep(5000)])
-        }
-        suggestionState.abortController?.abort()
-        suggestionState.abortController = null
-        await finalizePendingAsyncHooks()
-        unsubscribeSkillChanges()
-        unsubscribeAuthStatus?.()
-        statusListeners.delete(rateLimitListener)
-        output.done()
+      // Wait for any in-flight push suggestion before closing the output stream.
+      if (suggestionState.inflightPromise) {
+        await Promise.race([suggestionState.inflightPromise, sleep(5000)])
       }
+      suggestionState.abortController?.abort()
+      suggestionState.abortController = null
+      await finalizePendingAsyncHooks()
+      unsubscribeSkillChanges()
+      unsubscribeAuthStatus?.()
+      statusListeners.delete(rateLimitListener)
+      output.done()
     }
   }
 

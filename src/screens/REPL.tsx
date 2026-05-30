@@ -159,7 +159,6 @@ import { type AttributionState } from '../utils/commitAttribution.js';
 import { computeStandaloneAgentContext, restoreAgentFromSession, restoreSessionStateFromLog, restoreWorktreeForResume, exitRestoredWorktree } from '../utils/sessionRestore.js';
 import { updateSessionName, updateSessionActivity } from '../utils/concurrentSessions.js';
 import { isInProcessTeammateTask, type InProcessTeammateTaskState } from '../tasks/InProcessTeammateTask/types.js';
-import { useInboxPoller } from '../hooks/useInboxPoller.js';
 // Dead code elimination: conditional import for loop mode
 /* eslint-disable @typescript-eslint/no-require-imports */
 const SUGGEST_BG_PR_NOOP = (_p: string, _n: string): boolean => false;
@@ -3521,12 +3520,6 @@ export function REPL({
     return true;
   }, [onQuery, mainLoopModel, store]);
 
-  useInboxPoller({
-    enabled: isAgentSwarmsEnabled(),
-    isLoading,
-    focusedInputDialog,
-    onSubmitMessage: handleIncomingPrompt
-  });
   useMailboxBridge({
     isLoading,
     onSubmitMessage: handleIncomingPrompt
@@ -3541,9 +3534,6 @@ export function REPL({
     setMessages
   });
 
-  // Note: Permission polling is now handled by useInboxPoller
-  // - Workers receive permission responses via mailbox messages
-  // - Leaders receive permission requests via mailbox messages
 
 
   // Abort the current operation when a 'now' priority message arrives

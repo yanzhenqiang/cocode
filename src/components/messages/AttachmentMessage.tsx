@@ -15,14 +15,9 @@ import { getContentText } from 'src/utils/messages.js';
 import type { Theme } from 'src/utils/theme.js';
 import { UserImageMessage } from './UserImageMessage.js';
 import { toInkColor } from '../../utils/ink.js';
-import { jsonParse } from '../../utils/slowOperations.js';
 import { plural } from '../../utils/stringUtils.js';
 import { isEnvTruthy } from '../../utils/envUtils.js';
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
-import { tryRenderPlanApprovalMessage, formatTeammateMessageContent } from './PlanApprovalMessage.js';
 import { BLACK_CIRCLE } from '../../constants/figures.js';
-import { TeammateMessageContent } from './UserTeammateMessage.js';
-import { isShutdownApproved } from '../../utils/teammateMailbox.js';
 import { CtrlOToExpand } from '../CtrlOToExpand.js';
 import FullWidthRow from '../design-system/FullWidthRow.js';
 import { FilePathLink } from '../FilePathLink.js';
@@ -45,64 +40,6 @@ export function AttachmentMessage({
   const isDemoEnv = feature('EXPERIMENTAL_SKILL_SEARCH') ?
   // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
   useMemo(() => isEnvTruthy(process.env.IS_DEMO), []) : false;
-  // Handle teammate_mailbox BEFORE switch
-  if (isAgentSwarmsEnabled() && attachment.type === 'teammate_mailbox') {
-    // Filter out idle notifications BEFORE counting - they are hidden in the UI
-    // so showing them in the count would be confusing ("2 messages in mailbox:" with nothing shown)
-    const visibleMessages = attachment.messages.filter(msg => {
-      if (isShutdownApproved(msg.text)) {
-        return false;
-      }
-      try {
-        const parsed = jsonParse(msg.text);
-        return parsed?.type !== 'idle_notification' && parsed?.type !== 'teammate_terminated';
-      } catch {
-        return true; // Non-JSON messages are visible
-      }
-    });
-    if (visibleMessages.length === 0) {
-      return null;
-    }
-    return <Box flexDirection="column">
-        {visibleMessages.map((msg_0, idx) => {
-        // Try to parse as JSON for task_assignment messages
-        let parsedMsg: {
-          type?: string;
-          taskId?: string;
-          subject?: string;
-          assignedBy?: string;
-        } | null = null;
-        try {
-          parsedMsg = jsonParse(msg_0.text);
-        } catch {
-          // Not JSON, treat as plain text
-        }
-        if (parsedMsg?.type === 'task_assignment') {
-          return <Box key={idx} paddingLeft={2}>
-                <Text>{BLACK_CIRCLE} </Text>
-                <Text>Task assigned: </Text>
-                <Text bold>#{parsedMsg.taskId}</Text>
-                <Text> - {parsedMsg.subject}</Text>
-                <Text dimColor> (from {parsedMsg.assignedBy || msg_0.from})</Text>
-              </Box>;
-        }
-
-        // Note: idle_notification messages already filtered out above
-
-        // Try to render as plan approval message (request or response)
-        const planApprovalElement = tryRenderPlanApprovalMessage(msg_0.text, msg_0.from);
-        if (planApprovalElement) {
-          return <React.Fragment key={idx}>{planApprovalElement}</React.Fragment>;
-        }
-
-        // Plain text message - sender header with chevron, truncated content
-        const inkColor = toInkColor(msg_0.color);
-        const formattedContent = formatTeammateMessageContent(msg_0.text) ?? msg_0.text;
-        return <TeammateMessageContent key={idx} displayName={msg_0.from} inkColor={inkColor} content={formattedContent} summary={msg_0.summary} isTranscriptMode={isTranscriptMode} />;
-      })}
-      </Box>;
-  }
-
   // skill_discovery rendered here (not in the switch) so the 'skill_discovery'
   // string literal stays inside a feature()-guarded block. A case label can't
   // be conditionally eliminated; an if-body can.

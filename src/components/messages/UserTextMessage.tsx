@@ -2,8 +2,7 @@ import { c as _c } from "react-compiler-runtime";
 import type { TextBlockParam } from '@anthropic-ai/sdk/resources/index.mjs';
 import * as React from 'react';
 import { NO_CONTENT_MESSAGE } from '../../constants/messages.js';
-import { COMMAND_MESSAGE_TAG, LOCAL_COMMAND_CAVEAT_TAG, TASK_NOTIFICATION_TAG, TEAMMATE_MESSAGE_TAG, TICK_TAG } from '../../constants/xml.js';
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
+import { COMMAND_MESSAGE_TAG, LOCAL_COMMAND_CAVEAT_TAG, TASK_NOTIFICATION_TAG, TICK_TAG } from '../../constants/xml.js';
 import { extractTag, INTERRUPT_MESSAGE, INTERRUPT_MESSAGE_FOR_TOOL_USE } from '../../utils/messages.js';
 import { InterruptedByUser } from '../InterruptedByUser.js';
 import { MessageResponse } from '../MessageResponse.js';
@@ -16,7 +15,6 @@ import { UserMemoryInputMessage } from './UserMemoryInputMessage.js';
 import { UserPlanMessage } from './UserPlanMessage.js';
 import { UserPromptMessage } from './UserPromptMessage.js';
 import { UserResourceUpdateMessage } from './UserResourceUpdateMessage.js';
-import { UserTeammateMessage } from './UserTeammateMessage.js';
 type Props = {
   addMargin: boolean;
   param: TextBlockParam;
@@ -146,19 +144,6 @@ export function UserTextMessage(t0) {
       $[21] = t1;
     } else {
       t1 = $[21];
-    }
-    return t1;
-  }
-  if (isAgentSwarmsEnabled() && param.text.includes(`<${TEAMMATE_MESSAGE_TAG}`)) {
-    let t1;
-    if ($[22] !== addMargin || $[23] !== isTranscriptMode || $[24] !== param) {
-      t1 = <UserTeammateMessage addMargin={addMargin} param={param} isTranscriptMode={isTranscriptMode} />;
-      $[22] = addMargin;
-      $[23] = isTranscriptMode;
-      $[24] = param;
-      $[25] = t1;
-    } else {
-      t1 = $[25];
     }
     return t1;
   }
