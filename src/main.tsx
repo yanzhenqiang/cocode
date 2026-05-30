@@ -2014,7 +2014,6 @@ async function run(): Promise<CommanderCommand> {
         startDeferredPrefetches();
         void import('./utils/backgroundHousekeeping.js').then(m => m.startBackgroundHousekeeping());
       }
-      logSessionTelemetry();
       profileCheckpoint('before_print_import');
       const {
         runHeadless
@@ -2210,7 +2209,6 @@ async function run(): Promise<CommanderCommand> {
     }));
     setImmediate(() => {
       void logStartupTelemetry();
-      logSessionTelemetry();
     });
     // Set up per-turn session environment data uploader (internal-only build).
     // Default-enabled for all ant users when working in an Anthropic-owned
