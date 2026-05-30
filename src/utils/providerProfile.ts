@@ -1523,6 +1523,11 @@ export async function buildStartupEnvFromProfile(options?: {
   }
 
   if (!persisted) {
+    // No saved profile — if user already configured provider env vars
+    // (e.g. ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN), skip Codex fallback.
+    if (processEnv.ANTHROPIC_BASE_URL || processEnv.ANTHROPIC_AUTH_TOKEN) {
+      return processEnv
+    }
     // No saved profile — default to Codex OAuth / GPT 5.5.
     // If Codex credentials are available (OAuth or existing), use Codex.
     // Otherwise inject the Codex env defaults so the provider picker

@@ -194,10 +194,6 @@ export function printStartupScreen(modelOverride?: string): void {
 
   out.push('')
 
-  // Tagline
-  out.push(`  ${ansiRgb(...ACCENT)}\u2726${RESET} ${ansiRgb(...CREAM)}Any model. Every tool. Zero limits.${RESET} ${ansiRgb(...ACCENT)}\u2726${RESET}`)
-  out.push('')
-
   // Provider info box
   out.push(`${ansiRgb(...BORDER)}\u2554${'\u2550'.repeat(W - 2)}\u2557${RESET}`)
 
