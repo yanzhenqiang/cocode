@@ -9,7 +9,8 @@ import { type FsOperations, getFsImplementation } from './fsOperations.js'
 import { cleanupOldImageCaches } from './imageStore.js'
 import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
-import { cleanupOldVersions } from './nativeInstaller/index.js'
+// nativeInstaller removed - inline stub
+const cleanupOldVersions = async () => {}
 import { cleanupOldPastes } from './pasteStore.js'
 import { getDefaultPlansDirectory } from './plans.js'
 import { getSettingsWithAllErrors } from './settings/allErrors.js'

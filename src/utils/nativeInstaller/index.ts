@@ -1,18 +1,8 @@
-/**
- * Native Installer - Public API
- *
- * This is the barrel file that exports only the functions actually used by external modules.
- * External modules should only import from this file.
- */
-
-// Re-export only the functions that are actually used
-export {
-  checkInstall,
-  cleanupNpmInstallations,
-  cleanupOldVersions,
-  cleanupShellAliases,
-  installLatest,
-  lockCurrentVersion,
-  removeInstalledSymlink,
-  type SetupMessage,
-} from './installer.js'
+// Stub: nativeInstaller removed
+export function checkInstall() { return { isLatest: true } }
+export async function cleanupNpmInstallations() {}
+export async function cleanupOldVersions() {}
+export function cleanupShellAliases() {}
+export async function installLatest() {}
+export function lockCurrentVersion() {}
+export function removeInstalledSymlink() {}
