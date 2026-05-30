@@ -4,20 +4,21 @@ Stubs are stepping stones — each must eventually be **fully deleted** along wi
 
 ## Remaining Stubs
 
-### 1. `services/oauth/` (~1KB stub, was ~55KB)
+### 1. `services/oauth/` (~1KB stub, was ~55KB) [Batch 50+51: 1146→auth.ts decoupled]
 - **Files**: `index.ts`, `client.ts`, `getOauthProfile.ts`, `types.ts`
-- **Blockers** (files that still import from it):
-  - `utils/auth.ts` — OAuth token check, refresh, subscriber logic
+- **✅ Done**: `utils/auth.ts` — OAuth imports replaced with inline stubs (Batch 51)
+- **✅ Done**: `services/api/client.ts` — checkAndRefreshOAuthTokenIfNeeded removed
+- **✅ Done**: `entrypoints/init.ts` — populateOAuthAccountInfoIfNeeded removed
+- **Remaining blockers**:
+  - `cli/handlers/auth.ts` — uses OAuthService, createAndStoreApiKey, etc (login deleted, handler is dead)
   - `utils/config.ts` — OAuth account types
-  - `cli/handlers/auth.ts` — auth login/logout handler (login/logout cmds already deleted)
-  - `services/api/client.ts` — partially cleaned (checkAndRefreshOAuthToken removed)
   - `services/api/bootstrap.ts`, `codexOAuth.ts`, `grove.ts`, `usage.ts`, `firstTokenDate.ts`
   - `services/mcp/auth.ts`, `claudeai.ts`, `client.ts`, `xaaIdpLogin.ts`
-  - `components/ConsoleOAuthFlow.tsx`, `LogoV2.tsx`, `MCPRemoteServerMenu.tsx`
+  - `components/ConsoleOAuthFlow.tsx`, `LogoV2.tsx`, `MCPRemoteServerMenu.tsx` (compiled React)
   - `utils/apiPreconnect.ts`, `betas.ts`, `env.ts`, `fastMode.ts`, `http.ts`
   - `utils/plugins/marketplaceManager.ts`, `secureStorage/macOsKeychainHelpers.ts`
-  - `hooks/notifs/useCanSwitchToExistingSubscription.tsx`
-- **Strategy**: Clean `utils/auth.ts` OAuth paths → clean callers → delete stub
+  - `hooks/notifs/useCanSwitchToExistingSubscription.tsx` (compiled React)
+- **Next**: Clean `cli/handlers/auth.ts` → delete oauth stub
 
 ### 2. `services/PromptSuggestion/` (~1KB stub, was ~52KB)
 - **Files**: `promptSuggestion.ts`, `speculation.ts`
