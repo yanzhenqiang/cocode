@@ -26,7 +26,7 @@ import { buildSubagentLookups, createAssistantMessage, EMPTY_LOOKUPS } from '../
 import type { ModelAlias } from '../../utils/model/aliases.js';
 import { getMainLoopModel, parseUserSpecifiedModel, renderModelName } from '../../utils/model/model.js';
 import type { Theme, ThemeName } from '../../utils/theme.js';
-import type { outputSchema, Progress, RemoteLaunchedOutput } from './agentToolTypes.js';
+import type { outputSchema, Progress } from './agentToolTypes.js';
 import { inputSchema } from './agentToolTypes.js';
 import { getAgentColor } from './agentColorManager.js';
 const MAX_PROGRESS_MESSAGES_TO_SHOW = 3;
@@ -322,21 +322,6 @@ export function renderToolResultMessage(data: Output, progressMessagesForMessage
   theme: ThemeName;
   isTranscriptMode?: boolean;
 }): React.ReactNode {
-  // Remote-launched agents (internal-only) use a private output type not in the
-  // public schema. Narrow via the internal discriminant.
-  const internal = data as Output | RemoteLaunchedOutput;
-  if (internal.status === 'remote_launched') {
-    return <Box flexDirection="column">
-        <MessageResponse height={1}>
-          <Text>
-            Remote agent launched{' '}
-            <Text dimColor>
-              · {internal.taskId} · {internal.sessionUrl}
-            </Text>
-          </Text>
-        </MessageResponse>
-      </Box>;
-  }
   if (data.status === 'async_launched') {
     const {
       prompt
@@ -666,37 +651,19 @@ export function renderGroupedAgentToolUse(toolUses: Array<{
     const lastToolInfo = extractLastToolInfo(progressMessages, tools);
     const parsedInput = inputSchema().safeParse(param.input);
 
-    // teammate_spawned is not part of the exported Output type (cast through unknown
-    // for dead code elimination), so check via string comparison on the raw value
-    const isTeammateSpawn = result?.output?.status as string === 'teammate_spawned';
-
-    // For teammate spawns, show @name with type in parens and description as status
-    let agentType: string;
-    let description: string | undefined;
-    let color: keyof Theme | undefined;
-    let descriptionColor: keyof Theme | undefined;
-    let taskDescription: string | undefined;
-    if (isTeammateSpawn && parsedInput.success && parsedInput.data.name) {
-      agentType = `@${parsedInput.data.name}`;
-      const subagentType = parsedInput.data.subagent_type;
-      description = isCustomSubagentType(subagentType) ? subagentType : undefined;
-      taskDescription = parsedInput.data.description;
-      // Use the custom agent definition's color on the type, not the name
-      descriptionColor = isCustomSubagentType(subagentType) ? getAgentColor(subagentType) as keyof Theme | undefined : undefined;
-    } else {
-      agentType = parsedInput.success ? userFacingName(parsedInput.data) : 'Agent';
-      description = parsedInput.success ? parsedInput.data.description : undefined;
-      color = parsedInput.success ? userFacingNameBackgroundColor(parsedInput.data) : undefined;
-      taskDescription = undefined;
-    }
+    const agentType = parsedInput.success ? userFacingName(parsedInput.data) : 'Agent';
+    const description = parsedInput.success ? parsedInput.data.description : undefined;
+    const color = parsedInput.success ? userFacingNameBackgroundColor(parsedInput.data) : undefined;
+    const descriptionColor = undefined;
+    const taskDescription = undefined;
 
     // Check if this was launched as a background agent OR backgrounded mid-execution
     const launchedAsAsync = parsedInput.success && 'run_in_background' in parsedInput.data && parsedInput.data.run_in_background === true;
     const outputStatus = (result?.output as {
       status?: string;
     } | undefined)?.status;
-    const backgroundedMidExecution = outputStatus === 'async_launched' || outputStatus === 'remote_launched';
-    const isAsync = launchedAsAsync || backgroundedMidExecution || isTeammateSpawn;
+    const backgroundedMidExecution = outputStatus === 'async_launched';
+    const isAsync = launchedAsAsync || backgroundedMidExecution;
     const name = parsedInput.success ? parsedInput.data.name : undefined;
     return {
       id: param.id,

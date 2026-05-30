@@ -55,17 +55,6 @@ export const outputSchema = lazySchema(() => {
   return z.union([syncOutputSchema, asyncOutputSchema])
 })
 
-// Private type for remote-launched results — excluded from exported schema
-// for UI.tsx to do proper discriminated-union narrowing instead of ad-hoc casts.
-export type RemoteLaunchedOutput = {
-  status: 'remote_launched'
-  taskId: string
-  sessionUrl: string
-  description: string
-  prompt: string
-  outputFile: string
-}
-
 // AgentTool forwards both its own progress events and shell progress
-// events from the sub-agent so the SDK receives tool_progress updates during bash/powershell runs.
+// events from the sub-agent so the SDK receives tool_progress updates during bash runs.
 export type Progress = AgentToolProgress | ShellProgress

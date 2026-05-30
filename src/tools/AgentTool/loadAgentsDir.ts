@@ -50,7 +50,6 @@ import {
   checkAgentMemorySnapshot,
   initializeFromSnapshot,
 } from './agentMemorySnapshot.js'
-import { getBuiltInAgents } from './builtInAgents.js'
 
 // Type for MCP server specification in agent definitions
 // Can be either a reference to an existing server by name, or an inline definition as { [name]: config }
@@ -344,10 +343,7 @@ export const getAgentDefinitionsWithOverrides = memoize(
       }
       const pluginAgents = await pluginAgentsPromise
 
-      const builtInAgents = getBuiltInAgents()
-
       const allAgentsList: AgentDefinition[] = [
-        ...builtInAgents,
         ...pluginAgents,
         ...customAgents,
       ]
@@ -371,11 +367,9 @@ export const getAgentDefinitionsWithOverrides = memoize(
         error instanceof Error ? error.message : String(error)
       logForDebugging(`Error loading agent definitions: ${errorMessage}`)
       logError(error)
-      // Even on error, return the built-in agents
-      const builtInAgents = getBuiltInAgents()
       return {
-        activeAgents: builtInAgents,
-        allAgents: builtInAgents,
+        activeAgents: [],
+        allAgents: [],
         failedFiles: [{ path: 'unknown', error: errorMessage }],
       }
     }
