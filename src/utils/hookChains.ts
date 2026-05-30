@@ -16,7 +16,6 @@ import { readFileSync } from './fileRead.js'
 import { safeParseJSON } from './json.js'
 import { getAgentName, getTeamName, getTeammateColor } from './teammate.js'
 import { writeToMailbox } from './teammateMailbox.js'
-import { logOTelEvent } from './telemetry/events.js'
 import { z } from 'zod/v4'
 
 type HookEvent = (typeof HOOK_EVENTS)[number]
@@ -1009,13 +1008,6 @@ export function emitHookChainRuleMatched(data: {
     hook_event_name: asAnalyticsString(data.eventName),
     outcome: asAnalyticsString(data.outcome),
     chain_depth: data.chainDepth,
-  })
-
-  void logOTelEvent('chain_rule_matched', {
-    rule_id: data.ruleId,
-    hook_event_name: data.eventName,
-    outcome: data.outcome,
-    chain_depth: String(data.chainDepth),
   })
 }
 

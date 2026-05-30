@@ -26,8 +26,6 @@ import { isOfficialMarketplaceName, parsePluginIdentifier } from '../plugins/plu
 import { isRestrictedToPluginOnly, isSourceAdminTrusted } from '../settings/pluginOnlyPolicy.js';
 import { parseSlashCommand } from '../slashCommandParsing.js';
 import { recordSkillUsage } from '../suggestions/skillUsageTracking.js';
-import { logOTelEvent, redactIfDisabled } from '../telemetry/events.js';
-import { buildPluginCommandTelemetryFields } from '../telemetry/pluginTelemetry.js';
 import type { ProcessUserInputBaseResult, ProcessUserInputContext } from './processUserInput.js';
 type SlashCommandResult = ProcessUserInputBaseResult & {
   command: Command;
@@ -101,12 +99,6 @@ export async function processSlashCommand(inputString: string, precedingInputBlo
     const promptId = randomUUID();
     setPromptId(promptId);
     logEvent('tengu_input_prompt', {});
-    // Log user prompt event for OTLP
-    void logOTelEvent('user_prompt', {
-      prompt_length: String(inputString.length),
-      prompt: redactIfDisabled(inputString),
-      'prompt.id': promptId
-    });
     return {
       messages: [createUserMessage({
         content: prepareUserContent({
@@ -161,7 +153,6 @@ export async function processSlashCommand(inputString: string, precedingInputBlo
       if (isOfficial && pluginManifest.version) {
         eventData.plugin_version = pluginManifest.version as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS;
       }
-      Object.assign(eventData, buildPluginCommandTelemetryFields(returnedCommand.pluginInfo));
     }
     logEvent('tengu_input_command', {
       ...eventData,
@@ -229,7 +220,6 @@ export async function processSlashCommand(inputString: string, precedingInputBlo
     if (isOfficial && pluginManifest.version) {
       eventData.plugin_version = pluginManifest.version as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS;
     }
-    Object.assign(eventData, buildPluginCommandTelemetryFields(returnedCommand.pluginInfo));
   }
   logEvent('tengu_input_command', {
     ...eventData,
