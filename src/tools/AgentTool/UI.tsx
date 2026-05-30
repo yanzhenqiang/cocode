@@ -384,11 +384,6 @@ export function renderToolResultMessage(data: Output, progressMessagesForMessage
     }
   });
   return <Box flexDirection="column">
-      {"external" === 'ant' && <MessageResponse>
-          <Text color="warning">
-            [internal] API calls: {getDisplayPath(getDumpPromptsPath(agentId))}
-          </Text>
-        </MessageResponse>}
       {isTranscriptMode && prompt && <MessageResponse>
           <AgentPromptDisplay prompt={prompt} theme={theme} />
         </MessageResponse>}
@@ -590,11 +585,6 @@ export function renderToolUseRejectedMessage(_input: {
   const firstData = progressMessagesForMessage[0]?.data;
   const agentId = firstData && hasProgressMessage(firstData) ? firstData.agentId : undefined;
   return <>
-      {"external" === 'ant' && agentId && <MessageResponse>
-          <Text color="warning">
-            [internal] API calls: {getDisplayPath(getDumpPromptsPath(agentId))}
-          </Text>
-        </MessageResponse>}
       {renderToolUseProgressMessage(progressMessagesForMessage, {
       tools,
       verbose,

@@ -301,9 +301,6 @@ function runMigrations(): void {
     if (feature('TRANSCRIPT_CLASSIFIER')) {
       resetAutoModeOptInForDefaultOffer();
     }
-    if ("external" === 'ant') {
-      migrateFennecToOpus();
-    }
     saveGlobalConfig(prev => prev.migrationVersion === CURRENT_MIGRATION_VERSION ? prev : {
       ...prev,
       migrationVersion: CURRENT_MIGRATION_VERSION
@@ -389,9 +386,6 @@ export function startDeferredPrefetches(): void {
   }
 
   // Event loop stall detector — logs when the main thread is blocked >500ms
-  if ("external" === 'ant') {
-    void import('./utils/eventLoopStallDetector.js').then(m => m.startEventLoopStallDetector());
-  }
 }
 function loadSettingsFromFlag(settingsFile: string): void {
   try {
@@ -1120,12 +1114,6 @@ async function run(): Promise<CommanderCommand> {
     } = initResult;
 
     // Handle overly broad shell allow rules for ant users (Bash(*), PowerShell(*))
-    if ("external" === 'ant' && overlyBroadBashPermissions.length > 0) {
-      for (const permission of overlyBroadBashPermissions) {
-        logForDebugging(`Ignoring overly broad shell permission ${permission.ruleDisplay} from ${permission.sourceDisplay}`);
-      }
-      toolPermissionContext = removeDangerousPermissions(toolPermissionContext, overlyBroadBashPermissions);
-    }
     if (feature('TRANSCRIPT_CLASSIFIER') && dangerousPermissions.length > 0) {
       toolPermissionContext = stripDangerousPermissionsForAutoMode(toolPermissionContext);
     }
@@ -1337,9 +1325,6 @@ async function run(): Promise<CommanderCommand> {
     //  - no env override (which short-circuits _CACHED_MAY_BE_STALE before disk)
     //  - flag absent from disk (== null also catches pre-#22279 poisoned null)
     const explicitModel = options.model || process.env.ANTHROPIC_MODEL;
-    if ("external" === 'ant' && explicitModel && explicitModel !== 'default' && !hasGrowthBookEnvOverride('tengu_ant_model_override') && getGlobalConfig().cachedGrowthBookFeatures?.['tengu_ant_model_override'] == null) {
-      await initializeGrowthBook();
-    }
 
     // Special case the default model with the null keyword
     // NOTE: Model resolution happens after setup() to ensure trust is established before AWS auth
@@ -1463,9 +1448,6 @@ async function run(): Promise<CommanderCommand> {
       getFpsMetrics = ctx.getFpsMetrics;
       stats = ctx.stats;
       // Install asciicast recorder before Ink mounts (internal-only, opt-in via CLAUDE_CODE_TERMINAL_RECORDING=1)
-      if ("external" === 'ant') {
-        installAsciicastRecorder();
-      }
       const {
         createRoot
       } = await import('./ink.js');
@@ -2033,9 +2015,6 @@ async function run(): Promise<CommanderCommand> {
       if (!isBareMode()) {
         startDeferredPrefetches();
         void import('./utils/backgroundHousekeeping.js').then(m => m.startBackgroundHousekeeping());
-        if ("external" === 'ant') {
-          void import('./utils/sdkHeapDumpMonitor.js').then(m => m.startSdkMemoryMonitor());
-        }
       }
       logSessionTelemetry();
       profileCheckpoint('before_print_import');
@@ -2243,7 +2222,7 @@ async function run(): Promise<CommanderCommand> {
     //   - Runtime: uploader checks github.com/anthropics/* remote + gcloud auth.
     //   - Safety: CLAUDE_CODE_DISABLE_SESSION_DATA_UPLOAD=1 bypasses (tests set this).
     // Import is dynamic + async to avoid adding startup latency.
-    const sessionUploaderPromise = "external" === 'ant' ? import('./utils/sessionDataUploader.js') : null;
+    const sessionUploaderPromise = null;
 
     // Defer session uploader resolution to the onTurnComplete callback to avoid
     // adding a new top-level await in main.tsx (performance-critical path).
@@ -2377,91 +2356,6 @@ async function run(): Promise<CommanderCommand> {
         }
       }
 
-      if ("external" === 'ant') {
-        if (options.resume && typeof options.resume === 'string' && !maybeSessionId) {
-          // Check for ccshare URL (e.g. https://go/ccshare/boris-20260311-211036)
-          const {
-            parseCcshareId,
-            loadCcshare
-          } = await import('./utils/ccshareResume.js');
-          const ccshareId = parseCcshareId(options.resume);
-          if (ccshareId) {
-            try {
-              const resumeStart = performance.now();
-              const logOption = await loadCcshare(ccshareId);
-              const result = await loadConversationForResume(logOption, undefined);
-              if (result) {
-                processedResume = await processResumedConversation(result, {
-                  forkSession: true,
-                  transcriptPath: result.fullPath
-                }, resumeContext);
-                if (processedResume.restoredAgentDef) {
-                  mainThreadAgentDefinition = processedResume.restoredAgentDef;
-                }
-                logEvent('tengu_session_resumed', {
-                  entrypoint: 'ccshare' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                  success: true,
-                  resume_duration_ms: Math.round(performance.now() - resumeStart)
-                });
-              } else {
-                logEvent('tengu_session_resumed', {
-                  entrypoint: 'ccshare' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                  success: false
-                });
-              }
-            } catch (error) {
-              logEvent('tengu_session_resumed', {
-                entrypoint: 'ccshare' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                success: false
-              });
-              logError(error);
-              await exitWithError(root, `Unable to resume from ccshare: ${errorMessage(error)}`, () => gracefulShutdown(1));
-            }
-          } else {
-            const resolvedPath = resolve(options.resume);
-            try {
-              const resumeStart = performance.now();
-              let logOption;
-              try {
-                // Attempt to load as a transcript file; ENOENT falls through to session-ID handling
-                logOption = await loadTranscriptFromFile(resolvedPath);
-              } catch (error) {
-                if (!isENOENT(error)) throw error;
-                // ENOENT: not a file path — fall through to session-ID handling
-              }
-              if (logOption) {
-                const result = await loadConversationForResume(logOption, undefined /* sourceFile */);
-                if (result) {
-                  processedResume = await processResumedConversation(result, {
-                    forkSession: !!options.forkSession,
-                    transcriptPath: result.fullPath
-                  }, resumeContext);
-                  if (processedResume.restoredAgentDef) {
-                    mainThreadAgentDefinition = processedResume.restoredAgentDef;
-                  }
-                  logEvent('tengu_session_resumed', {
-                    entrypoint: 'file' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                    success: true,
-                    resume_duration_ms: Math.round(performance.now() - resumeStart)
-                  });
-                } else {
-                  logEvent('tengu_session_resumed', {
-                    entrypoint: 'file' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                    success: false
-                  });
-                }
-              }
-            } catch (error) {
-              logEvent('tengu_session_resumed', {
-                entrypoint: 'file' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                success: false
-              });
-              logError(error);
-              await exitWithError(root, errorMessage(error), () => gracefulShutdown(1));
-            }
-          }
-        }
-      }
 
       // If not loaded as a file, try as session ID
       if (maybeSessionId) {
@@ -2921,29 +2815,9 @@ async function run(): Promise<CommanderCommand> {
 
   // claude update
   // claude up — run the project's CLAUDE.md "# claude up" setup instructions.
-  if ("external" === 'ant') {
-    program.command('up').description('[internal-only] Initialize or upgrade the local dev environment using the "# claude up" section of the nearest CLAUDE.md').action(async () => {
-      const {
-        up
-      } = await import('src/cli/up.js');
-      await up();
-    });
-  }
 
   // claude rollback (internal-only)
   // Rolls back to previous releases
-  if ("external" === 'ant') {
-    program.command('rollback [target]').description('[internal-only] Roll back to a previous release\n\nExamples:\n  claude rollback                                    Go 1 version back from current\n  claude rollback 3                                  Go 3 versions back from current\n  claude rollback 2.0.73-dev.20251217.t190658        Roll back to a specific version').option('-l, --list', 'List recent published versions with ages').option('--dry-run', 'Show what would be installed without installing').option('--safe', 'Roll back to the server-pinned safe version (set by oncall during incidents)').action(async (target?: string, options?: {
-      list?: boolean;
-      dryRun?: boolean;
-      safe?: boolean;
-    }) => {
-      const {
-        rollback
-      } = await import('src/cli/rollback.js');
-      await rollback(target, options);
-    });
-  }
 
   // claude install
   program.command('install [target]').description('Install Cocode native build. Use [target] to specify version (stable, latest, or specific version)').option('--force', 'Force installation even if already installed').action(async (target: string | undefined, options: {
@@ -2956,104 +2830,6 @@ async function run(): Promise<CommanderCommand> {
   });
 
   // internal-only commands
-  if ("external" === 'ant') {
-    const validateLogId = (value: string) => {
-      const maybeSessionId = validateUuid(value);
-      if (maybeSessionId) return maybeSessionId;
-      return Number(value);
-    };
-    // claude log
-    program.command('log').description('[internal-only] Manage conversation logs.').argument('[number|sessionId]', 'A number (0, 1, 2, etc.) to display a specific log, or the sesssion ID (uuid) of a log', validateLogId).action(async (logId: string | number | undefined) => {
-      const {
-        logHandler
-      } = await import('./cli/handlers/ant.js');
-      await logHandler(logId);
-    });
-
-    // claude error
-    program.command('error').description('[internal-only] View error logs. Optionally provide a number (0, -1, -2, etc.) to display a specific log.').argument('[number]', 'A number (0, 1, 2, etc.) to display a specific log', parseInt).action(async (number: number | undefined) => {
-      const {
-        errorHandler
-      } = await import('./cli/handlers/ant.js');
-      await errorHandler(number);
-    });
-
-    // claude export
-    program.command('export').description('[internal-only] Export a conversation to a text file.').usage('<source> <outputFile>').argument('<source>', 'Session ID, log index (0, 1, 2...), or path to a .json/.jsonl log file').argument('<outputFile>', 'Output file path for the exported text').addHelpText('after', `
-Examples:
-  $ claude export 0 conversation.txt                Export conversation at log index 0
-  $ claude export <uuid> conversation.txt           Export conversation by session ID
-  $ claude export input.json output.txt             Render JSON log file to text
-  $ claude export <uuid>.jsonl output.txt           Render JSONL session file to text`).action(async (source: string, outputFile: string) => {
-      const {
-        exportHandler
-      } = await import('./cli/handlers/ant.js');
-      await exportHandler(source, outputFile);
-    });
-    if ("external" === 'ant') {
-      const taskCmd = program.command('task').description('[internal-only] Manage task list tasks');
-      taskCmd.command('create <subject>').description('Create a new task').option('-d, --description <text>', 'Task description').option('-l, --list <id>', 'Task list ID (defaults to "tasklist")').action(async (subject: string, opts: {
-        description?: string;
-        list?: string;
-      }) => {
-        const {
-          taskCreateHandler
-        } = await import('./cli/handlers/ant.js');
-        await taskCreateHandler(subject, opts);
-      });
-      taskCmd.command('list').description('List all tasks').option('-l, --list <id>', 'Task list ID (defaults to "tasklist")').option('--pending', 'Show only pending tasks').option('--json', 'Output as JSON').action(async (opts: {
-        list?: string;
-        pending?: boolean;
-        json?: boolean;
-      }) => {
-        const {
-          taskListHandler
-        } = await import('./cli/handlers/ant.js');
-        await taskListHandler(opts);
-      });
-      taskCmd.command('get <id>').description('Get details of a task').option('-l, --list <id>', 'Task list ID (defaults to "tasklist")').action(async (id: string, opts: {
-        list?: string;
-      }) => {
-        const {
-          taskGetHandler
-        } = await import('./cli/handlers/ant.js');
-        await taskGetHandler(id, opts);
-      });
-      taskCmd.command('update <id>').description('Update a task').option('-l, --list <id>', 'Task list ID (defaults to "tasklist")').option('-s, --status <status>', `Set status (${TASK_STATUSES.join(', ')})`).option('--subject <text>', 'Update subject').option('-d, --description <text>', 'Update description').option('--owner <agentId>', 'Set owner').option('--clear-owner', 'Clear owner').action(async (id: string, opts: {
-        list?: string;
-        status?: string;
-        subject?: string;
-        description?: string;
-        owner?: string;
-        clearOwner?: boolean;
-      }) => {
-        const {
-          taskUpdateHandler
-        } = await import('./cli/handlers/ant.js');
-        await taskUpdateHandler(id, opts);
-      });
-      taskCmd.command('dir').description('Show the tasks directory path').option('-l, --list <id>', 'Task list ID (defaults to "tasklist")').action(async (opts: {
-        list?: string;
-      }) => {
-        const {
-          taskDirHandler
-        } = await import('./cli/handlers/ant.js');
-        await taskDirHandler(opts);
-      });
-    }
-
-    // claude completion <shell>
-    program.command('completion <shell>', {
-      hidden: true
-    }).description('Generate shell completion script (bash, zsh, or fish)').option('--output <file>', 'Write completion script directly to a file instead of stdout').action(async (shell: string, opts: {
-      output?: string;
-    }) => {
-      const {
-        completionHandler
-      } = await import('./cli/handlers/ant.js');
-      await completionHandler(shell, opts, program);
-    });
-  }
   profileCheckpoint('run_before_parse');
   await program.parseAsync(process.argv);
   profileCheckpoint('run_after_parse');
@@ -3147,14 +2923,6 @@ async function logTenguInit({
       ...(assistantActivationPath && {
         assistantActivationPath: assistantActivationPath as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
       }),
-      ...("external" === 'ant' ? (() => {
-        const cwd = getCwd();
-        const gitRoot = findGitRoot(cwd);
-        const rp = gitRoot ? relative(gitRoot, cwd) || '.' : undefined;
-        return rp ? {
-          relativeProjectPath: rp as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        } : {};
-      })() : {})
     });
   } catch (error) {
     logError(error);

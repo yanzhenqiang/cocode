@@ -127,10 +127,10 @@ function PromptInputFooter({
         </Box>
         <Box flexShrink={1} gap={1}>
           {isFullscreen ? null : <Notifications apiKeyStatus={apiKeyStatus} debug={debug} verbose={verbose} messages={messages} mcpClients={mcpClients} isInputWrapped={isInputWrapped} isNarrow={isNarrow} />}
-          {"external" === 'ant' && isUndercover() && <Text dimColor>undercover</Text>}
+
         </Box>
       </Box>
-      {"external" === 'ant' && <CoordinatorTaskPanel />}
+
     </>;
 }
 export default memo(PromptInputFooter);

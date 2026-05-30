@@ -24,15 +24,6 @@ export function createRecentActivityFeed(activities: LogOption[]): FeedConfig {
 }
 export function createWhatsNewFeed(releaseNotes: string[]): FeedConfig {
   const lines: FeedLine[] = releaseNotes.map(note => {
-    if ("external" === 'ant') {
-      const match = note.match(/^(\d+\s+\w+\s+ago)\s+(.+)$/);
-      if (match) {
-        return {
-          timestamp: match[1],
-          text: match[2] || ''
-        };
-      }
-    }
     if (isReleaseSectionHeader(note)) {
       return {
         text: `${getReleaseSectionHeaderTitle(note)}:`
@@ -42,9 +33,9 @@ export function createWhatsNewFeed(releaseNotes: string[]): FeedConfig {
       text: note
     };
   });
-  const emptyMessage = "external" === 'ant' ? 'Unable to fetch latest claude-cli-internal commits' : 'Check /release-notes for recent updates';
+  const emptyMessage = 'Check /release-notes for recent updates';
   return {
-    title: "external" === 'ant' ? "Cocode Updates [internal-only: Latest CC commits]" : "Cocode Updates",
+    title: "Cocode Updates",
     lines,
     footer: lines.length > 0 ? '/release-notes for more' : undefined,
     emptyMessage

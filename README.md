@@ -20,6 +20,16 @@ git add -A
 git commit -m "describe your change"
 ```
 
+## Code Hygiene
+
+Run `unimport` regularly to remove dead imports and unused code:
+
+```bash
+npx unimport --include "src/**/*.{ts,tsx}" --write
+```
+
+This keeps the codebase lean by auto-detecting and stripping unused imports, variables, and functions. Run before major commits or after large refactors.
+
 ## Environment Setup
 
 Copy API credentials from `cocode.sh`:
