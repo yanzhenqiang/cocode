@@ -8,7 +8,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
     context: 'Global',
     bindings: {
       'ctrl+c': 'app:interrupt',
-      'ctrl+d': 'app:exit',
+      'ctrl+o': 'app:toggleTranscript',
     },
   },
   {
@@ -65,6 +65,12 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       pagedown: 'scroll:pageDown',
       'ctrl+home': 'scroll:top',
       'ctrl+end': 'scroll:bottom',
+    },
+  },
+  {
+    context: 'Task',
+    bindings: {
+      'ctrl+b': 'task:background',
     },
   },
 ]
