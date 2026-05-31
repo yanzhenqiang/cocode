@@ -6,11 +6,9 @@ import { toError } from '../../../utils/errors.js'
 import { logError } from '../../../utils/log.js'
 import type { PermissionDecision } from '../../../utils/permissions/PermissionResult.js'
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js'
-import {
-  createPermissionRequest,
-  isSwarmWorker,
-  sendPermissionRequestViaMailbox,
-} from '../../../utils/swarm/permissionSync.js'
+const createPermissionRequest = () => ({ requestId: '', promise: Promise.resolve(null as any) });
+const isSwarmWorker = () => false;
+const sendPermissionRequestViaMailbox = async () => {};
 import { registerPermissionCallback } from '../../useSwarmPermissionPoller.js'
 import type { PermissionContext } from '../PermissionContext.js'
 import { createResolveOnce } from '../PermissionContext.js'

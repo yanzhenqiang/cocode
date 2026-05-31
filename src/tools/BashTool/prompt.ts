@@ -11,10 +11,7 @@ import {
   getDefaultBashTimeoutMs,
   getMaxBashTimeoutMs,
 } from '../../utils/timeouts.js'
-import {
-  getUndercoverInstructions,
-  isUndercover,
-// undercover removed
+const getUndercoverInstructions = () => '';
 const isUndercover = () => false
 import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
 import { FILE_EDIT_TOOL_NAME } from '../FileEditTool/constants.js'

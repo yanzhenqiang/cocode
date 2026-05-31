@@ -75,7 +75,7 @@ async function main(): Promise<void> {
   // --provider: set provider env vars early so saved-profile resolution,
   // validation, and the startup banner all see the intended provider/model.
   if (args.includes('--provider')) {
-    const { applyProviderFlagFromArgs } = await import('../utils/providerFlag.js');
+    const { applyProviderFlagFromArgs } = { applyProviderFlagFromArgs: (args: string[]) => ({ error: '' } as { error?: string }) };
     const result = applyProviderFlagFromArgs(args);
     if (result?.error) {
       // biome-ignore lint/suspicious/noConsole:: intentional error output
@@ -131,7 +131,7 @@ async function main(): Promise<void> {
   // #808: --model alone (no --provider) — route to the env var matching the
   // active provider before the banner prints so the override is visible.
   if (args.includes('--model')) {
-    const { applyModelFlagFromArgs } = await import('../utils/providerFlag.js')
+    const { applyModelFlagFromArgs } = { applyModelFlagFromArgs: (args: string[]) => {} }
     applyModelFlagFromArgs(args)
   }
 

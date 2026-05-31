@@ -42,9 +42,7 @@ import rewind from './commands/rewind/index.js'
 import heapDump from './commands/heapdump/index.js'
 import version from './commands/version.js'
 import summary from './commands/summary/index.js'
-import {
-  resetLimitsNonInteractive,
-} from './commands/reset-limits/index.js'
+const resetLimitsNonInteractive = async () => {};
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'

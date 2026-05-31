@@ -1,14 +1,12 @@
 import { isBareMode } from './envUtils.js'
 import { createCombinedAbortSignal } from './combinedAbortSignal.js'
 const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
-import {
-  asTrimmedString,
-  CODEX_REFRESH_URL,
-  exchangeCodexIdTokenForApiKey,
-  getCodexOAuthClientId,
-  parseChatgptAccountId,
-  decodeJwtPayload,
-} from '../services/api/codexOAuthShared.js'
+const asTrimmedString = (s: unknown): string | undefined => typeof s === 'string' ? s.trim() || undefined : undefined;
+const CODEX_REFRESH_URL = '';
+const exchangeCodexIdTokenForApiKey = async () => '';
+const getCodexOAuthClientId = () => '';
+const parseChatgptAccountId = (..._args: unknown[]): string | undefined => undefined;
+const decodeJwtPayload = (_token: string) => ({});
 
 export const CODEX_STORAGE_KEY = 'codex' as const
 const CODEX_TOKEN_REFRESH_SKEW_MS = 60_000

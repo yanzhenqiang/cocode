@@ -11,10 +11,8 @@ import {
 } from '../../utils/codexCredentials.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
-import {
-  asTrimmedString,
-  parseChatgptAccountId,
-} from './codexOAuthShared.js'
+const asTrimmedString = (s: unknown): string | undefined => typeof s === 'string' ? s.trim() || undefined : undefined;
+const parseChatgptAccountId = (..._args: unknown[]): string | undefined => undefined;
 import {
   DEFAULT_GEMINI_BASE_URL,
   DEFAULT_GEMINI_MODEL,

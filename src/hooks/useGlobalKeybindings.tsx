@@ -135,3 +135,5 @@ export function GlobalKeybindingHandlers({
     context: 'Global'
   });
 
+  return null;
+}

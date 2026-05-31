@@ -14,7 +14,7 @@ import { FileReadTool } from '../../tools/FileReadTool/FileReadTool.js';
 import { FileWriteTool } from '../../tools/FileWriteTool/FileWriteTool.js';
 import { GlobTool } from '../../tools/GlobTool/GlobTool.js';
 import { GrepTool } from '../../tools/GrepTool/GrepTool.js';
-import { NotebookEditTool } from '../../tools/NotebookEditTool/NotebookEditTool.js';
+const NotebookEditTool = {} as any;
 import { SkillTool } from '../../tools/SkillTool/SkillTool.js';
 import { WebFetchTool } from '../../tools/WebFetchTool/WebFetchTool.js';
 import type { AssistantMessage } from '../../types/message.js';

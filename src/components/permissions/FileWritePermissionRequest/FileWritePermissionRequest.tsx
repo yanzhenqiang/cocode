@@ -8,8 +8,10 @@ import { getCwd } from '../../../utils/cwd.js';
 import { isENOENT } from '../../../utils/errors.js';
 import { readFileSync } from '../../../utils/fileRead.js';
 import { FilePermissionDialog } from '../FilePermissionDialog/FilePermissionDialog.js';
-import { createSingleEditDiffConfig, type FileEdit, type IDEDiffSupport } from '../FilePermissionDialog/ideDiffConfig.js';
 import type { PermissionRequestProps } from '../PermissionRequest.js';
+type IDEDiffSupport<T> = { getConfig: (input: T) => any; applyChanges: (input: T, edits: any[]) => any; supportsCancel?: boolean };
+type FileEdit = { old_string: string; new_string: string };
+const createSingleEditDiffConfig = (..._args: any[]) => [] as FileEdit[];
 import { FileWriteToolDiff } from './FileWriteToolDiff.js';
 type FileWriteToolInput = z.infer<typeof FileWriteTool.inputSchema>;
 const ideDiffSupport: IDEDiffSupport<FileWriteToolInput> = {

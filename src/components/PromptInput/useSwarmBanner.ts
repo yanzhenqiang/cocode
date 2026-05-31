@@ -11,12 +11,10 @@ import {
   getAgentColor,
 } from '../../tools/AgentTool/agentColorManager.js'
 import { getStandaloneAgentName } from '../../utils/standaloneAgent.js'
-import { isInsideTmux } from '../../utils/swarm/backends/detection.js'
-import {
-  getCachedDetectionResult,
-  isInProcessEnabled,
-} from '../../utils/swarm/backends/registry.js'
-import { getSwarmSocketName } from '../../utils/swarm/constants.js'
+const isInsideTmux = () => false;
+const getCachedDetectionResult = () => null;
+const isInProcessEnabled = () => false;
+const getSwarmSocketName = () => '';
 import {
   getAgentName,
   getTeammateColor,

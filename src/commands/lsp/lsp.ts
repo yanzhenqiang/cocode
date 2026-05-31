@@ -7,10 +7,8 @@ import {
   reinitializeLspServerManager,
   waitForInitialization,
 } from '../../services/lsp/manager.js'
-import {
-  installPluginOp,
-  uninstallPluginOp,
-} from '../../services/plugins/pluginOperations.js'
+const installPluginOp = async () => {};
+const uninstallPluginOp = async () => {};
 import type {
   LocalCommandCall,
   LocalJSXCommandContext,

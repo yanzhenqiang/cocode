@@ -20,7 +20,7 @@ import {
 import { getCwd } from '../cwd.js'
 import { errorMessage } from '../errors.js'
 import { logError } from '../log.js'
-import { getSessionIngressAuthToken } from '../sessionIngressAuth.js'
+const getSessionIngressAuthToken = async () => undefined;
 import {
   findModifiedFiles,
   getEnvironmentKind,
