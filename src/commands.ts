@@ -21,7 +21,6 @@ import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import mcp from './commands/mcp/index.js'
 import pr_comments from './commands/pr_comments/index.js'
-import releaseNotes from './commands/release-notes/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
 import review, { ultrareview } from './commands/review.js'
@@ -39,14 +38,11 @@ import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
-import reloadPlugins from './commands/reload-plugins/index.js'
 import rewind from './commands/rewind/index.js'
 import heapDump from './commands/heapdump/index.js'
-import mockLimits from './commands/mock-limits/index.js'
 import version from './commands/version.js'
 import summary from './commands/summary/index.js'
 import {
-  resetLimits,
   resetLimitsNonInteractive,
 } from './commands/reset-limits/index.js'
 import advisor from './commands/advisor.js'
@@ -116,9 +112,7 @@ export { getCommandName, isCommandEnabled } from './types/command.js'
 export const INTERNAL_ONLY_COMMANDS = [
   commit,
   issue,
-  mockLimits,
   version,
-  resetLimits,
   resetLimitsNonInteractive,
   summary,
   env,
@@ -157,8 +151,6 @@ const COMMANDS = memoize((): Command[] => [
   model,
   outputStyle,
   pr_comments,
-  releaseNotes,
-  reloadPlugins,
   rename,
   resume,
   skills,
