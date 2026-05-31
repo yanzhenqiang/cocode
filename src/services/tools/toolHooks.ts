@@ -29,7 +29,7 @@ import {
 } from '../../utils/permissions/PermissionResult.js'
 import { checkRuleBasedPermissions } from '../../utils/permissions/permissions.js'
 import { formatError } from '../../utils/toolErrors.js'
-import { getAutoFixConfig } from '../autoFix/autoFixConfig.js'
+const getAutoFixConfig = () => null
 import { shouldRunAutoFix, buildAutoFixContext } from '../autoFix/autoFixHook.js'
 import { runAutoFixCheck } from '../autoFix/autoFixRunner.js'
 

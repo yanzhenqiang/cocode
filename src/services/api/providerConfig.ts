@@ -14,7 +14,9 @@ import { isEnvTruthy } from '../../utils/envUtils.js'
 import {
   asTrimmedString,
   parseChatgptAccountId,
-} from './codexOAuthShared.js'
+// codexOAuthShared removed
+type CodexOAuthTokens = any
+const CODE_VERIFIER_LENGTH = 0
 import {
   DEFAULT_GEMINI_BASE_URL,
   DEFAULT_GEMINI_MODEL,

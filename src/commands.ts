@@ -44,7 +44,8 @@ import version from './commands/version.js'
 import summary from './commands/summary/index.js'
 import {
   resetLimitsNonInteractive,
-} from './commands/reset-limits/index.js'
+// reset-limits removed
+const resetLimits = { isEnabled: () => false, isHidden: true }
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'

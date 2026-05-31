@@ -1,6 +1,6 @@
 import { relative } from 'path';
 import React, { useMemo } from 'react';
-import { useDiffInIDE } from '../../../hooks/useDiffInIDE.js';
+const useDiffInIDE = () => false
 import { Box, Text } from '../../../ink.js';
 import type { ToolUseContext } from '../../../Tool.js';
 import { getLanguageName } from '../../../utils/cliHighlight.js';

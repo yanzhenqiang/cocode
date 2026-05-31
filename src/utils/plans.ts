@@ -16,7 +16,7 @@ import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../tools/ExitPlanModeTool/constants
 import { getCwd } from './cwd.js'
 import { logForDebugging } from './debug.js'
 import { isENOENT } from './errors.js'
-import { getEnvironmentKind } from './filePersistence/outputsScanner.js'
+const getEnvironmentKind = () => 'local'
 import { getFsImplementation } from './fsOperations.js'
 import { logError } from './log.js'
 import { getInitialSettings } from './settings/settings.js'

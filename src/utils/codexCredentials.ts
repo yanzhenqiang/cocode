@@ -8,7 +8,9 @@ import {
   getCodexOAuthClientId,
   parseChatgptAccountId,
   decodeJwtPayload,
-} from '../services/api/codexOAuthShared.js'
+// codexOAuthShared removed
+type CodexOAuthTokens = any
+const parseCodexTokenExpiry = () => null
 
 export const CODEX_STORAGE_KEY = 'codex' as const
 const CODEX_TOKEN_REFRESH_SKEW_MS = 60_000
