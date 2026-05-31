@@ -8,7 +8,7 @@ import {
   resolveCodexApiCredentials,
   resolveProviderRequest,
 } from '../services/api/providerConfig.js'
-import { parseChatgptAccountId } from '../services/api/codexOAuthShared.js'
+const parseChatgptAccountId = () => null
 import {
   getGoalDefaultOpenAIModel,
   normalizeRecommendationGoal,

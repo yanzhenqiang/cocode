@@ -19,7 +19,8 @@ class OAuthService {
 }
 import { logError } from '../utils/log.js';
 import { getSettings_DEPRECATED } from '../utils/settings/settings.js';
-import { ProviderManager } from './ProviderManager.js';
+// ProviderManager removed
+export function ProviderManager(_props: any): any { return null }
 import { Select } from './CustomSelect/select.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
 import { Spinner } from './Spinner.js';

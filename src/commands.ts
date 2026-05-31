@@ -31,13 +31,10 @@ import tasks from './commands/tasks/index.js'
 import securityReview from './commands/security-review.js'
 import terminalSetup from './commands/terminalSetup/index.js'
 import theme from './commands/theme/index.js'
-import thinkback from './commands/thinkback/index.js'
-import thinkbackPlay from './commands/thinkback-play/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import privacySettings from './commands/privacy-settings/index.js'
-import provider from './commands/provider/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
@@ -159,7 +156,6 @@ const COMMANDS = memoize((): Command[] => [
   memory,
   model,
   outputStyle,
-  provider,
   pr_comments,
   releaseNotes,
   reloadPlugins,
@@ -176,8 +172,6 @@ const COMMANDS = memoize((): Command[] => [
   securityReview,
   terminalSetup,
   usageReport,
-  thinkback,
-  thinkbackPlay,
   permissions,
   plan,
   privacySettings,
