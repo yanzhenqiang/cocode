@@ -1600,7 +1600,6 @@ function PromptInput({
   // fall through to history when the cursor can't move further.
   const chatHandlers = useMemo(() => ({
     'chat:newline': handleNewline,
-    'chat:stash': handleStash,
     'chat:modelPicker': handleModelPicker,
     'chat:thinkingToggle': handleThinkingToggle,
     'chat:cycleMode': handleCycleMode,

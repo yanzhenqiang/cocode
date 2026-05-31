@@ -41,7 +41,6 @@ export type KeybindingAction =
   | 'chat:thinkingToggle'
   | 'chat:submit'
   | 'chat:newline'
-  | 'chat:stash'
   | 'chat:imagePaste'
   | 'autocomplete:accept'
   | 'autocomplete:dismiss'
