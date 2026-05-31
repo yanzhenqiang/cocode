@@ -7,7 +7,7 @@ import {
 } from '../../utils/auth.js'
 import { getAuthHeaders } from '../../utils/http.js'
 import { getClaudeCodeUserAgent } from '../../utils/userAgent.js'
-import { isOAuthTokenExpired } from '../oauth/client.js'
+const isOAuthTokenExpired = () => false
 
 export type RateLimit = {
   utilization: number | null // a percentage from 0 to 100

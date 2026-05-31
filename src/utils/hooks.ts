@@ -23,7 +23,10 @@ import { DEFAULT_HOOK_SHELL } from './shell/shellProvider.js'
 import {
   loadPluginOptions,
   substituteUserConfigVariables,
-} from './plugins/pluginOptionsStorage.js'
+// pluginOptionsStorage removed
+const getPluginOption = () => undefined
+const setPluginOption = () => {}
+const getAllPluginOptions = () => ({})
 const getPluginDataDir = () => ''
 import {
   getSessionId,
