@@ -86,10 +86,8 @@ export const KEYBINDING_ACTIONS = [
   'chat:submit',
   'chat:newline',
   'chat:undo',
-  'chat:externalEditor',
   'chat:stash',
   'chat:imagePaste',
-  'chat:messageActions',
   // Autocomplete menu actions
   'autocomplete:accept',
   'autocomplete:dismiss',

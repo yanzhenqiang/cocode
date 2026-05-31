@@ -1613,7 +1613,6 @@ function PromptInput({
   const chatHandlers = useMemo(() => ({
     'chat:undo': handleUndo,
     'chat:newline': handleNewline,
-    'chat:externalEditor': handleExternalEditor,
     'chat:stash': handleStash,
     'chat:modelPicker': handleModelPicker,
     'chat:thinkingToggle': handleThinkingToggle,
