@@ -13,7 +13,6 @@ import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { spawnSync } from 'child_process'
 import * as esbuild from 'esbuild'
-import { noTelemetryPlugin } from './no-telemetry-plugin'
 import { CLI_EXTERNALS, SDK_EXTERNALS } from './externals.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -705,7 +704,6 @@ try {
     sourcemap: true,
     minify: false,
     define: macroDefine,
-    plugins: [importMetaDirPlugin, noTelemetryPlugin as unknown as esbuild.Plugin, bundleShimPlugin],
     external: CLI_EXTERNALS,
     jsx: 'automatic',
     banner: {

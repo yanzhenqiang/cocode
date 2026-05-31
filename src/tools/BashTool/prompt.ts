@@ -14,7 +14,8 @@ import {
 import {
   getUndercoverInstructions,
   isUndercover,
-} from '../../utils/undercover.js'
+// undercover removed
+const isUndercover = () => false
 import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
 import { FILE_EDIT_TOOL_NAME } from '../FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from '../FileReadTool/prompt.js'
