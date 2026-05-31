@@ -6,7 +6,7 @@ import {
   normalizePatternsToPath,
 } from './permissions/filesystem.js'
 import { getPlatform } from './platform.js'
-import { getGlobExclusionsForPluginCache } from './plugins/orphanedPluginFilter.js'
+const getGlobExclusionsForPluginCache = () => []
 import { ripGrep } from './ripgrep.js'
 
 /**

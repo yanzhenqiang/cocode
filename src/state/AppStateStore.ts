@@ -9,7 +9,6 @@ import type {
   MCPServerConnection,
   ServerResource,
 } from '../services/mcp/types.js'
-import { shouldEnablePromptSuggestion } from '../services/PromptSuggestion/promptSuggestion.js'
 import {
   getEmptyToolPermissionContext,
   type Tool,
@@ -38,6 +37,9 @@ import { getInitialSettings } from '../utils/settings/settings.js'
 import type { SettingsJson } from '../utils/settings/types.js'
 import { shouldEnableThinkingByDefault } from '../utils/thinking.js'
 import type { Store } from './store.js'
+
+// Prompt suggestion stub (deleted module)
+const shouldEnablePromptSuggestion = () => false;
 
 export type CompletionBoundary =
   | { type: 'complete'; completedAt: number; outputTokens: number }

@@ -17,17 +17,16 @@ import {
   isRunningFromLocalInstallation,
   localInstallationExists,
 } from './localInstaller.js'
-import {
-  detectApk,
-  detectAsdf,
-  detectDeb,
-  detectHomebrew,
-  detectMise,
-  detectPacman,
-  detectRpm,
-  detectWinget,
-  getPackageManager,
-} from './nativeInstaller/packageManagers.js'
+// nativeInstaller removed — inline stubs
+const detectApk = () => false
+const detectAsdf = () => false
+const detectDeb = () => false
+const detectHomebrew = () => false
+const detectMise = () => false
+const detectPacman = () => false
+const detectRpm = () => false
+const detectWinget = () => false
+const getPackageManager = () => null
 import { getPlatform } from './platform.js'
 import { getRipgrepStatus } from './ripgrep.js'
 import { SandboxManager } from './sandbox/sandbox-adapter.js'

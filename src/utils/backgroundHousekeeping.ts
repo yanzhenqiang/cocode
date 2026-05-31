@@ -5,10 +5,6 @@ import { initSkillImprovement } from './hooks/skillImprovement.js'
 const extractMemoriesModule = feature('EXTRACT_MEMORIES')
   ? (require('../services/extractMemories/extractMemories.js') as typeof import('../services/extractMemories/extractMemories.js'))
   : null
-const registerProtocolModule = feature('LODESTONE')
-  ? (require('./deepLink/registerProtocol.js') as typeof import('./deepLink/registerProtocol.js'))
-  : null
-
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 import { getIsInteractive, getLastInteractionTime } from '../bootstrap/state.js'
@@ -28,9 +24,6 @@ export function startBackgroundHousekeeping(): void {
   void initSkillImprovement()
   if (feature('EXTRACT_MEMORIES')) {
     extractMemoriesModule!.initExtractMemories()
-  }
-  if (feature('LODESTONE') && getIsInteractive()) {
-    void registerProtocolModule!.ensureDeepLinkProtocolRegistered()
   }
 
   let needsCleanup = true

@@ -68,7 +68,7 @@ import type {
   McpSdkServerConfig,
   ScopedMcpServerConfig,
 } from 'src/services/mcp/types.js'
-import { parsePluginIdentifier } from 'src/utils/plugins/pluginIdentifier.js'
+const parsePluginIdentifier = () => null
 import { validateUuid } from 'src/utils/uuid.js'
 import { fromArray } from 'src/utils/generators.js'
 import { ask } from 'src/QueryEngine.js'
@@ -159,8 +159,15 @@ import {
 } from 'src/utils/permissions/permissionSetup.js'
 import { getLastCacheSafeParams } from 'src/utils/backgroundQuery.js'
 import { getAccountInformation } from 'src/utils/auth.js'
-import { OAuthService } from 'src/services/oauth/index.js'
 import { installOAuthTokens } from 'src/cli/handlers/auth.js'
+// OAuth service removed — inline stub
+class OAuthService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async startOAuthFlow(_onUrl?: any, _opts?: any): Promise<any> { throw new Error('OAuth removed') }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  handleManualAuthCodeInput(_input?: any) {}
+  cleanup() {}
+}
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import type { HookCallbackMatcher } from 'src/types/hooks.js'
 import { AwsAuthStatusManager } from 'src/utils/awsAuthStatusManager.js'
@@ -290,9 +297,9 @@ import {
   isBareMode,
   isEnvTruthy,
 } from '../utils/envUtils.js'
-import { installPluginsForHeadless } from '../utils/plugins/headlessPluginInstall.js'
-import { refreshActivePlugins } from '../utils/plugins/refresh.js'
-import { loadAllPluginsCacheOnly } from '../utils/plugins/pluginLoader.js'
+const installPluginsForHeadless = async () => {}
+const refreshActivePlugins = async () => {}
+const loadAllPluginsCacheOnly = () => []
 import {
 } from '../utils/teammate.js'
 import { getRunningTasks } from '../utils/task/framework.js'
@@ -1714,9 +1721,8 @@ function runHeadlessStreaming(
 
       // Set up hot-reload for plugin hooks now that the initial install is done.
       // In sync-install mode, setup.ts skips this to avoid racing with the install.
-      const { setupPluginHookHotReload } = await import(
-        '../utils/plugins/loadPluginHooks.js'
-      )
+      // Plugin loading removed — utils/plugins/ was deleted
+      const setupPluginHookHotReload = () => {}
       setupPluginHookHotReload()
     }
 

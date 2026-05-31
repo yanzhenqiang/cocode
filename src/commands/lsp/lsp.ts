@@ -19,15 +19,11 @@ import { getCwd } from '../../utils/cwd.js'
 import { errorMessage } from '../../utils/errors.js'
 import { execFileNoThrowWithCwd } from '../../utils/execFileNoThrow.js'
 import { gitExe } from '../../utils/git.js'
-import {
-  listLspPluginCandidates,
-  type LspPluginCandidate,
-} from '../../utils/plugins/lspRecommendation.js'
-import {
-  checkAndInstallOfficialMarketplace,
-  type OfficialMarketplaceCheckResult,
-} from '../../utils/plugins/officialMarketplaceStartupCheck.js'
-import { refreshActivePlugins } from '../../utils/plugins/refresh.js'
+type LspPluginCandidate = { pluginId: string; pluginName: string; description?: string; language: string; extensions: string[]; servers: Array<{ command: string; args?: string[] }> }
+type OfficialMarketplaceCheckResult = { installed: boolean; configSaveFailed: boolean; skipped: boolean; reason?: string }
+const listLspPluginCandidates = async () => []
+const checkAndInstallOfficialMarketplace = async () => ({ installed: false, configSaveFailed: false, skipped: false } as OfficialMarketplaceCheckResult)
+const refreshActivePlugins = async () => {}
 import { plural } from '../../utils/stringUtils.js'
 
 type LspServerConfigLike = {

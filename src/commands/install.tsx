@@ -9,7 +9,11 @@ import { Box, render, Text } from '../ink.js';
 import { logForDebugging } from '../utils/debug.js';
 import { env } from '../utils/env.js';
 import { errorMessage } from '../utils/errors.js';
-import { checkInstall, cleanupNpmInstallations, cleanupShellAliases, installLatest } from '../utils/nativeInstaller/index.js';
+// nativeInstaller removed — inline stubs
+const checkInstall = async () => []
+const cleanupNpmInstallations = async () => ({ removed: 0, errors: [], warnings: [] })
+const cleanupShellAliases = async () => []
+const installLatest = async () => ({ latestVersion: '', wasUpdated: false, lockFailed: false })
 import { getInitialSettings, updateSettingsForSource } from '../utils/settings/settings.js';
 interface InstallProps {
   onDone: (result: string, options?: {

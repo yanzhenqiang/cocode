@@ -289,12 +289,7 @@ export async function setup(
   if (!skipPluginPrefetch) {
     void getCommands(getProjectRoot())
   }
-  void import('./utils/plugins/loadPluginHooks.js').then(m => {
-    if (!skipPluginPrefetch) {
-      void m.loadPluginHooks() // Pre-load plugin hooks (consumed by processSessionStartHooks before render)
-      m.setupPluginHookHotReload() // Set up hot reload for plugin hooks when settings change
-    }
-  })
+  // Plugin loading removed — utils/plugins/ was deleted
   // --bare: skip attribution hook install + repo classification +
   // session-file-access analytics + team memory watcher. These are background
   // bookkeeping for commit attribution + usage metrics — scripted calls don't

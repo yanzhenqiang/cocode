@@ -10,19 +10,22 @@ import { Dialog } from '../../components/design-system/Dialog.js';
 import { Spinner } from '../../components/Spinner.js';
 import instances from '../../ink/instances.js';
 import { Box, Text } from '../../ink.js';
-import { enablePluginOp } from '../../services/plugins/pluginOperations.js';
+const enablePluginOp = async () => ({ success: true, message: '' })
 import { logForDebugging } from '../../utils/debug.js';
 import { isENOENT, toError } from '../../utils/errors.js';
 import { execFileNoThrow } from '../../utils/execFileNoThrow.js';
 import { pathExists } from '../../utils/file.js';
 import { logError } from '../../utils/log.js';
 import { getPlatform } from '../../utils/platform.js';
-import { clearAllCaches } from '../../utils/plugins/cacheUtils.js';
-import { isPluginInstalled } from '../../utils/plugins/installedPluginsManager.js';
-import { addMarketplaceSource, clearMarketplacesCache, loadKnownMarketplacesConfig, refreshMarketplace } from '../../utils/plugins/marketplaceManager.js';
-import { OFFICIAL_MARKETPLACE_NAME } from '../../utils/plugins/officialMarketplace.js';
-import { loadAllPlugins } from '../../utils/plugins/pluginLoader.js';
-import { installSelectedPlugins } from '../../utils/plugins/pluginStartupCheck.js';
+const clearAllCaches = () => {}
+const isPluginInstalled = () => false
+const addMarketplaceSource = async () => {}
+const clearMarketplacesCache = () => {}
+const loadKnownMarketplacesConfig = () => []
+const refreshMarketplace = async () => {}
+const OFFICIAL_MARKETPLACE_NAME = ''
+const loadAllPlugins = async () => ({ enabled: [], disabled: [], errors: [] })
+const installSelectedPlugins = async () => ({ failed: [] })
 
 // Marketplace and plugin identifiers - varies by user type
 const INTERNAL_MARKETPLACE_NAME = 'claude-code-marketplace';

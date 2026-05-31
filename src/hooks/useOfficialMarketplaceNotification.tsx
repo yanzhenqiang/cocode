@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { Notification } from '../context/notifications.js';
 import { Text } from '../ink.js';
 import { logForDebugging } from '../utils/debug.js';
-import { checkAndInstallOfficialMarketplace } from '../utils/plugins/officialMarketplaceStartupCheck.js';
+const checkAndInstallOfficialMarketplace = async () => ({ installed: false, configSaveFailed: false, skipped: false } as { installed: boolean; configSaveFailed: boolean; skipped: boolean; reason?: string })
 import { useStartupNotification } from './notifs/useStartupNotification.js';
 
 /**

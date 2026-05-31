@@ -1,5 +1,6 @@
-import { checkInstall } from 'src/utils/nativeInstaller/index.js';
 import { useStartupNotification } from './useStartupNotification.js';
+// nativeInstaller removed
+const checkInstall = async () => []
 export function useInstallMessages() {
   useStartupNotification(_temp2);
 }

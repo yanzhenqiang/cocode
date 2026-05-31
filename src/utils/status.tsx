@@ -13,7 +13,8 @@ import { getClaudeAiUserDefaultModelDescription, modelDisplayString } from './mo
 import { getAPIProvider, type APIProvider } from './model/providers.js';
 import { resolveProviderRequest } from '../services/api/providerConfig.js';
 import { getMTLSConfig } from './mtls.js';
-import { checkInstall } from './nativeInstaller/index.js';
+// nativeInstaller removed
+const checkInstall = async () => [] as any[]
 import { getProxyUrl } from './proxy.js';
 import { SandboxManager } from './sandbox/sandbox-adapter.js';
 import { getSettingsWithAllErrors } from './settings/allErrors.js';

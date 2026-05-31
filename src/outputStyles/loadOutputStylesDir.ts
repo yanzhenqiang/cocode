@@ -8,7 +8,7 @@ import {
   extractDescriptionFromMarkdown,
   loadMarkdownFilesForSubdir,
 } from '../utils/markdownConfigLoader.js'
-import { clearPluginOutputStyleCache } from '../utils/plugins/loadPluginOutputStyles.js'
+const clearPluginOutputStyleCache = () => {}
 
 /**
  * Loads markdown files from .claude/output-styles directories throughout the project

@@ -19,8 +19,10 @@ import { useAppState } from '../state/AppState.js';
 import { saveGlobalConfig } from '../utils/config.js';
 import { logForDebugging } from '../utils/debug.js';
 import { logError } from '../utils/log.js';
-import { addToNeverSuggest, getMatchingLspPlugins, incrementIgnoredCount } from '../utils/plugins/lspRecommendation.js';
-import { cacheAndRegisterPlugin } from '../utils/plugins/pluginInstallationHelpers.js';
+const addToNeverSuggest = () => {}
+const getMatchingLspPlugins = () => []
+const incrementIgnoredCount = () => {}
+const cacheAndRegisterPlugin = async () => {}
 import { getSettingsForSource, updateSettingsForSource } from '../utils/settings/settings.js';
 import { installPluginAndNotify, usePluginRecommendationBase } from './usePluginRecommendationBase.js';
 

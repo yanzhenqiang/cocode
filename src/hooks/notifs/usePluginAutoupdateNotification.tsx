@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useNotifications } from '../../context/notifications.js';
 import { Text } from '../../ink.js';
 import { logForDebugging } from '../../utils/debug.js';
-import { onPluginsAutoUpdated } from '../../utils/plugins/pluginAutoupdate.js';
+const onPluginsAutoUpdated = (_cb: any) => () => {}
 
 /**
  * Hook that displays a notification when plugins have been auto-updated.

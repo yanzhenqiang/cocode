@@ -28,10 +28,9 @@ import type {
 import { logForDebugging } from 'src/utils/debug.js'
 import type { PermissionDecision } from 'src/utils/permissions/PermissionResult.js'
 import { getRuleByContentsForTool } from 'src/utils/permissions/permissions.js'
-import {
-  isOfficialMarketplaceName,
-  parsePluginIdentifier,
-} from 'src/utils/plugins/pluginIdentifier.js'
+// plugin identifier removed
+const parsePluginIdentifier = () => null
+const isOfficialMarketplaceName = () => false
 import { z } from 'zod/v4'
 import {
   addInvokedSkill,

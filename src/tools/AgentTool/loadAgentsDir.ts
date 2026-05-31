@@ -31,10 +31,8 @@ import {
   PERMISSION_MODES,
   type PermissionMode,
 } from '../../utils/permissions/PermissionMode.js'
-import {
-  clearPluginAgentCache,
-  loadPluginAgents,
-} from '../../utils/plugins/loadPluginAgents.js'
+const loadPluginAgents = async () => []
+const clearPluginAgentCache = () => {}
 import { HooksSchema, type HooksSettings } from '../../utils/settings/types.js'
 import { jsonStringify } from '../../utils/slowOperations.js'
 import { FILE_EDIT_TOOL_NAME } from '../FileEditTool/constants.js'

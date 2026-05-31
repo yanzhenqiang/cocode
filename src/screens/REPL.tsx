@@ -178,7 +178,6 @@ import { SessionBackgroundHint } from '../components/SessionBackgroundHint.js';
 import { startBackgroundSession } from '../tasks/LocalMainSessionTask.js';
 import { useSessionBackgrounding } from '../hooks/useSessionBackgrounding.js';
 import { diagnosticTracker } from '../services/diagnosticTracking.js';
-import { handleSpeculationAccept, type ActiveSpeculationState } from '../services/PromptSuggestion/speculation.js';
 
 import { EffortCallout, shouldShowEffortCallout } from '../components/EffortCallout.js';
 import type { EffortValue } from '../utils/effort.js';
@@ -198,7 +197,6 @@ import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketp
 import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
 
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
-import { shouldRunStartupChecks } from './replStartupGates.js';
 import { checkAndDisableBypassPermissionsIfNeeded, checkAndDisableAutoModeIfNeeded, useKickOffCheckAndDisableBypassPermissionsIfNeeded, useKickOffCheckAndDisableAutoModeIfNeeded } from 'src/utils/permissions/bypassPermissionsKillswitch.js';
 import { SandboxManager } from 'src/utils/sandbox/sandbox-adapter.js';
 import { SANDBOX_NETWORK_ACCESS_TOOL_NAME } from 'src/cli/structuredIO.js';
@@ -216,7 +214,6 @@ import { useClaudeCodeHintRecommendation } from 'src/hooks/useClaudeCodeHintReco
 import { PluginHintMenu } from 'src/components/ClaudeCodeHint/PluginHintMenu.js';
 import { usePluginInstallationStatus } from 'src/hooks/notifs/usePluginInstallationStatus.js';
 import { usePluginAutoupdateNotification } from 'src/hooks/notifs/usePluginAutoupdateNotification.js';
-import { performStartupChecks } from 'src/utils/plugins/performStartupChecks.js';
 import { UserTextMessage } from 'src/components/messages/UserTextMessage.js';
 import { AwsAuthStatusBox } from '../components/AwsAuthStatusBox.js';
 import { useRateLimitWarningNotification } from 'src/hooks/notifs/useRateLimitWarningNotification.js';
@@ -250,6 +247,10 @@ import { useMessageActions, MessageActionsKeybindings, MessageActionsBar, type M
 import { setClipboard } from '../ink/termio/osc.js';
 import type { ScrollBoxHandle } from '../ink/components/ScrollBox.js';
 import { createAttachmentMessage, getQueuedCommandAttachments } from '../utils/attachments.js';
+
+// Prompt suggestion stubs (deleted module)
+const handleSpeculationAccept = () => {};
+type ActiveSpeculationState = null;
 
 // Stable empty array for hooks that accept MCPServerConnection[] — avoids
 const HISTORY_STUB = {
@@ -1268,22 +1269,7 @@ export function REPL({
   const [inProgressToolUseIDs, setInProgressToolUseIDs] = useState<Set<string>>(new Set());
   const hasInterruptibleToolInProgressRef = useRef(false);
 
-  // Defer startup checks until the user has submitted their first message.
-  // A timeout or grace period is insufficient (issue #363): if the user pauses
-  // before typing, startup checks can still fire and recommendation dialogs
-  // steal focus. Only the user's first submission guarantees the prompt was
-  // the first thing they interacted with.
-  const startupChecksStartedRef = React.useRef(false);
-  const hasHadFirstSubmission = (submitCount ?? 0) > 0;
-  useEffect(() => {
-    if (startupChecksStartedRef.current) return;
-    if (!shouldRunStartupChecks({
-      hasStarted: startupChecksStartedRef.current,
-      hasHadFirstSubmission,
-    })) return;
-    startupChecksStartedRef.current = true;
-    void performStartupChecks(setAppState);
-  }, [setAppState, hasHadFirstSubmission]);
+  const startupChecksStartedRef = React.useRef(true); // startup checks removed - always treated as completed
   // Ref instead of state to avoid triggering React re-renders on every
   // streaming text_delta. The spinner reads this via its animation timer.
   const responseLengthRef = useRef(0);

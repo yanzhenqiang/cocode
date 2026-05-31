@@ -1,6 +1,6 @@
 import { isBareMode, isEnvTruthy } from './envUtils.js'
 import { getGeminiAuthMode } from './geminiAuth.js'
-import { getSecureStorage } from './secureStorage/index.js'
+const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
 
 export const GEMINI_TOKEN_STORAGE_KEY = 'gemini' as const
 

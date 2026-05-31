@@ -1,8 +1,9 @@
 import { feature } from 'bun:bundle'
 import type { LocalCommandCall } from '../../types/command.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
-import { refreshActivePlugins } from '../../utils/plugins/refresh.js'
 import { settingsChangeDetector } from '../../utils/settings/changeDetector.js'
+
+const refreshActivePlugins = async () => {}
 import { plural } from '../../utils/stringUtils.js'
 
 export const call: LocalCommandCall = async (_args, context) => {

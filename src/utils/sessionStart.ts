@@ -8,7 +8,7 @@ import { updateWatchPaths } from './hooks/fileChangedWatcher.js'
 import { shouldAllowManagedHooksOnly } from './hooks/hooksConfigSnapshot.js'
 import { executeSessionStartHooks, executeSetupHooks } from './hooks.js'
 import { logError } from './log.js'
-import { loadPluginHooks } from './plugins/loadPluginHooks.js'
+const loadPluginHooks = () => []
 
 type SessionStartHooksOptions = {
   sessionId?: string

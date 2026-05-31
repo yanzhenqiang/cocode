@@ -1,6 +1,6 @@
 import { isBareMode } from './envUtils.js'
 import { createCombinedAbortSignal } from './combinedAbortSignal.js'
-import { getSecureStorage } from './secureStorage/index.js'
+const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
 import {
   asTrimmedString,
   CODEX_REFRESH_URL,

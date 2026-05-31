@@ -8,8 +8,15 @@ import { Box, Link, Text } from '../ink.js';
 import { useKeybinding } from '../keybindings/useKeybinding.js';
 import { getSSLErrorHint } from '../services/api/errorUtils.js';
 import { sendNotification } from '../services/notifier.js';
-import { OAuthService } from '../services/oauth/index.js';
 import { getOauthAccountInfo, validateForceLoginOrg } from '../utils/auth.js';
+// OAuth service removed — inline stub
+class OAuthService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async startOAuthFlow(_onUrl?: any, _opts?: any): Promise<any> { throw new Error('OAuth removed') }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  handleManualAuthCodeInput(_input?: any) {}
+  cleanup() {}
+}
 import { logError } from '../utils/log.js';
 import { getSettings_DEPRECATED } from '../utils/settings/settings.js';
 import { ProviderManager } from './ProviderManager.js';

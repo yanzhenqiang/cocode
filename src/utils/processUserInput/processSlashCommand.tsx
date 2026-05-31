@@ -22,7 +22,8 @@ import { registerSkillHooks } from '../hooks/registerSkillHooks.js';
 import { logError } from '../log.js';
 import { createCommandInputMessage, createSyntheticUserCaveatMessage, createSystemMessage, createUserInterruptionMessage, createUserMessage, formatCommandInputTags, isCompactBoundaryMessage, isSystemLocalCommandMessage, prepareUserContent } from '../messages.js';
 import { parseToolListFromCLI } from '../permissions/permissionSetup.js';
-import { isOfficialMarketplaceName, parsePluginIdentifier } from '../plugins/pluginIdentifier.js';
+const isOfficialMarketplaceName = () => false
+const parsePluginIdentifier = () => null
 import { isRestrictedToPluginOnly, isSourceAdminTrusted } from '../settings/pluginOnlyPolicy.js';
 import { parseSlashCommand } from '../slashCommandParsing.js';
 import { recordSkillUsage } from '../suggestions/skillUsageTracking.js';

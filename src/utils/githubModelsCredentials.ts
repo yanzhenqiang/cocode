@@ -1,5 +1,5 @@
 import { isBareMode, isEnvTruthy } from './envUtils.js'
-import { getSecureStorage } from './secureStorage/index.js'
+const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
 
 const exchangeForCopilotToken = async (): Promise<never> => { throw new Error('GitHub device flow removed') }
 

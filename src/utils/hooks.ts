@@ -24,7 +24,7 @@ import {
   loadPluginOptions,
   substituteUserConfigVariables,
 } from './plugins/pluginOptionsStorage.js'
-import { getPluginDataDir } from './plugins/pluginDirectories.js'
+const getPluginDataDir = () => ''
 import {
   getSessionId,
   getProjectRoot,
@@ -54,7 +54,7 @@ import {
   logEvent,
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
 } from 'src/services/analytics/index.js'
-import { ALLOWED_OFFICIAL_MARKETPLACE_NAMES } from './plugins/schemas.js'
+const ALLOWED_OFFICIAL_MARKETPLACE_NAMES: string[] = []
 import {
   hookJSONOutputSchema,
   promptRequestSchema,

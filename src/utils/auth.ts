@@ -55,16 +55,12 @@ import { execSyncWithDefaults_DEPRECATED } from './execFileNoThrow.js'
 import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
 import { memoizeWithTTLAsync } from './memoize.js'
-import { getSecureStorage } from './secureStorage/index.js'
-import {
-  clearLegacyApiKeyPrefetch,
-  getLegacyApiKeyPrefetchResult,
-} from './secureStorage/keychainPrefetch.js'
-import {
-  clearKeychainCache,
-  getMacOsKeychainStorageServiceName,
-  getUsername,
-} from './secureStorage/macOsKeychainHelpers.js'
+const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
+const clearLegacyApiKeyPrefetch = () => {}
+const getLegacyApiKeyPrefetchResult = () => null
+const clearKeychainCache = () => {}
+const getMacOsKeychainStorageServiceName = () => ''
+const getUsername = () => ''
 import {
   getSettings_DEPRECATED,
   getSettingsForSource,

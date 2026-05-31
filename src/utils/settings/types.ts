@@ -6,7 +6,7 @@ import {
   EXTERNAL_PERMISSION_MODES,
   PERMISSION_MODES,
 } from '../permissions/PermissionMode.js'
-import { MarketplaceSourceSchema } from '../plugins/schemas.js'
+type MarketplaceSourceSchema = any
 import { CLAUDE_CODE_SETTINGS_SCHEMA_URL } from './constants.js'
 import { PermissionRuleSchema } from './permissionValidation.js'
 

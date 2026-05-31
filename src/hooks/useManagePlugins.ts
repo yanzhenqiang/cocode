@@ -18,14 +18,14 @@ import { logForDebugging } from '../utils/debug.js'
 import { logForDiagnosticsNoPII } from '../utils/diagLogs.js'
 import { toError } from '../utils/errors.js'
 import { logError } from '../utils/log.js'
-import { loadPluginAgents } from '../utils/plugins/loadPluginAgents.js'
-import { getPluginCommands } from '../utils/plugins/loadPluginCommands.js'
-import { loadPluginHooks } from '../utils/plugins/loadPluginHooks.js'
-import { loadPluginLspServers } from '../utils/plugins/lspPluginIntegration.js'
-import { loadPluginMcpServers } from '../utils/plugins/mcpPluginIntegration.js'
-import { detectAndUninstallDelistedPlugins } from '../utils/plugins/pluginBlocklist.js'
-import { getFlaggedPlugins } from '../utils/plugins/pluginFlagging.js'
-import { loadAllPlugins } from '../utils/plugins/pluginLoader.js'
+const loadPluginAgents = async () => []
+const getPluginCommands = () => []
+const loadPluginHooks = () => []
+const loadPluginLspServers = () => []
+const loadPluginMcpServers = () => []
+const detectAndUninstallDelistedPlugins = () => []
+const getFlaggedPlugins = () => ({})
+const loadAllPlugins = async () => ({ enabled: [], disabled: [], errors: [] })
 
 /**
  * Hook to manage plugin state and synchronize with AppState.
