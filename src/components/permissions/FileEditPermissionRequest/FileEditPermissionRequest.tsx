@@ -7,9 +7,7 @@ import type { z } from 'zod/v4';
 import { Text } from '../../../ink.js';
 import { FileEditTool } from '../../../tools/FileEditTool/FileEditTool.js';
 import { FilePermissionDialog } from '../FilePermissionDialog/FilePermissionDialog.js';
-type FileEdit = any
-type IDEDiffSupport = any
-const createSingleEditDiffConfig = () => ({})
+import { createSingleEditDiffConfig, type FileEdit, type IDEDiffSupport } from '../FilePermissionDialog/ideDiffConfig.js';
 import type { PermissionRequestProps } from '../PermissionRequest.js';
 type FileEditInput = z.infer<typeof FileEditTool.inputSchema>;
 const ideDiffSupport: IDEDiffSupport<FileEditInput> = {

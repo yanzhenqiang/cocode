@@ -211,7 +211,7 @@ async function launchFallbackAgentFromHookChains(
   canUseTool: CanUseToolFn,
 ): Promise<SpawnFallbackAgentResponse> {
   try {
-    const AgentTool = null
+    const { AgentTool } = await import('../tools/AgentTool/AgentTool.js')
     const normalizedModel = normalizeFallbackAgentModel(request.model)
     const result = await AgentTool.call(
       {

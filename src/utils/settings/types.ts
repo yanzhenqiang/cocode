@@ -26,7 +26,7 @@ export {
 
 // Also import for use within this file
 import { type HookCommand, HooksSchema } from '../../schemas/hooks.js'
-type AutoFixConfigSchema = any
+import { AutoFixConfigSchema } from '../../services/autoFix/autoFixConfig.js'
 import { count } from '../array.js'
 
 /**

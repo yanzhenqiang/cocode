@@ -1,10 +1,7 @@
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.js';
 import React from 'react';
 import type { LocalJSXCommandCall, LocalJSXCommandOnDone } from '../../types/command.js';
-// reviewRemote removed
-const checkOverageGate = () => false
-const confirmOverage = () => false
-const launchRemoteReview = () => {}
+import { checkOverageGate, confirmOverage, launchRemoteReview } from './reviewRemote.js';
 import { UltrareviewOverageDialog } from './UltrareviewOverageDialog.js';
 function contentBlocksToString(blocks: ContentBlockParam[]): string {
   return blocks.map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('\n');

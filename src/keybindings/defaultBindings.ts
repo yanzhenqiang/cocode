@@ -55,7 +55,7 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       escape: 'chat:cancel',
       // ctrl+x chord prefix avoids shadowing readline editing keys (ctrl+a/b/e/f/...).
       [MODE_CYCLE_KEY]: 'chat:cycleMode',
-      'ctrl+t': 'chat:thinkingToggle',
+      'meta+t': 'chat:thinkingToggle',
       enter: 'chat:submit',
       up: 'history:previous',
       down: 'history:next',
@@ -113,6 +113,10 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       space: 'confirm:toggle',
       // Cycle modes (used in file permission dialogs and teams dialog)
       'shift+tab': 'confirm:cycleMode',
+      // Toggle permission explanation in permission dialogs
+      'ctrl+e': 'confirm:toggleExplanation',
+      // Toggle permission debug info
+      'ctrl+d': 'permission:toggleDebug',
     },
   },
   {
