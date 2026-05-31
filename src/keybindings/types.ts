@@ -34,7 +34,6 @@ export type KeybindingAction =
   | 'history:previous'
   | 'history:next'
   | 'chat:cancel'
-  | 'chat:killAgents'
   | 'chat:cycleMode'
   | 'chat:modelPicker'
   | 'chat:fastMode'
