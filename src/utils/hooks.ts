@@ -21,14 +21,6 @@ import { getPlatform } from './platform.js'
 import { findGitBashPath, windowsPathToPosixPath } from './windowsPaths.js'
 import { DEFAULT_HOOK_SHELL } from './shell/shellProvider.js'
 import {
-  loadPluginOptions,
-  substituteUserConfigVariables,
-// pluginOptionsStorage removed
-const getPluginOption = () => undefined
-const setPluginOption = () => {}
-const getAllPluginOptions = () => ({})
-const getPluginDataDir = () => ''
-import {
   getSessionId,
   getProjectRoot,
   getIsNonInteractiveSession,
