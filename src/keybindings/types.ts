@@ -36,7 +36,6 @@ export type KeybindingAction =
   | 'chat:cancel'
   | 'chat:cycleMode'
   | 'chat:modelPicker'
-  | 'chat:fastMode'
   | 'chat:thinkingToggle'
   | 'chat:submit'
   | 'chat:newline'
