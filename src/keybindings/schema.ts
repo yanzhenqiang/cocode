@@ -98,7 +98,6 @@ export const KEYBINDING_ACTIONS = [
   'confirm:previousField',
   'confirm:cycleMode',
   'confirm:toggle',
-  'confirm:toggleExplanation',
   // Tabs navigation actions
   'tabs:next',
   'tabs:previous',
@@ -156,7 +155,6 @@ export const KEYBINDING_ACTIONS = [
   'plugin:toggle',
   'plugin:install',
   // Permission dialog actions
-  'permission:toggleDebug',
   // Settings config panel actions
   'settings:search',
   'settings:retry',

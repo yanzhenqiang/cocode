@@ -129,7 +129,6 @@ export function usePermissionExplainerUI(props) {
   } else {
     t2 = $[5];
   }
-  useKeybinding("confirm:toggleExplanation", t1, t2);
   let t3;
   if ($[6] !== promise || $[7] !== visible) {
     t3 = {

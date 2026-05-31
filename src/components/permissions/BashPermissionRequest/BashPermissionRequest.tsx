@@ -267,7 +267,6 @@ function BashPermissionRequestInner({
   const handleToggleDebug = useCallback(() => {
     setShowPermissionDebug(prev => !prev);
   }, []);
-  useKeybinding('permission:toggleDebug', handleToggleDebug, {
     context: 'Confirmation'
   });
 
