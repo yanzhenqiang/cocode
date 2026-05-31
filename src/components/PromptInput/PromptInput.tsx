@@ -1250,18 +1250,6 @@ function PromptInput({
   // Insert the at-mentioned reference (the file and, optionally, a line range) when
   // we receive an at-mentioned notification the IDE.
 
-  // Handler for chat:undo - undo last edit
-  const handleUndo = useCallback(() => {
-    if (canUndo) {
-      const previousState = undo();
-      if (previousState) {
-        trackAndSetInput(previousState.text);
-        setCursorOffset(previousState.cursorOffset);
-        setPastedContents(previousState.pastedContents);
-      }
-    }
-  }, [canUndo, undo, trackAndSetInput, setPastedContents]);
-
   // Handler for chat:newline - insert a newline at the cursor position
   const handleNewline = useCallback(() => {
     pushToBuffer(input, cursorOffset, pastedContents);
@@ -1611,14 +1599,13 @@ function PromptInput({
   // upOrHistoryUp/downOrHistoryDown can try cursor movement first and only
   // fall through to history when the cursor can't move further.
   const chatHandlers = useMemo(() => ({
-    'chat:undo': handleUndo,
     'chat:newline': handleNewline,
     'chat:stash': handleStash,
     'chat:modelPicker': handleModelPicker,
     'chat:thinkingToggle': handleThinkingToggle,
     'chat:cycleMode': handleCycleMode,
     'chat:imagePaste': handleImagePaste
-  }), [handleUndo, handleNewline, handleExternalEditor, handleStash, handleModelPicker, handleThinkingToggle, handleCycleMode, handleImagePaste]);
+  }), [handleNewline, handleExternalEditor, handleStash, handleModelPicker, handleThinkingToggle, handleCycleMode, handleImagePaste]);
   useKeybindings(chatHandlers, {
     context: 'Chat',
     isActive: !isModalOverlayActive

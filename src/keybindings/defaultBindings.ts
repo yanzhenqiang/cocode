@@ -63,10 +63,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       down: 'history:next',
       // Editing shortcuts (defined here, migration in progress)
       // Undo has two bindings to support different terminal behaviors:
-      // - ctrl+_ for legacy terminals (send \x1f control char)
-      // - ctrl+shift+- for Kitty protocol (sends physical key with modifiers)
-      'ctrl+_': 'chat:undo',
-      'ctrl+shift+-': 'chat:undo',
       return: 'chat:submit',
       'ctrl+s': 'chat:stash',
       // Image paste shortcut (platform-specific key defined above)
