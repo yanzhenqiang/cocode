@@ -21,19 +21,13 @@ import type { ValidationError } from './utils/settings/validation.js';
 // No runtime cost - erased at compile time.
 type ResumeConversationProps = React.ComponentProps<typeof import('./screens/ResumeConversation.js').ResumeConversation>;
 
-/**
- * Site ~3173: SnapshotUpdateDialog (agent memory snapshot update prompt).
- * Original callback wiring: onComplete={done}, onCancel={() => done('keep')}.
- */
-export async function launchSnapshotUpdateDialog(root: Root, props: {
+// SnapshotUpdateDialog removed — agents feature deleted
+export async function launchSnapshotUpdateDialog(_root: Root, _props: {
   agentType: string;
   scope: AgentMemoryScope;
   snapshotTimestamp: string;
 }): Promise<'merge' | 'keep' | 'replace'> {
-  const {
-    SnapshotUpdateDialog
-  } = await import('./components/agents/SnapshotUpdateDialog.js');
-  return showSetupDialog<'merge' | 'keep' | 'replace'>(root, done => <SnapshotUpdateDialog agentType={props.agentType} scope={props.scope} snapshotTimestamp={props.snapshotTimestamp} onComplete={done} onCancel={() => done('keep')} />);
+  return 'keep'
 }
 
 /**
