@@ -286,7 +286,7 @@ export function shouldMaintainProjectWorkingDir(): boolean {
  */
 export function isRunningOnHomespace(): boolean {
   return (
-    'false' &&
+    false &&
     isEnvTruthy(process.env.COO_RUNNING_ON_HOMESPACE)
   )
 }

@@ -44,7 +44,7 @@ function getCommitAndPRInstructions(): string {
   // your cover" instructions are the last line of defense against the model
   // volunteering an internal codename in a commit message.
   const undercoverSection =
-    'false' && isUndercover()
+    false && isUndercover()
       ? getUndercoverInstructions() + '\n'
       : ''
 

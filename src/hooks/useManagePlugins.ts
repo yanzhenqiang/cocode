@@ -223,7 +223,7 @@ export function useManagePlugins({
         // Kept separate from base metrics so it doesn't flow into
         // logForDiagnosticsNoPII.
         ant_enabled_names:
-          'false' && enabled.length > 0
+          false && enabled.length > 0
             ? (enabled
                 .map(p => p.name)
                 .sort()

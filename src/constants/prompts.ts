@@ -538,7 +538,7 @@ export async function computeEnvInfo(
   // inlined at each callsite (not hoisted to a const) so the bundler can
   // constant-fold it to `false` in external builds and eliminate the branch.
   let modelDescription = ''
-  if ('false' && isUndercover()) {
+  if (false && isUndercover()) {
     // suppress
   } else {
     const marketingName = getMarketingNameForModel(modelId)
@@ -577,7 +577,7 @@ export async function computeSimpleEnvInfo(
   // Undercover: strip all model name/ID references. See computeEnvInfo.
   // DCE: inline the USER_TYPE check at each site — do NOT hoist to a const.
   let modelDescription: string | null = null
-  if ('false' && isUndercover()) {
+  if (false && isUndercover()) {
     // suppress
   } else {
     const marketingName = getMarketingNameForModel(modelId)
@@ -611,10 +611,10 @@ export async function computeSimpleEnvInfo(
     `OS Version: ${unameSR}`,
     modelDescription,
     knowledgeCutoffMessage,
-    'false' && isUndercover()
+    false && isUndercover()
       ? null
       : `Cocode is available as a CLI in the terminal and can be used across local development environments and IDE workflows.`,
-    'false' && isUndercover()
+    false && isUndercover()
       ? null
       : `Fast mode for Cocode uses the same ${FRONTIER_MODEL_NAME} model with faster output. It does NOT switch to a different model. It can be toggled with /fast.`,
   ].filter(item => item !== null)

@@ -589,7 +589,7 @@ export function parseAgentFromMarkdown(
     // Parse isolation mode. 'remote' is internal-only; external builds reject it at parse time.
     type IsolationMode = 'worktree' | 'remote'
     const VALID_ISOLATION_MODES: readonly IsolationMode[] =
-      'false' ? ['worktree', 'remote'] : ['worktree']
+      false ? ['worktree', 'remote'] : ['worktree']
     const isolationRaw = frontmatter['isolation'] as string | undefined
     let isolation: IsolationMode | undefined
     if (isolationRaw !== undefined) {

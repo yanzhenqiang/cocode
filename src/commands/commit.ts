@@ -14,7 +14,7 @@ function getPromptContent(): string {
   const { commit: commitAttribution } = getAttributionTexts()
 
   let prefix = ''
-  if ('false' && isUndercover()) {
+  if (false && isUndercover()) {
     prefix = getUndercoverInstructions() + '\n'
   }
 

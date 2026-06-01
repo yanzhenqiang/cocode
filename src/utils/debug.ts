@@ -62,7 +62,7 @@ export const isDebugMode = memoize((): boolean => {
  * with --debug. Returns true if logging was already active.
  */
 export function enableDebugLogging(): boolean {
-  const wasActive = isDebugMode() || 'false'
+  const wasActive = isDebugMode() || false
   runtimeDebugEnabled = true
   isDebugMode.cache.clear?.()
   return wasActive
@@ -108,7 +108,7 @@ function shouldLogDebugMessage(message: string): boolean {
 
   // Non-ants only write debug logs when debug mode is active (via --debug at
   // startup or /debug mid-session). Ants always log for /share, bug reports.
-  if ('true' && !isDebugMode()) {
+  if (true && !isDebugMode()) {
     return false
   }
 

@@ -1342,11 +1342,11 @@ export async function analyzeContextUsage(
     memoryFiles: memoryFileDetails,
     mcpTools: mcpToolDetails,
     deferredBuiltinTools:
-      'false' ? deferredBuiltinDetails : undefined,
+      false ? deferredBuiltinDetails : undefined,
     systemTools:
-      'false' ? systemToolDetails : undefined,
+      false ? systemToolDetails : undefined,
     systemPromptSections:
-      'false' ? systemPromptSections : undefined,
+      false ? systemPromptSections : undefined,
     agents: agentDetails,
     slashCommands:
       slashCommandTokens > 0

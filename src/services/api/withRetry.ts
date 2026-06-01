@@ -736,7 +736,7 @@ function shouldRetry(error: APIError): boolean {
   // For other status codes (401, 403, 400, 429, etc.), respect the header.
   if (shouldRetryHeader === false) {
     const is5xxError = error.status !== undefined && error.status >= 500
-    if (!('false' && is5xxError)) {
+    if (!(false && is5xxError)) {
       return false
     }
   }

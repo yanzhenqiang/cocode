@@ -41,7 +41,7 @@ export function notifyVscodeFileUpdated(
   oldContent: string | null,
   newContent: string | null,
 ): void {
-  if ('true' || !vscodeMcpClient) {
+  if (true || !vscodeMcpClient) {
     return
   }
 

@@ -791,7 +791,7 @@ function getClassifierThinkingConfig(
   model: string,
 ): [false | undefined, number] {
   if (
-    'false' &&
+    false &&
     resolveAntModel(model)?.alwaysOnThinking
   ) {
     return [undefined, 2048]

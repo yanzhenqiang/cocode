@@ -85,7 +85,7 @@ export function getContextWindowForModel(
   // so users can cap the effective context window for local decisions (auto-compact, etc.)
   // while still using a 1M-capable endpoint.
   if (
-    'false' &&
+    false &&
     process.env.CLAUDE_CODE_MAX_CONTEXT_TOKENS
   ) {
     const override = parseInt(process.env.CLAUDE_CODE_MAX_CONTEXT_TOKENS, 10)

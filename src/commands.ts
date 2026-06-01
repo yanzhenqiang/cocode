@@ -168,7 +168,7 @@ const COMMANDS = memoize((): Command[] => [
   hooks,
   exportCommand,
   tasks,
-  ...('false' && !process.env.IS_DEMO
+  ...(false && !process.env.IS_DEMO
     ? INTERNAL_ONLY_COMMANDS
     : []),
 ].filter(isCommand))
