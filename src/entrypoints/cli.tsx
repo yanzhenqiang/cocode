@@ -116,16 +116,6 @@ async function main(): Promise<void> {
     }
   }
 
-  // Hydrate GitHub credentials after profile is applied so CLAUDE_CODE_USE_GITHUB from profile is available
-  {
-    const {
-      hydrateGithubModelsTokenFromSecureStorage,
-      refreshGithubModelsTokenIfNeeded,
-    } = await import('../utils/githubModelsCredentials.js')
-    await refreshGithubModelsTokenIfNeeded()
-    hydrateGithubModelsTokenFromSecureStorage()
-  }
-
   await validateProviderEnvForStartupOrExit()
 
   // #808: --model alone (no --provider) — route to the env var matching the

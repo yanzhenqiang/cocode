@@ -14,7 +14,6 @@ import {
   normalizeRecommendationGoal,
   type RecommendationGoal,
 } from './providerRecommendation.js'
-import { readGeminiAccessToken } from './geminiCredentials.js'
 import { getOllamaChatBaseUrl } from './providerDiscovery.js'
 import { getPrimaryModel } from './providerModels.js'
 import { getProviderValidationError } from './providerValidation.js'
@@ -1045,7 +1044,6 @@ export async function buildLaunchEnv(options: {
   resolveOllamaDefaultModel?: (goal: RecommendationGoal) => Promise<string>
   getAtomicChatChatBaseUrl?: (baseUrl?: string) => string
   resolveAtomicChatDefaultModel?: () => Promise<string | null>
-  readGeminiAccessToken?: () => string | undefined
 }): Promise<NodeJS.ProcessEnv> {
   const processEnv = options.processEnv ?? process.env
   const persistedEnv =
@@ -1102,8 +1100,6 @@ export async function buildLaunchEnv(options: {
   )
   const shellGeminiAccessToken =
     processEnv.GEMINI_ACCESS_TOKEN?.trim() || undefined
-  const storedGeminiAccessToken =
-    options.readGeminiAccessToken?.() ?? readGeminiAccessToken()
 
   const shellGeminiKey = sanitizeApiKey(
     processEnv.GEMINI_API_KEY ?? processEnv.GOOGLE_API_KEY,
@@ -1244,7 +1240,7 @@ export async function buildLaunchEnv(options: {
     env.GEMINI_AUTH_MODE = geminiAuthMode
     if (geminiAuthMode === 'access-token') {
       const geminiAccessToken =
-        shellGeminiAccessToken || storedGeminiAccessToken
+        shellGeminiAccessToken
       if (geminiAccessToken) {
         env.GEMINI_ACCESS_TOKEN = geminiAccessToken
       }
@@ -1481,7 +1477,6 @@ export async function buildStartupEnvFromProfile(options?: {
   hasConfiguredProviderProfile?: boolean
   getOllamaChatBaseUrl?: (baseUrl?: string) => string
   resolveOllamaDefaultModel?: (goal: RecommendationGoal) => Promise<string>
-  readGeminiAccessToken?: () => string | undefined
 }): Promise<NodeJS.ProcessEnv> {
   const processEnv = options?.processEnv ?? process.env
   const persisted = options?.persisted ?? loadProfileFile()
@@ -1560,7 +1555,6 @@ export async function buildStartupEnvFromProfile(options?: {
     getOllamaChatBaseUrl:
       options?.getOllamaChatBaseUrl ?? getOllamaChatBaseUrl,
     resolveOllamaDefaultModel: options?.resolveOllamaDefaultModel,
-    readGeminiAccessToken: options?.readGeminiAccessToken,
   })
 }
 
@@ -1598,7 +1592,6 @@ export async function applySavedProfileToCurrentSession(options: {
       goal: normalizeRecommendationGoal(processEnv.COCODE_PROFILE_GOAL),
       processEnv: buildEnvSource,
       getOllamaChatBaseUrl,
-      readGeminiAccessToken,
     })
     delete explicitEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED
     delete explicitEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED_ID
@@ -1647,7 +1640,6 @@ export async function applySavedProfileToCurrentSession(options: {
     goal: normalizeRecommendationGoal(processEnv.COCODE_PROFILE_GOAL),
     processEnv: baseEnv,
     getOllamaChatBaseUrl,
-    readGeminiAccessToken,
   })
   const validationEnv = isCodexOAuthProfile
     ? { ...nextEnv, CODEX_API_KEY: 'codex-oauth-token-for-validation' }

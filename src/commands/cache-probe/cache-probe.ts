@@ -3,7 +3,6 @@ import { resolveProviderRequest } from '../../services/api/providerConfig.js'
 import type { LocalCommandCall } from '../../types/command.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
-import { hydrateGithubModelsTokenFromSecureStorage } from '../../utils/githubModelsCredentials.js'
 import { getMainLoopModel } from '../../utils/model/model.js'
 
 const COPILOT_HEADERS: Record<string, string> = {
@@ -189,7 +188,6 @@ export const call: LocalCommandCall = async (args) => {
   // Resolve API key the same way the OpenAI shim does
   let apiKey = process.env.OPENAI_API_KEY ?? ''
   if (!apiKey && isGithub) {
-    hydrateGithubModelsTokenFromSecureStorage()
     apiKey =
       process.env.OPENAI_API_KEY ??
       process.env.GITHUB_TOKEN ??

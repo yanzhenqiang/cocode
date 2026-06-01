@@ -4,11 +4,6 @@ import { isIP } from 'node:net'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-import {
-  isCodexRefreshFailureCoolingDown,
-  readCodexCredentials,
-  type CodexCredentialBlob,
-} from '../../utils/codexCredentials.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 const asTrimmedString = (s: unknown): string | undefined => typeof s === 'string' ? s.trim() || undefined : undefined;
@@ -865,10 +860,12 @@ function resolveCodexAuthJsonCredentials(options: {
 }
 
 export function resolveStoredCodexCredentials(options: {
-  storedCredentials: Pick<
-    CodexCredentialBlob,
-    'apiKey' | 'accessToken' | 'idToken' | 'accountId'
-  >
+  storedCredentials: {
+    apiKey?: string
+    accessToken?: string
+    idToken?: string
+    accountId?: string
+  }
   envAccountId?: string
 }): ResolvedCodexCredentials {
   const { storedCredentials, envAccountId } = options
@@ -926,10 +923,12 @@ function resolveEnvOrAuthJsonCodexCredentials(
 
 export function resolveRuntimeCodexCredentials(options?: {
   env?: NodeJS.ProcessEnv
-  storedCredentials?: Pick<
-    CodexCredentialBlob,
-    'apiKey' | 'accessToken' | 'idToken' | 'accountId'
-  >
+  storedCredentials?: {
+    apiKey?: string
+    accessToken?: string
+    idToken?: string
+    accountId?: string
+  }
 }): ResolvedCodexCredentials {
   const env = options?.env ?? process.env
   const explicitCredentials = resolveEnvOrAuthJsonCodexCredentials(env, {
@@ -986,41 +985,6 @@ export function resolveCodexApiCredentials(
     envOrExplicitAuthJsonCredentials.authPath
   ) {
     return envOrExplicitAuthJsonCredentials
-  }
-
-  const storedCredentials = readCodexCredentials()
-  if (storedCredentials?.accessToken) {
-    const resolvedStoredCredentials = resolveStoredCodexCredentials({
-      storedCredentials,
-      envAccountId,
-    })
-
-    const shouldCheckDefaultAuthJson =
-      !resolvedStoredCredentials.accountId ||
-      isCodexRefreshFailureCoolingDown(storedCredentials)
-
-    if (!shouldCheckDefaultAuthJson) {
-      return resolvedStoredCredentials
-    }
-
-    const authPath = resolveCodexAuthPath(env)
-    const authJson = loadCodexAuthJson(authPath)
-    const resolvedAuthJsonCredentials = resolveCodexAuthJsonCredentials({
-      authJson,
-      authPath,
-      envAccountId,
-    })
-
-    if (resolvedAuthJsonCredentials.apiKey) {
-      return {
-        ...resolvedAuthJsonCredentials,
-        accountId:
-          resolvedAuthJsonCredentials.accountId ??
-          resolvedStoredCredentials.accountId,
-      }
-    }
-
-    return resolvedStoredCredentials
   }
 
   return resolveEnvOrAuthJsonCodexCredentials(env)

@@ -46,7 +46,6 @@ import {
 import { logAntError, logForDebugging } from './debug.js'
 import {
   getClaudeConfigHomeDir,
-  isBareMode,
   isEnvTruthy,
   isRunningOnHomespace,
 } from './envUtils.js'
@@ -90,9 +89,6 @@ function isManagedOAuthContext(): boolean {
 /** Whether we are supporting direct 1P auth. */
 // this code is closely related to getAuthTokenSource
 export function isAnthropicAuthEnabled(): boolean {
-  // --bare: API-key-only, never OAuth.
-  if (isBareMode()) return false
-
   // `claude ssh` remote: ANTHROPIC_UNIX_SOCKET tunnels API calls through a
   // local auth-injecting proxy. The launcher sets CLAUDE_CODE_OAUTH_TOKEN as a
   // placeholder iff the local side is a subscriber (so the remote includes the
@@ -154,16 +150,6 @@ export function isAnthropicAuthEnabled(): boolean {
 /** Where the auth token is being sourced from, if any. */
 // this code is closely related to isAnthropicAuthEnabled
 export function getAuthTokenSource() {
-  // --bare: API-key-only. apiKeyHelper (from --settings) is the only
-  // bearer-token-shaped source allowed. OAuth env vars, FD tokens, and
-  // keychain are ignored.
-  if (isBareMode()) {
-    if (getConfiguredApiKeyHelper()) {
-      return { source: 'apiKeyHelper' as const, hasToken: true }
-    }
-    return { source: 'none' as const, hasToken: false }
-  }
-
   if (process.env.ANTHROPIC_AUTH_TOKEN && !isManagedOAuthContext()) {
     return { source: 'ANTHROPIC_AUTH_TOKEN' as const, hasToken: true }
   }
@@ -239,24 +225,6 @@ export function getAnthropicApiKeyWithSource(
   key: null | string
   source: ApiKeySource
 } {
-  // --bare: hermetic auth. Only ANTHROPIC_API_KEY env or apiKeyHelper from
-  // the --settings flag. Never touches keychain, config file, or approval
-  // lists. 3P (Vertex/Foundry) uses provider creds, not this path.
-  if (isBareMode()) {
-    if (process.env.ANTHROPIC_API_KEY) {
-      return { key: process.env.ANTHROPIC_API_KEY, source: 'ANTHROPIC_API_KEY' }
-    }
-    if (getConfiguredApiKeyHelper()) {
-      return {
-        key: opts.skipRetrievingKeyFromApiKeyHelper
-          ? null
-          : getApiKeyFromApiKeyHelperCached(),
-        source: 'apiKeyHelper',
-      }
-    }
-    return { key: null, source: 'none' }
-  }
-
   // On homespace, don't use ANTHROPIC_API_KEY (use Console key instead)
   // https://anthropic.slack.com/archives/C08428WSLKV/p1747331773214779
   const apiKeyEnv = isRunningOnHomespace()
@@ -361,13 +329,8 @@ export function getAnthropicApiKeyWithSource(
 
 /**
  * Get the configured apiKeyHelper from settings.
- * In bare mode, only the --settings flag source is consulted — apiKeyHelper
- * from ~/.claude/settings.json or project settings is ignored.
  */
 export function getConfiguredApiKeyHelper(): string | undefined {
-  if (isBareMode()) {
-    return getSettingsForSource('flagSettings')?.apiKeyHelper
-  }
   const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.apiKeyHelper
 }
@@ -822,7 +785,6 @@ export function prefetchGcpCredentialsIfSafe(): void {
 /** @private Use {@link getAnthropicApiKey} or {@link getAnthropicApiKeyWithSource} */
 export const getApiKeyFromConfigOrMacOSKeychain = memoize(
   (): { key: string; source: ApiKeySource } | null => {
-    if (isBareMode()) return null
     // TODO: migrate to SecureStorage
     if (process.platform === 'darwin') {
       // keychainPrefetch.ts fires this read at main.tsx top-level in parallel
@@ -1025,8 +987,6 @@ export function saveOAuthTokensIfNeeded(tokens: OAuthTokens): {
 }
 
 export const getClaudeAIOAuthTokens = memoize((): OAuthTokens | null => {
-  // --bare: API-key-only. No OAuth env tokens, no keychain, no credentials file.
-  if (isBareMode()) return null
 
   // Check for force-set OAuth token from environment variable
   if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
@@ -1169,7 +1129,6 @@ async function handleOAuth401ErrorImpl(
  * (which don't hit the keychain), and only uses async for storage reads.
  */
 export async function getClaudeAIOAuthTokensAsync(): Promise<OAuthTokens | null> {
-  if (isBareMode()) return null
 
   // Env var and FD tokens are sync and don't hit the keychain
   if (
