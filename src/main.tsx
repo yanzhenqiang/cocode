@@ -54,14 +54,12 @@ import { getInitialEffortSetting, parseEffortValue } from './utils/effort.js';
 import { getInitialFastModeSetting, isFastModeEnabled, prefetchFastModeStatus, resolveFastModeStatusFromCache } from './utils/fastMode.js';
 import { applyConfigEnvironmentVariables } from './utils/managedEnv.js';
 import { createSystemMessage, createUserMessage } from './utils/messages.js';
-import { getPlatform } from './utils/platform.js';
 import { getBaseRenderOptions } from './utils/renderOptions.js';
 import { getSessionIngressAuthToken } from './utils/sessionIngressAuth.js';
 import { settingsChangeDetector } from './utils/settings/changeDetector.js';
 import { skillChangeDetector } from './utils/skills/skillChangeDetector.js';
 import { jsonParse, writeFileSync_DEPRECATED } from './utils/slowOperations.js';
 import { initializeWarningHandler } from './utils/warningHandler.js';
-import { isWorktreeModeEnabled } from './utils/worktreeModeEnabled.js';
 
 // Lazy require to avoid circular dependency: teammate.ts -> AppState.tsx -> ... -> main.tsx
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -168,7 +166,6 @@ import { migrateChangelogFromConfig } from './utils/releaseNotes.js';
 import { SandboxManager } from './utils/sandbox/sandbox-adapter.js';
 import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thinking.js';
 import { initUser, resetUserCache } from './utils/user.js';
-import { getTmuxInstallInstructions, isTmuxAvailable, parsePRReference } from './utils/worktree.js';
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 profileCheckpoint('main_tsx_imports_loaded');
@@ -781,45 +778,6 @@ async function run(): Promise<CommanderCommand> {
     // Extract disable slash commands flag
     const disableSlashCommands = options.disableSlashCommands || false;
 
-    // Extract worktree option
-    // worktree can be true (flag without value) or a string (custom name or PR reference)
-    const worktreeOption = isWorktreeModeEnabled() ? (options as {
-      worktree?: boolean | string;
-    }).worktree : undefined;
-    let worktreeName = typeof worktreeOption === 'string' ? worktreeOption : undefined;
-    const worktreeEnabled = worktreeOption !== undefined;
-
-    // Check if worktree name is a PR reference (#N or GitHub PR URL)
-    let worktreePRNumber: number | undefined;
-    if (worktreeName) {
-      const prNum = parsePRReference(worktreeName);
-      if (prNum !== null) {
-        worktreePRNumber = prNum;
-        worktreeName = undefined; // slug will be generated in setup()
-      }
-    }
-
-    // Extract tmux option (requires --worktree)
-    const tmuxEnabled = isWorktreeModeEnabled() && (options as {
-      tmux?: boolean;
-    }).tmux === true;
-
-    // Validate tmux option
-    if (tmuxEnabled) {
-      if (!worktreeEnabled) {
-        process.stderr.write(chalk.red('Error: --tmux requires --worktree\n'));
-        process.exit(1);
-      }
-      if (getPlatform() === 'windows') {
-        process.stderr.write(chalk.red('Error: --tmux is not supported on Windows\n'));
-        process.exit(1);
-      }
-      if (!(await isTmuxAvailable())) {
-        process.stderr.write(chalk.red(`Error: tmux is not installed.\n${getTmuxInstallInstructions()}\n`));
-        process.exit(1);
-      }
-    }
-
     // Allow env var to enable partial messages (used by sandbox gateway for baku)
     const effectiveIncludePartialMessages = includePartialMessages || isEnvTruthy(process.env.CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES);
 
@@ -1176,7 +1134,7 @@ async function run(): Promise<CommanderCommand> {
       }
     }
 
-    // IMPORTANT: setup() must be called before any other code that depends on the cwd or worktree setup
+    // IMPORTANT: setup() must be called before any other code that depends on the cwd
     profileCheckpoint('action_before_setup');
     logForDebugging('[STARTUP] Running setup()...');
     const setupStart = Date.now();
@@ -1186,9 +1144,7 @@ async function run(): Promise<CommanderCommand> {
     const messagingSocketPath = undefined;
     // Parallelize setup() with commands+agents loading. setup()'s ~28ms is
     // mostly startUdsMessaging (socket bind, ~20ms) — not disk-bound, so it
-    // doesn't contend with getCommands' file reads. Gated on !worktreeEnabled
-    // since --worktree makes setup() process.chdir() (setup.ts:203), and
-    // commands/agents need the post-chdir cwd.
+    // doesn't contend with getCommands' file reads.
     const preSetupCwd = getCwd();
     // Register bundled skills/plugins before kicking getCommands() — they're
     // pure in-memory array pushes (<1ms, zero I/O) that getBundledSkills()
@@ -1198,13 +1154,13 @@ async function run(): Promise<CommanderCommand> {
       initBuiltinPlugins();
       initBundledSkills();
     }
-    const setupPromise = setup(preSetupCwd, permissionMode, allowDangerouslySkipPermissions, worktreeEnabled, worktreeName, tmuxEnabled, sessionId ? validateUuid(sessionId) : undefined, worktreePRNumber, messagingSocketPath);
-    const commandsPromise = worktreeEnabled ? null : getCommands(preSetupCwd);
-    const agentDefsPromise = worktreeEnabled ? null : getAgentDefinitionsWithOverrides(preSetupCwd);
+    const setupPromise = setup(preSetupCwd, permissionMode, allowDangerouslySkipPermissions, sessionId ? validateUuid(sessionId) : undefined, messagingSocketPath);
+    const commandsPromise = getCommands(preSetupCwd);
+    const agentDefsPromise = getAgentDefinitionsWithOverrides(preSetupCwd);
     // Suppress transient unhandledRejection if these reject during the
     // ~28ms setupPromise await before Promise.all joins them below.
-    commandsPromise?.catch(() => {});
-    agentDefsPromise?.catch(() => {});
+    commandsPromise.catch(() => {});
+    agentDefsPromise.catch(() => {});
     await setupPromise;
     logForDebugging(`[STARTUP] setup() completed in ${Date.now() - setupStart}ms`);
     profileCheckpoint('action_after_setup');
@@ -1233,9 +1189,8 @@ async function run(): Promise<CommanderCommand> {
 
       // Spawn git status/log/branch now so the subprocess execution overlaps
       // with the getCommands await below and startDeferredPrefetches. After
-      // setup() so cwd is final (setup.ts:254 may process.chdir(worktreePath)
-      // for --worktree) and after the applyConfigEnvironmentVariables above
-      // so PATH/GIT_DIR/GIT_WORK_TREE from all sources (trusted + project)
+      // setup() so cwd is final and after the applyConfigEnvironmentVariables
+      // above so PATH/GIT_DIR/GIT_WORK_TREE from all sources (trusted + project)
       // are applied. getSystemContext is memoized; the
       // prefetchSystemContextIfSafe call in startDeferredPrefetches becomes
       // a cache hit. The microtask from await getIsGit() drains at the
@@ -1283,14 +1238,12 @@ async function run(): Promise<CommanderCommand> {
     const userSpecifiedModel = options.model === 'default' ? getDefaultMainLoopModel() : options.model;
     const userSpecifiedFallbackModel = fallbackModel === 'default' ? getDefaultMainLoopModel() : fallbackModel;
 
-    // Reuse preSetupCwd unless setup() chdir'd (worktreeEnabled). Saves a
-    // getCwd() syscall in the common path.
-    const currentCwd = worktreeEnabled ? getCwd() : preSetupCwd;
+    // Reuse preSetupCwd. Saves a getCwd() syscall in the common path.
+    const currentCwd = preSetupCwd;
     logForDebugging('[STARTUP] Loading commands and agents...');
     const commandsStart = Date.now();
-    // Join the promises kicked before setup() (or start fresh if
-    // worktreeEnabled gated the early kick). Both memoized by cwd.
-    const [commands, agentDefinitionsResult] = await Promise.all([commandsPromise ?? getCommands(currentCwd), agentDefsPromise ?? getAgentDefinitionsWithOverrides(currentCwd)]);
+    // Join the promises kicked before setup(). Both memoized by cwd.
+    const [commands, agentDefinitionsResult] = await Promise.all([commandsPromise, agentDefsPromise]);
     logForDebugging(`[STARTUP] Commands and agents loaded in ${Date.now() - commandsStart}ms`);
     profileCheckpoint('action_commands_loaded');
 
@@ -1643,7 +1596,6 @@ async function run(): Promise<CommanderCommand> {
       numAllowedTools: allowedTools.length,
       numDisallowedTools: disallowedTools.length,
       mcpClientCount: Object.keys(allMcpConfigs).length,
-      worktreeEnabled,
       skipWebFetchPreflight: getInitialSettings().skipWebFetchPreflight,
       githubActionInputs: process.env.GITHUB_ACTION_INPUTS,
       dangerouslySkipPermissionsPassed: dangerouslySkipPermissions ?? false,
@@ -2399,10 +2351,6 @@ async function run(): Promise<CommanderCommand> {
     }
   }).version(`${MACRO.DISPLAY_VERSION ?? MACRO.VERSION} (CoCode)`, '-v, --version', 'Output the version number');
 
-  // Worktree flags
-  program.option('-w, --worktree [name]', 'Create a new git worktree for this session (optionally specify a name)');
-  program.option('--tmux', 'Create a tmux session for the worktree (requires --worktree). Uses iTerm2 native panes when available; use --tmux=classic for traditional tmux.');
-  // TODO: --agent flag kept but usage expected to change
   // TODO: --agent flag kept but usage expected to change
   profileCheckpoint('run_main_options_built');
 
@@ -2618,7 +2566,6 @@ async function logTenguInit({
   numAllowedTools,
   numDisallowedTools,
   mcpClientCount,
-  worktreeEnabled,
   skipWebFetchPreflight,
   githubActionInputs,
   dangerouslySkipPermissionsPassed,
@@ -2641,7 +2588,6 @@ async function logTenguInit({
   numAllowedTools: number;
   numDisallowedTools: number;
   mcpClientCount: number;
-  worktreeEnabled: boolean;
   skipWebFetchPreflight: boolean | undefined;
   githubActionInputs: string | undefined;
   dangerouslySkipPermissionsPassed: boolean;
@@ -2667,7 +2613,6 @@ async function logTenguInit({
       numAllowedTools,
       numDisallowedTools,
       mcpClientCount,
-      worktree: worktreeEnabled,
       skipWebFetchPreflight,
       ...(githubActionInputs && {
         githubActionInputs: githubActionInputs as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS

@@ -199,35 +199,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Fast-path for --worktree --tmux: exec into tmux before loading full CLI
-  const hasTmuxFlag = args.includes('--tmux') || args.includes('--tmux=classic');
-  if (hasTmuxFlag && (args.includes('-w') || args.includes('--worktree') || args.some(a => a.startsWith('--worktree=')))) {
-    profileCheckpoint('cli_tmux_worktree_fast_path');
-    const {
-      enableConfigs
-    } = await import('../utils/config.js');
-    enableConfigs();
-    const {
-      isWorktreeModeEnabled
-    } = await import('../utils/worktreeModeEnabled.js');
-    if (isWorktreeModeEnabled()) {
-      const {
-        execIntoTmuxWorktree
-      } = await import('../utils/worktree.js');
-      const result = await execIntoTmuxWorktree(args);
-      if (result.handled) {
-        return;
-      }
-      // If not handled (e.g., error), fall through to normal CLI
-      if (result.error) {
-        const {
-          exitWithError
-        } = await import('../utils/process.js');
-        exitWithError(result.error);
-      }
-    }
-  }
-
   // Redirect common update flag mistakes to the update subcommand
   if (args.length === 1 && (args[0] === '--update' || args[0] === '--upgrade')) {
     process.argv = [process.argv[0]!, process.argv[1]!, 'update'];

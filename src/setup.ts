@@ -44,22 +44,12 @@ import type { PermissionMode } from './utils/permissions/PermissionMode.js'
 import { getPlanSlug } from './utils/plans.js'
 import { saveWorktreeState } from './utils/sessionStorage.js'
 import { profileCheckpoint } from './utils/startupProfiler.js'
-import {
-  createTmuxSessionForWorktree,
-  createWorktreeForSession,
-  generateTmuxSessionName,
-  worktreeBranchName,
-} from './utils/worktree.js'
 
 export async function setup(
   cwd: string,
   permissionMode: PermissionMode,
   allowDangerouslySkipPermissions: boolean,
-  worktreeEnabled: boolean,
-  worktreeName: string | undefined,
-  tmuxEnabled: boolean,
   customSessionId?: string | null,
-  worktreePRNumber?: number,
   _messagingSocketPath?: string,
 ): Promise<void> {
   logForDiagnosticsNoPII('info', 'setup_started')
@@ -146,119 +136,6 @@ export async function setup(
 
   // Initialize FileChanged hook watcher — sync, reads hook config snapshot
   initializeFileChangedWatcher(cwd)
-
-  // Handle worktree creation if requested
-  // IMPORTANT: this must be called befiore getCommands(), otherwise /eject won't be available.
-  if (worktreeEnabled) {
-    // Mirrors bridgeMain.ts: hook-configured sessions can proceed without git
-    // so createWorktreeForSession() can delegate to the hook (non-git VCS).
-    const hasHook = hasWorktreeCreateHook()
-    const inGit = await getIsGit()
-    if (!hasHook && !inGit) {
-      process.stderr.write(
-        chalk.red(
-          `Error: Can only use --worktree in a git repository, but ${chalk.bold(cwd)} is not a git repository. ` +
-            `Configure a WorktreeCreate hook in settings.json to use --worktree with other VCS systems.\n`,
-        ),
-      )
-      process.exit(1)
-    }
-
-    const slug = worktreePRNumber
-      ? `pr-${worktreePRNumber}`
-      : (worktreeName ?? getPlanSlug())
-
-    // Git preamble runs whenever we're in a git repo — even if a hook is
-    // configured — so --tmux keeps working for git users who also have a
-    // WorktreeCreate hook. Only hook-only (non-git) mode skips it.
-    let tmuxSessionName: string | undefined
-    if (inGit) {
-      // Resolve to main repo root (handles being invoked from within a worktree).
-      // findCanonicalGitRoot is sync/filesystem-only/memoized; the underlying
-      // findGitRoot cache was already warmed by getIsGit() above, so this is ~free.
-      const mainRepoRoot = findCanonicalGitRoot(getCwd())
-      if (!mainRepoRoot) {
-        process.stderr.write(
-          chalk.red(
-            `Error: Could not determine the main git repository root.\n`,
-          ),
-        )
-        process.exit(1)
-      }
-
-      // If we're inside a worktree, switch to the main repo for worktree creation
-      if (mainRepoRoot !== (findGitRoot(getCwd()) ?? getCwd())) {
-        logForDiagnosticsNoPII('info', 'worktree_resolved_to_main_repo')
-        process.chdir(mainRepoRoot)
-        setCwd(mainRepoRoot)
-      }
-
-      tmuxSessionName = tmuxEnabled
-        ? generateTmuxSessionName(mainRepoRoot, worktreeBranchName(slug))
-        : undefined
-    } else {
-      // Non-git hook mode: no canonical root to resolve, so name the tmux
-      // session from cwd — generateTmuxSessionName only basenames the path.
-      tmuxSessionName = tmuxEnabled
-        ? generateTmuxSessionName(getCwd(), worktreeBranchName(slug))
-        : undefined
-    }
-
-    let worktreeSession: Awaited<ReturnType<typeof createWorktreeForSession>>
-    try {
-      worktreeSession = await createWorktreeForSession(
-        getSessionId(),
-        slug,
-        tmuxSessionName,
-        worktreePRNumber ? { prNumber: worktreePRNumber } : undefined,
-      )
-    } catch (error) {
-      process.stderr.write(
-        chalk.red(`Error creating worktree: ${errorMessage(error)}\n`),
-      )
-      process.exit(1)
-    }
-
-    logEvent('tengu_worktree_created', { tmux_enabled: tmuxEnabled })
-
-    // Create tmux session for the worktree if enabled
-    if (tmuxEnabled && tmuxSessionName) {
-      const tmuxResult = await createTmuxSessionForWorktree(
-        tmuxSessionName,
-        worktreeSession.worktreePath,
-      )
-      if (tmuxResult.created) {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
-        console.log(
-          chalk.green(
-            `Created tmux session: ${chalk.bold(tmuxSessionName)}\nTo attach: ${chalk.bold(`tmux attach -t ${tmuxSessionName}`)}`,
-          ),
-        )
-      } else {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
-        console.error(
-          chalk.yellow(
-            `Warning: Failed to create tmux session: ${tmuxResult.error}`,
-          ),
-        )
-      }
-    }
-
-    process.chdir(worktreeSession.worktreePath)
-    setCwd(worktreeSession.worktreePath)
-    setOriginalCwd(getCwd())
-    // --worktree means the worktree IS the session's project, so skills/hooks/
-    // cron/etc. should resolve here. (EnterWorktreeTool mid-session does NOT
-    // touch projectRoot — that's a throwaway worktree, project stays stable.)
-    setProjectRoot(getCwd())
-    saveWorktreeState(worktreeSession)
-    // Clear memory files cache since originalCwd has changed
-    clearMemoryFileCaches()
-    // Settings cache was populated in init() (via applySafeConfigEnvironmentVariables)
-    // and again at captureHooksConfigSnapshot() above, both from the original dir's
-    // .claude/settings.json. Re-read from the worktree and re-capture hooks.
-    updateHooksConfigSnapshot()
-  }
 
   // Background jobs - only critical registrations that must happen before first query
   logForDiagnosticsNoPII('info', 'setup_background_jobs_starting')
