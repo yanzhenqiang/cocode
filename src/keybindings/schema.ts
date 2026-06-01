@@ -16,7 +16,6 @@ export const KEYBINDING_CONTEXTS = [
   'Confirmation',
   'Help',
   'Transcript',
-  'HistorySearch',
   'Task',
   'ThemePicker',
   'Settings',
@@ -44,7 +43,6 @@ export const KEYBINDING_CONTEXT_DESCRIPTIONS: Record<
   Confirmation: 'When a confirmation/permission dialog is shown',
   Help: 'When the help overlay is open',
   Transcript: 'When viewing the transcript',
-  HistorySearch: 'When searching command history (ctrl+r)',
   Task: 'When a task/agent is running in the foreground',
   ThemePicker: 'When the theme picker is open',
   Settings: 'When the settings menu is open',
@@ -73,7 +71,6 @@ export const KEYBINDING_ACTIONS = [
   'app:globalSearch',
   'app:quickOpen',
   // History navigation
-  'history:search',
   'history:previous',
   'history:next',
   // Chat input actions
@@ -105,11 +102,6 @@ export const KEYBINDING_ACTIONS = [
   // Transcript viewer actions
   'transcript:toggleShowAll',
   'transcript:exit',
-  // History search actions
-  'historySearch:next',
-  'historySearch:accept',
-  'historySearch:cancel',
-  'historySearch:execute',
   // Task/agent actions
   'task:background',
   // Theme picker actions

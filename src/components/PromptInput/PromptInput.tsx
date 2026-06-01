@@ -21,7 +21,7 @@ import { formatImageRef, formatPastedTextRef, getPastedTextRefNumLines, parseRef
 import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
 import { type HistoryMode, useArrowKeyHistory } from '../../hooks/useArrowKeyHistory.js';
 import { useDoublePress } from '../../hooks/useDoublePress.js';
-import { useHistorySearch } from '../../hooks/useHistorySearch.js';
+const useHistorySearch = () => ({ historyQuery: '', setHistoryQuery: (_: string) => {}, historyMatch: undefined, historyFailedMatch: false })
 import { useInputBuffer } from '../../hooks/useInputBuffer.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
@@ -89,7 +89,6 @@ import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { getVisibleAgentTasks, useCoordinatorTaskCount } from '../CoordinatorAgentStatus.js';
 import { getEffortNotificationText } from '../EffortIndicator.js';
 import { getFastIconString } from '../FastIcon.js';
-import { HistorySearchDialog } from '../HistorySearchDialog.js';
 import { ModelPicker } from '../ModelPicker.js';
 import TextInput from '../TextInput.js';
 import { ThinkingToggle } from '../ThinkingToggle.js';
@@ -330,15 +329,10 @@ function PromptInput({
     }
     return toolPermissionContext;
   }, [viewedTeammate, toolPermissionContext]);
-  const {
-    historyQuery,
-    setHistoryQuery,
-    historyMatch,
-    historyFailedMatch
-  } = useHistorySearch(entry => {
-    setPastedContents(entry.pastedContents);
-    void onSubmit(entry.display);
-  }, input, trackAndSetInput, setCursorOffset, cursorOffset, onModeChange, mode, isSearchingHistory, setIsSearchingHistory, setPastedContents, pastedContents);
+  const historyQuery = ''
+  const setHistoryQuery = (_: string) => {}
+  const historyMatch = undefined
+  const historyFailedMatch = false
   // Counter for paste IDs (shared between images and text).
   // Compute initial value once from existing messages (for --continue/--resume).
   // useRef(fn()) evaluates fn() on every render and discards the result after
@@ -1632,16 +1626,6 @@ function PromptInput({
     isActive: helpOpen
   });
 
-  useKeybinding('history:search', () => {
-    if (feature('HISTORY_PICKER')) {
-      setShowHistoryPicker(true);
-      setHelpOpen(false);
-    }
-  }, {
-    context: 'Global',
-    isActive: feature('HISTORY_PICKER') ? !isModalOverlayActive : false
-  });
-
   // Handle Ctrl+C to abort speculation when idle (not loading)
   // CancelRequestHandler only handles Ctrl+C during active tasks
   useKeybinding('app:interrupt', () => {
@@ -2025,18 +2009,6 @@ function PromptInput({
       insertTextAtCursor(/\s/.test(cursorChar) ? text : ` ${text}`);
     };
   }
-  if (feature('HISTORY_PICKER') && showHistoryPicker) {
-    return <HistorySearchDialog initialQuery={input} onSelect={entry => {
-      const entryMode = getModeFromInput(entry.display);
-      const value = getValueFromInput(entry.display);
-      onModeChange(entryMode);
-      trackAndSetInput(value);
-      setPastedContents(entry.pastedContents);
-      setCursorOffset(value.length);
-      setShowHistoryPicker(false);
-    }} onCancel={() => setShowHistoryPicker(false)} />;
-  }
-
   // Show loop mode menu when requested (internal-only, eliminated from external builds)
   if (modelPickerElement) {
     return modelPickerElement;

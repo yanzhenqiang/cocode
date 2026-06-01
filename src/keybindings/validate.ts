@@ -64,7 +64,6 @@ const VALID_CONTEXTS: KeybindingContextName[] = [
   'Confirmation',
   'Help',
   'Transcript',
-  'HistorySearch',
   'Task',
   'ThemePicker',
   'Settings',

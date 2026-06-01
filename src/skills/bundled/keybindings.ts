@@ -68,7 +68,6 @@ function inferContextFromAction(action: string): string {
     confirm: 'Confirmation',
     tabs: 'Tabs',
     transcript: 'Transcript',
-    historySearch: 'HistorySearch',
     task: 'Task',
     theme: 'ThemePicker',
     help: 'Help',

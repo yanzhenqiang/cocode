@@ -41,7 +41,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       'ctrl+l': 'app:redraw',
       'ctrl+t': 'app:toggleTodos',
       'ctrl+o': 'app:toggleTranscript',
-      'ctrl+r': 'history:search',
       // File navigation. cmd+ bindings only fire on kitty-protocol terminals;
       // ctrl+shift is the portable fallback.
       ...(feature('QUICK_SEARCH')
@@ -138,17 +137,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       // q — pager convention (less, tmux copy-mode). Transcript is a modal
       // reading view with no prompt, so q-as-literal-char has no owner.
       q: 'transcript:exit',
-    },
-  },
-  {
-    context: 'HistorySearch',
-    bindings: {
-      'ctrl+r': 'historySearch:next',
-      escape: 'historySearch:accept',
-      tab: 'historySearch:accept',
-      'ctrl+c': 'historySearch:cancel',
-      enter: 'historySearch:execute',
-      return: 'historySearch:execute',
     },
   },
   {

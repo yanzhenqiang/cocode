@@ -20,7 +20,6 @@ import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 const TeamStatus = (_props: any) => null;
 const isInProcessEnabled = () => false;
 import { useAppState, useAppStateStore } from 'src/state/AppState.js';
-import HistorySearchInput from './HistorySearchInput.js';
 import { usePrStatus } from '../../hooks/usePrStatus.js';
 import { KeyboardShortcutHint } from '../design-system/KeyboardShortcutHint.js';
 import { Byline } from '../design-system/Byline.js';
