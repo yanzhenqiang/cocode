@@ -233,12 +233,6 @@ async function main(): Promise<void> {
     process.argv = [process.argv[0]!, process.argv[1]!, 'update'];
   }
 
-  // --bare: set SIMPLE early so gates fire during module eval / commander
-  // option building (not just inside the action handler).
-  if (args.includes('--bare')) {
-    process.env.CLAUDE_CODE_SIMPLE = '1';
-  }
-
   // No special flags detected, load and run the full CLI
   if (process.env.COCODE_DISABLE_EARLY_INPUT !== '1') {
     const {

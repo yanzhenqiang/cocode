@@ -397,23 +397,21 @@ export const FileEditTool = buildTool({
     // Discover skills from this file's path (fire-and-forget, non-blocking)
     // Skip in simple mode - no skills available
     const cwd = getCwd()
-    if (!isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
-      const newSkillDirs = await discoverSkillDirsForPaths(
-        [absoluteFilePath],
-        cwd,
-      )
-      if (newSkillDirs.length > 0) {
-        // Store discovered dirs for attachment display
-        for (const dir of newSkillDirs) {
-          dynamicSkillDirTriggers?.add(dir)
-        }
-        // Don't await - let skill loading happen in the background
-        addSkillDirectories(newSkillDirs).catch(() => {})
+    const newSkillDirs = await discoverSkillDirsForPaths(
+      [absoluteFilePath],
+      cwd,
+    )
+    if (newSkillDirs.length > 0) {
+      // Store discovered dirs for attachment display
+      for (const dir of newSkillDirs) {
+        dynamicSkillDirTriggers?.add(dir)
       }
-
-      // Activate conditional skills whose path patterns match this file
-      activateConditionalSkillsForPaths([absoluteFilePath], cwd)
+      // Don't await - let skill loading happen in the background
+      addSkillDirectories(newSkillDirs).catch(() => {})
     }
+
+    // Activate conditional skills whose path patterns match this file
+    activateConditionalSkillsForPaths([absoluteFilePath], cwd)
 
     // Ensure parent directory exists before the atomic read-modify-write section.
     // These awaits must stay OUTSIDE the critical section below — a yield between

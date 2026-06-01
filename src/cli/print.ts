@@ -294,7 +294,6 @@ import { jsonStringify } from '../utils/slowOperations.js'
 import { skillChangeDetector } from '../utils/skills/skillChangeDetector.js'
 import { getCommands, clearCommandsCache } from '../commands.js'
 import {
-  isBareMode,
   isEnvTruthy,
 } from '../utils/envUtils.js'
 const installPluginsForHeadless = async () => {}
@@ -1572,12 +1571,10 @@ function runHeadlessStreaming(
   let pluginInstallPromise: Promise<void> | null = null
   // --bare / SIMPLE: skip plugin install. Scripted calls don't add plugins
   // mid-session; the next interactive run reconciles.
-  if (!isBareMode()) {
-    if (isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL)) {
-      pluginInstallPromise = installPluginsAndApplyMcpInBackground()
-    } else {
-      void installPluginsAndApplyMcpInBackground()
-    }
+  if (isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL)) {
+    pluginInstallPromise = installPluginsAndApplyMcpInBackground()
+  } else {
+    void installPluginsAndApplyMcpInBackground()
   }
 
   // Idle timeout management

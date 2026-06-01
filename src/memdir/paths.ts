@@ -35,12 +35,6 @@ export function isAutoMemoryEnabled(): boolean {
   if (isEnvDefinedFalsy(envVal)) {
     return true
   }
-  // --bare / SIMPLE: prompts.ts already drops the memory section from the
-  // system prompt via its SIMPLE early-return; this gate stops the other half
-  // (extractMemories turn-end fork, autoDream, /remember, /dream, team sync).
-  if (isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
-    return false
-  }
   if (
     false &&
     !process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR

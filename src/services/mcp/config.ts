@@ -19,7 +19,7 @@ import { getFsImplementation } from '../../utils/fsOperations.js'
 import { safeParseJSON } from '../../utils/json.js'
 import { logError } from '../../utils/log.js'
 const getPluginMcpServers = () => []
-const loadAllPluginsCacheOnly = () => []
+const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import { isSettingSourceEnabled } from '../../utils/settings/constants.js'
 import { getManagedFilePath } from '../../utils/settings/managedPath.js'
 import { isRestrictedToPluginOnly } from '../../utils/settings/pluginOnlyPolicy.js'

@@ -31,7 +31,6 @@ import {
 } from '../utils/effort.js'
 import {
   getClaudeConfigHomeDir,
-  isBareMode,
   isEnvTruthy,
 } from '../utils/envUtils.js'
 import { isENOENT, isFsInaccessible } from '../utils/errors.js'
@@ -735,29 +734,6 @@ export const getSkillDirCommands = memoize(
     const skillsLocked = isRestrictedToPluginOnly('skills')
     const projectSettingsEnabled =
       isSettingSourceEnabled('projectSettings') && !skillsLocked
-
-    // --bare: skip auto-discovery (managed/user/project dir walks + legacy
-    // commands-dir). Load ONLY explicit --add-dir paths. Bundled skills
-    // register separately. skillsLocked still applies — --bare is not a
-    // policy bypass.
-    if (isBareMode()) {
-      if (additionalDirs.length === 0 || !projectSettingsEnabled) {
-        logForDebugging(
-          `[bare] Skipping skill dir discovery (${additionalDirs.length === 0 ? 'no --add-dir' : 'projectSettings disabled or skillsLocked'})`,
-        )
-        return []
-      }
-      const additionalSkillsNested = await Promise.all(
-        additionalDirs.map(dir =>
-          loadSkillsFromSkillsDir(
-            join(dir, '.claude', 'skills'),
-            'projectSettings',
-          ),
-        ),
-      )
-      // No dedup needed — explicit dirs, user controls uniqueness.
-      return additionalSkillsNested.flat().map(s => s.skill)
-    }
 
     // Load from /skills/ directories, additional dirs, and legacy /commands/ in parallel
     // (all independent — different directories, no shared state)

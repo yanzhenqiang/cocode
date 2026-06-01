@@ -26,7 +26,6 @@ import {
   shouldUseCodexTransport,
 } from '../services/api/providerConfig.js'
 import { getGlobalClaudeFile } from './env.js'
-import { isBareMode } from './envUtils.js'
 import {
   type GeminiResolvedCredential,
   resolveGeminiCredential,
@@ -413,7 +412,7 @@ export async function getProviderValidationError(
   if (hasExplicitCodexIntent) {
     const credentials = resolveCodexApiCredentials(env)
     if (!credentials.apiKey) {
-      const oauthHint = isBareMode() ? '' : ', choose Codex OAuth in /provider'
+      const oauthHint = ', choose Codex OAuth in /provider'
       const authHint = credentials.authPath
         ? `${oauthHint} or put auth.json at ${credentials.authPath}`
         : oauthHint

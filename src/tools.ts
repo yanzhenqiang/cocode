@@ -142,11 +142,6 @@ export function filterToolsByDenyRules<
 }
 
 export const getTools = (permissionContext: ToolPermissionContext): Tools => {
-  // Simple mode: only Bash, Read, and Edit tools
-  if (isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
-    return filterToolsByDenyRules([BashTool, FileReadTool, FileEditTool], permissionContext)
-  }
-
   // Get all base tools and filter out special tools that get added conditionally
   const specialTools = new Set([
     ListMcpResourcesTool.name,

@@ -1,5 +1,4 @@
 import { logForDebugging } from '../../utils/debug.js'
-import { isBareMode } from '../../utils/envUtils.js'
 import { errorMessage } from '../../utils/errors.js'
 import { logError } from '../../utils/log.js'
 import {
@@ -143,11 +142,6 @@ export async function waitForInitialization(): Promise<void> {
  * However, if initialization previously failed, calling again will retry.
  */
 export function initializeLspServerManager(): void {
-  // --bare / SIMPLE: no LSP. LSP is for editor integration (diagnostics,
-  // hover, go-to-def in the REPL). Scripted -p calls have no use for it.
-  if (isBareMode()) {
-    return
-  }
   logForDebugging('[LSP MANAGER] initializeLspServerManager() called')
 
   // Skip if already initialized or currently initializing

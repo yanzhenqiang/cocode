@@ -47,7 +47,7 @@ import { invalidateRemovedToolSchemas } from './utils/toolSchemaCache.js'
 import type { AttributionState } from './utils/commitAttribution.js'
 import { getGlobalConfig } from './utils/config.js'
 import { getCwd } from './utils/cwd.js'
-import { isBareMode, isEnvTruthy } from './utils/envUtils.js'
+import { isEnvTruthy } from './utils/envUtils.js'
 import { logForDebugging } from './utils/debug.js'
 import { getFastModeState } from './utils/fastMode.js'
 import {
@@ -431,16 +431,12 @@ export class QueryEngine {
     // Transcript is still written (for post-hoc debugging); just not blocking.
     if (persistSession && messagesFromUserInput.length > 0) {
       const transcriptPromise = recordTranscript(messages)
-      if (isBareMode()) {
-        void transcriptPromise
-      } else {
-        await transcriptPromise
-        if (
-          isEnvTruthy(process.env.CLAUDE_CODE_EAGER_FLUSH) ||
-          isEnvTruthy(process.env.CLAUDE_CODE_IS_COWORK)
-        ) {
-          await flushSessionStorage()
-        }
+      await transcriptPromise
+      if (
+        isEnvTruthy(process.env.CLAUDE_CODE_EAGER_FLUSH) ||
+        isEnvTruthy(process.env.CLAUDE_CODE_IS_COWORK)
+      ) {
+        await flushSessionStorage()
       }
     }
 

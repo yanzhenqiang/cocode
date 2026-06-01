@@ -49,7 +49,6 @@ const jobClassifierModule = feature('TEMPLATES')
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 import type { QuerySource } from '../constants/querySource.js'
-import { isBareMode } from '../utils/envUtils.js'
 import {
   createCacheSafeParams,
   saveCacheSafeParams,
@@ -128,24 +127,19 @@ export async function* handleStopHooks(
       new Promise<void>(r => setTimeout(r, 60_000).unref()),
     ])
   }
-  // --bare / SIMPLE: skip background bookkeeping (prompt suggestion,
-  // memory extraction, auto-dream). Scripted -p calls don't want auto-memory
-  // or forked agents contending for resources during shutdown.
-  if (!isBareMode()) {
-    // Prompt suggestion feature removed in this build
-    if (
-      feature('EXTRACT_MEMORIES') &&
-      !toolUseContext.agentId &&
-      isExtractModeActive()
-    ) {
-      // Fire-and-forget in both interactive and non-interactive. For -p/SDK,
-      // print.ts drains the in-flight promise after flushing the response
-      // but before gracefulShutdownSync (see drainPendingExtraction).
-      void extractMemoriesModule!.executeExtractMemories(
-        stopHookContext,
-        toolUseContext.appendSystemMessage,
-      )
-    }
+  // Prompt suggestion feature removed in this build
+  if (
+    feature('EXTRACT_MEMORIES') &&
+    !toolUseContext.agentId &&
+    isExtractModeActive()
+  ) {
+    // Fire-and-forget in both interactive and non-interactive. For -p/SDK,
+    // print.ts drains the in-flight promise after flushing the response
+    // but before gracefulShutdownSync (see drainPendingExtraction).
+    void extractMemoriesModule!.executeExtractMemories(
+      stopHookContext,
+      toolUseContext.appendSystemMessage,
+    )
   }
 
   try {

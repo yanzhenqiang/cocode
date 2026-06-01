@@ -52,8 +52,7 @@ function getCommitAndPRInstructions(): string {
 
   // For ant users, use the short version pointing to skills
   if (false) {
-    const skillsSection = !isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)
-      ? `For git commits and pull requests, use the \`/commit\` and \`/commit-push-pr\` skills:
+    const skillsSection = `For git commits and pull requests, use the \`/commit\` and \`/commit-push-pr\` skills:
 - \`/commit\` - Create a git commit with staged changes
 - \`/commit-push-pr\` - Commit, push, and create a pull request
 
@@ -62,7 +61,6 @@ These skills handle git safety protocols, proper commit message formatting, and 
 Before creating a pull request, run \`/simplify\` to review your changes, then test end-to-end (e.g. via \`/tmux\` for interactive features).
 
 `
-      : ''
     return `${undercoverSection}# Git operations
 
 ${skillsSection}IMPORTANT: NEVER skip hooks (--no-verify, --no-gpg-sign, etc) unless the user explicitly requests it.

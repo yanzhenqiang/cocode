@@ -51,7 +51,7 @@ fi
 echo "Step 1: 启动主 agent..."
 tmux new -s main -d "cd /data/data/com.termux/files/home && bash"
 sleep 2
-tmux send-keys -t main "bash /data/data/com.termux/files/home/cocode.sh --bare" Enter
+tmux send-keys -t main "bash /data/data/com.termux/files/home/cocode.sh" Enter
 sleep 15
 
 # 验证点 1.1

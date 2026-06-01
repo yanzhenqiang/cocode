@@ -3,7 +3,6 @@ import type { HookResultMessage } from '../types/message.js'
 import { createAttachmentMessage } from './attachments.js'
 import { logForDebugging } from './debug.js'
 import { withDiagnosticsTiming } from './diagLogs.js'
-import { isBareMode } from './envUtils.js'
 import { updateWatchPaths } from './hooks/fileChangedWatcher.js'
 import { shouldAllowManagedHooksOnly } from './hooks/hooksConfigSnapshot.js'
 import { executeSessionStartHooks, executeSetupHooks } from './hooks.js'
@@ -41,12 +40,6 @@ export async function processSessionStartHooks(
     forceSyncExecution,
   }: SessionStartHooksOptions = {},
 ): Promise<HookResultMessage[]> {
-  // --bare skips all hooks. executeHooks already early-returns under --bare
-  // (hooks.ts:1861), but this skips the loadPluginHooks() await below too —
-  // no point loading plugin hooks that'll never run.
-  if (isBareMode()) {
-    return []
-  }
   const hookMessages: HookResultMessage[] = []
   const additionalContexts: string[] = []
   const allWatchPaths: string[] = []
@@ -178,10 +171,6 @@ export async function processSetupHooks(
   trigger: 'init' | 'maintenance',
   { forceSyncExecution }: { forceSyncExecution?: boolean } = {},
 ): Promise<HookResultMessage[]> {
-  // Same rationale as processSessionStartHooks above.
-  if (isBareMode()) {
-    return []
-  }
   const hookMessages: HookResultMessage[] = []
   const additionalContexts: string[] = []
 

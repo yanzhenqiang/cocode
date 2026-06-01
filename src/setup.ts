@@ -28,7 +28,7 @@ import { getCurrentProjectConfig, getGlobalConfig } from './utils/config.js'
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js'
 import { env } from './utils/env.js'
 import { envDynamic } from './utils/envDynamic.js'
-import { isBareMode, isEnvTruthy } from './utils/envUtils.js'
+import { isEnvTruthy } from './utils/envUtils.js'
 import { errorMessage } from './utils/errors.js'
 import { findCanonicalGitRoot, findGitRoot, getIsGit } from './utils/git.js'
 import { initializeFileChangedWatcher } from './utils/hooks/fileChangedWatcher.js'
@@ -266,9 +266,7 @@ export async function setup(
   // getCommands() kick — see comment there. Moved out of setup() because
   // the await points above (startUdsMessaging, ~20ms) meant getCommands()
   // raced ahead and memoized an empty bundledSkills list.
-  if (!isBareMode()) {
-    initSessionMemory() // Synchronous - registers hook, gate check happens lazily
-  }
+  initSessionMemory() // Synchronous - registers hook, gate check happens lazily
   logForDiagnosticsNoPII('info', 'setup_background_jobs_launched')
 
   profileCheckpoint('setup_before_prefetch')
@@ -282,10 +280,7 @@ export async function setup(
   // mid-install when policySettings arrives.
   const skipPluginPrefetch =
     (getIsNonInteractiveSession() &&
-      isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL)) ||
-    // --bare: loadPluginHooks → loadAllPlugins is filesystem work that's
-    // wasted when executeHooks early-returns under --bare anyway.
-    isBareMode()
+      isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL))
   if (!skipPluginPrefetch) {
     void getCommands(getProjectRoot())
   }
@@ -296,11 +291,9 @@ export async function setup(
   // commit code, and the 49ms attribution hook stat check (measured) is pure
   // overhead. NOT an early-return: the --dangerously-skip-permissions safety
   // gate, tengu_started beacon, and apiKeyHelper prefetch below must still run.
-  if (!isBareMode()) {
-    void import('./utils/sessionFileAccessHooks.js').then(m =>
-      m.registerSessionFileAccessHooks(),
-    ) // Register session file access analytics hooks
-  }
+  void import('./utils/sessionFileAccessHooks.js').then(m =>
+    m.registerSessionFileAccessHooks(),
+  ) // Register session file access analytics hooks
   initSinks() // Attach error log + analytics sinks and drain queued events
 
   // Session-success-rate denominator. Emit immediately after the analytics
@@ -314,15 +307,11 @@ export async function setup(
   profileCheckpoint('setup_after_prefetch')
 
   // Pre-fetch data for Logo v2 - await to ensure it's ready before logo renders.
-  // --bare / SIMPLE: skip — release notes are interactive-UI display data,
-  // and getRecentActivity() reads up to 10 session JSONL files.
-  if (!isBareMode()) {
-    const { hasReleaseNotes } = await checkForReleaseNotes(
-      getGlobalConfig().lastReleaseNotesSeen,
-    )
-    if (hasReleaseNotes) {
-      await getRecentActivity()
-    }
+  const { hasReleaseNotes } = await checkForReleaseNotes(
+    getGlobalConfig().lastReleaseNotesSeen,
+  )
+  if (hasReleaseNotes) {
+    await getRecentActivity()
   }
 
   // If permission mode is set to bypass, verify we're in a safe environment
