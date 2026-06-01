@@ -115,7 +115,7 @@ function pushRedactedProperty(
   });
 }
 export function buildSandboxProperties(): Property[] {
-  if (process.env.USER_TYPE !== 'ant') {
+  if (true) {
     return [];
   }
   const isSandboxed = SandboxManager.isSandboxingEnabled();

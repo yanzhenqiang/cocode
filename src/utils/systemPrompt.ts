@@ -51,7 +51,7 @@ export function buildEffectiveSystemPrompt({
   // Log agent memory loaded event for main loop agents
   if (mainThreadAgentDefinition?.memory) {
     logEvent('tengu_agent_memory_loaded', {
-      ...(process.env.USER_TYPE === 'ant' && {
+      ...('false' && {
         agent_type:
           mainThreadAgentDefinition.agentType as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       }),

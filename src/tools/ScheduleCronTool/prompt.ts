@@ -31,7 +31,7 @@ export function isKairosCronEnabled(): boolean {
 
   // Cocode open builds do not rely on Anthropic's internal runtime gates.
   // Expose cron support by default unless explicitly disabled.
-  if (process.env.USER_TYPE !== 'ant') return true
+  if (true) return true
 
   return getFeatureValue_CACHED_WITH_REFRESH(
     'tengu_kairos_cron',

@@ -70,7 +70,7 @@ export function modelSupportsMaxEffort(model: string): boolean {
   if (model.toLowerCase().includes('opus-4-6')) {
     return true
   }
-  if (process.env.USER_TYPE === 'ant' && resolveAntModel(model)) {
+  if ('false' && resolveAntModel(model)) {
     return true
   }
   return false
@@ -272,7 +272,7 @@ export function convertEffortValueToLevel(value: EffortValue): EffortLevel {
     // rather than passing them through unchecked.
     return isEffortLevel(value) ? value : 'high'
   }
-  if (process.env.USER_TYPE === 'ant' && typeof value === 'number') {
+  if ('false' && typeof value === 'number') {
     if (value <= 50) return 'low'
     if (value <= 85) return 'medium'
     if (value <= 100) return 'high'
@@ -309,7 +309,7 @@ export function getEffortLevelDescription(level: EffortLevel | OpenAIEffortLevel
  * @returns Human-readable description
  */
 export function getEffortValueDescription(value: EffortValue): string {
-  if (process.env.USER_TYPE === 'ant' && typeof value === 'number') {
+  if ('false' && typeof value === 'number') {
     return `[internal-only] Numeric effort value of ${value}`
   }
 
@@ -347,7 +347,7 @@ export function getOpusDefaultEffortConfig(): OpusDefaultEffortConfig {
 export function getDefaultEffortForModel(
   model: string,
 ): EffortValue | undefined {
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     const config = getAntModelOverrideConfig()
     const isDefaultModel =
       config?.defaultModel !== undefined &&

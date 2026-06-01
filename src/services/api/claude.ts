@@ -402,7 +402,7 @@ function should1hCacheTTL(querySource?: QuerySource): boolean {
   let userEligible = getPromptCache1hEligible()
   if (userEligible === null) {
     userEligible =
-      process.env.USER_TYPE === 'ant' ||
+      'false' ||
       (isClaudeAISubscriber() && !currentLimits.isUsingOverage)
     setPromptCache1hEligible(userEligible)
   }
@@ -450,7 +450,7 @@ function configureEffortParams(
     // Send string effort level as is
     outputConfig.effort = effortValue
     betas.push(EFFORT_BETA_HEADER)
-  } else if (process.env.USER_TYPE === 'ant') {
+  } else if (false) {
     // Numeric effort override - internal-only (uses anthropic_internal)
     const existingInternal =
       (extraBodyParams.anthropic_internal as Record<string, unknown>) || {}
@@ -1973,7 +1973,7 @@ async function* queryModel(
             // Capture research from message_start if available (internal only).
             // Always overwrite with the latest value.
             if (
-              process.env.USER_TYPE === 'ant' &&
+              'false' &&
               'research' in (part.message as unknown as Record<string, unknown>)
             ) {
               research = (part.message as unknown as Record<string, unknown>)
@@ -2146,7 +2146,7 @@ async function* queryModel(
             }
             // Capture research from content_block_delta if available (internal only).
             // Always overwrite with the latest value.
-            if (process.env.USER_TYPE === 'ant' && 'research' in part) {
+            if ('false' && 'research' in part) {
               research = (part as { research: unknown }).research
             }
             break
@@ -2185,7 +2185,7 @@ async function* queryModel(
               type: 'assistant',
               uuid: randomUUID(),
               timestamp: new Date().toISOString(),
-              ...(process.env.USER_TYPE === 'ant' &&
+              ...('false' &&
                 research !== undefined && { research }),
               ...(advisorModel && { advisorModel }),
             }
@@ -2200,7 +2200,7 @@ async function* queryModel(
             // already-yielded messages since message_delta arrives after
             // content_block_stop.
             if (
-              process.env.USER_TYPE === 'ant' &&
+              'false' &&
               'research' in (part as unknown as Record<string, unknown>)
             ) {
               research = (part as unknown as Record<string, unknown>).research
@@ -2564,7 +2564,7 @@ async function* queryModel(
         type: 'assistant',
         uuid: randomUUID(),
         timestamp: new Date().toISOString(),
-        ...(process.env.USER_TYPE === 'ant' &&
+        ...('false' &&
           research !== undefined && {
             research,
           }),
@@ -2661,7 +2661,7 @@ async function* queryModel(
           type: 'assistant',
           uuid: randomUUID(),
           timestamp: new Date().toISOString(),
-          ...(process.env.USER_TYPE === 'ant' &&
+          ...('false' &&
             research !== undefined && { research }),
           ...(advisorModel && { advisorModel }),
         }

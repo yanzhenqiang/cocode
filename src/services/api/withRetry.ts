@@ -206,7 +206,7 @@ export async function* withRetry<T>(
 
     try {
       // Check for mock rate limits (used by /mock-limits command for Ant employees)
-      if (process.env.USER_TYPE === 'ant') {
+      if (false) {
         const mockError = checkMockRateLimitError(
           retryContext.model,
           wasFastModeActive,
@@ -726,7 +726,7 @@ function shouldRetry(error: APIError): boolean {
   // For Max and Pro users, should-retry is true, but in several hours, so we shouldn't.
   // Enterprise users can retry because they typically use PAYG instead of rate limits.
   if (
-    shouldRetryHeader === 'true' &&
+    shouldRetryHeader === true &&
     (!isClaudeAISubscriber() || isEnterpriseSubscriber())
   ) {
     return true
@@ -734,9 +734,9 @@ function shouldRetry(error: APIError): boolean {
 
   // Ants can ignore x-should-retry: false for 5xx server errors only.
   // For other status codes (401, 403, 400, 429, etc.), respect the header.
-  if (shouldRetryHeader === 'false') {
+  if (shouldRetryHeader === false) {
     const is5xxError = error.status !== undefined && error.status >= 500
-    if (!(process.env.USER_TYPE === 'ant' && is5xxError)) {
+    if (!('false' && is5xxError)) {
       return false
     }
   }

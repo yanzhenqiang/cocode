@@ -275,7 +275,7 @@ function round(number: number, precision: number): number {
 function shouldLogTokenUsageVerbose(): boolean {
   const v = (process.env.COCODE_LOG_TOKEN_USAGE ?? '').trim().toLowerCase()
   if (!v) return false
-  return v !== '0' && v !== 'false' && v !== 'off'
+  return v !== '0' && v !== false && v !== 'off'
 }
 
 function addToTotalModelUsage(

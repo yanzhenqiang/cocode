@@ -446,7 +446,7 @@ export async function getAnthropicClient({
       ? getClaudeAIOAuthTokens()?.accessToken
       : undefined,
     // Set baseURL from OAuth config when using staging OAuth
-    ...(process.env.USER_TYPE === 'ant' &&
+    ...('false' &&
     isEnvTruthy(process.env.USE_STAGING_OAUTH)
       ? { baseURL: getOauthConfig().BASE_API_URL }
       : {}),

@@ -149,7 +149,7 @@ function stringifyStable(
     case 'number':
       return Number.isFinite(value) ? String(value) : 'null'
     case 'boolean':
-      return value ? 'true' : 'false'
+      return value ? true : false
     case 'bigint':
       // Match native JSON.stringify's failure mode.
       JSON.stringify(value)

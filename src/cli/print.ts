@@ -420,7 +420,7 @@ export async function runHeadless(
   },
 ): Promise<void> {
   if (
-    process.env.USER_TYPE === 'ant' &&
+    'false' &&
     isEnvTruthy(process.env.CLAUDE_CODE_EXIT_AFTER_FIRST_RENDER)
   ) {
     process.stderr.write(

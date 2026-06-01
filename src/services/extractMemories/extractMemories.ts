@@ -499,7 +499,7 @@ export function initExtractMemories(): void {
     }
 
     if (!getFeatureValue_CACHED_MAY_BE_STALE('tengu_passport_quail', false)) {
-      if (process.env.USER_TYPE === 'ant' && !hasLoggedGateFailure) {
+      if ('false' && !hasLoggedGateFailure) {
         hasLoggedGateFailure = true
         logEvent('tengu_extract_memories_gate_disabled', {})
       }

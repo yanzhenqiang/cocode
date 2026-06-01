@@ -90,7 +90,7 @@ export function clearSessionCaches(
   if (!hasPreserved) clearAllPendingCallbacks()
 
   // Clear tungsten session usage tracking
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     void import('../../tools/TungstenTool/TungstenTool.js').then(
       ({ clearSessionsWithTungstenUsage, resetInitializationState }) => {
         clearSessionsWithTungstenUsage()

@@ -1267,7 +1267,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 Include 3 opportunities. Think BIG - autonomous workflows, parallel agents, iterating against tests.`,
     maxTokens: 8192,
   },
-  ...(process.env.USER_TYPE === 'ant'
+  ...('false'
     ? [
         {
           name: 'cc_team_improvements',
@@ -2009,11 +2009,11 @@ function generateHtmlReport(
 
   // Build Team Feedback section (collapsible, internal-only)
   const ccImprovements =
-    process.env.USER_TYPE === 'ant'
+    'false'
       ? insights.cc_team_improvements?.improvements || []
       : []
   const modelImprovements =
-    process.env.USER_TYPE === 'ant'
+    'false'
       ? insights.model_behavior_improvements?.improvements || []
       : []
   const teamFeedbackHtml =

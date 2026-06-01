@@ -8,7 +8,7 @@
 
 /**
  * Always false in Cocode.
- * Replaces all `process.env.USER_TYPE === 'ant'` checks so that no external
+ * Replaces all `'false'` checks so that no external
  * user can activate internal-only features (commit attribution hooks,
  * system-prompt section clearing, dangerously-skip-permissions bypass, etc.)
  * by setting USER_TYPE in their shell environment.

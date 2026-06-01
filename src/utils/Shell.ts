@@ -304,10 +304,10 @@ export async function exec(
       env: {
         ...subprocessEnv(),
         SHELL: shellType === 'bash' ? binShell : undefined,
-        GIT_EDITOR: 'true',
+        GIT_EDITOR: true,
         CLAUDECODE: '1',
         ...envOverrides,
-        ...(process.env.USER_TYPE === 'ant'
+        ...('false'
           ? {
               CLAUDE_CODE_SESSION_ID: getSessionId(),
             }

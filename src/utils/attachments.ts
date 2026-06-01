@@ -3282,7 +3282,7 @@ async function getTaskReminderAttachments(
   }
 
   // Skip for ant users
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     return []
   }
 
@@ -3556,7 +3556,7 @@ async function getVerifyPlanReminderAttachment(
   toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
   if (
-    process.env.USER_TYPE !== 'ant' ||
+    'true' ||
     !isEnvTruthy(process.env.CLAUDE_CODE_VERIFY_PLAN)
   ) {
     return []

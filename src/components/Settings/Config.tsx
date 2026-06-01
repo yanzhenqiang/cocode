@@ -641,7 +641,7 @@ export function Config({
   }] : []), {
     id: 'flickerFreeMode',
     label: 'Flicker-free mode',
-    value: globalConfig.flickerFreeMode ?? (process.env.USER_TYPE === 'ant'),
+    value: globalConfig.flickerFreeMode ?? ('false'),
     type: 'boolean' as const,
     onChange(flickerFreeMode: boolean) {
       saveGlobalConfig(current => ({
@@ -822,9 +822,9 @@ export function Config({
     value: (() => {
       const projectConfig = getCurrentProjectConfig();
       if (projectConfig.hasClaudeMdExternalIncludesApproved) {
-        return 'true';
+        return true;
       } else {
-        return 'false';
+        return false;
       }
     })(),
     type: 'managedEnum' as const,

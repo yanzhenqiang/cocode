@@ -168,7 +168,7 @@ const COMMANDS = memoize((): Command[] => [
   hooks,
   exportCommand,
   tasks,
-  ...(process.env.USER_TYPE === 'ant' && !process.env.IS_DEMO
+  ...('false' && !process.env.IS_DEMO
     ? INTERNAL_ONLY_COMMANDS
     : []),
 ].filter(isCommand))
@@ -430,7 +430,6 @@ export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
     clear, // Wipe transcript
     cost, // Show session cost
     summary, // Summarize conversation
-    releaseNotes, // Show changelog
     files, // List tracked files
   ].filter((c): c is Command => c !== null),
 )

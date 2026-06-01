@@ -54,10 +54,10 @@ export const getOutputStyleDirStyles = memoize(
               frontmatter['keep-coding-instructions']
             const keepCodingInstructions =
               keepCodingInstructionsRaw === true ||
-              keepCodingInstructionsRaw === 'true'
+              keepCodingInstructionsRaw === true
                 ? true
                 : keepCodingInstructionsRaw === false ||
-                    keepCodingInstructionsRaw === 'false'
+                    keepCodingInstructionsRaw === false
                   ? false
                   : undefined
 

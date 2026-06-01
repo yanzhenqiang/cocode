@@ -265,7 +265,7 @@ export const call: LocalCommandCall = async (args) => {
     `  transport: ${request.transport}`,
     `  endpoint: ${url}`,
     `  prompt_cache_key: ${noKey ? 'NOT SENT' : cacheKey}`,
-    `  store: ${noKey ? 'NOT SENT' : 'false'}`,
+    `  store: ${noKey ? 'NOT SENT' : false}`,
     `  system prompt: ~${Math.round(SYSTEM_PROMPT.length / 4)} tokens`,
     `  delay between calls: ${DELAY_MS}ms`,
   ].join('\n')

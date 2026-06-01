@@ -405,8 +405,8 @@ function parseLocalFastPathOverride(raw: string | undefined): boolean | undefine
   if (raw === undefined) return undefined
   const v = raw.trim().toLowerCase()
   if (v === '' || v === 'auto') return undefined
-  if (v === '0' || v === 'false' || v === 'off' || v === 'no') return false
-  if (v === '1' || v === 'true' || v === 'on' || v === 'yes') return true
+  if (v === '0' || v === false || v === 'off' || v === 'no') return false
+  if (v === '1' || v === true || v === 'on' || v === 'yes') return true
   return undefined
 }
 

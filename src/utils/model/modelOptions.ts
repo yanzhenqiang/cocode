@@ -75,7 +75,7 @@ function getScopedAdditionalModelOptions(): ModelOption[] {
 export function getDefaultOptionForUser(fastMode = false): ModelOption {
   const is3P = getAPIProvider() !== 'firstParty'
 
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     const currentModel = renderDefaultModelSetting(
       getDefaultMainLoopModelSetting(),
     )
@@ -456,7 +456,7 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
     return [defaultOption]
   }
 
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     // Build options from antModels config
     const antModelOptions: ModelOption[] = getAntModels().map(m => ({
       value: m.alias,

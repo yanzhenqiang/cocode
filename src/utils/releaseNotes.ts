@@ -526,7 +526,7 @@ export async function checkForReleaseNotes(
   currentVersion: string = publicBuildVersion,
 ): Promise<{ hasReleaseNotes: boolean; releaseNotes: string[] }> {
   // For Ant builds, use VERSION_CHANGELOG bundled at build time
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     const changelog = MACRO.VERSION_CHANGELOG
     if (changelog) {
       const commits = changelog.trim().split('\n').filter(Boolean)
@@ -574,7 +574,7 @@ export function checkForReleaseNotesSync(
   currentVersion: string = publicBuildVersion,
 ): { hasReleaseNotes: boolean; releaseNotes: string[] } {
   // For Ant builds, use VERSION_CHANGELOG bundled at build time
-  if (process.env.USER_TYPE === 'ant') {
+  if (false) {
     const changelog = MACRO.VERSION_CHANGELOG
     if (changelog) {
       const commits = changelog.trim().split('\n').filter(Boolean)

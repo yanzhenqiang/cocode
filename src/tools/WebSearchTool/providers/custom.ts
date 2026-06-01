@@ -316,7 +316,7 @@ function validateUrl(urlString: string): void {
   }
 
   // 2. HTTPS-only (unless explicitly opted out)
-  const allowHttp = process.env.WEB_CUSTOM_ALLOW_HTTP === 'true'
+  const allowHttp = process.env.WEB_CUSTOM_ALLOW_HTTP === true
   if (!allowHttp && parsed.protocol !== 'https:') {
     throw new Error(
       `Custom search URL must use https:// (got ${parsed.protocol}). ` +
@@ -325,7 +325,7 @@ function validateUrl(urlString: string): void {
   }
 
   // 3. Private network check (unless explicitly opted out)
-  const allowPrivate = process.env.WEB_CUSTOM_ALLOW_PRIVATE === 'true'
+  const allowPrivate = process.env.WEB_CUSTOM_ALLOW_PRIVATE === true
   if (!allowPrivate && isPrivateHostname(parsed.hostname)) {
     throw new Error(
       `Custom search URL targets a private/reserved address (${parsed.hostname}). ` +
@@ -340,7 +340,7 @@ function validateUrl(urlString: string): void {
  * unless WEB_CUSTOM_ALLOW_ARBITRARY_HEADERS=true.
  */
 function validateHeaderName(name: string): boolean {
-  const allowArbitrary = process.env.WEB_CUSTOM_ALLOW_ARBITRARY_HEADERS === 'true'
+  const allowArbitrary = process.env.WEB_CUSTOM_ALLOW_ARBITRARY_HEADERS === true
   if (allowArbitrary) return true
   return SAFE_HEADER_NAMES.has(name.toLowerCase())
 }

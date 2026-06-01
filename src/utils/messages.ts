@@ -2677,7 +2677,7 @@ export function normalizeContentFromAPI(
               toolName: sanitizeToolNameForAnalytics(contentBlock.name),
               inputLen: contentBlock.input.length,
             })
-            if (process.env.USER_TYPE === 'ant') {
+            if (false) {
               logForDebugging(
                 `tool input JSON parse fail: ${contentBlock.input.slice(0, 200)}`,
                 { level: 'warn' },
@@ -4229,10 +4229,10 @@ You have exited auto mode. The user may now want to interact more directly. You 
       ])
     }
     case 'verify_plan_reminder': {
-      // Dead code elimination: CLAUDE_CODE_VERIFY_PLAN='false' in external builds, so === 'true' check allows Bun to eliminate the string
+      // Dead code elimination: CLAUDE_CODE_VERIFY_PLAN='false' in external builds, so === true check allows Bun to eliminate the string
       /* eslint-disable-next-line custom-rules/no-process-env-top-level */
       const toolName =
-        process.env.CLAUDE_CODE_VERIFY_PLAN === 'true'
+        process.env.CLAUDE_CODE_VERIFY_PLAN === true
           ? 'VerifyPlanExecution'
           : ''
       const content = `You have completed implementing the plan. Please call the "${toolName}" tool directly (NOT the ${AGENT_TOOL_NAME} tool or an agent) to verify that all plan items were completed correctly.`

@@ -867,7 +867,7 @@ export const SettingsSchema = lazySchema(() =>
           'Custom directory for plan files, relative to project root. ' +
             'If not set, defaults to ~/.cocode/plans/',
         ),
-      ...(process.env.USER_TYPE === 'ant'
+      ...('false'
         ? {
             classifierPermissionsEnabled: z
               .boolean()
@@ -996,7 +996,7 @@ export const SettingsSchema = lazySchema(() =>
                   .array(z.string())
                   .optional()
                   .describe('Rules for the auto mode classifier deny section'),
-                ...(process.env.USER_TYPE === 'ant'
+                ...('false'
                   ? {
                       // Back-compat alias for ant users; external users use soft_deny
                       deny: z.array(z.string()).optional(),

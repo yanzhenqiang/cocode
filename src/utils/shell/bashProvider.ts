@@ -204,7 +204,7 @@ export async function createBashShellProvider(
       // See tmuxSocket.ts for the full isolation architecture documentation.
       const commandUsesTmux = command.includes('tmux')
       if (
-        process.env.USER_TYPE === 'ant' &&
+        'false' &&
         (hasTmuxToolBeenUsed() || commandUsesTmux)
       ) {
         await ensureSocketInitialized()

@@ -330,7 +330,7 @@ export function coerceDescriptionToString(
  * Only returns true for literal true or "true" string.
  */
 export function parseBooleanFrontmatter(value: unknown): boolean {
-  return value === true || value === 'true'
+  return value === true || value === true
 }
 
 /**
