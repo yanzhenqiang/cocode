@@ -1,2 +1,1 @@
-export type TreeNode = any
-export function TreeSelect() { return null }
+export type TreeNode = any; export function TreeSelect() { return null }

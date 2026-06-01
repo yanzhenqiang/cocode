@@ -81,7 +81,7 @@ import {
 import { expandPath } from 'src/utils/path.js'
 import { extractReadFilesFromMessages } from 'src/utils/queryHelpers.js'
 import { registerHookEventHandler } from 'src/utils/hooks/hookEvents.js'
-import { executeFilePersistence } from 'src/utils/filePersistence/filePersistence.js'
+const executeFilePersistence = () => {}
 import { finalizePendingAsyncHooks } from 'src/utils/hooks/AsyncHookRegistry.js'
 import {
   gracefulShutdown,
