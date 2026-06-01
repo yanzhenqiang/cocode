@@ -20,6 +20,9 @@ import { subprocessEnv } from './subprocessEnv.js'
 import { getPlatform } from './platform.js'
 import { findGitBashPath, windowsPathToPosixPath } from './windowsPaths.js'
 import { DEFAULT_HOOK_SHELL } from './shell/shellProvider.js'
+const loadPluginOptions = () => ({})
+const substituteUserConfigVariables = (cmd: string) => cmd
+const getPluginDataDir = () => ''
 import {
   getSessionId,
   getProjectRoot,
@@ -50,9 +53,6 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
 } from 'src/services/analytics/index.js'
 const ALLOWED_OFFICIAL_MARKETPLACE_NAMES: string[] = []
-const getPluginDataDir = () => ""
-const loadPluginOptions = () => ({})
-const substituteUserConfigVariables = (cmd: string) => cmd
 import {
   hookJSONOutputSchema,
   promptRequestSchema,
