@@ -36,3 +36,9 @@ Each result file must include:
 ### File Location
 
 Place result files in the repository root, alongside the corresponding `TEST_*.md` test plan files.
+
+## Test Rules
+
+**Never modify test files without explicit user discussion and approval.**
+Tests are the user's verification baseline. Any change to test scripts,
+test timeouts, or test logic must be discussed with the user first.
