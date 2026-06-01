@@ -57,7 +57,7 @@ import { getBuiltinPluginSkillCommands } from './plugins/builtinPlugins.js'
 // plugin commands removed
 const getPluginCommands = () => []
 const clearPluginCommandCache = () => {}
-const getPluginSkills = () => []
+const getPluginSkills = async () => []
 const clearPluginSkillsCache = () => {}
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices, isClaudeAISubscriber } from './utils/auth.js'
