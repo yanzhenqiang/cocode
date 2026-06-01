@@ -673,7 +673,7 @@ async function run(): Promise<CommanderCommand> {
       throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
     }
     return value;
-  })).option('--agent <agent>', `Agent for the current session. Overrides the 'agent' setting.`).option('--betas <betas...>', 'Beta headers to include in API requests (API key users only)').option('--fallback-model <model>', 'Enable automatic fallback to specified model when default model is overloaded (only works with --print)').addOption(new Option('--workload <tag>', 'Workload tag for billing-header attribution (cc_workload). Process-scoped; set by SDK daemon callers that spawn subprocesses for cron work. (only works with --print)').hideHelp()).option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--strict-mcp-config', 'Only use MCP servers from --mcp-config, ignoring all other MCP configurations', () => true).option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)').option('--agents <json>', 'JSON object defining custom agents (e.g. \'{"reviewer": {"description": "Reviews code", "prompt": "You are a code reviewer"}}\')').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
+  })).option('--betas <betas...>', 'Beta headers to include in API requests (API key users only)').option('--fallback-model <model>', 'Enable automatic fallback to specified model when default model is overloaded (only works with --print)').addOption(new Option('--workload <tag>', 'Workload tag for billing-header attribution (cc_workload). Process-scoped; set by SDK daemon callers that spawn subprocesses for cron work. (only works with --print)').hideHelp()).option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--strict-mcp-config', 'Only use MCP servers from --mcp-config, ignoring all other MCP configurations', () => true).option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
   // gh-33508: <paths...> (variadic) consumed everything until the next
   // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
   // `mcp` and `add` as paths, then choked on --transport as an unknown
@@ -756,11 +756,11 @@ async function run(): Promise<CommanderCommand> {
 
     // Promise for file downloads - started early, awaited before REPL renders
     let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
-    const agentsJson = options.agents;
-    const agentCli = options.agent;
-    if (agentCli) {
-      process.env.CLAUDE_CODE_AGENT = agentCli;
-    }
+    const agentsJson = undefined;
+    const agentCli = undefined;
+    const cliAgents: never[] = [];
+    const agentSetting: string | undefined = undefined;
+    let mainThreadAgentDefinition: undefined;
 
     // NOTE: LSP manager initialization is intentionally deferred until after
     // the trust dialog is accepted. This prevents plugin LSP servers from
@@ -1247,84 +1247,10 @@ async function run(): Promise<CommanderCommand> {
     logForDebugging(`[STARTUP] Commands and agents loaded in ${Date.now() - commandsStart}ms`);
     profileCheckpoint('action_commands_loaded');
 
-    // Parse CLI agents if provided via --agents flag
-    let cliAgents: typeof agentDefinitionsResult.activeAgents = [];
-    if (agentsJson) {
-      try {
-        const parsedAgents = safeParseJSON(agentsJson);
-        if (parsedAgents) {
-          cliAgents = parseAgentsFromJson(parsedAgents, 'flagSettings');
-        }
-      } catch (error) {
-        logError(error);
-      }
-    }
-
-    // Merge CLI agents with existing ones
-    const allAgents = [...agentDefinitionsResult.allAgents, ...cliAgents];
-    const agentDefinitions = {
-      ...agentDefinitionsResult,
-      allAgents,
-      activeAgents: getActiveAgentsFromList(allAgents)
-    };
-
-    // Look up main thread agent from CLI flag or settings
-    const agentSetting = agentCli ?? getInitialSettings().agent;
-    let mainThreadAgentDefinition: (typeof agentDefinitions.activeAgents)[number] | undefined;
-    if (agentSetting) {
-      mainThreadAgentDefinition = agentDefinitions.activeAgents.find(agent => agent.agentType === agentSetting);
-      if (!mainThreadAgentDefinition) {
-        logForDebugging(`Warning: agent "${agentSetting}" not found. ` + `Available agents: ${agentDefinitions.activeAgents.map(a => a.agentType).join(', ')}. ` + `Using default behavior.`);
-      }
-    }
-
-    // Store the main thread agent type in bootstrap state so hooks can access it
-    setMainThreadAgentType(mainThreadAgentDefinition?.agentType);
-
-    // Log agent flag usage — only log agent name for built-in agents to avoid leaking custom agent names
-    if (mainThreadAgentDefinition) {
-      logEvent('tengu_agent_flag', {
-        agentType: isBuiltInAgent(mainThreadAgentDefinition) ? mainThreadAgentDefinition.agentType as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS : 'custom' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        ...(agentCli && {
-          source: 'cli' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        })
-      });
-    }
-
-    // Persist agent setting to session transcript for resume view display and restoration
-    if (mainThreadAgentDefinition?.agentType) {
-      saveAgentSetting(mainThreadAgentDefinition.agentType);
-    }
-
-    // Apply the agent's system prompt for non-interactive sessions
-    // (interactive mode uses buildEffectiveSystemPrompt instead)
-    if (isNonInteractiveSession && mainThreadAgentDefinition && !systemPrompt && !isBuiltInAgent(mainThreadAgentDefinition)) {
-      const agentSystemPrompt = mainThreadAgentDefinition.getSystemPrompt();
-      if (agentSystemPrompt) {
-        systemPrompt = agentSystemPrompt;
-      }
-    }
-
-    // initialPrompt goes first so its slash command (if any) is processed;
-    // user-provided text becomes trailing context.
-    // Only concatenate when inputPrompt is a string. When it's an
-    // AsyncIterable (SDK stream-json mode), template interpolation would
-    // call .toString() producing "[object Object]". The AsyncIterable case
-    // is handled in print.ts via structuredIO.prependUserMessage().
-    if (mainThreadAgentDefinition?.initialPrompt) {
-      if (typeof inputPrompt === 'string') {
-        inputPrompt = inputPrompt ? `${mainThreadAgentDefinition.initialPrompt}\n\n${inputPrompt}` : mainThreadAgentDefinition.initialPrompt;
-      } else if (!inputPrompt) {
-        inputPrompt = mainThreadAgentDefinition.initialPrompt;
-      }
-    }
+    const agentDefinitions = agentDefinitionsResult;
 
     // Compute effective model early so hooks can run in parallel with MCP
-    // If user didn't specify a model but agent has one, use the agent's model
     let effectiveModel = userSpecifiedModel;
-    if (!effectiveModel && mainThreadAgentDefinition?.model && mainThreadAgentDefinition.model !== 'inherit') {
-      effectiveModel = parseUserSpecifiedModel(mainThreadAgentDefinition.model);
-    }
     setMainLoopModelOverride(effectiveModel);
 
     // Compute resolved model for hooks (use user-specified model at launch)
