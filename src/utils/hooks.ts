@@ -53,9 +53,6 @@ import {
 import {
   logEvent,
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-} from 'src/services/analytics/index.js'
-import { ALLOWED_OFFICIAL_MARKETPLACE_NAMES } from './plugins/schemas.js'
-import {
   hookJSONOutputSchema,
   promptRequestSchema,
   type HookCallback,
