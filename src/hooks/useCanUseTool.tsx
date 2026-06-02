@@ -21,7 +21,6 @@ import { hasPermissionsToUseTool } from '../utils/permissions/permissions.js';
 import { jsonStringify } from '../utils/slowOperations.js';
 import { handleCoordinatorPermission } from './toolPermission/handlers/coordinatorHandler.js';
 import { handleInteractivePermission } from './toolPermission/handlers/interactiveHandler.js';
-import { handleSwarmWorkerPermission } from './toolPermission/handlers/swarmWorkerHandler.js';
 import { createPermissionContext, createPermissionQueueOps } from './toolPermission/PermissionContext.js';
 import { logPermissionDecision } from './toolPermission/permissionLogging.js';
 export type CanUseToolFn<Input extends Record<string, unknown> = Record<string, unknown>> = (tool: ToolType, input: Input, toolUseContext: ToolUseContext, assistantMessage: AssistantMessage, toolUseID: string, forceDecision?: PermissionDecision<Input>) => Promise<PermissionDecision<Input>>;
@@ -108,19 +107,6 @@ function useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext) {
                 }
               }
               if (ctx.resolveIfAborted(resolve)) {
-                return;
-              }
-              const swarmDecision = await handleSwarmWorkerPermission({
-                ctx,
-                description,
-                ...(feature("BASH_CLASSIFIER") ? {
-                  pendingClassifierCheck: result.pendingClassifierCheck
-                } : {}),
-                updatedInput: result.updatedInput,
-                suggestions: result.suggestions
-              });
-              if (swarmDecision) {
-                resolve(swarmDecision);
                 return;
               }
               if (feature("BASH_CLASSIFIER") && result.pendingClassifierCheck && tool.name === BASH_TOOL_NAME && !appState.toolPermissionContext.awaitAutomatedChecksBeforeDialog) {

@@ -87,8 +87,6 @@ import { KeybindingSetup } from '../keybindings/KeybindingProviderSetup.js';
 import { useShortcutDisplay } from '../keybindings/useShortcutDisplay.js';
 import { getShortcutDisplay } from '../keybindings/shortcutFormat.js';
 import { CancelRequestHandler } from '../hooks/useCancelRequest.js';
-import { useBackgroundTaskNavigation } from '../hooks/useBackgroundTaskNavigation.js';
-import { useSwarmInitialization } from '../hooks/useSwarmInitialization.js';
 import { useTeammateViewAutoExit } from '../hooks/useTeammateViewAutoExit.js';
 import { errorMessage } from '../utils/errors.js';
 import { isHumanTurn } from '../utils/messagePredicates.js';
@@ -713,12 +711,6 @@ export function REPL({
   // Allow Claude in Chrome MCP to send prompts through MCP notifications
   // and sync permission mode changes to the Chrome extension
   usePromptsFromClaudeInChrome(mcpClients, toolPermissionContext.mode);
-
-  // Initialize swarm features: teammate hooks and context
-  // Handles both fresh spawns and resumed teammate sessions
-  useSwarmInitialization(setAppState, initialMessages, {
-    enabled: true
-  });
   const mergedTools = useMergedTools(combinedInitialTools, mcp.tools, toolPermissionContext);
 
   // Apply agent tool restrictions if mainThreadAgentDefinition is set
@@ -3787,12 +3779,6 @@ export function REPL({
   const transcriptMessages = frozenTranscriptState ? deferredMessages.slice(0, frozenTranscriptState.messagesLength) : deferredMessages;
   const transcriptStreamingToolUses = frozenTranscriptState ? streamingToolUses.slice(0, frozenTranscriptState.streamingToolUsesLength) : streamingToolUses;
 
-  // Handle shift+down for teammate navigation and background task management.
-  // Guard onOpenBackgroundTasks when a local-jsx dialog (e.g. /mcp) is open —
-  // otherwise Shift+Down stacks BackgroundTasksDialog on top and deadlocks input.
-  useBackgroundTaskNavigation({
-    onOpenBackgroundTasks: isShowingLocalJSXCommand ? undefined : () => setShowBashesDialog(true)
-  });
   // Auto-exit viewing mode when teammate completes or errors
   useTeammateViewAutoExit();
   if (screen === 'transcript') {
