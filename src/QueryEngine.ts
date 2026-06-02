@@ -67,7 +67,7 @@ import {
   getMainLoopModel,
   parseUserSpecifiedModel,
 } from './utils/model/model.js'
-const loadAllPluginsCacheOnly = () => []
+const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import {
   type ProcessUserInputContext,
   processUserInput,

@@ -298,7 +298,7 @@ import {
 } from '../utils/envUtils.js'
 const installPluginsForHeadless = async () => {}
 const refreshActivePlugins = async () => {}
-const loadAllPluginsCacheOnly = () => []
+const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import {
 } from '../utils/teammate.js'
 import { getRunningTasks } from '../utils/task/framework.js'

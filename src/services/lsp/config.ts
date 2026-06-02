@@ -3,7 +3,7 @@ import { logForDebugging } from '../../utils/debug.js'
 import { errorMessage, toError } from '../../utils/errors.js'
 import { logError } from '../../utils/log.js'
 const getPluginLspServers = () => []
-const loadAllPluginsCacheOnly = () => []
+const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import type { ScopedLspServerConfig } from './types.js'
 
 /**
