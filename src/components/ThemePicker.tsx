@@ -15,7 +15,6 @@ import type { ThemeSetting } from '../utils/theme.js';
 import { Select } from './CustomSelect/index.js';
 import { Byline } from './design-system/Byline.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
-import { getColorModuleUnavailableReason, getSyntaxTheme } from './StructuredDiff/colorDiff.js';
 import { StructuredDiff } from './StructuredDiff.js';
 
 type StructuredDiffComponent = React.ComponentType<{
@@ -70,12 +69,7 @@ export function ThemePicker({
   const [theme] = useTheme();
   const themeSetting = useThemeSetting();
   const { columns } = useTerminalSize();
-  const colorModuleUnavailableReason = React.useMemo(
-    () => getColorModuleUnavailableReason(),
-    [],
-  )
-  const syntaxTheme =
-    colorModuleUnavailableReason === null ? getSyntaxTheme(theme) : null
+  const syntaxTheme = null
   const { setPreviewTheme, savePreview, cancelPreview } = usePreviewTheme()
   const syntaxHighlightingDisabled = useAppState(
     (s: AppState) => s.settings.syntaxHighlightingDisabled ?? false
@@ -85,21 +79,18 @@ export function ThemePicker({
   const syntaxToggleShortcut = useShortcutDisplay("theme:toggleSyntaxHighlighting", "ThemePicker", "ctrl+t");
 
   const toggleSyntax = React.useCallback(() => {
-    if (colorModuleUnavailableReason === null) {
-      const newValue = !syntaxHighlightingDisabled
-      updateSettingsForSource("userSettings", {
+    const newValue = !syntaxHighlightingDisabled
+    updateSettingsForSource("userSettings", {
+      syntaxHighlightingDisabled: newValue
+    });
+    setAppState(prev => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
         syntaxHighlightingDisabled: newValue
-      });
-      setAppState(prev => ({
-        ...prev,
-        settings: {
-          ...prev.settings,
-          syntaxHighlightingDisabled: newValue
-        }
-      }));
-    }
+      }
+    }));
   }, [
-    colorModuleUnavailableReason,
     syntaxHighlightingDisabled,
     setAppState,
   ])
@@ -160,14 +151,9 @@ export function ThemePicker({
     }
   }, [cancelPreview, onCancelProp, skipExitHandling])
 
-  const syntaxHint =
-    colorModuleUnavailableReason === 'env'
-      ? `Syntax highlighting disabled (via CLAUDE_CODE_SYNTAX_HIGHLIGHT=${process.env.CLAUDE_CODE_SYNTAX_HIGHLIGHT})`
-      : syntaxHighlightingDisabled
-        ? `Syntax highlighting disabled (${syntaxToggleShortcut} to enable)`
-        : syntaxTheme
-          ? `Syntax theme: ${syntaxTheme.theme}${syntaxTheme.source ? ` (from ${syntaxTheme.source})` : ''} (${syntaxToggleShortcut} to disable)`
-          : `Syntax highlighting enabled (${syntaxToggleShortcut} to disable)`
+  const syntaxHint = syntaxHighlightingDisabled
+    ? `Syntax highlighting disabled (${syntaxToggleShortcut} to enable)`
+    : `Syntax highlighting enabled (${syntaxToggleShortcut} to disable)`
 
   const header = showIntroText ? (
     <Text>{"Let's get started."}</Text>

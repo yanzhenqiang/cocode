@@ -1,1 +1,0 @@
-export function expectColorDiff() { return null }; export function expectColorFile() { return null }; export function getColorModuleUnavailableReason() { return null }; export function getSyntaxTheme() { return null }
