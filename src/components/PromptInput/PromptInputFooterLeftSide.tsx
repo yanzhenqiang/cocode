@@ -109,17 +109,7 @@ export function PromptInputFooterLeftSide(t0) {
     t1 = $[5];
   }
   const showVim = t1;
-  let t2;
-  if ($[6] !== historyFailedMatch || $[7] !== historyQuery || $[8] !== isSearching || $[9] !== setHistoryQuery) {
-    t2 = isSearching && <HistorySearchInput value={historyQuery} onChange={setHistoryQuery} historyFailedMatch={historyFailedMatch} />;
-    $[6] = historyFailedMatch;
-    $[7] = historyQuery;
-    $[8] = isSearching;
-    $[9] = setHistoryQuery;
-    $[10] = t2;
-  } else {
-    t2 = $[10];
-  }
+  let t2 = null;
   let t3;
   if ($[11] !== showVim) {
     t3 = showVim ? <Text dimColor={true} key="vim-insert">-- INSERT --</Text> : null;

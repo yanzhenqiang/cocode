@@ -1891,7 +1891,6 @@ export function REPL({
     popCommandFromQueue: handleQueuedCommandOnCancel,
     vimMode,
     isLocalJSXCommand: toolJSX?.isLocalJSXCommand,
-    isSearchingHistory,
     isHelpOpen,
     inputMode,
     inputValue,

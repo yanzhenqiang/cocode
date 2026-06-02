@@ -132,7 +132,7 @@ export function useIsOverlayActive() {
  *
  * @example
  * // Use for TextInput focus - allows typing during autocomplete
- * focus: !isSearchingHistory && !isModalOverlayActive
+ * focus: !isModalOverlayActive
  */
 function _temp2(s) {
   return s.activeOverlays.size > 0;

@@ -1,10 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { getModeFromInput } from 'src/components/PromptInput/inputModes.js';
-import { useNotifications } from 'src/context/notifications.js';
-import { ConfigurableShortcutHint } from '../components/ConfigurableShortcutHint.js';
-import { FOOTER_TEMPORARY_STATUS_TIMEOUT } from '../components/PromptInput/Notifications.js';
 import { getHistory } from '../history.js';
-import { Text } from '../ink.js';
 import type { PromptInputMode } from '../types/textInputTypes.js';
 import type { HistoryEntry, PastedContent } from '../utils/config.js';
 export type HistoryMode = PromptInputMode;
@@ -66,17 +62,11 @@ export function useArrowKeyHistory(onSetInput: (value: string, mode: HistoryMode
   onHistoryUp: () => void;
   onHistoryDown: () => boolean;
   resetHistory: () => void;
-  dismissSearchHint: () => void;
 } {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [lastShownHistoryEntry, setLastShownHistoryEntry] = useState<(HistoryEntry & {
     mode?: HistoryMode;
   }) | undefined>(undefined);
-  const hasShownSearchHintRef = useRef(false);
-  const {
-    addNotification,
-    removeNotification
-  } = useNotifications();
 
   // Cache loaded history entries
   const historyCache = useRef<HistoryEntry[]>([]);
@@ -111,16 +101,6 @@ export function useArrowKeyHistory(onSetInput: (value: string, mode: HistoryMode
     const value_0 = mode_0 === 'bash' ? input.display.slice(1) : input.display;
     setInputWithCursor(value_0, mode_0, input.pastedContents ?? {}, cursorToStart_0);
   }, [setInputWithCursor]);
-  const showSearchHint = useCallback((): void => {
-    addNotification({
-      key: 'search-history-hint',
-      jsx: <Text dimColor>
-          <ConfigurableShortcutHint action="history:search" context="Global" fallback="ctrl+r" description="search history" />
-        </Text>,
-      priority: 'immediate',
-      timeoutMs: FOOTER_TEMPORARY_STATUS_TIMEOUT
-    });
-  }, [addNotification]);
   const onHistoryUp = useCallback((): void => {
     // Capture and increment synchronously to handle rapid keypresses
     const targetIndex = historyIndexRef.current;
@@ -172,14 +152,8 @@ export function useArrowKeyHistory(onSetInput: (value: string, mode: HistoryMode
       const newIndex = targetIndex + 1;
       setHistoryIndex(newIndex);
       updateInput(historyCache.current[targetIndex], true);
-
-      // Show hint once per session after navigating through 2 history entries
-      if (newIndex >= 2 && !hasShownSearchHintRef.current) {
-        hasShownSearchHintRef.current = true;
-        showSearchHint();
-      }
     })();
-  }, [updateInput, showSearchHint]);
+  }, [updateInput]);
   const onHistoryDown = useCallback((): boolean => {
     // Use the ref for consistent reads
     const currentIndex = historyIndexRef.current;
@@ -210,19 +184,14 @@ export function useArrowKeyHistory(onSetInput: (value: string, mode: HistoryMode
     setHistoryIndex(0);
     historyIndexRef.current = 0;
     initialModeFilterRef.current = undefined;
-    removeNotification('search-history-hint');
     historyCache.current = [];
     historyCacheModeFilter.current = undefined;
-  }, [removeNotification]);
-  const dismissSearchHint = useCallback((): void => {
-    removeNotification('search-history-hint');
-  }, [removeNotification]);
+  }, []);
   return {
     historyIndex,
     setHistoryIndex,
     onHistoryUp,
     onHistoryDown,
-    resetHistory,
-    dismissSearchHint
+    resetHistory
   };
 }

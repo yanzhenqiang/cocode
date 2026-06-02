@@ -21,7 +21,6 @@ import { formatImageRef, formatPastedTextRef, getPastedTextRefNumLines, parseRef
 import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
 import { type HistoryMode, useArrowKeyHistory } from '../../hooks/useArrowKeyHistory.js';
 import { useDoublePress } from '../../hooks/useDoublePress.js';
-const useHistorySearch = () => ({ historyQuery: '', setHistoryQuery: (_: string) => {}, historyMatch: undefined, historyFailedMatch: false })
 import { useInputBuffer } from '../../hooks/useInputBuffer.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
@@ -379,7 +378,6 @@ function PromptInput({
   const [isPasting, setIsPasting] = useState(false);
   const [isExternalEditorActive, setIsExternalEditorActive] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
-  const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [showFastModePicker, setShowFastModePicker] = useState(false);
   const [showThinkingToggle, setShowThinkingToggle] = useState(false);
   const [showAutoModeOptIn, setShowAutoModeOptIn] = useState(false);
@@ -836,20 +834,12 @@ function PromptInput({
     resetHistory,
     onHistoryUp,
     onHistoryDown,
-    dismissSearchHint,
     historyIndex
   } = useArrowKeyHistory((value: string, historyMode: HistoryMode, pastedContents: Record<number, PastedContent>) => {
     onChange(value);
     onModeChange(historyMode);
     setPastedContents(pastedContents);
   }, input, pastedContents, setCursorOffset, mode);
-
-  // Dismiss search hint when user starts searching
-  useEffect(() => {
-    if (isSearchingHistory) {
-      dismissSearchHint();
-    }
-  }, [isSearchingHistory, dismissSearchHint]);
 
   // Only use history navigation when there are 0 or 1 slash command suggestions.
   // Footer nav is NOT here — when a pill is selected, TextInput focus=false so
@@ -1715,7 +1705,7 @@ function PromptInput({
     // Skip all input handling when a full-screen dialog is open. These dialogs
     // render via early return, but hooks run unconditionally — so without this
     // guard, Escape inside a dialog leaks to the double-press message-selector.
-    if (showTeamsDialog || showHistoryPicker) {
+    if (showTeamsDialog) {
       return;
     }
 
