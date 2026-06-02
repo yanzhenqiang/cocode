@@ -733,10 +733,6 @@ async function run(): Promise<CommanderCommand> {
 
     // Promise for file downloads - started early, awaited before REPL renders
     let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
-    const agentsJson = undefined;
-    const agentCli = undefined;
-    const cliAgents: never[] = [];
-    const agentSetting: string | undefined = undefined;
     let mainThreadAgentDefinition: undefined;
 
 // Extract these separately so they can be modified if needed
@@ -1809,7 +1805,6 @@ if (!isNonInteractiveSession) {
         resumeSessionAt: options.resumeSessionAt || undefined,
         rewindFiles: options.rewindFiles,
         enableAuthStatus: options.enableAuthStatus,
-        agent: agentCli,
         workload: options.workload,
         setupTrigger: setupTrigger ?? undefined,
         sessionStartHooksPromise
@@ -1823,7 +1818,6 @@ if (!isNonInteractiveSession) {
       env_var: process.env.ANTHROPIC_MODEL as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       settings_file: (getInitialSettings() || {}).model as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       subscriptionType: getSubscriptionType() as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      agent: agentSetting as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
     });
 
     // Get deprecation warning for the initial model (resolvedInitialModel computed earlier for hooks parallelization)
@@ -2016,7 +2010,6 @@ if (!isNonInteractiveSession) {
       mainThreadAgentDefinition,
       agentDefinitions,
       currentCwd,
-      cliAgents,
       initialState
     };
     if (options.continue) {
