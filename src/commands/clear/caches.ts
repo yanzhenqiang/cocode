@@ -16,7 +16,6 @@ import {
 } from '../../context.js'
 import { clearFileSuggestionCaches } from '../../hooks/fileSuggestions.js'
 import { clearAllPendingCallbacks } from '../../hooks/useSwarmPermissionPoller.js'
-const clearAllDumpState = () => {}
 import { resetPromptCacheBreakDetection } from '../../services/api/promptCacheBreakDetection.js'
 const clearAllSessions = () => {};
 import { runPostCompactCleanup } from '../../services/compact/postCompactCleanup.js'
@@ -102,8 +101,6 @@ export function clearSessionCaches(
   clearRepositoryCaches()
   // Clear bash command prefix caches (Haiku-extracted prefixes)
   clearCommandPrefixCaches()
-  // Clear dump prompts state
-  if (!hasPreserved) clearAllDumpState()
   // Clear invoked skills cache (each entry holds full skill file content)
   clearInvokedSkills(preservedAgentIds)
   // Clear git dir resolution cache
