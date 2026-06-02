@@ -733,7 +733,6 @@ async function run(): Promise<CommanderCommand> {
 
     // Promise for file downloads - started early, awaited before REPL renders
     let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
-    let mainThreadAgentDefinition: undefined;
 
 // Extract these separately so they can be modified if needed
     let outputFormat = options.outputFormat;
@@ -1414,7 +1413,7 @@ if (!isNonInteractiveSession) {
     // fires 'resume' instead — without this guard, hooks fire TWICE on /resume
     // and the second systemMessage clobbers the first. gh-30825)
     const hooksPromise = initOnly || init || maintenance || isNonInteractiveSession || options.continue || options.resume ? null : processSessionStartHooks('startup', {
-      agentType: mainThreadAgentDefinition?.agentType,
+      agentType: undefined,
       model: resolvedInitialModel
     });
 
@@ -1880,7 +1879,6 @@ if (!isNonInteractiveSession) {
       viewSelectionMode: 'none',
       footerSelection: null,
       toolPermissionContext: effectiveToolPermissionContext,
-      agent: mainThreadAgentDefinition?.agentType,
       agentDefinitions,
       mcp: {
         clients: [],
@@ -1991,7 +1989,6 @@ if (!isNonInteractiveSession) {
       initialTools,
       mcpClients,
       autoConnectIdeFlag: ide,
-      mainThreadAgentDefinition,
       disableSlashCommands,
       dynamicMcpConfig,
       strictMcpConfig,
@@ -2007,7 +2004,6 @@ if (!isNonInteractiveSession) {
 
     // Shared context for processResumedConversation calls
     const resumeContext = {
-      mainThreadAgentDefinition,
       agentDefinitions,
       currentCwd,
       initialState
@@ -2035,9 +2031,7 @@ if (!isNonInteractiveSession) {
           includeAttribution: true,
           transcriptPath: result.fullPath
         }, resumeContext);
-        if (loaded.restoredAgentDef) {
-          mainThreadAgentDefinition = loaded.restoredAgentDef;
-        }
+        // loaded.restoredAgentDef was assigned to mainThreadAgentDefinition (now removed)
             logEvent('tengu_continue', {
           success: true,
           resume_duration_ms: Math.round(performance.now() - resumeStart)
@@ -2049,7 +2043,7 @@ if (!isNonInteractiveSession) {
           initialState: loaded.initialState
         }, {
           ...sessionConfig,
-          mainThreadAgentDefinition: loaded.restoredAgentDef ?? mainThreadAgentDefinition,
+          mainThreadAgentDefinition: loaded.restoredAgentDef,
           initialMessages: loaded.messages,
           initialFileHistorySnapshots: loaded.fileHistorySnapshots,
           initialContentReplacements: loaded.contentReplacements,
@@ -2134,9 +2128,7 @@ if (!isNonInteractiveSession) {
             sessionIdOverride: sessionId,
             transcriptPath: fullPath
           }, resumeContext);
-          if (processedResume.restoredAgentDef) {
-            mainThreadAgentDefinition = processedResume.restoredAgentDef;
-          }
+          // processedResume.restoredAgentDef was assigned to mainThreadAgentDefinition (now removed)
           logEvent('tengu_session_resumed', {
             entrypoint: 'cli_flag' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
             success: true,
@@ -2171,7 +2163,7 @@ if (!isNonInteractiveSession) {
         fileHistorySnapshots: undefined,
         agentName: undefined,
         agentColor: undefined as AgentColorName | undefined,
-        restoredAgentDef: mainThreadAgentDefinition,
+        restoredAgentDef: undefined,
         initialState,
         contentReplacements: undefined
       } : undefined);
@@ -2182,7 +2174,7 @@ if (!isNonInteractiveSession) {
           initialState: resumeData.initialState
         }, {
           ...sessionConfig,
-          mainThreadAgentDefinition: resumeData.restoredAgentDef ?? mainThreadAgentDefinition,
+          mainThreadAgentDefinition: resumeData.restoredAgentDef,
           initialMessages: resumeData.messages,
           initialFileHistorySnapshots: resumeData.fileHistorySnapshots,
           initialContentReplacements: resumeData.contentReplacements,
