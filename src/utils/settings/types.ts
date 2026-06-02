@@ -26,7 +26,6 @@ export {
 
 // Also import for use within this file
 import { type HookCommand, HooksSchema } from '../../schemas/hooks.js'
-import { AutoFixConfigSchema } from '../../services/autoFix/autoFixConfig.js'
 import { count } from '../array.js'
 
 /**
@@ -441,7 +440,6 @@ export const SettingsSchema = lazySchema(() =>
       hooks: HooksSchema()
         .optional()
         .describe('Custom commands to run before/after tool executions'),
-      autoFix: AutoFixConfigSchema
         .optional()
         .describe(
           'Auto-fix configuration: automatically run lint/test after AI file edits ' +
