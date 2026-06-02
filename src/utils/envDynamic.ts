@@ -50,9 +50,6 @@ if (process.platform === 'linux') {
  * whose result is cached at module load. If the cache isn't populated yet, returns false.
  */
 function isMuslEnvironment(): boolean {
-  if (feature('IS_LIBC_MUSL')) return true
-  if (feature('IS_LIBC_GLIBC')) return false
-
   // Fallback for node: runtime detection via pre-populated cache
   if (process.platform !== 'linux') return false
   return muslRuntimeCache ?? false

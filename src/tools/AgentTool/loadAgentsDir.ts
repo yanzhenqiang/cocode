@@ -331,15 +331,7 @@ export const getAgentDefinitionsWithOverrides = memoize(
       // Kick off plugin agent loading concurrently with memory snapshot init —
       // loadPluginAgents is memoized and takes no args, so it's independent.
       // Join both so neither becomes a floating promise if the other throws.
-      let pluginAgentsPromise = loadPluginAgents()
-      if (feature('AGENT_MEMORY_SNAPSHOT') && isAutoMemoryEnabled()) {
-        const [pluginAgents_] = await Promise.all([
-          pluginAgentsPromise,
-          initializeAgentMemorySnapshots(customAgents),
-        ])
-        pluginAgentsPromise = Promise.resolve(pluginAgents_)
-      }
-      const pluginAgents = await pluginAgentsPromise
+      const pluginAgents = await loadPluginAgents()
 
       const allAgentsList: AgentDefinition[] = [
         ...pluginAgents,
