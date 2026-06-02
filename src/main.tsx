@@ -147,7 +147,6 @@ import { filterAllowedSdkBetas } from './utils/betas.js';
 import { isInBundledMode, isRunningWithBun } from './utils/bundledMode.js';
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js';
 import { filterExistingPaths, getKnownPathsForRepo } from './utils/githubRepoPathMapping.js';
-const clearPluginCache = () => {}
 import { migrateChangelogFromConfig } from './utils/releaseNotes.js';
 import { SandboxManager } from './utils/sandbox/sandbox-adapter.js';
 import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thinking.js';
@@ -616,7 +615,6 @@ async function run(): Promise<CommanderCommand> {
     const pluginDir = thisCommand.getOptionValue('pluginDir');
     if (Array.isArray(pluginDir) && pluginDir.length > 0 && pluginDir.every(p => typeof p === 'string')) {
       setInlinePlugins(pluginDir);
-      clearPluginCache('preAction: --plugin-dir inline plugins');
     }
     runMigrations();
     profileCheckpoint('preAction_after_migrations');
