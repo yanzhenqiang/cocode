@@ -236,16 +236,6 @@ export const getHookEventMetadata = memoize(
           ],
         },
       },
-      WorktreeCreate: {
-        summary: 'Create an isolated worktree for VCS-agnostic isolation',
-        description:
-          'Input to command is JSON with name (suggested worktree slug).\nStdout should contain the absolute path to the created worktree directory.\nExit code 0 - worktree created successfully\nOther exit codes - worktree creation failed',
-      },
-      WorktreeRemove: {
-        summary: 'Remove a previously created worktree',
-        description:
-          'Input to command is JSON with worktree_path (absolute path to worktree).\nExit code 0 - worktree removed successfully\nOther exit codes - show stderr to user only',
-      },
       CwdChanged: {
         summary: 'After the working directory changes',
         description:
@@ -288,8 +278,6 @@ export function groupHooksByEventAndMatcher(
     Elicitation: {},
     ElicitationResult: {},
     ConfigChange: {},
-    WorktreeCreate: {},
-    WorktreeRemove: {},
     InstructionsLoaded: {},
     CwdChanged: {},
     FileChanged: {},

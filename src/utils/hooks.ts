@@ -1691,7 +1691,7 @@ function getHooksConfig(
  *
  * Used to skip createBaseHookInput (getTranscriptPathForSession path joins)
  * and getMatchingHooks on hot paths where hooks are typically unconfigured.
- * See hasInstructionsLoadedHook / hasWorktreeCreateHook for the same pattern.
+ * See hasInstructionsLoadedHook for the same pattern.
  */
 function hasHookForEvent(
   hookEvent: HookEvent,
@@ -3160,12 +3160,7 @@ async function executeHooksOutsideREPL({
             }
           }
 
-          const output =
-            hookEvent === 'WorktreeCreate' &&
-            isSyncHookJSONOutput(json) &&
-            json.hookSpecificOutput?.hookEventName === 'WorktreeCreate'
-              ? json.hookSpecificOutput.worktreePath
-              : json.systemMessage || ''
+          const output = json.systemMessage || ''
           const blocked =
             isSyncHookJSONOutput(json) && json.decision === 'block'
 
@@ -3286,19 +3281,7 @@ async function executeHooksOutsideREPL({
             isSyncHookJSONOutput(httpJson) &&
             httpJson.decision === 'block'
 
-          // WorktreeCreate's consumer reads `output` as the bare filesystem
-          // path. Command hooks provide it via stdout; http hooks provide it
-          // via hookSpecificOutput.worktreePath. Without worktreePath, emit ''
-          // so the consumer's length filter skips it instead of treating the
-          // raw '{}' body as a path.
-          const output =
-            hookEvent === 'WorktreeCreate'
-              ? httpJson &&
-                isSyncHookJSONOutput(httpJson) &&
-                httpJson.hookSpecificOutput?.hookEventName === 'WorktreeCreate'
-                ? httpJson.hookSpecificOutput.worktreePath
-                : ''
-              : httpResult.body
+          const output = httpResult.body
 
           return {
             command: hook.url,
@@ -4962,113 +4945,6 @@ async function executeHookCallback({
     outcome: 'success',
     hook,
   }
-}
-
-/**
- * Check if WorktreeCreate hooks are configured (without executing them).
- *
- * Checks both settings-file hooks (getHooksConfigFromSnapshot) and registered
- * hooks (plugin hooks + SDK callback hooks via registerHookCallbacks).
- *
- * Must mirror the managedOnly filtering in getHooksConfig() — when
- * shouldAllowManagedHooksOnly() is true, plugin hooks (pluginRoot set) are
- * skipped at execution, so we must also skip them here. Otherwise this returns
- * true but executeWorktreeCreateHook() finds no matching hooks and throws,
- * blocking the git-worktree fallback.
- */
-export function hasWorktreeCreateHook(): boolean {
-  const snapshotHooks = getHooksConfigFromSnapshot()?.['WorktreeCreate']
-  if (snapshotHooks && snapshotHooks.length > 0) return true
-  const registeredHooks = getRegisteredHooks()?.['WorktreeCreate']
-  if (!registeredHooks || registeredHooks.length === 0) return false
-  // Mirror getHooksConfig(): skip plugin hooks in managed-only mode
-  const managedOnly = shouldAllowManagedHooksOnly()
-  return registeredHooks.some(
-    matcher => !(managedOnly && 'pluginRoot' in matcher),
-  )
-}
-
-/**
- * Execute WorktreeCreate hooks.
- * Returns the worktree path from hook stdout.
- * Throws if hooks fail or produce no output.
- * Callers should check hasWorktreeCreateHook() before calling this.
- */
-export async function executeWorktreeCreateHook(
-  name: string,
-): Promise<{ worktreePath: string }> {
-  const hookInput = {
-    ...createBaseHookInput(undefined),
-    hook_event_name: 'WorktreeCreate' as const,
-    name,
-  }
-
-  const results = await executeHooksOutsideREPL({
-    hookInput,
-    timeoutMs: TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-  })
-
-  // Find the first successful result with non-empty output
-  const successfulResult = results.find(
-    r => r.succeeded && r.output.trim().length > 0,
-  )
-
-  if (!successfulResult) {
-    const failedOutputs = results
-      .filter(r => !r.succeeded)
-      .map(r => `${r.command}: ${r.output.trim() || 'no output'}`)
-    throw new Error(
-      `WorktreeCreate hook failed: ${failedOutputs.join('; ') || 'no successful output'}`,
-    )
-  }
-
-  const worktreePath = successfulResult.output.trim()
-  return { worktreePath }
-}
-
-/**
- * Execute WorktreeRemove hooks if configured.
- * Returns true if hooks were configured and ran, false if no hooks are configured.
- *
- * Checks both settings-file hooks (getHooksConfigFromSnapshot) and registered
- * hooks (plugin hooks + SDK callback hooks via registerHookCallbacks).
- */
-export async function executeWorktreeRemoveHook(
-  worktreePath: string,
-): Promise<boolean> {
-  const snapshotHooks = getHooksConfigFromSnapshot()?.['WorktreeRemove']
-  const registeredHooks = getRegisteredHooks()?.['WorktreeRemove']
-  const hasSnapshotHooks = snapshotHooks && snapshotHooks.length > 0
-  const hasRegisteredHooks = registeredHooks && registeredHooks.length > 0
-  if (!hasSnapshotHooks && !hasRegisteredHooks) {
-    return false
-  }
-
-  const hookInput = {
-    ...createBaseHookInput(undefined),
-    hook_event_name: 'WorktreeRemove' as const,
-    worktree_path: worktreePath,
-  }
-
-  const results = await executeHooksOutsideREPL({
-    hookInput,
-    timeoutMs: TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-  })
-
-  if (results.length === 0) {
-    return false
-  }
-
-  for (const result of results) {
-    if (!result.succeeded) {
-      logForDebugging(
-        `WorktreeRemove hook failed [${result.command}]: ${result.output.trim()}`,
-        { level: 'error' },
-      )
-    }
-  }
-
-  return true
 }
 
 function getHookDefinitionsForTelemetry(

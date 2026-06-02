@@ -374,8 +374,6 @@ export const HOOK_EVENTS = [
   'Elicitation',
   'ElicitationResult',
   'ConfigChange',
-  'WorktreeCreate',
-  'WorktreeRemove',
   'InstructionsLoaded',
   'CwdChanged',
   'FileChanged',
@@ -695,24 +693,6 @@ export const InstructionsLoadedHookInputSchema = lazySchema(() =>
   ),
 )
 
-export const WorktreeCreateHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('WorktreeCreate'),
-      name: z.string(),
-    }),
-  ),
-)
-
-export const WorktreeRemoveHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('WorktreeRemove'),
-      worktree_path: z.string(),
-    }),
-  ),
-)
-
 export const CwdChangedHookInputSchema = lazySchema(() =>
   BaseHookInputSchema().and(
     z.object({
@@ -777,8 +757,6 @@ export const HookInputSchema = lazySchema(() =>
     ElicitationResultHookInputSchema(),
     ConfigChangeHookInputSchema(),
     InstructionsLoadedHookInputSchema(),
-    WorktreeCreateHookInputSchema(),
-    WorktreeRemoveHookInputSchema(),
     CwdChangedHookInputSchema(),
     FileChangedHookInputSchema(),
   ]),
@@ -916,7 +894,6 @@ export const SyncHookJSONOutputSchema = lazySchema(() =>
         ElicitationResultHookSpecificOutputSchema(),
         CwdChangedHookSpecificOutputSchema(),
         FileChangedHookSpecificOutputSchema(),
-        WorktreeCreateHookSpecificOutputSchema(),
       ])
       .optional(),
   }),
@@ -943,17 +920,6 @@ export const ElicitationResultHookSpecificOutputSchema = lazySchema(() =>
     })
     .describe(
       'Hook-specific output for the ElicitationResult event. Return this to override the action or content before the response is sent to the MCP server.',
-    ),
-)
-
-export const WorktreeCreateHookSpecificOutputSchema = lazySchema(() =>
-  z
-    .object({
-      hookEventName: z.literal('WorktreeCreate'),
-      worktreePath: z.string(),
-    })
-    .describe(
-      'Hook-specific output for the WorktreeCreate event. Provides the absolute path to the created worktree directory. Command hooks print the path on stdout instead.',
     ),
 )
 

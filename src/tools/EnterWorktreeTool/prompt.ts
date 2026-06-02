@@ -13,13 +13,12 @@ export function getEnterWorktreeToolPrompt(): string {
 
 ## Requirements
 
-- Must be in a git repository, OR have WorktreeCreate/WorktreeRemove hooks configured in settings.json
+- Must be in a git repository
 - Must not already be in a worktree
 
 ## Behavior
 
-- In a git repository: creates a new git worktree inside \`.claude/worktrees/\` with a new branch based on HEAD
-- Outside a git repository: delegates to WorktreeCreate/WorktreeRemove hooks for VCS-agnostic isolation
+- Creates a new git worktree inside \`.claude/worktrees/\` with a new branch based on HEAD
 - Switches the session's working directory to the new worktree
 - Use ExitWorktree to leave the worktree mid-session (keep or remove). On session exit, if still in the worktree, the user will be prompted to keep or remove it
 

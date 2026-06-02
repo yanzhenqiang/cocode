@@ -44,8 +44,6 @@ export const HOOK_EVENTS = [
   'Elicitation',
   'ElicitationResult',
   'ConfigChange',
-  'WorktreeCreate',
-  'WorktreeRemove',
   'InstructionsLoaded',
   'CwdChanged',
   'FileChanged',

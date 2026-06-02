@@ -30,11 +30,6 @@ import {
   getDefaultBranch,
   gitExe,
 } from './git.js'
-import {
-  executeWorktreeCreateHook,
-  executeWorktreeRemoveHook,
-  hasWorktreeCreateHook,
-} from './hooks.js'
 import { containsPathTraversal } from './path.js'
 import { getPlatform } from './platform.js'
 import {
@@ -756,61 +751,43 @@ export async function createWorktreeForSession(
 
   const originalCwd = getCwd()
 
-  // Try hook-based worktree creation first (allows user-configured VCS)
-  if (hasWorktreeCreateHook()) {
-    const hookResult = await executeWorktreeCreateHook(slug)
-    logForDebugging(
-      `Created hook-based worktree at: ${hookResult.worktreePath}`,
+  // Use git worktree
+  const gitRoot = findGitRoot(getCwd())
+  if (!gitRoot) {
+    throw new Error(
+      'Cannot create a worktree: not in a git repository.',
     )
+  }
 
-    currentWorktreeSession = {
-      originalCwd,
-      worktreePath: hookResult.worktreePath,
-      worktreeName: slug,
-      sessionId,
-      tmuxSessionName,
-      hookBased: true,
-    }
+  const originalBranch = await getBranch()
+
+  const createStart = Date.now()
+  const { worktreePath, worktreeBranch, headCommit, existed } =
+    await getOrCreateWorktree(gitRoot, slug, options)
+
+  let creationDurationMs: number | undefined
+  if (existed) {
+    logForDebugging(`Resuming existing worktree at: ${worktreePath}`)
   } else {
-    // Fall back to git worktree
-    const gitRoot = findGitRoot(getCwd())
-    if (!gitRoot) {
-      throw new Error(
-        'Cannot create a worktree: not in a git repository and no WorktreeCreate hooks are configured. ' +
-          'Configure WorktreeCreate/WorktreeRemove hooks in settings.json to use worktree isolation with other VCS systems.',
-      )
-    }
+    logForDebugging(
+      `Created worktree at: ${worktreePath} on branch: ${worktreeBranch}`,
+    )
+    await performPostCreationSetup(gitRoot, worktreePath)
+    creationDurationMs = Date.now() - createStart
+  }
 
-    const originalBranch = await getBranch()
-
-    const createStart = Date.now()
-    const { worktreePath, worktreeBranch, headCommit, existed } =
-      await getOrCreateWorktree(gitRoot, slug, options)
-
-    let creationDurationMs: number | undefined
-    if (existed) {
-      logForDebugging(`Resuming existing worktree at: ${worktreePath}`)
-    } else {
-      logForDebugging(
-        `Created worktree at: ${worktreePath} on branch: ${worktreeBranch}`,
-      )
-      await performPostCreationSetup(gitRoot, worktreePath)
-      creationDurationMs = Date.now() - createStart
-    }
-
-    currentWorktreeSession = {
-      originalCwd,
-      worktreePath,
-      worktreeName: slug,
-      worktreeBranch,
-      originalBranch,
-      originalHeadCommit: headCommit,
-      sessionId,
-      tmuxSessionName,
-      creationDurationMs,
-      usedSparsePaths:
-        (getInitialSettings().worktree?.sparsePaths?.length ?? 0) > 0,
-    }
+  currentWorktreeSession = {
+    originalCwd,
+    worktreePath,
+    worktreeName: slug,
+    worktreeBranch,
+    originalBranch,
+    originalHeadCommit: headCommit,
+    sessionId,
+    tmuxSessionName,
+    creationDurationMs,
+    usedSparsePaths:
+      (getInitialSettings().worktree?.sparsePaths?.length ?? 0) > 0,
   }
 
   // Save to project config for persistence
@@ -861,42 +838,29 @@ export async function cleanupWorktree(): Promise<void> {
   }
 
   try {
-    const { worktreePath, originalCwd, worktreeBranch, hookBased } =
+    const { worktreePath, originalCwd, worktreeBranch } =
       currentWorktreeSession
 
     // Change back to original directory first
     process.chdir(originalCwd)
 
-    if (hookBased) {
-      // Hook-based worktree: delegate cleanup to WorktreeRemove hook
-      const hookRan = await executeWorktreeRemoveHook(worktreePath)
-      if (hookRan) {
-        logForDebugging(`Removed hook-based worktree at: ${worktreePath}`)
-      } else {
-        logForDebugging(
-          `No WorktreeRemove hook configured, hook-based worktree left at: ${worktreePath}`,
-          { level: 'warn' },
-        )
-      }
-    } else {
-      // Git-based worktree: use git worktree remove.
-      // Explicit cwd: process.chdir above does NOT update getCwd() (the state
-      // CWD that execFileNoThrow defaults to). If the model cd'd to a non-repo
-      // dir, the bare execFileNoThrow variant would fail silently here.
-      const { code: removeCode, stderr: removeError } =
-        await execFileNoThrowWithCwd(
-          gitExe(),
-          ['worktree', 'remove', '--force', worktreePath],
-          { cwd: originalCwd },
-        )
+    // Git-based worktree: use git worktree remove.
+    // Explicit cwd: process.chdir above does NOT update getCwd() (the state
+    // CWD that execFileNoThrow defaults to). If the model cd'd to a non-repo
+    // dir, the bare execFileNoThrow variant would fail silently here.
+    const { code: removeCode, stderr: removeError } =
+      await execFileNoThrowWithCwd(
+        gitExe(),
+        ['worktree', 'remove', '--force', worktreePath],
+        { cwd: originalCwd },
+      )
 
-      if (removeCode !== 0) {
-        logForDebugging(`Failed to remove linked worktree: ${removeError}`, {
-          level: 'error',
-        })
-      } else {
-        logForDebugging(`Removed linked worktree at: ${worktreePath}`)
-      }
+    if (removeCode !== 0) {
+      logForDebugging(`Failed to remove linked worktree: ${removeError}`, {
+        level: 'error',
+      })
+    } else {
+      logForDebugging(`Removed linked worktree at: ${worktreePath}`)
     }
 
     // Clear the session
@@ -908,8 +872,8 @@ export async function cleanupWorktree(): Promise<void> {
       activeWorktreeSession: undefined,
     }))
 
-    // Delete the temporary worktree branch (git-based only)
-    if (!hookBased && worktreeBranch) {
+    // Delete the temporary worktree branch
+    if (worktreeBranch) {
       // Wait a bit to ensure git has released all locks
       await sleep(100)
 
@@ -942,28 +906,16 @@ export async function cleanupWorktree(): Promise<void> {
  * Create a lightweight worktree for a subagent.
  * Reuses getOrCreateWorktree/performPostCreationSetup but does NOT touch
  * global session state (currentWorktreeSession, process.chdir, project config).
- * Falls back to hook-based creation if not in a git repository.
  */
 export async function createAgentWorktree(slug: string): Promise<{
   worktreePath: string
   worktreeBranch?: string
   headCommit?: string
   gitRoot?: string
-  hookBased?: boolean
 }> {
   validateWorktreeSlug(slug)
 
-  // Try hook-based worktree creation first (allows user-configured VCS)
-  if (hasWorktreeCreateHook()) {
-    const hookResult = await executeWorktreeCreateHook(slug)
-    logForDebugging(
-      `Created hook-based agent worktree at: ${hookResult.worktreePath}`,
-    )
-
-    return { worktreePath: hookResult.worktreePath, hookBased: true }
-  }
-
-  // Fall back to git worktree
+  // Use git worktree
   // findCanonicalGitRoot (not findGitRoot) so agent worktrees always land in
   // the main repo's .claude/worktrees/ even when spawned from inside a session
   // worktree — otherwise they nest at <worktree>/.claude/worktrees/ and the
@@ -971,8 +923,7 @@ export async function createAgentWorktree(slug: string): Promise<{
   const gitRoot = findCanonicalGitRoot(getCwd())
   if (!gitRoot) {
     throw new Error(
-      'Cannot create agent worktree: not in a git repository and no WorktreeCreate hooks are configured. ' +
-        'Configure WorktreeCreate/WorktreeRemove hooks in settings.json to use worktree isolation with other VCS systems.',
+      'Cannot create agent worktree: not in a git repository.',
     )
   }
 
@@ -998,30 +949,15 @@ export async function createAgentWorktree(slug: string): Promise<{
 
 /**
  * Remove a worktree created by createAgentWorktree.
- * For git-based worktrees, removes the worktree directory and deletes the temporary branch.
- * For hook-based worktrees, delegates to the WorktreeRemove hook.
- * Must be called with the main repo's git root (for git worktrees), not the worktree path,
+ * Removes the worktree directory and deletes the temporary branch.
+ * Must be called with the main repo's git root, not the worktree path,
  * since the worktree directory is deleted during this operation.
  */
 export async function removeAgentWorktree(
   worktreePath: string,
   worktreeBranch?: string,
   gitRoot?: string,
-  hookBased?: boolean,
 ): Promise<boolean> {
-  if (hookBased) {
-    const hookRan = await executeWorktreeRemoveHook(worktreePath)
-    if (hookRan) {
-      logForDebugging(`Removed hook-based agent worktree at: ${worktreePath}`)
-    } else {
-      logForDebugging(
-        `No WorktreeRemove hook configured, hook-based agent worktree left at: ${worktreePath}`,
-        { level: 'warn' },
-      )
-    }
-    return hookRan
-  }
-
   if (!gitRoot) {
     logForDebugging('Cannot remove agent worktree: no git root provided', {
       level: 'error',
@@ -1299,56 +1235,36 @@ export async function execIntoTmuxWorktree(args: string[]): Promise<{
     }
   }
 
-  // Mirror createWorktreeForSession(): hook takes precedence over git so the
-  // WorktreeCreate hook substitutes the VCS backend for this fast-path too
-  // (anthropics/claude-code#39281). Git path below runs only when no hook.
-  let worktreeDir: string
-  let repoName: string
-  if (hasWorktreeCreateHook()) {
-    try {
-      const hookResult = await executeWorktreeCreateHook(worktreeName)
-      worktreeDir = hookResult.worktreePath
-    } catch (error) {
-      return {
-        handled: false,
-        error: `Error: ${errorMessage(error)}`,
-      }
+  // Get main git repo root (resolves through worktrees)
+  const repoRoot = findCanonicalGitRoot(getCwd())
+  if (!repoRoot) {
+    return {
+      handled: false,
+      error: 'Error: --worktree requires a git repository',
     }
-    repoName = basename(findCanonicalGitRoot(getCwd()) ?? getCwd())
-    // biome-ignore lint/suspicious/noConsole: intentional console output
-    console.log(`Using worktree via hook: ${worktreeDir}`)
-  } else {
-    // Get main git repo root (resolves through worktrees)
-    const repoRoot = findCanonicalGitRoot(getCwd())
-    if (!repoRoot) {
-      return {
-        handled: false,
-        error: 'Error: --worktree requires a git repository',
-      }
-    }
+  }
 
-    repoName = basename(repoRoot)
-    worktreeDir = worktreePathFor(repoRoot, worktreeName)
+  const repoName = basename(repoRoot)
+  const worktreeDir = worktreePathFor(repoRoot, worktreeName)
 
-    // Create or resume worktree
-    try {
-      const result = await getOrCreateWorktree(
-        repoRoot,
-        worktreeName,
-        prNumber !== null ? { prNumber } : undefined,
+  // Create or resume worktree
+  try {
+    const result = await getOrCreateWorktree(
+      repoRoot,
+      worktreeName,
+      prNumber !== null ? { prNumber } : undefined,
+    )
+    if (!result.existed) {
+      // biome-ignore lint/suspicious/noConsole: intentional console output
+      console.log(
+        `Created worktree: ${worktreeDir} (based on ${result.baseBranch})`,
       )
-      if (!result.existed) {
-        // biome-ignore lint/suspicious/noConsole: intentional console output
-        console.log(
-          `Created worktree: ${worktreeDir} (based on ${result.baseBranch})`,
-        )
-        await performPostCreationSetup(repoRoot, worktreeDir)
-      }
-    } catch (error) {
-      return {
-        handled: false,
-        error: `Error: ${errorMessage(error)}`,
-      }
+      await performPostCreationSetup(repoRoot, worktreeDir)
+    }
+  } catch (error) {
+    return {
+      handled: false,
+      error: `Error: ${errorMessage(error)}`,
     }
   }
 
