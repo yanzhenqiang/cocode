@@ -7,7 +7,6 @@ import {
   formatDescriptionWithSource,
   getCommandName,
 } from 'src/commands.js'
-import { createStreamlinedTransformer } from 'src/utils/streamlinedTransform.js'
 import { installStreamJsonStdoutGuard } from 'src/utils/streamJsonStdoutGuard.js'
 import type { ToolPermissionContext } from 'src/Tool.js'
 import type { ThinkingConfig } from 'src/utils/thinking.js'
@@ -81,7 +80,6 @@ import {
 import { expandPath } from 'src/utils/path.js'
 import { extractReadFilesFromMessages } from 'src/utils/queryHelpers.js'
 import { registerHookEventHandler } from 'src/utils/hooks/hookEvents.js'
-const executeFilePersistence = () => {}
 import { finalizePendingAsyncHooks } from 'src/utils/hooks/AsyncHookRegistry.js'
 import {
   gracefulShutdown,
@@ -745,14 +743,6 @@ export async function runHeadless(
   const needsFullArray = options.outputFormat === 'json' && options.verbose
   const messages: SDKMessage[] = []
   let lastMessage: SDKMessage | undefined
-  // Streamlined mode transforms messages when CLAUDE_CODE_STREAMLINED_OUTPUT=true and using stream-json
-  // Build flag gates this out of external builds; env var is the runtime opt-in for ant builds
-  const transformToStreamlined =
-    feature('STREAMLINED_OUTPUT') &&
-    isEnvTruthy(process.env.CLAUDE_CODE_STREAMLINED_OUTPUT) &&
-    options.outputFormat === 'stream-json'
-      ? createStreamlinedTransformer()
-      : null
 
   headlessProfilerCheckpoint('before_runHeadlessStreaming')
   for await (const message of runHeadlessStreaming(
@@ -769,17 +759,10 @@ export async function runHeadless(
     options,
     turnInterruptionState,
   )) {
-    if (transformToStreamlined) {
-      // Streamlined mode: transform messages and stream immediately
-      const transformed = transformToStreamlined(message)
-      if (transformed) {
-        await structuredIO.write(transformed)
-      }
-    } else if (options.outputFormat === 'stream-json' && options.verbose) {
+    if (options.outputFormat === 'stream-json' && options.verbose) {
       await structuredIO.write(message)
     }
     // Should not be getting control messages or stream events in non-stream mode.
-    // Also filter out streamlined types since they're only produced by the transformer.
     // SDK-only system events are excluded so lastMessage stays at the result
     // (session_state_changed(idle) and any late task_notification drain after
     // result in the finally block).
@@ -797,8 +780,6 @@ export async function runHeadless(
       ) &&
       message.type !== 'stream_event' &&
       message.type !== 'keep_alive' &&
-      message.type !== 'streamlined_text' &&
-      message.type !== 'streamlined_tool_use_summary' &&
       message.type !== 'prompt_suggestion'
     ) {
       if (needsFullArray) {
@@ -1916,9 +1897,6 @@ function runHeadlessStreaming(
           }
 
           abortController = createAbortController()
-          const turnStartTime = feature('FILE_PERSISTENCE')
-            ? Date.now()
-            : undefined
 
           headlessProfilerCheckpoint('before_ask')
           startQueryProfile()
@@ -2027,24 +2005,6 @@ function runHeadlessStreaming(
 
           for (const uuid of batchUuids) {
             notifyCommandLifecycle(uuid, 'completed')
-          }
-
-          if (feature('FILE_PERSISTENCE') && turnStartTime !== undefined) {
-            void executeFilePersistence(
-              turnStartTime,
-              abortController.signal,
-              result => {
-                output.enqueue({
-                  type: 'system' as const,
-                  subtype: 'files_persisted' as const,
-                  files: result.files,
-                  failed: result.failed,
-                  processed_at: new Date().toISOString(),
-                  uuid: randomUUID(),
-                  session_id: getSessionId(),
-                })
-              },
-            )
           }
 
           // Prompt suggestion feature removed in this build
