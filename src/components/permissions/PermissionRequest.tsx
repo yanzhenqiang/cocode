@@ -32,8 +32,6 @@ import { SkillPermissionRequest } from './SkillPermissionRequest/SkillPermission
 import { WebFetchPermissionRequest } from './WebFetchPermissionRequest/WebFetchPermissionRequest.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const ReviewArtifactTool = null;
-const ReviewArtifactPermissionRequest = null;
 const WorkflowTool = null;
 const WorkflowPermissionRequest = null;
 const MonitorTool = feature('MONITOR_TOOL') ? (require('../../tools/MonitorTool/MonitorTool.js') as typeof import('../../tools/MonitorTool/MonitorTool.js')).MonitorTool : null;
@@ -51,8 +49,6 @@ function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionR
       return FileWritePermissionRequest;
     case BashTool:
       return BashPermissionRequest;
-    case ReviewArtifactTool:
-      return ReviewArtifactPermissionRequest ?? FallbackPermissionRequest;
     case WebFetchTool:
       return WebFetchPermissionRequest;
     case NotebookEditTool:
@@ -129,9 +125,6 @@ function getNotificationMessage(toolUseConfirm: ToolUseConfirm): string {
   }
   if (toolUseConfirm.tool === EnterPlanModeTool) {
     return `${PRODUCT_DISPLAY_NAME} wants to enter plan mode`;
-  }
-  if (feature('REVIEW_ARTIFACT') && toolUseConfirm.tool === ReviewArtifactTool) {
-    return `${PRODUCT_DISPLAY_NAME} needs your approval for a review artifact`;
   }
   if (!toolName || toolName.trim() === '') {
     return `${PRODUCT_DISPLAY_NAME} needs your attention`;
