@@ -17,7 +17,7 @@ import { AppStateProvider } from './state/AppState.js';
 import { onChangeAppState } from './state/onChangeAppState.js';
 import { normalizeApiKeyForConfig } from './utils/authPortable.js';
 import { getExternalClaudeMdIncludes, getMemoryFiles, shouldShowClaudeMdExternalIncludesWarning } from './utils/claudemd.js';
-import { checkHasTrustDialogAccepted, getCustomApiKeyStatus, getGlobalConfig, saveGlobalConfig } from './utils/config.js';
+import { getCustomApiKeyStatus, getGlobalConfig, saveGlobalConfig } from './utils/config.js';
 import { isEnvTruthy, isRunningOnHomespace } from './utils/envUtils.js';
 import { type FpsMetrics, FpsTracker } from './utils/fpsTracker.js';
 import { updateGithubRepoPathMapping } from './utils/githubRepoPathMapping.js';
@@ -135,13 +135,6 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   if (!isEnvTruthy(process.env.CLAUBBIT)) {
     // Skip trust dialog UI for third-party providers (no Anthropic auth), but still
     // run trust state initialization below so the REPL mounts correctly.
-    if (usesAnthropicSetup && !checkHasTrustDialogAccepted()) {
-      const {
-        TrustDialog
-      } = await import('./components/TrustDialog/TrustDialog.js');
-      await showSetupDialog(root, done => <TrustDialog commands={commands} onDone={done} />);
-    }
-
     // Signal that trust has been verified for this session.
     // GrowthBook checks this to decide whether to include auth headers.
     // Critical for third-party providers: without this, downstream config lookups
