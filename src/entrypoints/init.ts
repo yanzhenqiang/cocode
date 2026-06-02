@@ -3,7 +3,6 @@ import '../bootstrap/state.js'
 import '../utils/config.js'
 import memoize from 'lodash-es/memoize.js'
 import { getIsNonInteractiveSession } from 'src/bootstrap/state.js'
-import { shutdownLspServerManager } from '../services/lsp/manager.js'
 import { preconnectAnthropicApi } from '../utils/apiPreconnect.js'
 import { applyExtraCACertsFromConfig } from '../utils/caCertsConfig.js'
 import { registerCleanup } from '../utils/cleanupRegistry.js'
@@ -136,9 +135,6 @@ export const init = memoize(async (): Promise<void> => {
 
     // Set up git-bash if relevant
     setShellIfWindows()
-
-    // Register LSP manager cleanup (initialization happens in main.tsx after --plugin-dir is processed)
-    registerCleanup(shutdownLspServerManager)
 
     // Initialize scratchpad directory if enabled
     if (isScratchpadEnabled()) {

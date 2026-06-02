@@ -1,23 +1,20 @@
 # TODO
 
-## Completed
+## Done
 - [x] Remove --bare mode
 - [x] Remove --worktree / --tmux CLI flags
 - [x] Remove --agent / --agents CLI options
 - [x] Remove ctrl+r history search
-- [x] Fix stub: getPluginSkills, loadAllPluginsCacheOnly, createStatsStore, MarketplaceSourceSchema
+- [x] Remove LSP module (in progress)
 
-## Stub Cleanup
-Plugin system stubs that can be removed after verifying no callers depend on their return values:
-- `getPluginCommands = () => []` (`src/commands.ts:58`)
-- `clearPluginCommandCache = () => {}` (`src/commands.ts:59`)
-- `clearPluginSkillsCache = () => {}` (`src/commands.ts:61`)
-- `getPluginMcpServers = () => []` (`src/services/mcp/config.ts:21`)
-- Others TBD
+## Remaining Stubs (~50, mostly plugin-related)
+Grouped by module:
+- **Plugin management UI** (~15): `useManagePlugins.ts`, `useLspPluginRecommendation.tsx`, etc.
+- **Plugin loading** (~10): `loadPluginAgents`, `loadPluginHooks`, `loadPluginMcpServers`, etc.
+- **MCP OAuth/keychain** (~8): `clearKeychainCache`, `isOAuthTokenExpired`, etc.
+- **Marketplace/ChatGPT** (~5): `parsePluginIdentifier`, `parseChatgptAccountId`, etc.
+- **LSP diagnostics** (~5): `LSPDiagnosticRegistry`, `LSPServerManager`, etc. (being deleted now)
+- **Platform-specific** (~7): `detectHomebrew`, `detectApk`, `detectDeb`, etc.
 
-## Default-False Feature Flags to Clean
-- [ ] TREE_SITTER_BASH
-- [ ] STREAMLINED_OUTPUT
-- [ ] REVIEW_ARTIFACT / BUILDING_CLAUDE_APPS / RUN_SKILL_GENERATOR
-- [ ] KAIROS
-- [ ] ... 33 total, pick one at a time
+## Default-False Feature Flags (33 total)
+Largest dead code blocks behind feature() gates.

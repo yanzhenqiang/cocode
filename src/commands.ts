@@ -16,7 +16,6 @@ import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import init from './commands/init.js'
 import keybindings from './commands/keybindings/index.js'
-import lsp from './commands/lsp/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import mcp from './commands/mcp/index.js'
@@ -141,7 +140,6 @@ const COMMANDS = memoize((): Command[] => [
   help,
   init,
   keybindings,
-  lsp,
   mcp,
   memory,
   model,

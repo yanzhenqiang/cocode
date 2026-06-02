@@ -5,7 +5,6 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from '../services/analytics/index.js'
-import { reinitializeLspServerManager } from '../services/lsp/manager.js'
 import { useAppState, useSetAppState } from '../state/AppState.js'
 import {
   getPluginCommandsState,
@@ -21,7 +20,6 @@ import { logError } from '../utils/log.js'
 const loadPluginAgents = async () => []
 const getPluginCommands = () => []
 const loadPluginHooks = () => []
-const loadPluginLspServers = () => []
 const loadPluginMcpServers = () => []
 const detectAndUninstallDelistedPlugins = () => []
 const getFlaggedPlugins = () => ({})
@@ -139,30 +137,13 @@ export function useManagePlugins({
       )
       const mcp_count = mcpServerCounts.reduce((sum, n) => sum + n, 0)
 
-      // LSP: the primary fix for issue #15521 is in refresh.ts (via
-      // performBackgroundPluginInstallations → refreshActivePlugins, which
-      // clears caches first). This reinit is defensive — it reads the same
-      // memoized loadAllPlugins() result as the original init unless a cache
-      // invalidation happened between main.tsx:3203 and REPL mount (e.g.
-      // seed marketplace registration or policySettings hot-reload).
-      const lspServerCounts = await Promise.all(
-        enabled.map(async p => {
-          if (p.lspServers) return Object.keys(p.lspServers).length
-          const servers = await loadPluginLspServers(p, errors)
-          if (servers) p.lspServers = servers
-          return servers ? Object.keys(servers).length : 0
-        }),
-      )
-      const lsp_count = lspServerCounts.reduce((sum, n) => sum + n, 0)
-      reinitializeLspServerManager()
-
-      // Update AppState - merge errors to preserve LSP errors
+      // Update AppState - merge errors to preserve existing errors
       setAppState(prevState => {
-        // Keep existing LSP/non-plugin-loading errors (source 'lsp-manager' or 'plugin:*')
+        // Keep existing non-plugin-loading errors (source 'lsp-manager' or 'plugin:*')
         const existingLspErrors = prevState.plugins.errors.filter(
-          e => e.source === 'lsp-manager' || e.source.startsWith('plugin:'),
+          e => e.source.startsWith('plugin:'),
         )
-        // Deduplicate: remove existing LSP errors that are also in new errors
+        // Deduplicate: remove existing errors that are also in new errors
         const newErrorKeys = new Set(
           errors.map(e =>
             e.type === 'generic-error'
@@ -218,7 +199,6 @@ export function useManagePlugins({
         agent_count: agents.length,
         hook_count,
         mcp_count,
-        lsp_count,
         // Ant-only: which plugins are enabled, to correlate with RSS/FPS.
         // Kept separate from base metrics so it doesn't flow into
         // logForDiagnosticsNoPII.
@@ -237,12 +217,12 @@ export function useManagePlugins({
       const errorObj = toError(error)
       logError(errorObj)
       logForDebugging(`Error loading plugins: ${error}`)
-      // Set empty state on error, but preserve LSP errors and add the new error
+      // Set empty state on error and add the new error
       setPluginCommandsState([])
       setAppState(prevState => {
-        // Keep existing LSP/non-plugin-loading errors
+        // Keep existing non-plugin-loading errors
         const existingLspErrors = prevState.plugins.errors.filter(
-          e => e.source === 'lsp-manager' || e.source.startsWith('plugin:'),
+          e => e.source.startsWith('plugin:'),
         )
         const newError = {
           type: 'generic-error' as const,
@@ -271,7 +251,6 @@ export function useManagePlugins({
         agent_count: 0,
         hook_count: 0,
         mcp_count: 0,
-        lsp_count: 0,
         load_failed: true,
         ant_enabled_names: undefined,
       }

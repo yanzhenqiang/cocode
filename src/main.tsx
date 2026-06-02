@@ -133,7 +133,6 @@ const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/
 
 // migrations directory removed — all migrations already applied
 /* eslint-enable @typescript-eslint/no-require-imports */
-import { initializeLspServerManager } from './services/lsp/manager.js';
 import { type AppState, getDefaultAppState, IDLE_SPECULATION_STATE } from './state/AppStateStore.js';
 import { onChangeAppState } from './state/onChangeAppState.js';
 import { createStore } from './state/store.js';
@@ -741,11 +740,7 @@ async function run(): Promise<CommanderCommand> {
     const agentSetting: string | undefined = undefined;
     let mainThreadAgentDefinition: undefined;
 
-    // NOTE: LSP manager initialization is intentionally deferred until after
-    // the trust dialog is accepted. This prevents plugin LSP servers from
-    // executing code in untrusted directories before user consent.
-
-    // Extract these separately so they can be modified if needed
+// Extract these separately so they can be modified if needed
     let outputFormat = options.outputFormat;
     let inputFormat = options.inputFormat;
     let verbose = options.verbose ?? getGlobalConfig().verbose;
@@ -1310,13 +1305,7 @@ async function run(): Promise<CommanderCommand> {
       return;
     }
 
-    // Initialize LSP manager AFTER trust is established (or in non-interactive mode
-    // where trust is implicit). This prevents plugin LSP servers from executing
-    // code in untrusted directories before user consent.
-    // Must be after inline plugins are set (if any) so --plugin-dir LSP servers are included.
-    initializeLspServerManager();
-
-    if (!isNonInteractiveSession) {
+if (!isNonInteractiveSession) {
       const {
         errors
       } = getSettingsWithErrors();
