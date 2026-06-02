@@ -88,9 +88,6 @@ import { getDefaultMainLoopModel, getUserSpecifiedModelSetting, normalizeModelSt
 import { ensureModelStringsInitialized } from './utils/model/modelStrings.js';
 import { PERMISSION_MODES } from './utils/permissions/PermissionMode.js';
 import { checkAndDisableBypassPermissions, getAutoModeEnabledStateIfCached, initializeToolPermissionContext, initialPermissionModeFromCLI, isDefaultPermissionModeAuto, parseToolListFromCLI, removeDangerousPermissions, stripDangerousPermissionsForAutoMode, verifyAutoModeGateAccess } from './utils/permissions/permissionSetup.js';
-const cleanupOrphanedPluginVersionsInBackground = async () => {}
-const initializeVersionedPlugins = async () => {}
-const getGlobExclusionsForPluginCache = () => []
 import { countFilesRoundedRg } from './utils/ripgrep.js';
 import { processSessionStartHooks, processSetupHooks } from './utils/sessionStart.js';
 import { cacheSessionTitle, getSessionIdFromLog, loadTranscriptFromFile, saveAgentSetting, searchSessionsByCustomTitle, sessionIdExists } from './utils/sessionStorage.js';
@@ -1549,19 +1546,8 @@ async function run(): Promise<CommanderCommand> {
     // are install/upgrade bookkeeping that scripted calls don't need —
     // the next interactive session will reconcile. The await here was
     // blocking -p on a marketplace round-trip.
-    if (isNonInteractiveSession) {
-      // In headless mode, await to ensure plugin sync completes before CLI exits
-      await initializeVersionedPlugins();
-      profileCheckpoint('action_after_plugins_init');
-      void cleanupOrphanedPluginVersionsInBackground().then(() => getGlobExclusionsForPluginCache());
-    } else {
-      // In interactive mode, fire-and-forget — this is purely bookkeeping
-      // that doesn't affect runtime behavior of the current session
-      void initializeVersionedPlugins().then(async () => {
-        profileCheckpoint('action_after_plugins_init');
-        await cleanupOrphanedPluginVersionsInBackground();
-        void getGlobExclusionsForPluginCache();
-      });
+    profileCheckpoint('action_after_plugins_init');
+    if (!isNonInteractiveSession) {
     }
     const setupTrigger = initOnly || init ? 'init' : maintenance ? 'maintenance' : null;
     if (initOnly) {
