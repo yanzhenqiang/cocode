@@ -591,7 +591,6 @@ export function getManagedSettingsKeysForLogging(
       'SubagentStop',
       'PreCompact',
       'PostCompact',
-      'TeammateIdle',
       'TaskCreated',
       'TaskCompleted',
     ]),

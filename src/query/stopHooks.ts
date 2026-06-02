@@ -23,10 +23,8 @@ import type { REPLHookContext } from '../utils/hooks/postSamplingHooks.js'
 import {
   executeStopHooks,
   executeTaskCompletedHooks,
-  executeTeammateIdleHooks,
   getStopHookMessage,
   getTaskCompletedHookMessage,
-  getTeammateIdleHookMessage,
 } from '../utils/hooks.js'
 import {
   createStopHookSummaryMessage,
@@ -266,7 +264,7 @@ export async function* handleStopHooks(
       return { blockingErrors, preventContinuation: false }
     }
 
-    // After Stop hooks pass, run TeammateIdle and TaskCompleted hooks if this is a teammate
+    // After Stop hooks pass, run TaskCompleted hooks if this is a teammate
     if (isTeammate()) {
       const teammateName = getAgentName() ?? ''
       const teamName = getTeamName() ?? ''
@@ -331,47 +329,6 @@ export async function* handleStopHooks(
           if (toolUseContext.abortController.signal.aborted) {
             return { blockingErrors: [], preventContinuation: true }
           }
-        }
-      }
-
-      // Run TeammateIdle hooks
-      const teammateIdleGenerator = executeTeammateIdleHooks(
-        teammateName,
-        teamName,
-        permissionMode,
-        toolUseContext.abortController.signal,
-      )
-
-      for await (const result of teammateIdleGenerator) {
-        if (result.message) {
-          if (result.message.type === 'progress' && result.message.toolUseID) {
-            teammateHookToolUseID = result.message.toolUseID
-          }
-          yield result.message
-        }
-        if (result.blockingError) {
-          const userMessage = createUserMessage({
-            content: getTeammateIdleHookMessage(result.blockingError),
-            isMeta: true,
-          })
-          teammateBlockingErrors.push(userMessage)
-          yield userMessage
-        }
-        // Match Stop hook behavior: allow preventContinuation/stopReason
-        if (result.preventContinuation) {
-          teammatePreventedContinuation = true
-          teammateStopReason =
-            result.stopReason || 'TeammateIdle hook prevented continuation'
-          yield createAttachmentMessage({
-            type: 'hook_stopped_continuation',
-            message: teammateStopReason,
-            hookName: 'TeammateIdle',
-            toolUseID: teammateHookToolUseID,
-            hookEvent: 'TeammateIdle',
-          })
-        }
-        if (toolUseContext.abortController.signal.aborted) {
-          return { blockingErrors: [], preventContinuation: true }
         }
       }
 

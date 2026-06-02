@@ -178,11 +178,6 @@ export const getHookEventMetadata = memoize(
           values: ['init', 'maintenance'],
         },
       },
-      TeammateIdle: {
-        summary: 'When a teammate is about to go idle',
-        description:
-          'Input to command is JSON with teammate_name and team_name.\nExit code 0 - stdout/stderr not shown\nExit code 2 - show stderr to teammate and prevent idle (teammate continues working)\nOther exit codes - show stderr to user only',
-      },
       TaskCreated: {
         summary: 'When a task is being created',
         description:
@@ -288,7 +283,6 @@ export function groupHooksByEventAndMatcher(
     PostCompact: {},
     PermissionRequest: {},
     Setup: {},
-    TeammateIdle: {},
     TaskCreated: {},
     TaskCompleted: {},
     Elicitation: {},

@@ -82,7 +82,6 @@ import type {
   StopFailureHookInput,
   SubagentStartHookInput,
   SubagentStopHookInput,
-  TeammateIdleHookInput,
   TaskCreatedHookInput,
   TaskCompletedHookInput,
   ConfigChangeHookInput,
@@ -1761,7 +1760,6 @@ export async function getMatchingHooks(
       case 'SubagentStop':
         matchQuery = hookInput.agent_type
         break
-      case 'TeammateIdle':
       case 'TaskCreated':
       case 'TaskCompleted':
         break
@@ -2006,17 +2004,6 @@ export function getPreToolHookBlockingMessage(
  */
 export function getStopHookMessage(blockingError: HookBlockingError): string {
   return `Stop hook feedback:\n${blockingError.blockingError}`
-}
-
-/**
- * Format a blocking error from a TeammateIdle hook.
- * @param blockingError The blocking error from the hook
- * @returns Formatted message to give feedback to the model
- */
-export function getTeammateIdleHookMessage(
-  blockingError: HookBlockingError,
-): string {
-  return `TeammateIdle hook feedback:\n${blockingError.blockingError}`
 }
 
 /**
@@ -3775,38 +3762,6 @@ export async function* executeStopHooks(
     toolUseContext,
     messages,
     requestPrompt,
-  })
-}
-
-/**
- * Execute TeammateIdle hooks when a teammate is about to go idle.
- * If a hook blocks (exit code 2), the teammate should continue working instead of going idle.
- * @param teammateName The name of the teammate going idle
- * @param teamName The team this teammate belongs to
- * @param permissionMode Optional permission mode
- * @param signal Optional AbortSignal to cancel hook execution
- * @param timeoutMs Optional timeout in milliseconds for hook execution
- * @returns Async generator that yields progress messages and blocking errors
- */
-export async function* executeTeammateIdleHooks(
-  teammateName: string,
-  teamName: string,
-  permissionMode?: string,
-  signal?: AbortSignal,
-  timeoutMs: number = TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-): AsyncGenerator<AggregatedHookResult> {
-  const hookInput: TeammateIdleHookInput = {
-    ...createBaseHookInput(permissionMode),
-    hook_event_name: 'TeammateIdle',
-    teammate_name: teammateName,
-    team_name: teamName,
-  }
-
-  yield* executeHooks({
-    hookInput,
-    toolUseID: randomUUID(),
-    signal,
-    timeoutMs,
   })
 }
 

@@ -288,7 +288,7 @@ export type PermissionResult = ({
 /** Permission mode for controlling how tool executions are handled. 'default' - Standard behavior, prompts for dangerous operations. 'acceptEdits' - Auto-accept file edit operations. 'bypassPermissions' - Bypass all permission checks (requires allowDangerouslySkipPermissions). 'plan' - Planning mode, no actual tool execution. 'dontAsk' - Don't prompt for permissions, deny if not pre-approved. */
 export type PermissionMode = "default" | "acceptEdits" | "bypassPermissions" | "plan" | "dontAsk"
 
-export type HookEvent = "PreToolUse" | "PostToolUse" | "PostToolUseFailure" | "Notification" | "UserPromptSubmit" | "SessionStart" | "SessionEnd" | "Stop" | "StopFailure" | "SubagentStart" | "SubagentStop" | "PreCompact" | "PostCompact" | "PermissionRequest" | "PermissionDenied" | "Setup" | "TeammateIdle" | "TaskCreated" | "TaskCompleted" | "Elicitation" | "ElicitationResult" | "ConfigChange" | "WorktreeCreate" | "WorktreeRemove" | "InstructionsLoaded" | "CwdChanged" | "FileChanged"
+export type HookEvent = "PreToolUse" | "PostToolUse" | "PostToolUseFailure" | "Notification" | "UserPromptSubmit" | "SessionStart" | "SessionEnd" | "Stop" | "StopFailure" | "SubagentStart" | "SubagentStop" | "PreCompact" | "PostCompact" | "PermissionRequest" | "PermissionDenied" | "Setup" | "TaskCreated" | "TaskCompleted" | "Elicitation" | "ElicitationResult" | "ConfigChange" | "WorktreeCreate" | "WorktreeRemove" | "InstructionsLoaded" | "CwdChanged" | "FileChanged"
 
 export type BaseHookInput = {
   session_id: string
@@ -553,19 +553,6 @@ export type SetupHookInput = {
 } & {
   hook_event_name: "Setup"
   trigger: "init" | "maintenance"
-}
-
-export type TeammateIdleHookInput = {
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "TeammateIdle"
-  teammate_name: string
-  team_name: string
 }
 
 export type TaskCreatedHookInput = {
@@ -939,17 +926,6 @@ export type HookInput = ({
 } & {
   hook_event_name: "Setup"
   trigger: "init" | "maintenance"
-}) | ({
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "TeammateIdle"
-  teammate_name: string
-  team_name: string
 }) | ({
   session_id: string
   transcript_path: string

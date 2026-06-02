@@ -369,7 +369,6 @@ export const HOOK_EVENTS = [
   'PermissionRequest',
   'PermissionDenied',
   'Setup',
-  'TeammateIdle',
   'TaskCreated',
   'TaskCompleted',
   'Elicitation',
@@ -588,16 +587,6 @@ export const PostCompactHookInputSchema = lazySchema(() =>
   ),
 )
 
-export const TeammateIdleHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('TeammateIdle'),
-      teammate_name: z.string(),
-      team_name: z.string(),
-    }),
-  ),
-)
-
 export const TaskCreatedHookInputSchema = lazySchema(() =>
   BaseHookInputSchema().and(
     z.object({
@@ -782,7 +771,6 @@ export const HookInputSchema = lazySchema(() =>
     PostCompactHookInputSchema(),
     PermissionRequestHookInputSchema(),
     SetupHookInputSchema(),
-    TeammateIdleHookInputSchema(),
     TaskCreatedHookInputSchema(),
     TaskCompletedHookInputSchema(),
     ElicitationHookInputSchema(),
