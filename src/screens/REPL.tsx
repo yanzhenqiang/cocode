@@ -40,7 +40,6 @@ const isSwarmWorker = () => false;
 const generateSandboxRequestId = () => '';
 const sendSandboxPermissionRequestViaMailbox = async () => {};
 const sendSandboxPermissionResponseViaMailbox = async () => {};
-import { registerSandboxPermissionCallback } from '../hooks/useSwarmPermissionPoller.js';
 import { getTeamName, getAgentName } from '../utils/teammate.js';
 import { WorkerPendingPermission } from '../components/permissions/WorkerPendingPermission.js';
 import { injectUserMessageToTeammate, getAllInProcessTeammateTasks } from '../tasks/InProcessTeammateTask/InProcessTeammateTask.js';
@@ -1918,21 +1917,6 @@ export function REPL({
           return;
         }
 
-        // Register the callback for when the leader responds
-        registerSandboxPermissionCallback({
-          requestId,
-          host: hostPattern.host,
-          resolve: resolveShouldAllowHost
-        });
-
-        // Update AppState to show pending indicator
-        setAppState(prev => ({
-          ...prev,
-          pendingSandboxRequest: {
-            requestId,
-            host: hostPattern.host
-          }
-        }));
       });
     }
 

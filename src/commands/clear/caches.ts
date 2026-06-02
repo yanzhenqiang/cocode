@@ -15,7 +15,6 @@ import {
   setSystemPromptInjection,
 } from '../../context.js'
 import { clearFileSuggestionCaches } from '../../hooks/fileSuggestions.js'
-import { clearAllPendingCallbacks } from '../../hooks/useSwarmPermissionPoller.js'
 import { resetPromptCacheBreakDetection } from '../../services/api/promptCacheBreakDetection.js'
 const clearAllSessions = () => {};
 import { runPostCompactCleanup } from '../../services/compact/postCompactCleanup.js'
@@ -84,8 +83,6 @@ export function clearSessionCaches(
 
   // Clear all session ingress caches (lastUuidMap, sequentialAppendBySession)
   clearAllSessions()
-  // Clear swarm permission pending callbacks
-  if (!hasPreserved) clearAllPendingCallbacks()
 
   // Clear repository detection caches
   clearRepositoryCaches()
