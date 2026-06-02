@@ -54,18 +54,9 @@ import { isMcpInstructionsDeltaEnabled } from '../utils/mcpInstructionsDelta.js'
 const getCachedMCConfigForFRC = null
 
 const briefToolModule = null
-const DISCOVER_SKILLS_TOOL_NAME: string | null = feature(
-  'EXPERIMENTAL_SKILL_SEARCH',
-)
-  ? (
-      require('../tools/DiscoverSkillsTool/prompt.js') as typeof import('../tools/DiscoverSkillsTool/prompt.js')
-    ).DISCOVER_SKILLS_TOOL_NAME
-  : null
-// Capture the module (not .isSkillSearchEnabled directly) so spyOn() in tests
-// patches what we actually call — a captured function ref would point past the spy.
-const skillSearchFeatureCheck = feature('EXPERIMENTAL_SKILL_SEARCH')
-  ? (require('../services/skillSearch/featureCheck.js') as typeof import('../services/skillSearch/featureCheck.js'))
-  : null
+const DISCOVER_SKILLS_TOOL_NAME: string | null = null
+
+const skillSearchFeatureCheck = null
 /* eslint-enable @typescript-eslint/no-require-imports */
 import type { OutputStyleConfig } from './outputStyles.js'
 import { CYBER_RISK_INSTRUCTION } from './cyberRiskInstruction.js'
@@ -279,12 +270,6 @@ function getAgentToolSection(): string {
  * along with the DISCOVER_SKILLS_TOOL_NAME interpolation.
  */
 function getDiscoverSkillsGuidance(): string | null {
-  if (
-    feature('EXPERIMENTAL_SKILL_SEARCH') &&
-    DISCOVER_SKILLS_TOOL_NAME !== null
-  ) {
-    return `Relevant skills are automatically surfaced each turn as "Skills relevant to your task:" reminders. If you're about to do something those don't cover — a mid-task pivot, an unusual workflow, a multi-step plan — call ${DISCOVER_SKILLS_TOOL_NAME} with a specific description of what you're doing. Skills already visible or loaded are filtered automatically. Skip this if the surfaced skills already cover your next action.`
-  }
   return null
 }
 
@@ -671,13 +656,7 @@ export async function enhanceSystemPromptWithEnvDetails(
   // enabledToolNames when the caller provides it (agent tools do).
   // AgentTool.tsx:768 builds the prompt before assembleToolPool:830 so it
   // omits this param — `?? true` preserves guidance there.
-  const discoverSkillsGuidance =
-    feature('EXPERIMENTAL_SKILL_SEARCH') &&
-    skillSearchFeatureCheck?.isSkillSearchEnabled() &&
-    DISCOVER_SKILLS_TOOL_NAME !== null &&
-    (enabledToolNames?.has(DISCOVER_SKILLS_TOOL_NAME) ?? true)
-      ? getDiscoverSkillsGuidance()
-      : null
+  const discoverSkillsGuidance = null
   const envInfo = await computeEnvInfo(model, additionalWorkingDirectories)
   return [
     ...existingSystemPrompt,
