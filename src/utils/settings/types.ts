@@ -440,11 +440,6 @@ export const SettingsSchema = lazySchema(() =>
       hooks: HooksSchema()
         .optional()
         .describe('Custom commands to run before/after tool executions'),
-        .optional()
-        .describe(
-          'Auto-fix configuration: automatically run lint/test after AI file edits ' +
-          'and feed errors back for self-repair.',
-        ),
       worktree: z
         .object({
           symlinkDirectories: z

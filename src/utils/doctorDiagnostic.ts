@@ -17,16 +17,6 @@ import {
   isRunningFromLocalInstallation,
   localInstallationExists,
 } from './localInstaller.js'
-// nativeInstaller removed — inline stubs
-const detectApk = () => false
-const detectAsdf = () => false
-const detectDeb = () => false
-const detectHomebrew = () => false
-const detectMise = () => false
-const detectPacman = () => false
-const detectRpm = () => false
-const detectWinget = () => false
-const getPackageManager = () => null
 import { getPlatform } from './platform.js'
 import { getRipgrepStatus } from './ripgrep.js'
 import { SandboxManager } from './sandbox/sandbox-adapter.js'
@@ -97,19 +87,6 @@ export async function getCurrentInstallationType(): Promise<InstallationType> {
 
   // Check if running in bundled mode first
   if (isInBundledMode()) {
-    // Check if this bundled instance was installed by a package manager
-    if (
-      detectHomebrew() ||
-      detectWinget() ||
-      detectMise() ||
-      detectAsdf() ||
-      (await detectPacman()) ||
-      (await detectDeb()) ||
-      (await detectRpm()) ||
-      (await detectApk())
-    ) {
-      return 'package-manager'
-    }
     return 'native'
   }
 
@@ -268,7 +245,7 @@ async function detectMultipleInstallations(): Promise<
         // If the symlink points to a Caskroom directory, it's a Homebrew cask
         // Only skip it if it's the same Homebrew installation we're currently running from
         if (realPath.includes('/Caskroom/')) {
-          isCurrentHomebrewInstallation = detectHomebrew()
+          isCurrentHomebrewInstallation = false
         }
       } catch {
         // If we can't resolve the symlink, include it anyway
@@ -598,10 +575,7 @@ export async function getDoctorDiagnostic(): Promise<DiagnosticInfo> {
   }
 
   // Get package manager info if running from package manager
-  const packageManager =
-    installationType === 'package-manager'
-      ? await getPackageManager()
-      : undefined
+  const packageManager = undefined
 
   const diagnostic: DiagnosticInfo = {
     installationType,
