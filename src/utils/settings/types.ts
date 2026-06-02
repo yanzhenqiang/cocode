@@ -837,16 +837,6 @@ export const SettingsSchema = lazySchema(() =>
         })
         .optional()
         .describe('Remote session configuration'),
-      ...(feature('LODESTONE')
-        ? {
-            disableDeepLinkRegistration: z
-              .enum(['disable'])
-              .optional()
-              .describe(
-                'Prevent claude-cli:// protocol handler registration with the OS',
-              ),
-          }
-        : {}),
       minimumVersion: z
         .string()
         .optional()

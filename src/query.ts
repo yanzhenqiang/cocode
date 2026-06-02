@@ -248,15 +248,6 @@ async function* queryLoop(
   | ToolUseSummaryMessage,
   Terminal
 > {
-  // Start a new turn for multi-turn context tracking
-  if (
-    feature('MULTI_TURN_CONTEXT') &&
-    getGlobalConfig().knowledgeGraphEnabled
-  ) {
-    const { startNewTurn } = await import('./utils/multiTurnContext.js')
-    startNewTurn()
-  }
-
   // Immutable params — never reassigned during the query loop.
   const {
     systemPrompt,
@@ -373,16 +364,6 @@ async function* queryLoop(
 
     let messagesForQuery = [...getMessagesAfterCompactBoundary(messages)]
 
-    // Extract facts and update phase from the latest message (user input or tool result)
-    if (
-      feature('CONVERSATION_ARC') &&
-      getGlobalConfig().knowledgeGraphEnabled &&
-      messagesForQuery.length > 0
-    ) {
-      const { updateArcPhase } = await import('./utils/conversationArc.js')
-      await updateArcPhase([messagesForQuery[messagesForQuery.length - 1]])
-    }
-
     let tracking = autoCompactTracking
 
     // Enforce per-message budget on aggregate tool result size. Runs BEFORE
@@ -450,27 +431,8 @@ async function* queryLoop(
       : undefined
     queryCheckpoint('query_microcompact_end')
 
-    // arcSummary must be a separate array element; concatenating it into a
-    // template string makes [...systemPrompt] spread chars, shredding the prompt.
-    let promptWithArc: readonly string[] = systemPrompt
-    if (feature('CONVERSATION_ARC')) {
-      if (getGlobalConfig().knowledgeGraphEnabled) {
-        const lastMessage = messagesForQuery[messagesForQuery.length - 1]
-        const userQueryText =
-          lastMessage?.type === 'user' &&
-          typeof lastMessage.message.content === 'string'
-            ? lastMessage.message.content
-            : ''
-        const { getArcSummary } = await import('./utils/conversationArc.js')
-        const arcSummary = await getArcSummary(userQueryText)
-        if (arcSummary) {
-          promptWithArc = [...systemPrompt, arcSummary]
-        }
-      }
-    }
-
     const fullSystemPrompt = asSystemPrompt(
-      appendSystemContext(asSystemPrompt(promptWithArc), systemContext),
+      appendSystemContext(asSystemPrompt(systemPrompt), systemContext),
     )
 
     queryCheckpoint('query_autocompact_start')
@@ -1445,37 +1407,6 @@ async function* queryLoop(
       }
     }
     queryCheckpoint('query_tool_execution_end')
-
-    // Track multi-turn context after tool execution
-    if (
-      feature('MULTI_TURN_CONTEXT') &&
-      getGlobalConfig().knowledgeGraphEnabled
-    ) {
-      const { addMessageToTurn, addToolCallToTurn } = await import(
-        './utils/multiTurnContext.js'
-      )
-      addMessageToTurn(assistantMessage)
-      for (const toolUse of toolUseBlocks) {
-        addToolCallToTurn({
-          id: toolUse.id,
-          name: toolUse.name,
-          input: toolUse.input as Record<string, unknown>,
-          timestamp: Date.now(),
-        })
-      }
-    }
-
-    // Update conversation arc phase
-    if (
-      feature('CONVERSATION_ARC') &&
-      getGlobalConfig().knowledgeGraphEnabled
-    ) {
-      const { updateArcPhase, finalizeArcTurn } = await import(
-        './utils/conversationArc.js'
-      )
-      await updateArcPhase([assistantMessage])
-      await finalizeArcTurn()
-    }
 
     // Generate tool use summary after tool batch completes — passed to next recursive call
     let nextPendingToolUseSummary:
