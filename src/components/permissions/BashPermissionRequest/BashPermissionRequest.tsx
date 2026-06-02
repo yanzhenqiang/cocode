@@ -1,5 +1,4 @@
 import { c as _c } from "react-compiler-runtime";
-import { feature } from 'bun:bundle';
 import figures from 'figures';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, useTheme } from '../../../ink.js';
@@ -11,7 +10,7 @@ import { useAppState } from '../../../state/AppState.js';
 import { BashTool } from '../../../tools/BashTool/BashTool.js';
 import { getFirstWordPrefix, getSimpleCommandPrefix } from '../../../tools/BashTool/bashPermissions.js';
 import { getCompoundCommandPrefixesStatic } from '../../../utils/bash/prefix.js';
-import { createPromptRuleContent, generateGenericDescription, getBashPromptAllowDescriptions, isClassifierPermissionsEnabled } from '../../../utils/permissions/bashClassifier.js';
+import { generateGenericDescription, getBashPromptAllowDescriptions, isClassifierPermissionsEnabled } from '../../../utils/permissions/bashClassifier.js';
 import { extractRules } from '../../../utils/permissions/PermissionUpdate.js';
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js';
 import { Select } from '../../CustomSelect/select.js';
@@ -287,15 +286,6 @@ function BashPermissionRequestInner({
       'yes-prefix-edited': 2,
       no: 3
     };
-    if (feature('BASH_CLASSIFIER')) {
-      optionIndex = {
-        yes: 1,
-        'yes-apply-suggestions': 2,
-        'yes-prefix-edited': 2,
-        'yes-classifier-reviewed': 3,
-        no: 4
-      };
-    }
     logEvent('tengu_permission_request_option_selected', {
       option_index: optionIndex[value_0],
       explainer_visible: explainerState.visible
@@ -317,26 +307,6 @@ function BashPermissionRequestInner({
           destination: 'localSettings'
         }];
         toolUseConfirm.onAllow(toolUseConfirm.input, prefixUpdates);
-      }
-      onDone();
-      return;
-    }
-    if (feature('BASH_CLASSIFIER') && value_0 === 'yes-classifier-reviewed') {
-      const trimmedDescription = classifierDescription.trim();
-      logUnaryPermissionEvent('tool_use_single', toolUseConfirm, 'accept');
-      if (!trimmedDescription) {
-        toolUseConfirm.onAllow(toolUseConfirm.input, []);
-      } else {
-        const permissionUpdates: PermissionUpdate[] = [{
-          type: 'addRules',
-          rules: [{
-            toolName: BashTool.name,
-            ruleContent: createPromptRuleContent(trimmedDescription)
-          }],
-          behavior: 'allow',
-          destination: 'session'
-        }];
-        toolUseConfirm.onAllow(toolUseConfirm.input, permissionUpdates);
       }
       onDone();
       return;
@@ -386,14 +356,7 @@ function BashPermissionRequestInner({
         }
     }
   }
-  const classifierSubtitle = feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved ? <Text>
-        <Text color="success">{figures.tick} Auto-approved</Text>
-        {toolUseConfirm.classifierMatchedRule && <Text dimColor>
-            {' \u00b7 matched "'}
-            {toolUseConfirm.classifierMatchedRule}
-            {'"'}
-          </Text>}
-      </Text> : toolUseConfirm.classifierCheckInProgress ? <ClassifierCheckingSubtitle /> : classifierWasChecking ? <Text dimColor>Requires manual approval</Text> : undefined : undefined;
+  const classifierSubtitle = undefined;
   return <PermissionDialog workerBadge={workerBadge} title={sandboxingEnabled_0 && !isSandboxed_0 ? 'Bash command (unsandboxed)' : 'Bash command'} subtitle={classifierSubtitle}>
       <Box flexDirection="column" paddingX={2} paddingY={1}>
         <Text dimColor={explainerState.visible}>
@@ -425,10 +388,7 @@ function BashPermissionRequestInner({
             <Text dimColor={false}>
               Do you want to proceed?
             </Text>
-            <Select options={feature('BASH_CLASSIFIER') ? toolUseConfirm.classifierAutoApproved ? options.map(o => ({
-          ...o,
-          disabled: true
-        })) : options : options} isDisabled={false} inlineDescriptions onChange={onSelect} onCancel={() => handleReject()} onFocus={handleFocus} onInputModeToggle={handleInputModeToggle} />
+            <Select options={options} isDisabled={false} inlineDescriptions onChange={onSelect} onCancel={() => handleReject()} onFocus={handleFocus} onInputModeToggle={handleInputModeToggle} />
           </Box>
           <Box justifyContent="space-between" marginTop={1}>
             <Text dimColor>

@@ -67,7 +67,7 @@ function sourceToString(
   source: PermissionApprovalSource | PermissionRejectionSource,
 ): string {
   if (
-    (feature('BASH_CLASSIFIER') || feature('TRANSCRIPT_CLASSIFIER')) &&
+    feature('TRANSCRIPT_CLASSIFIER') &&
     source.type === 'classifier'
   ) {
     return 'classifier'
@@ -117,7 +117,7 @@ function logApprovalEvent(
     return
   }
   if (
-    (feature('BASH_CLASSIFIER') || feature('TRANSCRIPT_CLASSIFIER')) &&
+    feature('TRANSCRIPT_CLASSIFIER') &&
     source.type === 'classifier'
   ) {
     logEvent(

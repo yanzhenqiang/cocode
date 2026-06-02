@@ -50,13 +50,11 @@ export function getYoloClassifierApproval(
 }
 
 export function setClassifierChecking(toolUseID: string): void {
-  if (!feature('BASH_CLASSIFIER') && !feature('TRANSCRIPT_CLASSIFIER')) return
   CLASSIFIER_CHECKING.add(toolUseID)
   classifierChecking.emit()
 }
 
 export function clearClassifierChecking(toolUseID: string): void {
-  if (!feature('BASH_CLASSIFIER') && !feature('TRANSCRIPT_CLASSIFIER')) return
   CLASSIFIER_CHECKING.delete(toolUseID)
   classifierChecking.emit()
 }

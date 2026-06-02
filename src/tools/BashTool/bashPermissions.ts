@@ -341,17 +341,6 @@ export async function awaitClassifierAutoApproval(
 
   logClassifierResultForAnts(command, 'allow', descriptions, classifierResult)
 
-  if (
-    feature('BASH_CLASSIFIER') &&
-    classifierResult.matches &&
-    classifierResult.confidence === 'high'
-  ) {
-    return {
-      type: 'classifier',
-      classifier: 'bash_allow',
-      reason: `Allowed by prompt rule: "${classifierResult.matchedDescription}"`,
-    }
-  }
   return undefined
 }
 
@@ -410,20 +399,8 @@ export async function executeAsyncClassifierCheck(
   // with the permission dialog (e.g., arrow keys, tab, typing)
   if (!callbacks.shouldContinue()) return
 
-  if (
-    feature('BASH_CLASSIFIER') &&
-    classifierResult.matches &&
-    classifierResult.confidence === 'high'
-  ) {
-    callbacks.onAllow({
-      type: 'classifier',
-      classifier: 'bash_allow',
-      reason: `Allowed by prompt rule: "${classifierResult.matchedDescription}"`,
-    })
-  } else {
-    // No match — notify so the checking indicator is cleared
-    callbacks.onComplete?.()
-  }
+  // BASH_CLASSIFIER disabled at compile time — always no match
+  callbacks.onComplete?.()
 }
 
 /**
@@ -535,14 +512,6 @@ export async function bashToolHasPermission(
             type: 'other',
             reason: `Required by Bash prompt rule: "${askResult.matchedDescription}"`,
           },
-          ...(feature('BASH_CLASSIFIER')
-            ? {
-                pendingClassifierCheck: buildPendingClassifierCheck(
-                  input.command,
-                  appState.toolPermissionContext,
-                ),
-              }
-            : {}),
         }
       }
     }
@@ -557,14 +526,6 @@ export async function bashToolHasPermission(
     behavior: 'passthrough',
     message: createPermissionRequestMessage(BashTool.name, decisionReason),
     decisionReason,
-    ...(feature('BASH_CLASSIFIER')
-      ? {
-          pendingClassifierCheck: buildPendingClassifierCheck(
-            input.command,
-            appState.toolPermissionContext,
-          ),
-        }
-      : {}),
   }
 }
 

@@ -57,13 +57,6 @@ export function UserToolSuccessMessage({
     return fallbackContent ? <Box flexDirection="column">
           <Box flexDirection="column" width={width}>
             <Text>{fallbackContent}</Text>
-            {feature('BASH_CLASSIFIER') ? classifierRule && <MessageResponse height={1}>
-                    <Text dimColor>
-                      <Text color="success">{figures.tick}</Text>
-                      {' Auto-approved · matched '}
-                      {`"${classifierRule}"`}
-                    </Text>
-                  </MessageResponse> : null}
             {feature('TRANSCRIPT_CLASSIFIER') ? yoloReason && <MessageResponse height={1}>
                     <Text dimColor>Allowed by auto mode classifier</Text>
                   </MessageResponse> : null}
@@ -83,13 +76,6 @@ export function UserToolSuccessMessage({
     return fallbackContent ? <Box flexDirection="column">
           <Box flexDirection="column" width={width}>
             <Text>{fallbackContent}</Text>
-            {feature('BASH_CLASSIFIER') ? classifierRule && <MessageResponse height={1}>
-                    <Text dimColor>
-                      <Text color="success">{figures.tick}</Text>
-                      {' Auto-approved · matched '}
-                      {`"${classifierRule}"`}
-                    </Text>
-                  </MessageResponse> : null}
             {feature('TRANSCRIPT_CLASSIFIER') ? yoloReason && <MessageResponse height={1}>
                     <Text dimColor>Allowed by auto mode classifier</Text>
                   </MessageResponse> : null}
@@ -123,13 +109,6 @@ export function UserToolSuccessMessage({
   return <Box flexDirection="column">
       <Box flexDirection="column" width={rendersAsAssistantText ? undefined : width}>
         {renderedMessage}
-        {feature('BASH_CLASSIFIER') ? classifierRule && <MessageResponse height={1}>
-                <Text dimColor>
-                  <Text color="success">{figures.tick}</Text>
-                  {' Auto-approved \u00b7 matched '}
-                  {`"${classifierRule}"`}
-                </Text>
-              </MessageResponse> : null}
         {feature('TRANSCRIPT_CLASSIFIER') ? yoloReason && <MessageResponse height={1}>
                 <Text dimColor>Allowed by auto mode classifier</Text>
               </MessageResponse> : null}
