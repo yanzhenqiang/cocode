@@ -1,8 +1,6 @@
 import type { Command } from '../commands.js'
 import { getAttributionTexts } from '../utils/attribution.js'
 import { executeShellCommandsInPrompt } from '../utils/promptShellExecution.js'
-const isUndercover = () => false
-const getUndercoverInstructions = () => ''
 
 const ALLOWED_TOOLS = [
   'Bash(git add:*)',
@@ -13,12 +11,7 @@ const ALLOWED_TOOLS = [
 function getPromptContent(): string {
   const { commit: commitAttribution } = getAttributionTexts()
 
-  let prefix = ''
-  if (false && isUndercover()) {
-    prefix = getUndercoverInstructions() + '\n'
-  }
-
-  return `${prefix}## Context
+  return `## Context
 
 - Current git status: !\`git status\`
 - Current git diff (staged and unstaged changes): !\`git diff HEAD\`

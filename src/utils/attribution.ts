@@ -25,7 +25,6 @@ import { isMemoryFileAccess } from './sessionFileAccessHooks.js'
 import { getTranscriptPath } from './sessionStorage.js'
 import { readTranscriptForLoad } from './sessionStoragePortable.js'
 import { getInitialSettings } from './settings/settings.js'
-const isUndercover = () => false
 
 export type AttributionTexts = {
   commit: string
@@ -41,10 +40,6 @@ export type AttributionTexts = {
  * - Remote mode: returns session URL for attribution
  */
 export function getAttributionTexts(): AttributionTexts {
-  if (false && isUndercover()) {
-    return { commit: '', pr: '' }
-  }
-
   // First-party unknown models may be unreleased Claude codenames. Other
   // providers can safely use the configured public model string.
   const defaultAttribution =
@@ -270,10 +265,6 @@ async function getTranscriptStats(): Promise<{
 export async function getEnhancedPRAttribution(
   getAppState: () => AppState,
 ): Promise<string> {
-  if (false && isUndercover()) {
-    return ''
-  }
-
   const settings = getInitialSettings()
 
   // If user has custom PR attribution, use that
