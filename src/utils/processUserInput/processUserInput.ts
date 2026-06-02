@@ -455,40 +455,6 @@ async function processUserInputBase(
   // the CCR prompt receives paste contents and stays grammatical. See
   // keyword.ts for the quote/path exclusions. Interactive prompt mode +
   // non-slash-prefixed only:
-  // headless/print mode filters local-jsx commands out of context.options,
-  // so routing to /ultraplan there yields "Unknown skill" — and there's no
-  // rainbow animation in print mode anyway.
-  // Runs before attachment extraction so this path matches the slash-command
-  // path below (no await between setUserInputOnProcessing and setAppState —
-  // React batches both into one render, no flash).
-  if (
-    feature('ULTRAPLAN') &&
-    mode === 'prompt' &&
-    !context.options.isNonInteractiveSession &&
-    inputString !== null &&
-    !effectiveSkipSlash &&
-    !inputString.startsWith('/') &&
-    !context.getAppState().ultraplanSessionUrl &&
-    !context.getAppState().ultraplanLaunching &&
-    hasUltraplanKeyword(preExpansionInput ?? inputString)
-  ) {
-    logEvent('tengu_ultraplan_keyword', {})
-    const rewritten = replaceUltraplanKeyword(inputString).trim()
-    const { processSlashCommand } = await import('./processSlashCommand.js')
-    const slashResult = await processSlashCommand(
-      `/ultraplan ${rewritten}`,
-      precedingInputBlocks,
-      imageContentBlocks,
-      [],
-      context,
-      setToolJSX,
-      uuid,
-      isAlreadyProcessing,
-      canUseTool,
-    )
-    return addImageMetadataMessage(slashResult, imageMetadataTexts)
-  }
-
   // For slash commands, attachments will be extracted within getMessagesForSlashCommand
   const shouldExtractAttachments =
     !skipAttachments &&

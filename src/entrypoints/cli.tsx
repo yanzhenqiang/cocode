@@ -163,18 +163,6 @@ async function main(): Promise<void> {
   }
   // Fast-path for `--daemon-worker=<kind>` (internal — supervisor spawns this).
   // Must come before the daemon subcommand check: spawned per-worker, so
-  // Fast-path for template job commands.
-  if (feature('TEMPLATES') && (args[0] === 'new' || args[0] === 'list' || args[0] === 'reply')) {
-    profileCheckpoint('cli_templates_path');
-    const {
-      templatesMain
-    } = await import('../cli/handlers/templateJobs.js');
-    await templatesMain(args);
-    // process.exit (not return) — mountFleetView's Ink TUI can leave event
-    // loop handles that prevent natural exit.
-    // eslint-disable-next-line custom-rules/no-process-exit
-    process.exit(0);
-  }
 
   // Redirect common update flag mistakes to the update subcommand
   if (args.length === 1 && (args[0] === '--update' || args[0] === '--upgrade')) {

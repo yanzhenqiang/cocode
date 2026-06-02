@@ -2013,24 +2013,7 @@ async function* queryModel(
               })
               throw new RangeError('Content block not found')
             }
-            if (
-              feature('CONNECTOR_TEXT') &&
-              delta.type === 'connector_text_delta'
-            ) {
-              if (contentBlock.type !== 'connector_text') {
-                logEvent('tengu_streaming_error', {
-                  error_type:
-                    'content_block_type_mismatch_connector_text' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                  expected_type:
-                    'connector_text' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                  actual_type:
-                    contentBlock.type as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                })
-                throw new Error('Content block is not a connector_text block')
-              }
-              contentBlock.connector_text += delta.connector_text
-            } else {
-              switch (delta.type) {
+            switch (delta.type) {
                 case 'citations_delta':
                   // TODO: handle citations
                   break
@@ -2104,7 +2087,6 @@ async function* queryModel(
                   contentBlock.thinking += delta.thinking
                   break
               }
-            }
             // Capture research from content_block_delta if available (internal only).
             // Always overwrite with the latest value.
             if (false && 'research' in part) {

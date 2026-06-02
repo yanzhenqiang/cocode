@@ -48,7 +48,7 @@ function logLoadOnce(success: boolean): void {
  * parseCommand/parseCommandRaw for the parser to be available. Idempotent.
  */
 export async function ensureInitialized(): Promise<void> {
-  if (feature('TREE_SITTER_BASH') || feature('TREE_SITTER_BASH_SHADOW')) {
+  if (feature('TREE_SITTER_BASH')) {
     await ensureParserInitialized()
   }
 }
@@ -105,7 +105,7 @@ export async function parseCommandRaw(
   command: string,
 ): Promise<Node | null | typeof PARSE_ABORTED> {
   if (!command || command.length > MAX_COMMAND_LENGTH) return null
-  if (feature('TREE_SITTER_BASH') || feature('TREE_SITTER_BASH_SHADOW')) {
+  if (feature('TREE_SITTER_BASH')) {
     await ensureParserInitialized()
     const mod = getParserModule()
     logLoadOnce(mod !== null)
