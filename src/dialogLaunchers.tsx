@@ -46,15 +46,12 @@ export async function launchInvalidSettingsDialog(root: Root, props: {
 
 /**
  * Site ~4229: AssistantSessionChooser (pick a bridge session to attach to).
- * Original callback wiring: onSelect={id => done(id)}, onCancel={() => done(null)}.
+ * Stub: component removed from source snapshot.
  */
-export async function launchAssistantSessionChooser(root: Root, props: {
+export async function launchAssistantSessionChooser(_root: Root, _props: {
   sessions: AssistantSession[];
 }): Promise<string | null> {
-  const {
-    AssistantSessionChooser
-  } = await import('./assistant/AssistantSessionChooser.js');
-  return showSetupDialog<string | null>(root, done => <AssistantSessionChooser sessions={props.sessions} onSelect={id => done(id)} onCancel={() => done(null)} />);
+  return null
 }
 
 /**

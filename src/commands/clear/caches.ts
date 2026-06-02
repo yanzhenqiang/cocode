@@ -87,15 +87,6 @@ export function clearSessionCaches(
   // Clear swarm permission pending callbacks
   if (!hasPreserved) clearAllPendingCallbacks()
 
-  // Clear tungsten session usage tracking
-  if (false) {
-    void import('../../tools/TungstenTool/TungstenTool.js').then(
-      ({ clearSessionsWithTungstenUsage, resetInitializationState }) => {
-        clearSessionsWithTungstenUsage()
-        resetInitializationState()
-      },
-    )
-  }
   // Clear repository detection caches
   clearRepositoryCaches()
   // Clear bash command prefix caches (Haiku-extracted prefixes)

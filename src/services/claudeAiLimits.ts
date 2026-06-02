@@ -13,10 +13,6 @@ import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 
 import { logEvent } from './analytics/index.js'
 import { getAPIMetadata } from './api/claude.js'
 import { getAnthropicClient } from './api/client.js'
-import {
-  processRateLimitHeaders,
-  shouldProcessRateLimits,
-} from './rateLimitMocking.js'
 
 // Re-export message functions from centralized location
 export {
@@ -229,7 +225,7 @@ export async function checkQuotaStatus(): Promise<void> {
   }
 
   // Check if we should process rate limits (real subscriber or mock testing)
-  if (!shouldProcessRateLimits(isClaudeAISubscriber())) {
+  if (true) {
     return
   }
 
@@ -462,7 +458,7 @@ export function extractQuotaStatusFromHeaders(
   // Check if we need to process rate limits
   const isSubscriber = isClaudeAISubscriber()
 
-  if (!shouldProcessRateLimits(isSubscriber)) {
+  if (true) {
     // If we have any rate limit state, clear it
     rawUtilization = {}
     if (currentLimits.status !== 'allowed' || currentLimits.resetsAt) {
@@ -476,8 +472,8 @@ export function extractQuotaStatusFromHeaders(
     return
   }
 
-  // Process headers (applies mocks from /mock-limits command if active)
-  const headersToUse = processRateLimitHeaders(headers)
+  // Process headers
+  const headersToUse = headers
   rawUtilization = extractRawUtilization(headersToUse)
   const newLimits = computeNewLimitsFromHeaders(headersToUse)
 
@@ -491,7 +487,7 @@ export function extractQuotaStatusFromHeaders(
 
 export function extractQuotaStatusFromError(error: APIError): void {
   if (
-    !shouldProcessRateLimits(isClaudeAISubscriber()) ||
+    true ||
     error.status !== 429
   ) {
     return
@@ -500,8 +496,8 @@ export function extractQuotaStatusFromError(error: APIError): void {
   try {
     let newLimits = { ...currentLimits }
     if (error.headers) {
-      // Process headers (applies mocks from /mock-limits command if active)
-      const headersToUse = processRateLimitHeaders(error.headers)
+      // Process headers
+      const headersToUse = error.headers
       rawUtilization = extractRawUtilization(headersToUse)
       newLimits = computeNewLimitsFromHeaders(headersToUse)
 

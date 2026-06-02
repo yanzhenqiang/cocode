@@ -9,7 +9,6 @@ import { getFsImplementation, safeResolvePath } from '../../../utils/fsOperation
 import { expandPath } from '../../../utils/path.js';
 import type { CompletionType } from '../../../utils/unaryLogging.js';
 import { Select } from '../../CustomSelect/index.js';
-import { ShowInIDEPrompt } from '../../ShowInIDEPrompt.js';
 import { usePermissionRequestLogging } from '../hooks.js';
 import { PermissionDialog } from '../PermissionDialog.js';
 import type { ToolUseConfirm } from '../PermissionRequest.js';
@@ -157,7 +156,7 @@ export function FilePermissionDialog<T extends ToolInput = ToolInput>({
     fileDialogResult.onChange(option_0, parsedInput, feedback?.trim());
   };
   if (showingDiffInIDE && ideDiffConfig && path) {
-    return <ShowInIDEPrompt onChange={(option_1: PermissionOption, _input, feedback_0?: string) => onChange(option_1, feedback_0)} options={options} filePath={path} input={parsedInput} ideName={ideName} symlinkTarget={symlinkTarget} rejectFeedback={rejectFeedback} acceptFeedback={acceptFeedback} setFocusedOption={setFocusedOption} onInputModeToggle={handleInputModeToggle} focusedOption={focusedOption} yesInputMode={yesInputMode} noInputMode={noInputMode} />;
+    return null;
   }
   const isSymlinkOutsideCwd = symlinkTarget != null && relative(getCwd(), symlinkTarget).startsWith('..');
   const symlinkWarning = symlinkTarget ? <Box paddingX={1} marginBottom={1}>
