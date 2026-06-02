@@ -16,7 +16,6 @@ import { jsonStringify } from '../../utils/slowOperations.js';
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { Byline } from '../design-system/Byline.js';
 import { ProgressBar } from '../design-system/ProgressBar.js';
-import { isEligibleForOverageCreditGrant, OverageCreditUpsell } from '../LogoV2/OverageCreditUpsell.js';
 import { CodexUsage } from './CodexUsage.js';
 import { MiniMaxUsage } from './MiniMaxUsage.js';
 import { UnsupportedUsage } from './UnsupportedUsage.js';
@@ -261,7 +260,6 @@ function AnthropicUsage(): React.ReactNode {
 
       {utilization.extra_usage && <ExtraUsageSection extraUsage={utilization.extra_usage} maxWidth={maxWidth} />}
 
-      {isEligibleForOverageCreditGrant() && <OverageCreditUpsell maxWidth={maxWidth} />}
 
       <Text dimColor>
         <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
