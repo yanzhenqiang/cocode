@@ -29,7 +29,6 @@ import { SessionPreview } from './SessionPreview.js';
 import { Spinner } from './Spinner.js';
 import { TagTabs } from './TagTabs.js';
 import TextInput from './TextInput.js';
-import { type TreeNode, TreeSelect } from './ui/TreeSelect.js';
 type AgenticSearchState = {
   status: 'idle';
 } | {
@@ -55,10 +54,7 @@ export type LogSelectorProps = {
   onToggleAllProjects?: () => void;
   onAgenticSearch?: (query: string, logs: LogOption[], signal?: AbortSignal) => Promise<LogOption[]>;
 };
-type LogTreeNode = TreeNode<{
-  log: LogOption;
-  indexInFiltered: number;
-}>;
+type LogTreeNode = any;
 function normalizeAndTruncateToWidth(text: string, maxWidth: number): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
   return truncateToWidth(normalized, maxWidth);
@@ -1354,30 +1350,7 @@ export function LogSelector(t0) {
   }
   let t70;
   if ($[202] !== agenticSearchState.status || $[203] !== branchFilterEnabled || $[204] !== columns || $[205] !== displayedLogs || $[206] !== expandedGroupSessionIds || $[207] !== flatOptions || $[208] !== focusedLog || $[209] !== focusedNode?.id || $[210] !== handleFlatOptionsSelectFocus || $[211] !== handleRenameSubmit || $[212] !== handleTreeSelectFocus || $[213] !== isAgenticSearchOptionFocused || $[214] !== onCancel || $[215] !== onSelect || $[216] !== renameCursorOffset || $[217] !== renameValue || $[218] !== treeNodes || $[219] !== viewMode || $[220] !== visibleCount) {
-    t70 = agenticSearchState.status === "searching" ? null : viewMode === "rename" && focusedLog ? <Box paddingLeft={2} flexDirection="column"><Text bold={true}>Rename session:</Text><Box paddingTop={1}><TextInput value={renameValue} onChange={setRenameValue} onSubmit={handleRenameSubmit} placeholder={getLogDisplayTitle(focusedLog, "Enter new session name")} columns={columns} cursorOffset={renameCursorOffset} onChangeCursorOffset={setRenameCursorOffset} showCursor={true} /></Box></Box> : isResumeWithRenameEnabled ? <TreeSelect nodes={treeNodes} onSelect={node_0 => {
-      onSelect(node_0.value.log);
-    }} onFocus={handleTreeSelectFocus} onCancel={onCancel} focusNodeId={focusedNode?.id} visibleOptionCount={visibleCount} layout="expanded" isDisabled={viewMode === "search" || isAgenticSearchOptionFocused} hideIndexes={false} isNodeExpanded={nodeId => {
-      if (viewMode === "search" || branchFilterEnabled) {
-        return true;
-      }
-      const sessionId_2 = typeof nodeId === "string" && nodeId.startsWith("group:") ? nodeId.substring(6) : null;
-      return sessionId_2 ? expandedGroupSessionIds.has(sessionId_2) : false;
-    }} onExpand={nodeId_0 => {
-      const sessionId_3 = typeof nodeId_0 === "string" && nodeId_0.startsWith("group:") ? nodeId_0.substring(6) : null;
-      if (sessionId_3) {
-        setExpandedGroupSessionIds(prev_0 => new Set(prev_0).add(sessionId_3));
-        logEvent("tengu_session_group_expanded", {});
-      }
-    }} onCollapse={nodeId_1 => {
-      const sessionId_4 = typeof nodeId_1 === "string" && nodeId_1.startsWith("group:") ? nodeId_1.substring(6) : null;
-      if (sessionId_4) {
-        setExpandedGroupSessionIds(prev_1 => {
-          const newSet = new Set(prev_1);
-          newSet.delete(sessionId_4);
-          return newSet;
-        });
-      }
-    }} onUpFromFirstItem={enterSearchMode} /> : <Select options={flatOptions} onChange={value_0 => {
+    t70 = agenticSearchState.status === "searching" ? null : viewMode === "rename" && focusedLog ? <Box paddingLeft={2} flexDirection="column"><Text bold={true}>Rename session:</Text><Box paddingTop={1}><TextInput value={renameValue} onChange={setRenameValue} onSubmit={handleRenameSubmit} placeholder={getLogDisplayTitle(focusedLog, "Enter new session name")} columns={columns} cursorOffset={renameCursorOffset} onChangeCursorOffset={setRenameCursorOffset} showCursor={true} /></Box></Box> : isResumeWithRenameEnabled ? null : <Select options={flatOptions} onChange={value_0 => {
       const itemIndex = parseInt(value_0, 10);
       const log_13 = displayedLogs[itemIndex];
       if (log_13) {

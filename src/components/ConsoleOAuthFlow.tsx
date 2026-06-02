@@ -19,8 +19,6 @@ class OAuthService {
 }
 import { logError } from '../utils/log.js';
 import { getSettings_DEPRECATED } from '../utils/settings/settings.js';
-// ProviderManager removed
-export function ProviderManager(_props: any): any { return null }
 import { Select } from './CustomSelect/select.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
 import { Spinner } from './Spinner.js';
@@ -457,22 +455,7 @@ function OAuthStatusMessage({
     }
 
     case 'platform_setup':
-      return (
-        <ProviderManager
-          mode="first-run"
-          onDone={result => {
-            if (!result || result.action !== 'saved' || !result.message) {
-              setOAuthStatus({ state: 'idle' })
-              return
-            }
-
-            setOAuthStatus({
-              state: 'platform_setup_complete',
-              message: result.message,
-            })
-          }}
-        />
-      )
+      return null
 
     case 'platform_setup_complete':
       return (
