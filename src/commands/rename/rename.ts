@@ -11,7 +11,6 @@ import {
   saveAgentName,
   saveCustomTitle,
 } from '../../utils/sessionStorage.js'
-import { isTeammate } from '../../utils/teammate.js'
 import { generateSessionName } from './generateSessionName.js'
 
 export async function call(
@@ -19,16 +18,7 @@ export async function call(
   context: ToolUseContext & LocalJSXCommandContext,
   args: string,
 ): Promise<null> {
-  // Prevent teammates from renaming - their names are set by team leader
-  if (isTeammate()) {
-    onDone(
-      'Cannot rename: This session is a swarm teammate. Teammate names are set by the team leader.',
-      { display: 'system' },
-    )
-    return null
-  }
-
-  let newName: string
+let newName: string
   if (!args || args.trim() === '') {
     const generated = await generateSessionName(
       getMessagesAfterCompactBoundary(context.messages),

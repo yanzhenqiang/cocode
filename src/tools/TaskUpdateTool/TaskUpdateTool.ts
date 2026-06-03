@@ -19,11 +19,6 @@ import {
   TaskStatusSchema,
   updateTask,
 } from '../../utils/tasks.js'
-import {
-  getAgentId,
-  getAgentName,
-  getTeamName,
-} from '../../utils/teammate.js'
 import { TASK_UPDATE_TOOL_NAME } from './constants.js'
 import { DESCRIPTION, PROMPT } from './prompt.js'
 
@@ -179,21 +174,6 @@ export const TaskUpdateTool = buildTool({
       updates.owner = owner
       updatedFields.push('owner')
     }
-    // Auto-set owner when a teammate marks a task as in_progress without
-    // explicitly providing an owner. This ensures the task list can match
-    // todo items to teammates for showing activity status.
-    if (
-      isAgentSwarmsEnabled() &&
-      status === 'in_progress' &&
-      owner === undefined &&
-      !existingTask.owner
-    ) {
-      const agentName = getAgentName()
-      if (agentName) {
-        updates.owner = agentName
-        updatedFields.push('owner')
-      }
-    }
     if (metadata !== undefined) {
       const merged = { ...(existingTask.metadata ?? {}) }
       for (const [key, value] of Object.entries(metadata)) {
@@ -233,8 +213,8 @@ export const TaskUpdateTool = buildTool({
             taskId,
             existingTask.subject,
             existingTask.description,
-            getAgentName(),
-            getTeamName(),
+            undefined,
+            undefined,
             undefined,
             context?.abortController?.signal,
             undefined,
@@ -356,15 +336,6 @@ export const TaskUpdateTool = buildTool({
 
     let resultContent = `Updated task #${taskId} ${updatedFields.join(', ')}`
 
-    // Add reminder for teammates when they complete a task (supports in-process teammates)
-    if (
-      statusChange?.to === 'completed' &&
-      getAgentId() &&
-      isAgentSwarmsEnabled()
-    ) {
-      resultContent +=
-        '\n\nTask completed. Call TaskList now to find your next available task or see if your work unblocked others.'
-    }
 
     if (verificationNudgeNeeded) {
       resultContent += `\n\nNOTE: You just closed out 3+ tasks and none of them was a verification step. Before writing your final summary, use the /verify skill. You cannot self-assign PARTIAL by listing caveats in your summary — only the verifier issues a verdict.`

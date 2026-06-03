@@ -11,7 +11,6 @@ import {
   onTasksUpdated,
   resetTaskList,
 } from '../utils/tasks.js'
-import { isTeamLead } from '../utils/teammate.js'
 
 const HIDE_DELAY_MS = 5000
 const DEBOUNCE_MS = 50
@@ -218,7 +217,7 @@ const NOOP_SNAPSHOT = (): undefined => undefined
 export function useTasksV2(): Task[] | undefined {
   const teamContext = useAppState(s => s.teamContext)
 
-  const enabled = isTodoV2Enabled() && (!teamContext || isTeamLead(teamContext))
+  const enabled = isTodoV2Enabled()
 
   const store = enabled ? getStore() : null
 

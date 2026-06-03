@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { Box, Text } from '../../ink.js';
-import { getAgentName, getTeammateColor, getTeamName } from '../../utils/teammate.js';
 import { Spinner } from '../Spinner.js';
 import { WorkerBadge } from './WorkerBadge.js';
 type Props = {
@@ -19,30 +18,9 @@ export function WorkerPendingPermission(t0) {
     toolName,
     description
   } = t0;
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = getTeamName();
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  const teamName = t1;
-  let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = getAgentName();
-    $[1] = t2;
-  } else {
-    t2 = $[1];
-  }
-  const agentName = t2;
-  let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = getTeammateColor();
-    $[2] = t3;
-  } else {
-    t3 = $[2];
-  }
-  const agentColor = t3;
+  const teamName = undefined;
+  const agentName = undefined;
+  const agentColor = undefined;
   let t4;
   let t5;
   if ($[3] === Symbol.for("react.memo_cache_sentinel")) {

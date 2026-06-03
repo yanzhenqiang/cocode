@@ -205,12 +205,6 @@ import { findRelevantMemories } from '../memdir/findRelevantMemories.js'
 import { memoryAge, memoryFreshnessText } from '../memdir/memoryAge.js'
 import { getAutoMemPath, isAutoMemoryEnabled } from '../memdir/paths.js'
 import { getAgentMemoryDir } from '../tools/AgentTool/agentMemory.js'
-import {
-  getAgentName,
-  getAgentId,
-  getTeamName,
-  isTeamLead,
-} from './teammate.js'
 import { unassignTeammateTasks } from './tasks.js'
 export const TODO_REMINDER_CONFIG = {
   TURNS_SINCE_WRITE: 10,
@@ -848,12 +842,8 @@ export async function getAttachments(
                   getTeammateMailboxAttachments(toolUseContext),
                 ),
               ]),
-          maybe('team_context', async () =>
-            getTeamContextAttachment(messages ?? []),
-          ),
         ]
-      : []),
-    maybe('agent_pending_messages', async () =>
+      : []),    maybe('agent_pending_messages', async () =>
       getAgentPendingMessageAttachments(toolUseContext),
     ),
     maybe('critical_system_reminder', () =>
@@ -3297,38 +3287,6 @@ async function getTeammateMailboxAttachments(
  * Get team context attachment for teammates in a swarm.
  * Only injected on the first turn to provide team coordination instructions.
  */
-function getTeamContextAttachment(messages: Message[]): Attachment[] {
-  const teamName = getTeamName()
-  const agentId = getAgentId()
-  const agentName = getAgentName()
-
-  // Only inject for teammates (not team lead or non-team sessions)
-  if (!teamName || !agentId) {
-    return []
-  }
-
-  // Only inject on first turn - check if there are no assistant messages yet
-  const hasAssistantMessage = messages.some(m => m.type === 'assistant')
-  if (hasAssistantMessage) {
-    return []
-  }
-
-  const configDir = getClaudeConfigHomeDir()
-  const teamConfigPath = `${configDir}/teams/${teamName}/config.json`
-  const taskListPath = `${configDir}/tasks/${teamName}/`
-
-  return [
-    {
-      type: 'team_context',
-      agentId,
-      agentName: agentName || agentId,
-      teamName,
-      teamConfigPath,
-      taskListPath,
-    },
-  ]
-}
-
 function getTokenUsageAttachment(
   messages: Message[],
   model: string,

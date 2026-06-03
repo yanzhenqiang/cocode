@@ -25,12 +25,6 @@ import {
   getPlanFilePath,
   persistFileSnapshotIfRemote,
 } from '../../utils/plans.js'
-import {
-  getAgentName,
-  getTeamName,
-  isPlanModeRequired,
-  isTeammate,
-} from '../../utils/teammate.js'
 import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from './constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_PROMPT } from './prompt.js'
@@ -166,21 +160,9 @@ export const ExitPlanModeV2Tool: Tool<InputSchema, Output> = buildTool({
     return false // Now writes to disk
   },
   requiresUserInteraction() {
-    // For ALL teammates, no local user interaction needed:
-    // - If isPlanModeRequired(): team lead approves via mailbox
-    // - Otherwise: exits locally without approval (voluntary plan mode)
-    if (isTeammate()) {
-      return false
-    }
-    // For non-teammates, require user confirmation to exit plan mode
     return true
   },
   async validateInput(_input, { getAppState, options }) {
-    // Teammate AppState may show leader's mode (agent tasks skip override in
-    // acceptEdits/bypassPermissions/auto); isPlanModeRequired() is the real source
-    if (isTeammate()) {
-      return { result: true }
-    }
     // The deferred-tool list announces this tool regardless of mode, so the
     // model can call it after plan approval (fresh delta on compact/clear).
     // Reject before checkPermissions to avoid showing the approval dialog.
@@ -202,18 +184,6 @@ export const ExitPlanModeV2Tool: Tool<InputSchema, Output> = buildTool({
     return { result: true }
   },
   async checkPermissions(input, context) {
-    // For ALL teammates, bypass the permission UI to avoid sending permission_request
-    // The call() method handles the appropriate behavior:
-    // - If isPlanModeRequired(): sends plan_approval_request to leader
-    // - Otherwise: exits plan mode locally (voluntary plan mode)
-    if (isTeammate()) {
-      return {
-        behavior: 'allow' as const,
-        updatedInput: input,
-      }
-    }
-
-    // For non-teammates, require user confirmation to exit plan mode
     return {
       behavior: 'ask' as const,
       message: 'Exit plan mode?',

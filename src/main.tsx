@@ -50,7 +50,6 @@ import { initializeWarningHandler } from './utils/warningHandler.js';
 
 // Lazy require to avoid circular dependency: teammate.ts -> AppState.tsx -> ... -> main.tsx
 /* eslint-disable @typescript-eslint/no-require-imports */
-const getTeammateUtils = () => require('./utils/teammate.js') as typeof import('./utils/teammate.js');
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { relative, resolve } from 'path';
 import { isAnalyticsDisabled } from 'src/services/analytics/config.js';
@@ -1858,7 +1857,7 @@ if (!isNonInteractiveSession) {
     }
     const effectiveToolPermissionContext = {
       ...toolPermissionContext,
-      mode: isAgentSwarmsEnabled() && getTeammateUtils().isPlanModeRequired() ? 'plan' as const : toolPermissionContext.mode
+      mode: toolPermissionContext.mode
     };
     // All startup opt-in paths (--tools, --brief, defaultView) have fired
     // above; initialIsBriefOnly just reads the resulting state.

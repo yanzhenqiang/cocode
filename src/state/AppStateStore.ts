@@ -1,5 +1,5 @@
 import type { Notification } from 'src/context/notifications.js'
-import { isTeammate, isPlanModeRequired } from '../utils/teammate.js'
+import type { PermissionMode } from '../utils/permissions/PermissionMode.js'
 import type { TodoList } from 'src/utils/todo/types.js'
 // Bridge module deleted — inline type stub
 import type { Command } from '../commands.js'
@@ -32,7 +32,6 @@ import type { REPLHookContext } from '../utils/hooks/postSamplingHooks.js'
 import type { SessionHooksState } from '../utils/hooks/sessionHooks.js'
 import type { ModelSetting } from '../utils/model/model.js'
 import type { DenialTrackingState } from '../utils/permissions/denialTracking.js'
-import type { PermissionMode } from '../utils/permissions/PermissionMode.js'
 import { getInitialSettings } from '../utils/settings/settings.js'
 import type { SettingsJson } from '../utils/settings/types.js'
 import { shouldEnableThinkingByDefault } from '../utils/thinking.js'
@@ -369,11 +368,7 @@ export type AppState = DeepImmutable<{
 export type AppStateStore = Store<AppState>
 
 export function getDefaultAppState(): AppState {
-  // Determine initial permission mode for teammates spawned with plan_mode_required
-  const initialMode: PermissionMode =
-    isTeammate() && isPlanModeRequired()
-      ? 'plan'
-      : 'default'
+  const initialMode: PermissionMode = 'default'
 
   return {
     settings: getInitialSettings(),

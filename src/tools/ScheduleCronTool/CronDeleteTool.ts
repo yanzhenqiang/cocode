@@ -7,7 +7,6 @@ import {
   removeCronTasks,
 } from '../../utils/cronTasks.js'
 import { lazySchema } from '../../utils/lazySchema.js'
-import { getTeammateContext } from '../../utils/teammateContext.js'
 import {
   buildCronDeletePrompt,
   CRON_DELETE_DESCRIPTION,
@@ -66,15 +65,6 @@ export const CronDeleteTool = buildTool({
         result: false,
         message: `No scheduled job with id '${input.id}'`,
         errorCode: 1,
-      }
-    }
-    // Teammates may only delete their own crons.
-    const ctx = getTeammateContext()
-    if (ctx && task.agentId !== ctx.agentId) {
-      return {
-        result: false,
-        message: `Cannot delete cron job '${input.id}': owned by another agent`,
-        errorCode: 2,
       }
     }
     return { result: true }

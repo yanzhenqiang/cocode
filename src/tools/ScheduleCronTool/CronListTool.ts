@@ -4,7 +4,6 @@ import { cronToHuman } from '../../utils/cron.js'
 import { listAllCronTasks } from '../../utils/cronTasks.js'
 import { truncate } from '../../utils/format.js'
 import { lazySchema } from '../../utils/lazySchema.js'
-import { getTeammateContext } from '../../utils/teammateContext.js'
 import {
   buildCronListPrompt,
   CRON_LIST_DESCRIPTION,
@@ -61,12 +60,7 @@ export const CronListTool = buildTool({
     return buildCronListPrompt(isDurableCronEnabled())
   },
   async call() {
-    const allTasks = await listAllCronTasks()
-    // Teammates only see their own crons; team lead (no ctx) sees all.
-    const ctx = getTeammateContext()
-    const tasks = ctx
-      ? allTasks.filter(t => t.agentId === ctx.agentId)
-      : allTasks
+    const tasks = await listAllCronTasks()
     const jobs = tasks.map(t => ({
       id: t.id,
       cron: t.cron,

@@ -11,7 +11,6 @@ import {
 } from '../../utils/cronTasks.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { semanticBoolean } from '../../utils/semanticBoolean.js'
-import { getTeammateContext } from '../../utils/teammateContext.js'
 import {
   buildCronCreateDescription,
   buildCronCreatePrompt,
@@ -102,16 +101,6 @@ export const CronCreateTool = buildTool({
         errorCode: 3,
       }
     }
-    // Teammates don't persist across sessions, so a durable teammate cron
-    // would orphan on restart (agentId would point to a nonexistent teammate).
-    if (input.durable && getTeammateContext()) {
-      return {
-        result: false,
-        message:
-          'durable crons are not supported for teammates (teammates do not persist across sessions)',
-        errorCode: 4,
-      }
-    }
     return { result: true }
   },
   async call({ cron, prompt, recurring = true, durable = false }) {
@@ -123,7 +112,7 @@ export const CronCreateTool = buildTool({
       prompt,
       recurring,
       effectiveDurable,
-      getTeammateContext()?.agentId,
+      undefined,
     )
     // Enable the scheduler so the task fires in this session. The
     // useScheduledTasks hook polls this flag and will start watching

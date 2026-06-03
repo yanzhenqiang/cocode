@@ -13,7 +13,6 @@ import { isEnvTruthy } from './envUtils.js'
 import { getErrnoCode } from './errors.js'
 import { readFileSync } from './fileRead.js'
 import { safeParseJSON } from './json.js'
-import { getAgentName, getTeamName, getTeammateColor } from './teammate.js'
 import { z } from 'zod/v4'
 
 type HookEvent = (typeof HOOK_EVENTS)[number]
@@ -834,7 +833,7 @@ function resolveTeamName(
     return payloadTeam
   }
 
-  return getTeamName()
+  return undefined
 }
 
 function resolveRecipients(
@@ -876,8 +875,8 @@ export async function executeNotifyTeamAction(args: {
     }
   }
 
-  const senderName = runtime.senderName ?? getAgentName() ?? 'self-healing-mesh'
-  const senderColor = runtime.senderColor ?? getTeammateColor()
+  const senderName = runtime.senderName ?? 'self-healing-mesh'
+  const senderColor = runtime.senderColor
   const { summary, body } = buildNotifyTeamMessage(action, rule, event)
 
   // Swarm/team file system removed — notify_team action is no longer supported.

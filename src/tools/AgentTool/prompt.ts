@@ -2,8 +2,6 @@ import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/gr
 import { getSubscriptionType } from '../../utils/auth.js'
 import { hasEmbeddedSearchTools } from '../../utils/embeddedTools.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from '../../utils/envUtils.js'
-import { isTeammate } from '../../utils/teammate.js'
-import { isInProcessTeammate } from '../../utils/teammateContext.js'
 import { FILE_READ_TOOL_NAME } from '../FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from '../FileWriteTool/prompt.js'
 import { GLOB_TOOL_NAME } from '../GlobTool/prompt.js'
@@ -175,8 +173,7 @@ Usage notes:
 - Always include a short description (3-5 words) summarizing what the agent will do${concurrencyNote}
 - When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user with a concise summary of the result.${
     // eslint-disable-next-line custom-rules/no-process-env-top-level
-    !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS) &&
-    !isInProcessTeammate()
+    !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)
       ? `
 - You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will be automatically notified when it completes — do NOT sleep, poll, or proactively check on its progress. Continue with other work or respond to the user instead.
 - **Foreground vs background**: Use foreground (default) when you need the agent's results before you can proceed — e.g., research agents whose findings inform your next steps. Use background when you have genuinely independent work to do in parallel.`
@@ -190,14 +187,6 @@ Usage notes:
     'false'
       ? `\n- You can set \`isolation: "remote"\` to run the agent in a remote CCR environment. This is always a background task; you'll be notified when it completes. Use for long-running tasks that need a fresh sandbox.`
       : ''
-  }${
-    isInProcessTeammate()
-      ? `
-- The run_in_background, name, team_name, and mode parameters are not available in this context. Only synchronous subagents are supported.`
-      : isTeammate()
-        ? `
-- The name, team_name, and mode parameters are not available in this context — teammates cannot spawn other teammates. Omit them to spawn a subagent.`
-        : ''
   }${writingThePromptSection}
 
 ${currentExamples}`

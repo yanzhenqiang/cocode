@@ -136,7 +136,6 @@ import {
 import { createAttachmentMessage } from './attachments.js'
 import { all } from './generators.js'
 import { findToolByName, type Tools, type ToolUseContext } from '../Tool.js'
-import type { CanUseToolFn } from '../hooks/useCanUseTool.js'
 import { execPromptHook } from './hooks/execPromptHook.js'
 import type { Message, AssistantMessage } from '../types/message.js'
 import { execAgentHook } from './hooks/execAgentHook.js'
@@ -155,12 +154,8 @@ import { jsonStringify, jsonParse } from './slowOperations.js'
 import { stableStringifyJson } from './stableStringify.js'
 import { isEnvTruthy } from './envUtils.js'
 import { errorMessage, getErrnoCode } from './errors.js'
-import { getAgentName, getTeamName, getTeammateColor } from './teammate.js'
 import type {
   HookChainOutcome,
-  HookChainRuntimeContext,
-  SpawnFallbackAgentRequest,
-  SpawnFallbackAgentResponse,
 } from './hookChains.js'
 
 const TOOL_HOOK_EXECUTION_TIMEOUT_MS = 10 * 60 * 1000
@@ -198,69 +193,7 @@ function dedupeRegisteredPluginHooks(
   return deduped
 }
 
-function normalizeFallbackAgentModel(
-  model: string | undefined,
-): 'sonnet' | 'opus' | 'haiku' | undefined {
-  if (model === 'sonnet' || model === 'opus' || model === 'haiku') {
-    return model
-  }
-  return undefined
-}
 
-async function launchFallbackAgentFromHookChains(
-  request: SpawnFallbackAgentRequest,
-  toolUseContext: ToolUseContext,
-  canUseTool: CanUseToolFn,
-): Promise<SpawnFallbackAgentResponse> {
-  try {
-    const { AgentTool } = await import('../tools/AgentTool/AgentTool.js')
-    const normalizedModel = normalizeFallbackAgentModel(request.model)
-    const result = await AgentTool.call(
-      {
-        prompt: request.prompt,
-        description: request.description,
-        run_in_background: true,
-        ...(request.agentType ? { subagent_type: request.agentType } : {}),
-        ...(normalizedModel ? { model: normalizedModel } : {}),
-      },
-      toolUseContext,
-      canUseTool,
-      createAssistantMessage({ content: [] }),
-    )
-
-    const data = result.data as
-      | {
-          status?: string
-          agentId?: string
-          agent_id?: string
-        }
-      | undefined
-    const status = data?.status
-
-    if (
-      status === 'async_launched' ||
-      status === 'completed'
-    ) {
-      return {
-        launched: true,
-        agentId: data?.agentId ?? data?.agent_id,
-      }
-    }
-
-    return {
-      launched: true,
-      reason:
-        status !== undefined
-          ? `Fallback launched with status ${status}`
-          : undefined,
-    }
-  } catch (error) {
-    return {
-      launched: false,
-      reason: `Fallback launch failed: ${errorMessage(error)}`,
-    }
-  }
-}
 
 async function dispatchHookChainFromHookRuntime(args: {
   eventName: 'PostToolUseFailure' | 'TaskCompleted'
@@ -269,60 +202,7 @@ async function dispatchHookChainFromHookRuntime(args: {
   signal?: AbortSignal
   toolUseContext?: ToolUseContext
 }): Promise<void> {
-  try {
-    return
-
-    const { dispatchHookChainsForEvent } = await import('./hookChains.js')
-
-    const runtime: HookChainRuntimeContext = {
-      signal: args.signal,
-      senderName: getAgentName() ?? undefined,
-      senderColor: getTeammateColor() ?? undefined,
-      teamName: getTeamName() ?? undefined,
-    }
-
-    const chainDepth = args.toolUseContext?.queryTracking?.depth
-    if (typeof chainDepth === 'number' && Number.isFinite(chainDepth)) {
-      runtime.chainDepth = chainDepth
-    }
-
-    const hookChainsCanUseTool = (
-      args.toolUseContext as
-        | (ToolUseContext & { hookChainsCanUseTool?: CanUseToolFn })
-        | undefined
-    )?.hookChainsCanUseTool
-
-    if (args.toolUseContext) {
-      runtime.onSpawnFallbackAgent = request => {
-        if (!hookChainsCanUseTool) {
-          return Promise.resolve({
-            launched: false,
-            reason:
-              'Fallback action requires canUseTool in this hook runtime context',
-          })
-        }
-
-        return launchFallbackAgentFromHookChains(
-          request,
-          args.toolUseContext!,
-          hookChainsCanUseTool,
-        )
-      }
-    }
-
-    await dispatchHookChainsForEvent({
-      event: {
-        eventName: args.eventName,
-        outcome: args.outcome,
-        payload: args.payload,
-      },
-      runtime,
-    })
-  } catch (error) {
-    logForDebugging(
-      `[hook-chains] Dispatch failed for ${args.eventName}: ${errorMessage(error)}`,
-    )
-  }
+  // No-op after teammate/swarm system removal
 }
 
 /**

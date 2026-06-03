@@ -40,7 +40,6 @@ const isSwarmWorker = () => false;
 const generateSandboxRequestId = () => '';
 const sendSandboxPermissionRequestViaMailbox = async () => {};
 const sendSandboxPermissionResponseViaMailbox = async () => {};
-import { getTeamName, getAgentName } from '../utils/teammate.js';
 import { WorkerPendingPermission } from '../components/permissions/WorkerPendingPermission.js';
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 const registerLeaderToolUseConfirmQueue = () => {};
@@ -2386,16 +2385,6 @@ export function REPL({
     await onTurnComplete?.(messagesRef.current);
   }, [initialMcpClients, resetLoadingState, getToolUseContext, toolPermissionContext, setAppState, customSystemPrompt, onTurnComplete, appendSystemPrompt, canUseTool, mainThreadAgentDefinition, onQueryEvent, sessionTitle, titleDisabled]);
   const onQuery = useCallback(async (newMessages: MessageType[], abortController: AbortController, shouldQuery: boolean, additionalAllowedTools: string[], mainLoopModelParam: string, onBeforeQueryCallback?: (input: string, newMessages: MessageType[]) => Promise<boolean>, input?: string, effort?: EffortValue): Promise<void> => {
-    // If this is a teammate, mark them as active when starting a turn
-    if (isAgentSwarmsEnabled()) {
-      const teamName = getTeamName();
-      const agentName = getAgentName();
-      if (teamName && agentName) {
-        // Fire and forget - turn starts immediately, write happens in background
-        void setMemberActive(teamName, agentName, true);
-      }
-    }
-
     // Concurrent guard via state machine. tryStart() atomically checks
     // and transitions idle→running, returning the generation number.
     // Returns null if already running — no separate check-then-set.
