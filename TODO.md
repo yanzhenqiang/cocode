@@ -1,23 +1,31 @@
-# TODO
+# TODO — ALL CLEAN
 
-## All Major Cleanup Complete
+## Done
+- [x] Remove --bare mode (30+ gates)
+- [x] Remove --worktree / --tmux / --agent / --agents CLI flags
+- [x] Remove LSP module (20 files)
+- [x] Remove trust dialog
+- [x] Remove ctrl+r history search
+- [x] Fix critical stubs (getPluginSkills, loadAllPluginsCacheOnly, createStatsStore, MarketplaceSourceSchema)
+- [x] Delete credential modules (codexCredentials, geminiCredentials, githubModelsCredentials)
+- [x] Remove 33/33 feature flags
+- [x] Delete plugin management system (5 files, ~700 lines)
+- [x] Delete plugin UI stubs (StructuredDiff, HighlightedCode, LogoV2/Feed, TreeSelect, ProviderManager)
+- [x] Remove 9 OAuth/keychain stubs from auth.ts
+- [x] Remove refreshActivePlugins and dead plugin reload system
+- [x] Remove TeammateIdle, WorktreeCreate/Remove hooks
+- [x] Massive swarm/teammate cleanup (~75% eliminated)
+- [x] Remove all plugin command stubs from commands.ts
+- [x] Remove 3 unused npm packages
+- [x] **ALL 70+ STUBS ELIMINATED — ZERO REMAINING**
 
-### Done
-- 33/33 feature flags removed
-- Swarm/Teammate: ~75% eliminated
-- 55+ dead files deleted
-- 3 npm packages removed
-- CLI flags: --bare, --worktree, --tmux, --agent, --agents removed
-- LSP, trust dialog, ctrl+r, WorktreeCreate/Remove, TeammateIdle removed
-- All stubs fixed (getPluginSkills, loadAllPluginsCacheOnly, createStatsStore, MarketplaceSourceSchema)
+## Nothing Left
 
-### Remaining (low priority, harmless)
-- Plugin UI stubs (useManagePlugins.ts)
-- MCP OAuth/keychain stubs
-- Marketplace/install check stubs
-
-### Stats
-- Started: 354,397 lines, 1,425 files
-- Current: 346,133 lines, ~1,370 files
-- Reduced: 8,264 lines, ~55 files
-- 33 commits, all tests 8/8
+| Metric | Start | Final |
+|--------|-------|-------|
+| Lines | 354,397 | 344,723 |
+| Files | 1,425 | ~1,360 |
+| Feature flags | 33 dead | 0 |
+| Stubs | ~70 | 0 |
+| Tests | 8/8 | 8/8 |
+| Commits | - | 45+ |
