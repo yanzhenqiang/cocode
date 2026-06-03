@@ -294,7 +294,6 @@ import { getCommands, clearCommandsCache } from '../commands.js'
 import {
   isEnvTruthy,
 } from '../utils/envUtils.js'
-const installPluginsForHeadless = async () => {}
 const refreshActivePlugins = async () => {}
 const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import { getRunningTasks } from '../utils/task/framework.js'
@@ -1532,8 +1531,6 @@ function runHeadlessStreaming(
       // settings (fired in main.tsx preAction). downloadUserSettings() caches
       // its promise so this awaits the same in-flight request.
       
-
-      const pluginsInstalled = await installPluginsForHeadless()
 
       if (pluginsInstalled) {
         await applyPluginMcpDiff()
