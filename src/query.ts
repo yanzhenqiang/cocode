@@ -11,11 +11,7 @@ import {
   type AutoCompactTrackingState,
 } from './services/compact/autoCompact.js'
 import { buildPostCompactMessages } from './services/compact/compact.js'
-/* eslint-disable @typescript-eslint/no-require-imports */
-const reactiveCompact = feature('REACTIVE_COMPACT')
-  ? (require('./services/compact/reactiveCompact.js') as typeof import('./services/compact/reactiveCompact.js'))
-  : null
-/* eslint-enable @typescript-eslint/no-require-imports */
+const reactiveCompact = null
 import {
   logEvent,
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,

@@ -193,12 +193,6 @@ export async function shouldAutoCompact(
   // Note: returning false here also means autoCompactIfNeeded never reaches
   // trySessionMemoryCompaction in the query loop — the /compact call site
   // still tries session memory first. Revisit if reactive-only graduates.
-  if (feature('REACTIVE_COMPACT')) {
-    if (getFeatureValue_CACHED_MAY_BE_STALE('tengu_cobalt_raccoon', false)) {
-      return false
-    }
-  }
-
   const tokenCount = tokenCountWithEstimation(messages) - snipTokensFreed
   const threshold = getAutoCompactThreshold(model)
   const effectiveWindow = getEffectiveContextWindowSize(model)
