@@ -1,18 +1,10 @@
 import {
   getAnthropicApiKey,
   getAuthTokenSource,
-  getSubscriptionType,
-  isClaudeAISubscriber,
 } from './auth.js'
 import { getGlobalConfig } from './config.js'
 
 export function hasConsoleBillingAccess(): boolean {
-  const isSubscriber = isClaudeAISubscriber()
-
-  // This might be wrong if user is signed into Max but also using an API key, but
-  // we already show a warning on launch in that case
-  if (isSubscriber) return false
-
   // Check if user has any form of authentication
   const authSource = getAuthTokenSource()
   const hasApiKey = getAnthropicApiKey() !== null
@@ -50,23 +42,5 @@ export function hasClaudeAiBillingAccess(): boolean {
     return mockBillingAccessOverride
   }
 
-  if (!isClaudeAISubscriber()) {
-    return false
-  }
-
-  const subscriptionType = getSubscriptionType()
-
-  // Consumer plans (Max/Pro) - individual users always have billing access
-  if (subscriptionType === 'max' || subscriptionType === 'pro') {
-    return true
-  }
-
-  // Team/Enterprise - check for admin or billing roles
-  const config = getGlobalConfig()
-  const orgRole = config.oauthAccount?.organizationRole
-
-  return (
-    !!orgRole &&
-    ['admin', 'billing', 'owner', 'primary_owner'].includes(orgRole)
-  )
+  return false
 }

@@ -17,7 +17,6 @@ import type {
 import {
   getAnthropicApiKeyWithSource,
   getOauthAccountInfo,
-  isClaudeAISubscriber,
 } from 'src/utils/auth.js'
 import {
   createAssistantAPIErrorMessage,
@@ -744,7 +743,7 @@ export function getAssistantMessageFromError(
 
   // Check for invalid model name error for subscription users trying to use Opus
   if (
-    isClaudeAISubscriber() &&
+    false &&
     error instanceof APIError &&
     error.status === 400 &&
     error.message.toLowerCase().includes('invalid model name') &&
@@ -804,8 +803,7 @@ export function getAssistantMessageFromError(
     // actually set and actually on the wire.
     if (
       source === 'ANTHROPIC_API_KEY' &&
-      process.env.ANTHROPIC_API_KEY &&
-      !isClaudeAISubscriber()
+      process.env.ANTHROPIC_API_KEY
     ) {
       return createAssistantAPIErrorMessage({
         error: 'invalid_request',

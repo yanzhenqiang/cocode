@@ -21,7 +21,7 @@ export type ApiKeyVerificationResult = {
 }
 
 function getInitialVerificationStatus(): VerificationStatus {
-  if (!isAnthropicAuthEnabled() || isClaudeAISubscriber()) {
+  if (!isAnthropicAuthEnabled()) {
     return 'valid'
   }
   // Use skipRetrievingKeyFromApiKeyHelper to avoid executing apiKeyHelper
@@ -43,7 +43,7 @@ export function useApiKeyVerification(): ApiKeyVerificationResult {
   )
   const [error, setError] = useState<Error | null>(null)
   const anthropicVerificationEnabled =
-    isAnthropicAuthEnabled() && !isClaudeAISubscriber()
+    isAnthropicAuthEnabled()
 
   useEffect(() => {
     const nextStatus = anthropicVerificationEnabled
@@ -59,7 +59,7 @@ export function useApiKeyVerification(): ApiKeyVerificationResult {
   }, [anthropicVerificationEnabled])
 
   const verify = useCallback(async (): Promise<void> => {
-    if (!isAnthropicAuthEnabled() || isClaudeAISubscriber()) {
+    if (!isAnthropicAuthEnabled()) {
       setStatus('valid')
       return
     }

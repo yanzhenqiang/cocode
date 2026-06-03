@@ -14,7 +14,6 @@ import { getAPIProvider, getAPIProviderForStatsig } from 'src/utils/model/provid
 import {
   clearApiKeyHelperCache,
   clearGcpCredentialsCache,
-  getClaudeAIOAuthTokens,
   handleOAuth401Error,
   isEnterpriseSubscriber,
 } from '../../utils/auth.js'
@@ -224,16 +223,6 @@ export async function* withRetry<T>(
         isVertexAuthError(lastError) ||
         isStaleConnection
       ) {
-        // On 401 "token expired" or 403 "token revoked", force a token refresh
-        if (
-          (lastError instanceof APIError && lastError.status === 401) ||
-          isOAuthTokenRevokedError(lastError)
-        ) {
-          const failedAccessToken = getClaudeAIOAuthTokens()?.accessToken
-          if (failedAccessToken) {
-            await handleOAuth401Error(failedAccessToken)
-          }
-        }
         client = await getClient()
       }
 
