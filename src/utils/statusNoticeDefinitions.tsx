@@ -7,7 +7,7 @@ import { getCwd } from './cwd.js';
 import { relative } from 'path';
 import { formatNumber } from './format.js';
 import type { getGlobalConfig } from './config.js';
-import { getAnthropicApiKeyWithSource, getApiKeyFromConfigOrMacOSKeychain, getAuthTokenSource, isClaudeAISubscriber } from './auth.js';
+import { getAnthropicApiKeyWithSource, getApiKeyFromConfigOrMacOSKeychain, getAuthTokenSource } from './auth.js';
 import type { AgentDefinitionsResult } from '../tools/AgentTool/loadAgentsDir.js';
 import { getAgentDescriptionsTotalTokens, AGENT_DESCRIPTIONS_THRESHOLD } from './statusNoticeHelpers.js';
 
@@ -46,25 +46,6 @@ const largeMemoryFilesNotice: StatusNoticeDefinition = {
             </Box>;
       })}
       </>;
-  }
-};
-const claudeAiSubscriberExternalTokenNotice: StatusNoticeDefinition = {
-  id: 'claude-ai-external-token',
-  type: 'warning',
-  isActive: () => {
-    const authTokenInfo = getAuthTokenSource();
-    return isClaudeAISubscriber() && (authTokenInfo.source === 'ANTHROPIC_AUTH_TOKEN' || authTokenInfo.source === 'apiKeyHelper');
-  },
-  render: () => {
-    const authTokenInfo = getAuthTokenSource();
-    return <Box flexDirection="row" marginTop={1}>
-        <Text color="warning">{figures.warning}</Text>
-        <Text color="warning">
-          Auth conflict: Using {authTokenInfo.source} instead of Claude account
-          subscription token. Either unset {authTokenInfo.source}, or run
-          `claude /logout`.
-        </Text>
-      </Box>;
   }
 };
 const apiKeyConflictNotice: StatusNoticeDefinition = {
@@ -156,7 +137,7 @@ const largeAgentDescriptionsNotice: StatusNoticeDefinition = {
   }
 };
 // All notice definitions
-export const statusNoticeDefinitions: StatusNoticeDefinition[] = [largeMemoryFilesNotice, largeAgentDescriptionsNotice, claudeAiSubscriberExternalTokenNotice, apiKeyConflictNotice, bothAuthMethodsNotice];
+export const statusNoticeDefinitions: StatusNoticeDefinition[] = [largeMemoryFilesNotice, largeAgentDescriptionsNotice, apiKeyConflictNotice, bothAuthMethodsNotice];
 
 // Helper functions for external use
 export function getActiveNotices(context: StatusNoticeContext): StatusNoticeDefinition[] {

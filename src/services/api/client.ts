@@ -3,8 +3,6 @@ import { randomUUID } from 'crypto'
 import {
   getAnthropicApiKey,
   getApiKeyFromApiKeyHelper,
-  getClaudeAIOAuthTokens,
-  isClaudeAISubscriber,
   refreshGcpCredentialsIfNeeded,
 } from 'src/utils/auth.js'
 import {
@@ -235,10 +233,7 @@ export async function getAnthropicClient({
   const shouldUseFirstPartyAuth =
     shouldUseFirstPartyAnthropicAuth(providerOverride)
 
-  const isClaudeAiSubscriber =
-    shouldUseFirstPartyAuth && isClaudeAISubscriber()
-
-  if (shouldUseFirstPartyAuth && !isClaudeAiSubscriber) {
+  if (shouldUseFirstPartyAuth) {
     await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
   }
 
@@ -441,10 +436,7 @@ export async function getAnthropicClient({
 
   // Determine authentication method based on available tokens
   const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
-    apiKey: isClaudeAiSubscriber ? null : apiKey || getAnthropicApiKey(),
-    authToken: isClaudeAiSubscriber
-      ? getClaudeAIOAuthTokens()?.accessToken
-      : undefined,
+    apiKey: apiKey || getAnthropicApiKey(),
     // Set baseURL from OAuth config when using staging OAuth
     ...(false &&
     isEnvTruthy(process.env.USE_STAGING_OAUTH)

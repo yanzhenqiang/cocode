@@ -2,7 +2,7 @@ import { c as _c } from "react-compiler-runtime";
 import React, { useEffect, useMemo } from 'react';
 import type { CommandResultDisplay } from '../../commands.js';
 import { ClaudeAuthProvider } from '../../services/mcp/auth.js';
-import type { McpClaudeAIProxyServerConfig, McpHTTPServerConfig, McpSSEServerConfig, McpStdioServerConfig } from '../../services/mcp/types.js';
+import type { McpHTTPServerConfig, McpSSEServerConfig, McpStdioServerConfig } from '../../services/mcp/types.js';
 import { extractAgentMcpServers, filterToolsByServer } from '../../services/mcp/utils.js';
 import { useAppState } from '../../state/AppState.js';
 const getSessionIngressAuthToken = async () => undefined;
@@ -55,7 +55,7 @@ export function MCPSettings(t0) {
   const agentMcpServers = t3;
   let t4;
   if ($[4] !== mcpClients) {
-    t4 = mcpClients.filter().sort(_temp4);
+    t4 = mcpClients.slice().sort(_temp4);
     $[4] = mcpClients;
     $[5] = t4;
   } else {
@@ -72,7 +72,6 @@ export function MCPSettings(t0) {
           const scope = client_0.config.scope;
           const isSSE = client_0.config.type === "sse";
           const isHTTP = client_0.config.type === "http";
-          const isClaudeAIProxy = client_0.config.type === "claudeai-proxy";
           let isAuthenticated = undefined;
           if (isSSE || isHTTP) {
             const authProvider = new ClaudeAuthProvider(client_0.name, client_0.config as McpSSEServerConfig | McpHTTPServerConfig);
@@ -86,38 +85,27 @@ export function MCPSettings(t0) {
             client: client_0,
             scope
           };
-          if (isClaudeAIProxy) {
-            return {
-              ...baseInfo,
-              transport: "claudeai-proxy" as const,
-              isAuthenticated: false,
-              config: client_0.config as McpClaudeAIProxyServerConfig
-            };
-          } else {
-            if (isSSE) {
+          if (isSSE) {
               return {
                 ...baseInfo,
                 transport: "sse" as const,
                 isAuthenticated,
                 config: client_0.config as McpSSEServerConfig
               };
+            } else if (isHTTP) {
+              return {
+                ...baseInfo,
+                transport: "http" as const,
+                isAuthenticated,
+                config: client_0.config as McpHTTPServerConfig
+              };
             } else {
-              if (isHTTP) {
-                return {
-                  ...baseInfo,
-                  transport: "http" as const,
-                  isAuthenticated,
-                  config: client_0.config as McpHTTPServerConfig
-                };
-              } else {
-                return {
-                  ...baseInfo,
-                  transport: "stdio" as const,
-                  config: client_0.config as McpStdioServerConfig
-                };
-              }
+              return {
+                ...baseInfo,
+                transport: "stdio" as const,
+                config: client_0.config as McpStdioServerConfig
+              };
             }
-          }
         }));
         if (cancelled) {
           return;
@@ -207,7 +195,7 @@ export function MCPSettings(t0) {
           t9 = $[25];
         }
         const serverTools_0 = t9;
-        const defaultTab = viewState.server.transport === "claudeai-proxy" ? "claude.ai" : "Claude Code";
+        const defaultTab = "Claude Code";
         if (viewState.server.transport === "stdio") {
           let t10;
           if ($[26] !== viewState.server) {
