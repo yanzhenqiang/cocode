@@ -17,7 +17,6 @@ The statusLine command receives JSON via stdin with the following fields:
 - version, output_style
 - context_window: { total_input_tokens, total_output_tokens, context_window_size, current_usage, used_percentage, remaining_percentage }
 - rate_limits: { five_hour, seven_day } (optional)
-- vim: { mode } (optional)
 - agent: { name, type } (optional)
 - worktree: { name, path, branch, original_cwd, original_branch } (optional)
 

@@ -736,7 +736,7 @@ export function Config({
     label: 'Editor mode',
     // Convert 'emacs' to 'normal' for backward compatibility
     value: globalConfig.editorMode === 'emacs' ? 'normal' : globalConfig.editorMode || 'normal',
-    options: ['normal', 'vim'],
+    options: ['normal'],
     type: 'enum',
     onChange(value_1: string) {
       saveGlobalConfig(current_13 => ({

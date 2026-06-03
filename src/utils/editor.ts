@@ -31,7 +31,7 @@ const GUI_EDITORS = [
 
 // Editors that accept +N as a goto-line argument. The Windows default
 // ('start /wait notepad') does not — notepad treats +42 as a filename.
-const PLUS_N_EDITORS = /\b(vi|vim|nvim|nano|emacs|pico|micro|helix|hx)\b/
+const PLUS_N_EDITORS = /\b(vi|nvim|nano|emacs|pico|micro|helix|hx)\b/
 
 // VS Code and forks use -g file:line. subl uses bare file:line (no -g).
 const VSCODE_FAMILY = new Set(['code', 'cursor', 'windsurf', 'codium'])

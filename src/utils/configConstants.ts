@@ -12,7 +12,7 @@ export const NOTIFICATION_CHANNELS = [
 ] as const
 
 // Valid editor modes (excludes deprecated 'emacs' which is auto-migrated to 'normal')
-export const EDITOR_MODES = ['normal', 'vim'] as const
+export const EDITOR_MODES = ['normal'] as const
 
 // Valid teammate modes for spawning
 // 'tmux' = traditional tmux-based teammates

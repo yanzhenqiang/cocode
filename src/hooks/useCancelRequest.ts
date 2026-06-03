@@ -12,7 +12,6 @@ import {
   useAppStateStore,
   useSetAppState,
 } from 'src/state/AppState.js'
-import { isVimModeEnabled } from '../components/PromptInput/utils.js'
 import type { ToolUseConfirm } from '../components/permissions/PermissionRequest.js'
 import type { SpinnerMode } from '../components/Spinner/types.js'
 import { useNotifications } from '../context/notifications.js'
@@ -26,7 +25,7 @@ import {
   killAllRunningAgentTasks,
   markAgentsNotified,
 } from '../tasks/LocalAgentTask/LocalAgentTask.js'
-import type { PromptInputMode, VimMode } from '../types/textInputTypes.js'
+import type { PromptInputMode } from '../types/textInputTypes.js'
 import {
   clearCommandQueue,
   enqueuePendingNotification,
@@ -47,7 +46,6 @@ type CancelRequestHandlerProps = {
   screen: Screen
   abortSignal?: AbortSignal
   popCommandFromQueue?: () => void
-  vimMode?: VimMode
   isLocalJSXCommand?: boolean
   isHelpOpen?: boolean
   inputMode?: PromptInputMode
@@ -68,7 +66,6 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
     screen,
     abortSignal,
     popCommandFromQueue,
-    vimMode,
     isLocalJSXCommand,
     isHelpOpen,
     inputMode,
@@ -139,8 +136,7 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
     !isMessageSelectorVisible &&
     !isLocalJSXCommand &&
     !isHelpOpen &&
-    !isOverlayActive &&
-    !(isVimModeEnabled() && vimMode === 'INSERT')
+    !isOverlayActive
 
   // Escape (chat:cancel) defers to mode-exit when in special mode with empty
   // input, and to useBackgroundTaskNavigation when viewing a teammate

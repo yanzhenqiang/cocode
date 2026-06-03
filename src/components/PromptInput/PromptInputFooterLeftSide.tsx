@@ -5,9 +5,8 @@ import { Box, Text, Link } from '../../ink.js';
 import * as React from 'react';
 import figures from 'figures';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { VimMode, PromptInputMode } from '../../types/textInputTypes.js';
+import type { PromptInputMode } from '../../types/textInputTypes.js';
 import type { ToolPermissionContext } from '../../Tool.js';
-import { isVimModeEnabled } from './utils.js';
 import { useShortcutDisplay } from '../../keybindings/useShortcutDisplay.js';
 import { isDefaultMode, permissionModeSymbol, permissionModeTitle, getModeColor } from '../../utils/permissions/PermissionMode.js';
 import { BackgroundTaskStatus } from '../tasks/BackgroundTaskStatus.js';
@@ -40,7 +39,6 @@ type Props = {
     show: boolean;
     key?: string;
   };
-  vimMode: VimMode | undefined;
   mode: PromptInputMode;
   toolPermissionContext: ToolPermissionContext;
   suppressHint: boolean;
@@ -57,10 +55,9 @@ type Props = {
   onOpenTasksDialog?: (taskId?: string) => void;
 };
 export function PromptInputFooterLeftSide(t0) {
-  const $ = _c(27);
+  const $ = _c(13);
   const {
     exitMessage,
-    vimMode,
     mode,
     toolPermissionContext,
     suppressHint,
@@ -96,52 +93,23 @@ export function PromptInputFooterLeftSide(t0) {
     }
     return t1;
   }
-  let t1;
-  if ($[3] !== isSearching || $[4] !== vimMode) {
-    t1 = isVimModeEnabled() && vimMode === "INSERT" && !isSearching;
-    $[3] = isSearching;
-    $[4] = vimMode;
-    $[5] = t1;
-  } else {
-    t1 = $[5];
-  }
-  const showVim = t1;
-  let t2 = null;
-  let t3;
-  if ($[11] !== showVim) {
-    t3 = showVim ? <Text dimColor={true} key="vim-insert">-- INSERT --</Text> : null;
-    $[11] = showVim;
-    $[12] = t3;
-  } else {
-    t3 = $[12];
-  }
-  const t4 = !suppressHint && !showVim;
+  const t4 = !suppressHint;
   let t5;
-  if ($[13] !== isLoading || $[14] !== mode || $[15] !== onOpenTasksDialog || $[16] !== t4 || $[17] !== tasksSelected || $[18] !== teamsSelected || $[19] !== tmuxSelected || $[20] !== toolPermissionContext) {
+  if ($[3] !== isLoading || $[4] !== mode || $[5] !== onOpenTasksDialog || $[6] !== t4 || $[7] !== tasksSelected || $[8] !== teamsSelected || $[9] !== tmuxSelected || $[10] !== toolPermissionContext) {
     t5 = <ModeIndicator mode={mode} toolPermissionContext={toolPermissionContext} showHint={t4} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} tmuxSelected={tmuxSelected} onOpenTasksDialog={onOpenTasksDialog} />;
-    $[13] = isLoading;
-    $[14] = mode;
-    $[15] = onOpenTasksDialog;
-    $[16] = t4;
-    $[17] = tasksSelected;
-    $[18] = teamsSelected;
-    $[19] = tmuxSelected;
-    $[20] = toolPermissionContext;
-    $[22] = t5;
+    $[3] = isLoading;
+    $[4] = mode;
+    $[5] = onOpenTasksDialog;
+    $[6] = t4;
+    $[7] = tasksSelected;
+    $[8] = teamsSelected;
+    $[9] = tmuxSelected;
+    $[10] = toolPermissionContext;
+    $[12] = t5;
   } else {
-    t5 = $[22];
+    t5 = $[12];
   }
-  let t6;
-  if ($[23] !== t2 || $[24] !== t3 || $[25] !== t5) {
-    t6 = <Box justifyContent="flex-start" gap={1}>{t2}{t3}{t5}</Box>;
-    $[23] = t2;
-    $[24] = t3;
-    $[25] = t5;
-    $[26] = t6;
-  } else {
-    t6 = $[26];
-  }
-  return t6;
+  return t5;
 }
 type ModeIndicatorProps = {
   mode: PromptInputMode;
