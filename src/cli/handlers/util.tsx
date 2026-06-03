@@ -8,7 +8,6 @@ import { c as _c } from "react-compiler-runtime";
 import { cwd } from 'process';
 import React from 'react';
 import { WelcomeV2 } from '../../components/LogoV2/WelcomeV2.js';
-import { useManagePlugins } from '../../hooks/useManagePlugins.js';
 import type { Root } from '../../ink.js';
 import { Box, Text } from '../../ink.js';
 import { KeybindingSetup } from '../../keybindings/KeybindingProviderSetup.js';
@@ -58,7 +57,6 @@ function DoctorWithPlugins(t0) {
   const {
     onDone
   } = t0;
-  useManagePlugins();
   let t1;
   if ($[0] !== onDone) {
     t1 = <React.Suspense fallback={null}><DoctorLazy onDone={onDone} /></React.Suspense>;

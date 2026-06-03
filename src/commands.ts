@@ -52,8 +52,8 @@ import {
   getDynamicSkills,
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
-import { getBuiltinPluginSkillCommands } from './plugins/builtinPlugins.js'
 // plugin commands removed
+const getBuiltinPluginSkillCommands = () => []
 const getPluginCommands = () => []
 const getPluginSkills = async () => []
 import memoize from 'lodash-es/memoize.js'
