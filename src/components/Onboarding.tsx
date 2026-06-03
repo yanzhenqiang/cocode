@@ -6,18 +6,16 @@ import { PRODUCT_DISPLAY_NAME } from '../constants/product.js';
 import { useExitOnCtrlCDWithKeybindings } from '../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { Box, Newline, Text, useTheme } from '../ink.js';
 import { useKeybindings } from '../keybindings/useKeybinding.js';
-import { isAnthropicAuthEnabled } from '../utils/auth.js';
 import { normalizeApiKeyForConfig } from '../utils/authPortable.js';
 import { getCustomApiKeyStatus } from '../utils/config.js';
 import { env } from '../utils/env.js';
 import { isRunningOnHomespace } from '../utils/envUtils.js';
 import type { ThemeSetting } from '../utils/theme.js';
 import { ApproveApiKey } from './ApproveApiKey.js';
-import { ConsoleOAuthFlow } from './ConsoleOAuthFlow.js';
 import { Select } from './CustomSelect/select.js';
 import { WelcomeV2 } from './LogoV2/WelcomeV2.js';
 import { ThemePicker } from './ThemePicker.js';
-type StepId = 'theme' | 'oauth' | 'api-key' | 'terminal-setup';
+type StepId = 'theme' | 'api-key' | 'terminal-setup';
 interface OnboardingStep {
   id: StepId;
   component: React.ReactNode;
@@ -29,20 +27,15 @@ export function Onboarding({
   onDone
 }: Props): React.ReactNode {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [skipOAuth, setSkipOAuth] = useState(false);
-  const [oauthEnabled] = useState(() => isAnthropicAuthEnabled());
   const [theme, setTheme] = useTheme();
   useEffect(() => {
-    logEvent('tengu_began_setup', {
-      oauthEnabled
-    });
-  }, [oauthEnabled]);
+    logEvent('tengu_began_setup', {});
+  }, []);
   function goToNextStep() {
     if (currentStepIndex < steps.length - 1) {
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       logEvent('tengu_onboarding_step', {
-        oauthEnabled,
         stepId: steps[nextIndex]?.id as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
       });
     } else {
@@ -61,12 +54,12 @@ export function Onboarding({
     />
     </Box>;
 
-  // Create the steps array - determine which steps to include based on reAuth and oauthEnabled
+  // Create the steps array - determine which steps to include
   const apiKeyNeedingApproval = useMemo(() => {
     // Add API key step if needed
     // On homespace, ANTHROPIC_API_KEY is preserved in process.env for child
     // processes but ignored by Claude Code itself (see auth.ts).
-    if (!process.env.ANTHROPIC_API_KEY || isRunningOnHomespace() || !isAnthropicAuthEnabled()) {
+    if (!process.env.ANTHROPIC_API_KEY || isRunningOnHomespace()) {
       return '';
     }
     const customApiKeyTruncated = normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY);
@@ -74,10 +67,7 @@ export function Onboarding({
       return customApiKeyTruncated;
     }
   }, []);
-  function handleApiKeyDone(approved: boolean) {
-    if (approved) {
-      setSkipOAuth(true);
-    }
+  function handleApiKeyDone(_approved: boolean) {
     goToNextStep();
   }
   const steps: OnboardingStep[] = [];
@@ -89,14 +79,6 @@ export function Onboarding({
     steps.push({
       id: 'api-key',
       component: <ApproveApiKey customApiKeyTruncated={apiKeyNeedingApproval} onDone={handleApiKeyDone} />
-    });
-  }
-  if (oauthEnabled) {
-    steps.push({
-      id: 'oauth',
-      component: <SkippableStep skip={skipOAuth} onSkip={goToNextStep}>
-          <ConsoleOAuthFlow onDone={goToNextStep} />
-        </SkippableStep>
     });
   }
   if (shouldOfferTerminalSetup()) {
@@ -136,7 +118,7 @@ export function Onboarding({
 
   const handleTerminalSetupSkip = useCallback(() => {
     goToNextStep();
-  }, [currentStepIndex, steps.length, oauthEnabled, onDone]);
+  }, [currentStepIndex, steps.length, onDone]);
   useKeybindings({
     'confirm:no': handleTerminalSetupSkip
   }, {

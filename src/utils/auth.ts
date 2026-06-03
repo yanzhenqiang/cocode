@@ -1,9 +1,7 @@
 import chalk from 'chalk'
 import { exec } from 'child_process'
 import { execa } from 'execa'
-import { stat } from 'fs/promises'
 import memoize from 'lodash-es/memoize.js'
-import { join } from 'path'
 const CLAUDE_AI_PROFILE_SCOPE = 'claude_ai_profile'
 import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
@@ -33,16 +31,11 @@ import {
   saveGlobalConfig,
 } from './config.js'
 import { logAntError, logForDebugging } from './debug.js'
-import {
-  getClaudeConfigHomeDir,
-  isEnvTruthy,
-  isRunningOnHomespace,
-} from './envUtils.js'
+import { isEnvTruthy, isRunningOnHomespace } from './envUtils.js'
 import { errorMessage } from './errors.js'
 import { execSyncWithDefaults_DEPRECATED } from './execFileNoThrow.js'
 import { logError } from './log.js'
 import { memoizeWithTTLAsync } from './memoize.js'
-const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
 import {
   getSettings_DEPRECATED,
   getSettingsForSource,
@@ -896,10 +889,8 @@ export function saveOAuthTokensIfNeeded(_tokens: OAuthTokens): {
 }
 
 export const getClaudeAIOAuthTokens = memoize((): OAuthTokens | null => {
-
   // Check for force-set OAuth token from environment variable
   if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
-    // Return an inference-only token (unknown refresh and expiry)
     return {
       accessToken: process.env.CLAUDE_CODE_OAUTH_TOKEN,
       refreshToken: null,
@@ -913,7 +904,6 @@ export const getClaudeAIOAuthTokens = memoize((): OAuthTokens | null => {
   // Check for OAuth token from file descriptor
   const oauthTokenFromFd = getOAuthTokenFromFileDescriptor()
   if (oauthTokenFromFd) {
-    // Return an inference-only token (unknown refresh and expiry)
     return {
       accessToken: oauthTokenFromFd,
       refreshToken: null,
@@ -924,20 +914,7 @@ export const getClaudeAIOAuthTokens = memoize((): OAuthTokens | null => {
     }
   }
 
-  try {
-    const secureStorage = getSecureStorage()
-    const storageData = secureStorage.read()
-    const oauthData = storageData?.claudeAiOauth
-
-    if (!oauthData?.accessToken) {
-      return null
-    }
-
-    return oauthData
-  } catch (error) {
-    logError(error)
-    return null
-  }
+  return null
 })
 
 /**
@@ -950,124 +927,30 @@ export function clearOAuthTokenCache(): void {
   getClaudeAIOAuthTokens.cache?.clear?.()
 }
 
-let lastCredentialsMtimeMs = 0
-
-// Cross-process staleness: another CC instance may write fresh tokens to
-// disk (refresh or /login), but this process's memoize caches forever.
-// Without this, terminal 1's /login fixes terminal 1; terminal 2's /login
-// then revokes terminal 1 server-side, and terminal 1's memoize never
-// re-reads — infinite /login regress (CC-1096, GH#24317).
-async function invalidateOAuthCacheIfDiskChanged(): Promise<void> {
-  try {
-    const { mtimeMs } = await stat(
-      join(getClaudeConfigHomeDir(), '.credentials.json'),
-    )
-    if (mtimeMs !== lastCredentialsMtimeMs) {
-      lastCredentialsMtimeMs = mtimeMs
-      clearOAuthTokenCache()
-    }
-  } catch {
-    // ENOENT — macOS keychain path (file deleted on migration). Clear only
-    // the memoize so it delegates to the keychain cache's 30s TTL instead
-    // of caching forever on top. `security find-generic-password` is
-    // ~15ms; bounded to once per 30s by the keychain cache.
-    getClaudeAIOAuthTokens.cache?.clear?.()
-  }
-}
-
-// In-flight dedup: when N claude.ai proxy connectors hit 401 with the same
-// token simultaneously (common at startup — #20930), only one should clear
-// caches and re-read the keychain. Without this, each call's clearOAuthTokenCache()
-// nukes readInFlight in macOsKeychainStorage and triggers a fresh spawn —
-// sync spawns stacked to 800ms+ of blocked render frames.
-const pending401Handlers = new Map<string, Promise<boolean>>()
-
 /**
  * Handle a 401 "OAuth token has expired" error from the API.
  *
- * This function forces a token refresh when the server says the token is expired,
- * even if our local expiration check disagrees (which can happen due to clock
- * issues when the token was issued).
+ * Since Console OAuth login has been removed, token refresh is not possible.
+ * Clears the token cache so the next read picks up fresh env var/FD tokens.
  *
- * Safety: We compare the failed token with what's in keychain. If another tab
- * already refreshed (different token in keychain), we use that instead of
- * refreshing again. Concurrent calls with the same failedAccessToken are
- * deduplicated to a single keychain read.
- *
- * @param failedAccessToken - The access token that was rejected with 401
- * @returns true if we now have a valid token, false otherwise
+ * @returns false - token refresh is not available without Console OAuth
  */
 export function handleOAuth401Error(
-  failedAccessToken: string,
+  _failedAccessToken: string,
 ): Promise<boolean> {
-  const pending = pending401Handlers.get(failedAccessToken)
-  if (pending) return pending
-
-  const promise = handleOAuth401ErrorImpl(failedAccessToken).finally(() => {
-    pending401Handlers.delete(failedAccessToken)
-  })
-  pending401Handlers.set(failedAccessToken, promise)
-  return promise
-}
-
-async function handleOAuth401ErrorImpl(
-  failedAccessToken: string,
-): Promise<boolean> {
-  // Clear caches and re-read from keychain (async — sync read blocks ~100ms/call)
   clearOAuthTokenCache()
-  const currentTokens = await getClaudeAIOAuthTokensAsync()
-
-  if (!currentTokens?.refreshToken) {
-    return false
-  }
-
-  // If keychain has a different token, another tab already refreshed - use it
-  if (currentTokens.accessToken !== failedAccessToken) {
-    logEvent('tengu_oauth_401_recovered_from_keychain', {})
-    return true
-  }
-
-  // Same token that failed - force refresh, bypassing local expiration check
-  // checkAndRefreshOAuthTokenIfNeeded always returns false (OAuth removed)
-  return false
+  return Promise.resolve(false)
 }
 
 /**
- * Reads OAuth tokens asynchronously, avoiding blocking keychain reads.
- * Delegates to the sync memoized version for env var / file descriptor tokens
- * (which don't hit the keychain), and only uses async for storage reads.
+ * Reads OAuth tokens asynchronously.
  */
 export async function getClaudeAIOAuthTokensAsync(): Promise<OAuthTokens | null> {
-
-  // Env var and FD tokens are sync and don't hit the keychain
-  if (
-    process.env.CLAUDE_CODE_OAUTH_TOKEN ||
-    getOAuthTokenFromFileDescriptor()
-  ) {
-    return getClaudeAIOAuthTokens()
-  }
-
-  try {
-    const secureStorage = getSecureStorage()
-    const storageData = await secureStorage.readAsync()
-    const oauthData = storageData?.claudeAiOauth
-    if (!oauthData?.accessToken) {
-      return null
-    }
-    return oauthData
-  } catch (error) {
-    logError(error)
-    return null
-  }
+  return getClaudeAIOAuthTokens()
 }
 
 export function checkAndRefreshOAuthTokenIfNeeded(): Promise<boolean> {
-  return checkAndRefreshOAuthTokenIfNeededImpl()
-}
-
-async function checkAndRefreshOAuthTokenIfNeededImpl(): Promise<boolean> {
-  await invalidateOAuthCacheIfDiskChanged()
-  return false
+  return Promise.resolve(false)
 }
 
 export function isClaudeAISubscriber(): boolean {
@@ -1418,21 +1301,16 @@ export type OrgValidationResult =
 
 /**
  * Validate that the active OAuth token belongs to the organization required
- * by `forceLoginOrgUUID` in managed settings. Returns a result object
- * rather than throwing so callers can choose how to surface the error.
+ * by `forceLoginOrgUUID` in managed settings.
  *
- * Fails closed: if `forceLoginOrgUUID` is set and we cannot determine the
- * token's org (network error, missing profile data), validation fails.
+ * Console OAuth login has been removed, so org validation via profile
+ * endpoint is no longer possible. If forceLoginOrgUUID is set, validation
+ * fails since we cannot verify the org.
  */
 export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
   // `claude ssh` remote: real auth lives on the local machine and is injected
-  // by the proxy. The placeholder token can't be validated against the profile
-  // endpoint. The local side already ran this check before establishing the session.
+  // by the proxy. The local side already ran this check.
   if (process.env.ANTHROPIC_UNIX_SOCKET) {
-    return { valid: true }
-  }
-
-  if (!isAnthropicAuthEnabled()) {
     return { valid: true }
   }
 
@@ -1442,20 +1320,13 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
     return { valid: true }
   }
 
-  const tokens = getClaudeAIOAuthTokens()
-  if (!tokens) {
-    return { valid: true }
-  }
-
-  // Profile fetch always returns null (OAuth removed) — fail closed
+  // Profile fetch is not available without Console OAuth — fail closed
   return {
     valid: false,
     message:
       `Unable to verify organization for the current authentication token.\n` +
       `This machine requires organization ${requiredOrgUuid} but the profile could not be fetched.\n` +
-      `This may be a network error, or the token may lack the user:profile scope required for\n` +
-      `verification (tokens from 'cocode setup-token' do not include this scope).\n` +
-      `Try again, or obtain a full-scope token via 'cocode auth login'.`,
+      `Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to authenticate with the required organization.`,
   }
 }
 

@@ -3,12 +3,9 @@
  */
 
 import axios from 'axios'
-import { OAUTH_BETA_HEADER } from '../constants/oauth.js'
 import {
   getAnthropicApiKey,
-  getClaudeAIOAuthTokens,
   handleOAuth401Error,
-  isClaudeAISubscriber,
 } from './auth.js'
 import { getAPIProvider } from './model/providers.js'
 import { getClaudeCodeUserAgent } from './userAgent.js'
@@ -69,26 +66,9 @@ export type AuthHeaders = {
 
 /**
  * Get authentication headers for API requests
- * Returns either OAuth headers for Max/Pro users or API key headers for regular users
+ * Returns API key headers for authentication
  */
 export function getAuthHeaders(): AuthHeaders {
-  if (isClaudeAISubscriber()) {
-    const oauthTokens = getClaudeAIOAuthTokens()
-    if (!oauthTokens?.accessToken) {
-      return {
-        headers: {},
-        error: 'No OAuth token available',
-      }
-    }
-    return {
-      headers: {
-        Authorization: `Bearer ${oauthTokens.accessToken}`,
-        'anthropic-beta': OAUTH_BETA_HEADER,
-      },
-    }
-  }
-  // TODO: this will fail if the API key is being set to an LLM Gateway key
-  // should we try to query keychain / credentials for a valid Anthropic key?
   const apiKey = getAnthropicApiKey()
   if (!apiKey) {
     return {
@@ -104,18 +84,11 @@ export function getAuthHeaders(): AuthHeaders {
 }
 
 /**
- * Wrapper that handles OAuth 401 errors by force-refreshing the token and
- * retrying once. Addresses clock drift scenarios where the local expiration
- * check disagrees with the server.
+ * Wrapper that handles 401/403 auth errors by clearing the token cache
+ * and retrying once. The request closure is called again on retry so it
+ * re-reads auth via getAuthHeaders().
  *
- * The request closure is called again on retry, so it should re-read auth
- * (e.g., via getAuthHeaders()) to pick up the refreshed token.
- *
- * Note: bridgeApi.ts has its own DI-injected version — handleOAuth401Error
- * transitively pulls in config.ts (~1300 modules), which breaks the SDK bundle.
- *
- * @param opts.also403Revoked - Also retry on 403 with "OAuth token has been
- *   revoked" body (some endpoints signal revocation this way instead of 401).
+ * Note: bridgeApi.ts has its own DI-injected version.
  */
 export async function withOAuth401Retry<T>(
   request: () => Promise<T>,
@@ -133,9 +106,7 @@ export async function withOAuth401Retry<T>(
         typeof err.response?.data === 'string' &&
         err.response.data.includes('OAuth token has been revoked'))
     if (!isAuthError) throw err
-    const failedAccessToken = getClaudeAIOAuthTokens()?.accessToken
-    if (!failedAccessToken) throw err
-    await handleOAuth401Error(failedAccessToken)
+    await handleOAuth401Error('')
     return await request()
   }
 }
