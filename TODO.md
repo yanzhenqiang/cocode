@@ -1,28 +1,22 @@
-# TODO — Next Round
+# TODO
 
-## Dead Keyword Cleanup
+## Done (This Round)
+- [x] Vim mode (~169 refs → 110, 2 files deleted, -486 lines)
+- [x] MiniMax usage tracking (~239 refs → 145, 6 files deleted, -1,003 lines)
+- [x] Codex provider (~430 refs → 17 comments, 3 files deleted, -2,491 lines)
+- [x] ChatGPT (22 refs → 0)
+- [x] Console OAuth (~263 refs, 1 file deleted, -1,224 lines)
+- [x] /diff command (3 files deleted, -432 lines)
 
-| Keyword | Refs | 说明 |
-|---------|------|------|
-| `oauth` / `OAuth` | 863 | OAuth 认证流程（token 刷新、keychain、login） |
-| `codex` / `Codex` | 430 | ChatGPT Codex API 集成、用量统计、shim |
-| `claude.ai` / `ClaudeAI` | 350 | Anthropic 订阅检测、rate limit、billing |
-| `minimax` / `MiniMax` | 239 | MiniMax 用量统计面板 |
-| `vim` / `Vim` | 169 | Vim 编辑模式 |
-| `chatgpt` / `ChatGPT` | 22 | ChatGPT 账号解析、provider |
+## Remaining OAuth (567 refs)
+Almost all in MCP OAuth (`services/mcp/auth.ts`, `client.ts`) — needed for MCP server auth. Keep.
 
-**总计 ~2,073 引用**
+## Remaining Vim (110 refs)
+Harmless `isVimModeEnabled()` checks that always return false.
 
-## Feature Modules to Delete
+## Remaining Claude.ai (350 refs)
+Anthropic subscription/billing/rate limit references. Deeper analysis needed.
 
-- [ ] **Vim 模式** (~169 refs) — 终端 vim 按键绑定
-- [ ] **Codex 集成** (~430 refs) — ChatGPT Codex API provider、用量面板
-- [ ] **MiniMax 用量** (~239 refs) — MiniMax 使用量统计 UI
-- [ ] **OAuth 残留** (~863 refs) — keychain、token refresh、login flow
-
-## Previous Round Stats
-
-- 46 commits, -9,674 lines, -65 files
-- 70+ stubs eliminated
-- 33 feature flags removed
-- Swarm/Teammate ~75% cleaned
+## Stats
+- Total removed this round: ~5,600 lines, 15+ files
+- All tests: 8/8
