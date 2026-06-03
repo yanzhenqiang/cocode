@@ -257,20 +257,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
         },
       ]
     : []),
-  // Diff dialog navigation
-  {
-    context: 'DiffDialog',
-    bindings: {
-      escape: 'diff:dismiss',
-      left: 'diff:previousSource',
-      right: 'diff:nextSource',
-      up: 'diff:previousFile',
-      down: 'diff:nextFile',
-      enter: 'diff:viewDetails',
-      return: 'diff:viewDetails',
-      // Note: diff:back is handled by left arrow in detail mode
-    },
-  },
   // Model picker effort cycling (internal-only)
   {
     context: 'ModelPicker',

@@ -24,7 +24,6 @@ export const KEYBINDING_CONTEXTS = [
   'Attachments',
   'Footer',
   'MessageSelector',
-  'DiffDialog',
   'ModelPicker',
   'Select',
   'Plugin',
@@ -128,13 +127,6 @@ export const KEYBINDING_ACTIONS = [
   'messageSelector:bottom',
   'messageSelector:select',
   // Diff dialog actions
-  'diff:dismiss',
-  'diff:previousSource',
-  'diff:nextSource',
-  'diff:back',
-  'diff:viewDetails',
-  'diff:previousFile',
-  'diff:nextFile',
   // Model picker actions (internal-only)
   'modelPicker:decreaseEffort',
   'modelPicker:increaseEffort',
