@@ -32,7 +32,6 @@ const API_PROVIDER_LABELS: Partial<Record<APIProvider, string>> = {
   vertex: 'Google Vertex AI',
   foundry: 'Microsoft Foundry',
   openai: 'OpenAI-compatible',
-  codex: 'Codex',
   gemini: 'Google Gemini',
   github: 'GitHub Models',
   'nvidia-nim': 'NVIDIA NIM',
@@ -53,10 +52,6 @@ const OPENAI_COMPATIBLE_STATUS_METADATA: Partial<
 > = {
   openai: {
     baseUrlLabel: 'OpenAI base URL',
-    resolveModelMetadata: true,
-  },
-  codex: {
-    baseUrlLabel: 'Codex base URL',
     resolveModelMetadata: true,
   },
   'nvidia-nim': {
@@ -283,7 +278,6 @@ export function buildAPIProviderProperties(): Property[] {
   const properties: Property[] = [];
   const secretSource: SecretValueSource = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    CODEX_API_KEY: process.env.CODEX_API_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
     BNKR_API_KEY: process.env.BNKR_API_KEY,

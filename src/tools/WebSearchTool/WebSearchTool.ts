@@ -9,12 +9,6 @@ import type { PermissionResult } from 'src/utils/permissions/PermissionResult.js
 import { z } from 'zod/v4'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/growthbook.js'
 import { queryModelWithStreaming } from '../../services/api/claude.js'
-import { collectCodexCompletedResponse } from '../../services/api/codexShim.js'
-import { fetchWithProxyRetry } from '../../services/api/fetchWithProxyRetry.js'
-import {
-  resolveCodexApiCredentials,
-  resolveProviderRequest,
-} from '../../services/api/providerConfig.js'
 import { buildTool, type ToolDef } from '../../Tool.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
@@ -144,9 +138,6 @@ function formatProviderOutputWithEmptyHint(
 }
 
 // ---------------------------------------------------------------------------
-// Native Anthropic + Codex paths (unchanged, tightly coupled to SDK)
-// ---------------------------------------------------------------------------
-
 function makeToolSchema(input: Input): BetaWebSearchTool20250305 {
   return {
     type: 'web_search_20250305',
@@ -155,267 +146,6 @@ function makeToolSchema(input: Input): BetaWebSearchTool20250305 {
     blocked_domains: input.blocked_domains,
     max_uses: 15, // Allow up to 15 searches per query for better coverage
   }
-}
-
-function isClaudeModel(model: string): boolean {
-  return /claude/i.test(model)
-}
-
-function isCodexResponsesWebSearchEnabled(): boolean {
-  if (getAPIProvider() !== 'openai') {
-    return false
-  }
-
-  const request = resolveProviderRequest({
-    model: getMainLoopModel(),
-    baseUrl: process.env.OPENAI_BASE_URL,
-  })
-  return request.transport === 'codex_responses'
-}
-
-function makeCodexWebSearchTool(input: Input): Record<string, unknown> {
-  const tool: Record<string, unknown> = {
-    type: 'web_search',
-  }
-
-  if (input.allowed_domains?.length) {
-    tool.filters = {
-      allowed_domains: input.allowed_domains,
-    }
-  }
-
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  if (timezone) {
-    tool.user_location = {
-      type: 'approximate',
-      timezone,
-    }
-  }
-
-  return tool
-}
-
-function buildCodexWebSearchInputText(input: Input): string {
-  if (!input.blocked_domains?.length) {
-    return input.query
-  }
-
-  // Responses web_search supports allowed_domains filters but not blocked domains.
-  // Convert blocked domains into common search-engine exclusion operators so the
-  // constraint still affects ranking and candidate selection.
-  const excludedSites = input.blocked_domains.map(domain => `-site:${domain}`)
-  return `${input.query} ${excludedSites.join(' ')}`
-}
-
-function buildCodexWebSearchInput(input: Input): Array<Record<string, unknown>> {
-  return [
-    {
-      type: 'message',
-      role: 'user',
-      content: [
-        {
-          type: 'input_text',
-          text: buildCodexWebSearchInputText(input),
-        },
-      ],
-    },
-  ]
-}
-
-function buildCodexWebSearchInstructions(): string {
-  return [
-    'You are the Cocode web search tool.',
-    'Search the web for the user query and return a concise factual answer.',
-    'Include source URLs in the response.',
-  ].join(' ')
-}
-
-function pushCodexTextResult(
-  results: (SearchResult | string)[],
-  value: unknown,
-): void {
-  if (typeof value !== 'string') return
-  const trimmed = value.trim()
-  if (trimmed) {
-    results.push(trimmed)
-  }
-}
-
-function addCodexSource(
-  sourceMap: Map<string, { title: string; url: string }>,
-  source: unknown,
-): void {
-  if (typeof source?.url !== 'string' || !source.url) return
-  sourceMap.set(source.url, {
-    title:
-      typeof source.title === 'string' && source.title
-        ? source.title
-        : source.url,
-    url: source.url,
-  })
-}
-
-function getCodexSources(item: Record<string, any>): unknown[] {
-  if (Array.isArray(item.action?.sources)) {
-    return item.action.sources
-  }
-  if (Array.isArray(item.sources)) {
-    return item.sources
-  }
-  if (Array.isArray(item.result?.sources)) {
-    return item.result.sources
-  }
-  return []
-}
-
-function extractCodexWebSearchFailure(item: Record<string, any>): string | undefined {
-  // Codex web_search_call items can carry a status field. When the tool
-  // call fails (rate limit, upstream error, model-side guardrail), the
-  // parser should surface a meaningful error rather than the generic
-  // "No results found." fallback. Shape observed across recent payloads:
-  //   { type: 'web_search_call', status: 'failed', error: { message?: string } }
-  //   { type: 'web_search_call', status: 'failed', action: { error?: { message?: string } } }
-  if (item?.status !== 'failed') return undefined
-  const reason =
-    (typeof item.error?.message === 'string' && item.error.message) ||
-    (typeof item.action?.error?.message === 'string' &&
-      item.action.error.message) ||
-    (typeof item.error === 'string' && item.error) ||
-    undefined
-  return reason ? `Web search failed: ${reason}` : 'Web search failed.'
-}
-
-function makeOutputFromCodexWebSearchResponse(
-  response: Record<string, unknown>,
-  query: string,
-  durationSeconds: number,
-): Output {
-  const results: (SearchResult | string)[] = []
-  const sourceMap = new Map<string, { title: string; url: string }>()
-  const output = Array.isArray(response.output) ? response.output : []
-
-  for (const item of output) {
-    if (item?.type === 'web_search_call') {
-      const failure = extractCodexWebSearchFailure(item)
-      if (failure) {
-        results.push(failure)
-      }
-      for (const source of getCodexSources(item)) {
-        addCodexSource(sourceMap, source)
-      }
-      continue
-    }
-
-    if (item?.type !== 'message' || !Array.isArray(item.content)) {
-      continue
-    }
-
-    for (const part of item.content) {
-      if (part?.type === 'output_text' || part?.type === 'text') {
-        pushCodexTextResult(results, part.text)
-      }
-
-      for (const source of getCodexSources(part)) {
-        addCodexSource(sourceMap, source)
-      }
-
-      const annotations = Array.isArray(part?.annotations)
-        ? part.annotations
-        : []
-      for (const annotation of annotations) {
-        if (annotation?.type !== 'url_citation') continue
-        addCodexSource(sourceMap, annotation)
-      }
-    }
-  }
-
-  if (results.length === 0) {
-    pushCodexTextResult(results, response.output_text)
-  }
-
-  if (sourceMap.size > 0) {
-    results.push({
-      tool_use_id: 'codex-web-search',
-      content: Array.from(sourceMap.values()),
-    })
-  }
-
-  if (results.length === 0) {
-    results.push('No results found.')
-  }
-
-  return {
-    query,
-    results,
-    durationSeconds,
-  }
-}
-
-export const __test = {
-  makeOutputFromCodexWebSearchResponse,
-  buildEmptyAdapterResultHint,
-  formatProviderOutputWithEmptyHint,
-}
-
-async function runCodexWebSearch(
-  input: Input,
-  signal: AbortSignal,
-): Promise<Output> {
-  const startTime = performance.now()
-  const request = resolveProviderRequest({
-    model: getMainLoopModel(),
-    baseUrl: process.env.OPENAI_BASE_URL,
-  })
-  const credentials = resolveCodexApiCredentials()
-
-  if (!credentials.apiKey) {
-    throw new Error('Codex web search requires CODEX_API_KEY or a valid auth.json.')
-  }
-  if (!credentials.accountId) {
-    throw new Error(
-      'Codex web search requires CHATGPT_ACCOUNT_ID or an auth.json with chatgpt_account_id.',
-    )
-  }
-
-  const body: Record<string, unknown> = {
-    model: request.resolvedModel,
-    input: buildCodexWebSearchInput(input),
-    instructions: buildCodexWebSearchInstructions(),
-    tools: [makeCodexWebSearchTool(input)],
-    tool_choice: 'required',
-    include: ['web_search_call.action.sources'],
-    store: false,
-    stream: true,
-  }
-
-  if (request.reasoning) {
-    body.reasoning = request.reasoning
-  }
-
-  const response = await fetchWithProxyRetry(`${request.baseUrl}/responses`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${credentials.apiKey}`,
-      'chatgpt-account-id': credentials.accountId,
-      originator: 'cocode',
-    },
-    body: JSON.stringify(body),
-    signal,
-  })
-
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => 'unknown error')
-    throw new Error(`Codex web search error ${response.status}: ${errorBody}`)
-  }
-
-  const payload = await collectCodexCompletedResponse(response)
-  const endTime = performance.now()
-  return makeOutputFromCodexWebSearchResponse(
-    payload,
-    input.query,
-    (endTime - startTime) / 1000,
-  )
 }
 
 function makeOutputFromSearchResponse(
@@ -514,7 +244,7 @@ function isTransientError(err: unknown): boolean {
 /**
  * Returns true when we should use the adapter-based provider system.
  *
- * In auto mode: native/first-party/Codex paths take precedence.
+ * In auto mode: native/first-party paths take precedence.
  *   → Only falls back to adapter if no native path is available.
  * In explicit adapter modes (tavily, ddg, custom, etc.): always true.
  * In native mode: never true.
@@ -524,8 +254,7 @@ function shouldUseAdapterProvider(): boolean {
   if (mode === 'native') return false
   if (mode !== 'auto') return true // explicit adapter mode (tavily, ddg, custom, etc.)
 
-  // Auto mode: native/first-party/Codex take precedence over adapter
-  if (isCodexResponsesWebSearchEnabled()) return false
+  // Auto mode: native/first-party paths take precedence over adapter
   const provider = getAPIProvider()
   if (provider === 'firstParty' || provider === 'vertex' || provider === 'foundry') {
     return false
@@ -535,14 +264,13 @@ function shouldUseAdapterProvider(): boolean {
 }
 
 /**
- * Returns true when the current provider has a working native or Codex
+ * Returns true when the current provider has a working native
  * web-search fallback after an adapter failure. OpenAI shim providers
  * (moonshot, minimax, nvidia-nim, openai, github, etc.) do NOT support
  * Anthropic's web_search_20250305 tool, so falling through to the native
  * path silently produces "Did 0 searches".
  */
 function hasNativeSearchFallback(): boolean {
-  if (isCodexResponsesWebSearchEnabled()) return true
   const provider = getAPIProvider()
   return provider === 'firstParty' || provider === 'vertex' || provider === 'foundry'
 }
@@ -577,7 +305,6 @@ export const WebSearchTool = buildTool({
 
     // Auto/native mode: check all paths
     if (getAvailableProviders().length > 0) return true
-    if (isCodexResponsesWebSearchEnabled()) return true
 
     const provider = getAPIProvider()
     const model = getMainLoopModel()
@@ -635,7 +362,7 @@ export const WebSearchTool = buildTool({
   },
   async prompt() {
     // Strip "US only" when using non-native backends
-    if (shouldUseAdapterProvider() || isCodexResponsesWebSearchEnabled()) {
+    if (shouldUseAdapterProvider()) {
       return getWebSearchPrompt().replace(
         /\n\s*-\s*Web search is only available in the US/,
         '',
@@ -709,7 +436,7 @@ export const WebSearchTool = buildTool({
           }
         }
         // Auto mode + 0 hits + native fallback available: fall through to
-        // native (Anthropic/Vertex/Foundry/Codex) and let it try.
+        // native (Anthropic/Vertex/Foundry) and let it try.
       } catch (err) {
         // Explicit adapter: throw the real error (no silent native fallback)
         if (isExplicitAdapter) throw err
@@ -724,19 +451,12 @@ export const WebSearchTool = buildTool({
           throw new Error(
             `Web search is unavailable for provider "${provider}". ` +
               `The search adapter failed (${errMsg}). ` +
-              `Try switching to a provider with built-in web search (e.g. Anthropic, Codex) or try again later.`,
+              `Try switching to a provider with built-in web search (e.g. Anthropic) or try again later.`,
           )
         }
         console.error(
           `[web-search] Adapter failed, falling through to native: ${err}`,
         )
-      }
-    }
-
-    // --- Codex / OpenAI Responses path ---
-    if (isCodexResponsesWebSearchEnabled()) {
-      return {
-        data: await runCodexWebSearch(input, context.abortController.signal),
       }
     }
 

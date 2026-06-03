@@ -5,7 +5,6 @@ import { isProSubscriber, isMaxSubscriber, isTeamSubscriber } from './auth.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js'
 import { getAPIProvider } from './model/providers.js'
 import { get3PModelCapabilityOverride } from './model/modelSupportOverrides.js'
-import { supportsCodexReasoningEffort } from '../services/api/providerConfig.js'
 import { isEnvTruthy } from './envUtils.js'
 import type { EffortLevel } from 'src/entrypoints/sdk/runtimeTypes.js'
 
@@ -38,7 +37,7 @@ export function modelSupportsEffort(model: string): boolean {
   if (supported3P !== undefined) {
     return supported3P
   }
-  if (modelUsesOpenAIEffort(model) && supportsCodexReasoningEffort(model)) {
+  if (modelUsesOpenAIEffort(model)) {
     return true
   }
   // Supported by a subset of Claude 4 models
@@ -84,9 +83,9 @@ export function isOpenAIEffortLevel(value: string): value is OpenAIEffortLevel {
   return (OPENAI_EFFORT_LEVELS as readonly string[]).includes(value)
 }
 
-export function modelUsesOpenAIEffort(model: string): boolean {
+export function modelUsesOpenAIEffort(_model: string): boolean {
   const provider = getAPIProvider()
-  return provider === 'openai' || provider === 'codex'
+  return provider === 'openai'
 }
 
 export function getAvailableEffortLevels(model: string): EffortLevel[] | OpenAIEffortLevel[] {
@@ -220,7 +219,7 @@ export function resolveAppliedEffort(
   const resolved =
     envOverride ?? appStateEffortValue ?? getDefaultEffortForModel(model)
   // API rejects 'max' on non-Opus-4.6 Anthropic models — downgrade to 'high'.
-  // OpenAI/Codex models use 'max' as the standard form of 'xhigh'; the client
+  // OpenAI models use 'max' as the standard form of 'xhigh'; the client
   // shim converts it back to 'xhigh' on the wire, so don't clamp it here.
   if (
     resolved === 'max' &&
@@ -298,7 +297,7 @@ export function getEffortLevelDescription(level: EffortLevel | OpenAIEffortLevel
     case 'max':
       return 'Maximum capability with deepest reasoning (Opus 4.6 only)'
     case 'xhigh':
-      return 'Extra high reasoning effort for complex tasks (OpenAI/Codex)'
+      return 'Extra high reasoning effort for complex tasks (OpenAI)'
   }
 }
 

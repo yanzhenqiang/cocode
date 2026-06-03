@@ -205,7 +205,7 @@ export const call: LocalCommandCall = async (args) => {
     }
   }
 
-  const useResponses = request.transport === 'codex_responses'
+  const useResponses = request.transport === 'responses'
   const endpoint = useResponses ? '/responses' : '/chat/completions'
   const url = `${request.baseUrl}${endpoint}`
   const family = getModelFamily(request.resolvedModel)
@@ -355,7 +355,7 @@ export const call: LocalCommandCall = async (args) => {
   comparison.push(`\n  Verdict: ${verdict}`)
 
   // --- Simulate what main's shim code does with this usage ---
-  // codexShim.ts makeUsage() — used for Responses API (GPT-5+/Codex)
+  // makeUsage() — used for Responses API (GPT-5+)
   function mainMakeUsage(u: any) {
     return {
       input_tokens: u?.input_tokens ?? 0,
@@ -379,7 +379,7 @@ export const call: LocalCommandCall = async (args) => {
   const shim2 = shimFn(r2.usage)
 
   comparison.push('')
-  comparison.push(`  --- What main's shim reports (${useResponses ? 'codexShim.makeUsage' : 'openaiShim.convertChunkUsage'}) ---`)
+  comparison.push(`  --- What main's shim reports (${useResponses ? 'makeUsage' : 'openaiShim.convertChunkUsage'}) ---`)
   comparison.push(`  Call 1: cache_read_input_tokens=${shim1.cache_read_input_tokens}`)
   comparison.push(`  Call 2: cache_read_input_tokens=${shim2.cache_read_input_tokens}`)
   if (useResponses && cached2 > 0) {
@@ -392,7 +392,7 @@ export const call: LocalCommandCall = async (args) => {
 
   // User-facing summary
   const mode = noKey ? ' (NO cache key sent)' : ''
-  const shimLabel = useResponses ? 'codexShim.makeUsage()' : 'openaiShim.convertChunkUsage()'
+  const shimLabel = useResponses ? 'makeUsage()' : 'openaiShim.convertChunkUsage()'
   const summary = [
     `Cache Probe — ${request.resolvedModel} via ${useResponses ? 'Responses API' : 'Chat Completions'}${mode}`,
     '',

@@ -16,7 +16,6 @@ import { jsonStringify } from '../../utils/slowOperations.js';
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { Byline } from '../design-system/Byline.js';
 import { ProgressBar } from '../design-system/ProgressBar.js';
-import { CodexUsage } from './CodexUsage.js';
 import { UnsupportedUsage } from './UnsupportedUsage.js';
 type LimitBarProps = {
   title: string;
@@ -267,9 +266,6 @@ function AnthropicUsage(): React.ReactNode {
 }
 export function Usage(): React.ReactNode {
   const provider = getAPIProvider();
-  if (provider === 'codex') {
-    return <CodexUsage />;
-  }
   if (provider === 'anthropic' || provider === 'firstParty') {
     return <AnthropicUsage />;
   }

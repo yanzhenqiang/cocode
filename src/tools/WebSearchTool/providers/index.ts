@@ -15,7 +15,7 @@
  *   "mojeek"    — use Mojeek only (fail loudly)
  *   "linkup"    — use Linkup only (fail loudly)
  *   "ddg"       — use DuckDuckGo only (fail loudly)
- *   "native"    — use Anthropic native / Codex only (fail loudly)
+ *   "native"    — use Anthropic native only (fail loudly)
  *
  * "auto" mode is the only mode that silently falls through to the next provider.
  * All other modes throw on failure — no silent backend switching.

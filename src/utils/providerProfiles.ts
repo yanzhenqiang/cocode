@@ -1,6 +1,5 @@
 import { randomBytes } from 'crypto'
 import {
-  isCodexBaseUrl,
   parseOpenAICompatibleApiFormat,
 } from '../services/api/providerConfig.js'
 import {
@@ -918,10 +917,6 @@ export function getProfileModelOptions(
 function buildOpenAICompatibleStartupEnv(
   activeProfile: ProviderProfile,
 ): ProfileEnv | null {
-  if (isCodexBaseUrl(activeProfile.baseUrl)) {
-    return null
-  }
-
   if (activeProfile.apiKey) {
     const strictEnv = buildOpenAIProfileEnv({
       goal: 'balanced',

@@ -53,11 +53,6 @@ export function getSmallFastModel(): ModelName {
   if (getAPIProvider() === 'openai') {
     return process.env.OPENAI_MODEL || 'gpt-4o-mini'
   }
-  // Codex provider — OPENAI_MODEL is always set for Codex profiles; only fall
-  // back to a codex-spark alias when an override env strips it.
-  if (getAPIProvider() === 'codex') {
-    return process.env.OPENAI_MODEL || 'codexspark'
-  }
   // For GitHub Copilot provider
   if (getAPIProvider() === 'github') {
     return process.env.OPENAI_MODEL || 'github:copilot'
@@ -118,16 +113,12 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
     // Read the model env var that matches the active provider to prevent
     // cross-provider leaks (e.g. ANTHROPIC_MODEL sent to the OpenAI API).
     //
-    // All OpenAI-shim providers (openai, codex, github, nvidia-nim, minimax)
+    // All OpenAI-shim providers (openai, github, nvidia-nim, minimax)
     // set CLAUDE_CODE_USE_OPENAI=1 + OPENAI_MODEL via
-    // applyProviderProfileToProcessEnv. Earlier this check only included
-    // openai/github — codex/nvidia-nim/minimax fell through to the stale
-    // settings.model, so switching from (say) Moonshot to Codex kept firing
-    // `kimi-k2.6` at the Codex endpoint and getting 400s.
+    // applyProviderProfileToProcessEnv.
     const provider = getAPIProvider()
     const isOpenAIShimProvider =
       provider === 'openai' ||
-      provider === 'codex' ||
       provider === 'github' ||
       provider === 'nvidia-nim' ||
       provider === 'minimax' ||
@@ -191,10 +182,6 @@ export function getDefaultOpusModel(): ModelName {
   if (getAPIProvider() === 'openai') {
     return process.env.OPENAI_MODEL || 'gpt-4o'
   }
-  // Codex provider: use user-specified model or default to gpt-5.5
-  if (getAPIProvider() === 'codex') {
-    return process.env.OPENAI_MODEL || 'gpt-5.5'
-  }
   // GitHub Copilot provider
   if (getAPIProvider() === 'github') {
     return process.env.OPENAI_MODEL || 'github:copilot'
@@ -241,10 +228,6 @@ export function getDefaultSonnetModel(): ModelName {
   if (getAPIProvider() === 'openai') {
     return process.env.OPENAI_MODEL || 'gpt-4o'
   }
-  // Codex provider
-  if (getAPIProvider() === 'codex') {
-    return process.env.OPENAI_MODEL || 'gpt-5.5'
-  }
   // GitHub Copilot provider
   if (getAPIProvider() === 'github') {
     return process.env.OPENAI_MODEL || 'github:copilot'
@@ -284,10 +267,6 @@ export function getDefaultHaikuModel(): ModelName {
   // OpenAI provider
   if (getAPIProvider() === 'openai') {
     return process.env.OPENAI_MODEL || 'gpt-4o-mini'
-  }
-  // Codex provider
-  if (getAPIProvider() === 'codex') {
-    return process.env.OPENAI_MODEL || 'gpt-5.5'
   }
   // GitHub Copilot provider
   if (getAPIProvider() === 'github') {
@@ -376,10 +355,6 @@ export function getDefaultMainLoopModelSetting(): ModelName | ModelAlias {
   // OpenAI provider: always use the configured OpenAI model
   if (getAPIProvider() === 'openai') {
     return process.env.OPENAI_MODEL || 'gpt-4o'
-  }
-  // Codex provider: always use the configured Codex model (default gpt-5.5)
-  if (getAPIProvider() === 'codex') {
-    return process.env.OPENAI_MODEL || 'gpt-5.5'
   }
   // xAI provider: always use the configured Grok model (default grok-4.3)
   if (getAPIProvider() === 'xai') {
@@ -556,13 +531,6 @@ export function renderModelSetting(setting: ModelName | ModelAlias): string {
   if (setting === 'opusplan') {
     return 'Opus Plan'
   }
-  // Handle Codex models - show actual model name + resolved model
-  if (setting === 'codexplan') {
-    return 'codexplan (gpt-5.5)'
-  }
-  if (setting === 'codexspark') {
-    return 'codexspark (gpt-5.3-codex-spark)'
-  }
   if (isModelAlias(setting)) {
     return capitalize(setting)
   }
@@ -580,7 +548,6 @@ export function getPublicModelDisplayName(model: ModelName): string | null {
   if (
     getAPIProvider() === 'openai' ||
     getAPIProvider() === 'gemini' ||
-    getAPIProvider() === 'codex' ||
     getAPIProvider() === 'github' ||
     getAPIProvider() === 'xai' ||
     getAPIProvider() === 'minimax' ||
@@ -594,12 +561,7 @@ export function getPublicModelDisplayName(model: ModelName): string | null {
       'gpt-5.5-mini': 'GPT-5.5 mini',
       'gpt-5.4': 'GPT-5.4',
       'gpt-5.4-mini': 'GPT-5.4 mini',
-      'gpt-5.3-codex': 'GPT-5.3 Codex',
-      'gpt-5.2-codex': 'GPT-5.2 Codex',
       'gpt-5.2': 'GPT-5.2',
-      'gpt-5.1-codex': 'GPT-5.1 Codex',
-      'gpt-5.1-codex-max': 'GPT-5.1 Codex max',
-      'gpt-5.1-codex-mini': 'GPT-5.1 Codex mini',
       'gpt-4o': 'GPT-4o',
       'gpt-4.1': 'GPT-4.1',
       'claude-opus-4.6': 'Claude Opus 4.6',
@@ -622,8 +584,6 @@ export function getPublicModelDisplayName(model: ModelName): string | null {
       return 'GPT-5.5'
     case 'gpt-5.4':
       return 'GPT-5.4'
-    case 'gpt-5.3-codex-spark':
-      return 'GPT-5.3 Codex Spark'
     case getModelStrings().opus47 + '[1m]':
       return 'Opus 4.7 (1M context)'
     case getModelStrings().opus47:
@@ -756,13 +716,6 @@ export function parseUserSpecifiedModel(
     }
   }
 
-  // Handle Codex aliases - map to actual model names
-  if (modelString === 'codexplan') {
-    return 'gpt-5.5'
-  }
-  if (modelString === 'codexspark') {
-    return 'gpt-5.3-codex-spark'
-  }
 
   // Opus 4/4.1 are no longer available on the first-party API (same as
   // Claude.ai) — silently remap to the current Opus default. The 'opus'

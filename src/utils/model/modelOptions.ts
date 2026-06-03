@@ -315,77 +315,6 @@ function getOpusPlanOption(): ModelOption {
   }
 }
 
-function getCodexPlanOption(): ModelOption {
-  return {
-    value: 'gpt-5.5',
-    label: 'gpt-5.5',
-    description: 'GPT-5.5 on the Codex backend with high reasoning',
-  }
-}
-
-function getCodexSparkOption(): ModelOption {
-  return {
-    value: 'gpt-5.3-codex-spark',
-    label: 'gpt-5.3-codex-spark',
-    description: 'GPT-5.3 Codex Spark on the Codex backend for fast tool loops',
-  }
-}
-
-function getCodexModelOptions(): ModelOption[] {
-  return [
-    {
-      value: 'gpt-5.5',
-      label: 'gpt-5.5',
-      description: 'GPT-5.5 with high reasoning',
-    },
-    {
-      value: 'gpt-5.4',
-      label: 'gpt-5.4',
-      description: 'GPT-5.4 with high reasoning',
-    },
-    {
-      value: 'gpt-5.3-codex',
-      label: 'gpt-5.3-codex',
-      description: 'GPT-5.3 Codex with high reasoning',
-    },
-    {
-      value: 'gpt-5.3-codex-spark',
-      label: 'gpt-5.3-codex-spark',
-      description: 'GPT-5.3 Codex Spark for fast tool loops',
-    },
-    {
-      value: 'codexspark',
-      label: 'codexspark',
-      description: 'GPT-5.3 Codex Spark alias for fast tool loops',
-    },
-    {
-      value: 'gpt-5.2-codex',
-      label: 'gpt-5.2-codex',
-      description: 'GPT-5.2 Codex with high reasoning',
-    },
-    {
-      value: 'gpt-5.1-codex-max',
-      label: 'gpt-5.1-codex-max',
-      description: 'GPT-5.1 Codex Max for deep reasoning',
-    },
-    {
-      value: 'gpt-5.1-codex-mini',
-      label: 'gpt-5.1-codex-mini',
-      description: 'GPT-5.1 Codex Mini - faster, cheaper',
-    },
-    {
-      value: 'gpt-5.5-mini',
-      label: 'gpt-5.5-mini',
-      description: 'GPT-5.5 Mini - faster, cheaper',
-    },
-    {
-      value: 'gpt-5.4-mini',
-      label: 'gpt-5.4-mini',
-      description: 'GPT-5.4 Mini - faster, cheaper',
-    },
-  ]
-}
-
 // @[MODEL LAUNCH]: Update the model picker lists below to include/reorder options for the new model.
 // Each user tier (ant, Max/Team Premium, Pro/Team Standard/Enterprise, PAYG 1P, PAYG 3P) has its own list.
 
@@ -557,11 +486,6 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
   // PAYG 3P: Default (Sonnet 4.5) + Sonnet (3P custom) or Sonnet 4.6/1M + Opus (3P custom) or Opus 4.1/Opus 4.6/Opus1M + Haiku + Opus 4.1
   const payg3pOptions = [getDefaultOptionForUser(fastMode)]
 
-  // Add Codex models for openai and codex providers
-  if (getAPIProvider() === 'openai' || getAPIProvider() === 'codex') {
-    payg3pOptions.push(...getCodexModelOptions())
-  }
-
   const customSonnet = getCustomSonnetOption()
   if (customSonnet !== undefined) {
     payg3pOptions.push(customSonnet)
@@ -722,9 +646,9 @@ export function getModelOptions(fastMode = false): ModelOption[] {
   } else if (customModel === 'opusplan') {
     return filterModelOptionsByAllowlist([...options, getOpusPlanOption()])
   } else if (customModel === 'gpt-5.5') {
-    return filterModelOptionsByAllowlist([...options, getCodexPlanOption()])
+    return filterModelOptionsByAllowlist([...options, { value: 'gpt-5.5', label: 'gpt-5.5', description: 'GPT-5.5 with high reasoning' }])
   } else if (customModel === 'gpt-5.3-codex-spark') {
-    return filterModelOptionsByAllowlist([...options, getCodexSparkOption()])
+    return filterModelOptionsByAllowlist([...options, { value: 'gpt-5.3-codex-spark', label: 'gpt-5.3-codex-spark', description: 'GPT-5.3 Codex Spark for fast tool loops' }])
   } else if (customModel === 'opus' && getAPIProvider() === 'firstParty') {
     return filterModelOptionsByAllowlist([
       ...options,

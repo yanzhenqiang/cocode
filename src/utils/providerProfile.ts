@@ -1,14 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import {
-  DEFAULT_CODEX_BASE_URL,
   DEFAULT_OPENAI_BASE_URL,
-  isCodexBaseUrl,
   parseOpenAICompatibleApiFormat,
-  resolveCodexApiCredentials,
   resolveProviderRequest,
 } from '../services/api/providerConfig.js'
-const parseChatgptAccountId = () => null
 import {
   getGoalDefaultOpenAIModel,
   normalizeRecommendationGoal,
@@ -67,10 +63,6 @@ const PROFILE_ENV_KEYS = [
   'OPENAI_AUTH_SCHEME',
   'OPENAI_AUTH_HEADER_VALUE',
   'OPENAI_API_KEY',
-  'CODEX_API_KEY',
-  'CODEX_CREDENTIAL_SOURCE',
-  'CHATGPT_ACCOUNT_ID',
-  'CODEX_ACCOUNT_ID',
   'GEMINI_API_KEY',
   'GEMINI_AUTH_MODE',
   'GEMINI_ACCESS_TOKEN',
@@ -106,7 +98,6 @@ export type CompatibilityProfileMode =
 const SECRET_ENV_KEYS = [
   'OPENAI_API_KEY',
   'OPENAI_AUTH_HEADER_VALUE',
-  'CODEX_API_KEY',
   'GEMINI_API_KEY',
   'GOOGLE_API_KEY',
   'NVIDIA_API_KEY',
@@ -122,7 +113,6 @@ export type ProviderProfile =
   | 'anthropic'
   | 'openai'
   | 'ollama'
-  | 'codex'
   | 'gemini'
   | 'atomic-chat'
   | 'nvidia-nim'
@@ -148,10 +138,6 @@ export type ProfileEnv = {
   OPENAI_AUTH_SCHEME?: 'bearer' | 'raw'
   OPENAI_AUTH_HEADER_VALUE?: string
   OPENAI_API_KEY?: string
-  CODEX_API_KEY?: string
-  CODEX_CREDENTIAL_SOURCE?: 'oauth' | 'existing'
-  CHATGPT_ACCOUNT_ID?: string
-  CODEX_ACCOUNT_ID?: string
   GEMINI_API_KEY?: string
   GEMINI_AUTH_MODE?: 'api-key' | 'access-token' | 'adc'
   GEMINI_ACCESS_TOKEN?: string
@@ -184,7 +170,6 @@ type SecretValueSource = Partial<
   Record<
     | 'OPENAI_API_KEY'
     | 'OPENAI_AUTH_HEADER_VALUE'
-    | 'CODEX_API_KEY'
     | 'GEMINI_API_KEY'
     | 'GOOGLE_API_KEY'
     | 'NVIDIA_API_KEY'
@@ -298,7 +283,6 @@ export function isProviderProfile(value: unknown): value is ProviderProfile {
     value === 'anthropic' ||
     value === 'openai' ||
     value === 'ollama' ||
-    value === 'codex' ||
     value === 'gemini' ||
     value === 'atomic-chat' ||
     value === 'nvidia-nim' ||
@@ -637,18 +621,17 @@ export function buildOpenAIProfileEnv(options: {
     fallbackModel: defaultModel,
     apiFormat: processEnv.OPENAI_API_FORMAT,
   })
-  const useShellOpenAIConfig = shellOpenAIRequest.transport !== 'codex_responses'
 
   return {
     OPENAI_BASE_URL:
       sanitizeProviderConfigValue(options.baseUrl, secretSource) ||
-      (useShellOpenAIConfig ? shellOpenAIBaseUrl : undefined) ||
+      shellOpenAIBaseUrl ||
       DEFAULT_OPENAI_BASE_URL,
     OPENAI_MODEL:
       normalizeProfileModel(
         sanitizeProviderConfigValue(options.model, secretSource),
       ) ||
-      (useShellOpenAIConfig ? shellOpenAIModel : undefined) ||
+      shellOpenAIModel ||
       defaultModel,
     ...(options.apiFormat ? { OPENAI_API_FORMAT: options.apiFormat } : {}),
     ...(options.authHeader ? { OPENAI_AUTH_HEADER: options.authHeader } : {}),
@@ -656,41 +639,6 @@ export function buildOpenAIProfileEnv(options: {
     ...(authHeaderValue ? { OPENAI_AUTH_HEADER_VALUE: authHeaderValue } : {}),
     ...(key ? { OPENAI_API_KEY: key } : {}),
   }
-}
-
-export function buildCodexProfileEnv(options: {
-  model?: string | null
-  baseUrl?: string | null
-  apiKey?: string | null
-  credentialSource?: 'oauth' | 'existing'
-  processEnv?: NodeJS.ProcessEnv
-}): ProfileEnv | null {
-  const processEnv = options.processEnv ?? process.env
-  const key = sanitizeApiKey(options.apiKey ?? processEnv.CODEX_API_KEY)
-  const credentialEnv = key
-    ? ({ ...processEnv, CODEX_API_KEY: key } as NodeJS.ProcessEnv)
-    : processEnv
-  const credentials = resolveCodexApiCredentials(credentialEnv)
-  if (!credentials.apiKey || !credentials.accountId) {
-    return null
-  }
-  const credentialSource =
-    options.credentialSource ??
-    (credentials.source === 'secure-storage' ? 'oauth' : 'existing')
-
-  const env: ProfileEnv = {
-    OPENAI_BASE_URL: options.baseUrl || DEFAULT_CODEX_BASE_URL,
-    OPENAI_MODEL: options.model || 'codexplan',
-    CODEX_CREDENTIAL_SOURCE: credentialSource,
-  }
-
-  if (key) {
-    env.CODEX_API_KEY = key
-  }
-
-  env.CHATGPT_ACCOUNT_ID = credentials.accountId
-
-  return env
 }
 
 export function buildMistralProfileEnv(options: {
@@ -859,30 +807,6 @@ export function buildCompatibilityProcessEnv(options: {
   return env
 }
 
-export function buildCodexOAuthProfileEnv(
-  tokens: {
-    accessToken: string
-    idToken?: string
-    accountId?: string
-  },
-): ProfileEnv | null {
-  const accountId =
-    tokens.accountId ??
-    parseChatgptAccountId(tokens.idToken) ??
-    parseChatgptAccountId(tokens.accessToken)
-
-  if (!accountId) {
-    return null
-  }
-
-  return {
-    OPENAI_BASE_URL: DEFAULT_CODEX_BASE_URL,
-    OPENAI_MODEL: 'codexplan',
-    CHATGPT_ACCOUNT_ID: accountId,
-    CODEX_CREDENTIAL_SOURCE: 'oauth',
-  }
-}
-
 export function createProfileFile(
   profile: ProviderProfile,
   env: ProfileEnv,
@@ -892,31 +816,6 @@ export function createProfileFile(
     env,
     createdAt: new Date().toISOString(),
   }
-}
-
-export function isPersistedCodexOAuthProfile(
-  persisted: ProfileFile | null,
-): boolean {
-  return (
-    persisted?.profile === 'codex' &&
-    persisted.env.CODEX_CREDENTIAL_SOURCE === 'oauth'
-  )
-}
-
-export function clearPersistedCodexOAuthProfile(
-  options?: ProfileFileLocation,
-): string | null {
-  let removedPath: string | null = null
-
-  for (const filePath of resolveProfileFileCleanupPaths(options)) {
-    const persisted = readProfileFile(filePath)
-    if (isPersistedCodexOAuthProfile(persisted)) {
-      rmSync(filePath, { force: true })
-      removedPath ??= filePath
-    }
-  }
-
-  return removedPath
 }
 
 export function loadProfileFile(options?: ProfileFileLocation): ProfileFile | null {
@@ -1119,13 +1018,7 @@ export async function buildLaunchEnv(options: {
 
     for (const [envKey, provider] of explicitProfileOverrides) {
       if (isEnvTruthy(processEnv[envKey])) {
-        const isCodexOAuthProfile =
-          options.profile === 'codex' &&
-          provider === 'openai' &&
-          persistedEnv.CODEX_CREDENTIAL_SOURCE === 'oauth'
-        if (!isCodexOAuthProfile) {
-          options.profile = provider
-        }
+        options.profile = provider
         break
       }
     }
@@ -1359,69 +1252,21 @@ export async function buildLaunchEnv(options: {
     })
   }
 
-  if (options.profile === 'codex') {
-    const isCodexOAuthProfile = persistedEnv.CODEX_CREDENTIAL_SOURCE === 'oauth'
-    const codexKey = isCodexOAuthProfile
-      ? undefined
-      : sanitizeApiKey(processEnv.CODEX_API_KEY) ||
-        sanitizeApiKey(persistedEnv.CODEX_API_KEY)
-    const liveCodexCredentials = isCodexOAuthProfile
-      ? undefined
-      : resolveCodexApiCredentials(processEnv)
-    const codexAccountId = isCodexOAuthProfile
-      ? persistedEnv.CHATGPT_ACCOUNT_ID || persistedEnv.CODEX_ACCOUNT_ID
-      : processEnv.CHATGPT_ACCOUNT_ID ||
-        processEnv.CODEX_ACCOUNT_ID ||
-        liveCodexCredentials?.accountId ||
-        persistedEnv.CHATGPT_ACCOUNT_ID ||
-        persistedEnv.CODEX_ACCOUNT_ID
-
-    return buildCompatibilityProcessEnv({
-      processEnv,
-      compatibilityMode: 'openai',
-      profileEnv: {
-        OPENAI_BASE_URL:
-          persistedOpenAIBaseUrl && isCodexBaseUrl(persistedOpenAIBaseUrl)
-            ? persistedOpenAIBaseUrl
-            : DEFAULT_CODEX_BASE_URL,
-        OPENAI_MODEL: persistedOpenAIModel || 'codexplan',
-        ...(codexKey ? { CODEX_API_KEY: codexKey } : {}),
-        ...(codexAccountId ? { CHATGPT_ACCOUNT_ID: codexAccountId } : {}),
-      },
-    })
-  }
-
   const defaultOpenAIModel = getGoalDefaultOpenAIModel(options.goal)
-  const shellOpenAIRequest = resolveProviderRequest({
-    model: shellOpenAIModel,
-    baseUrl: shellOpenAIBaseUrl,
-    fallbackModel: defaultOpenAIModel,
-    apiFormat: processEnv.OPENAI_API_FORMAT,
-  })
-  const persistedOpenAIRequest = resolveProviderRequest({
-    model: persistedOpenAIModel,
-    baseUrl: persistedOpenAIBaseUrl,
-    fallbackModel: defaultOpenAIModel,
-    apiFormat: persistedOpenAIApiFormat,
-  })
-  const useShellOpenAIConfig = shellOpenAIRequest.transport !== 'codex_responses'
-  const usePersistedOpenAIConfig =
-    (!persistedOpenAIModel && !persistedOpenAIBaseUrl) ||
-    persistedOpenAIRequest.transport !== 'codex_responses'
 
   const env: ProfileEnv = {
     OPENAI_BASE_URL:
-      (useShellOpenAIConfig ? shellOpenAIBaseUrl : undefined) ||
-      (usePersistedOpenAIConfig ? persistedOpenAIBaseUrl : undefined) ||
+      shellOpenAIBaseUrl ||
+      persistedOpenAIBaseUrl ||
       DEFAULT_OPENAI_BASE_URL,
     OPENAI_MODEL:
-      (useShellOpenAIConfig ? shellOpenAIModel : undefined) ||
-      (usePersistedOpenAIConfig ? persistedOpenAIModel : undefined) ||
+      shellOpenAIModel ||
+      persistedOpenAIModel ||
       defaultOpenAIModel,
   }
   const openAIApiFormat =
     parseOpenAICompatibleApiFormat(processEnv.OPENAI_API_FORMAT) ||
-    (usePersistedOpenAIConfig ? persistedOpenAIApiFormat : undefined)
+    persistedOpenAIApiFormat
   if (openAIApiFormat) {
     env.OPENAI_API_FORMAT = openAIApiFormat
   } else {
@@ -1429,7 +1274,7 @@ export async function buildLaunchEnv(options: {
   }
   const openAIAuthHeader =
     processEnv.OPENAI_AUTH_HEADER ||
-    (usePersistedOpenAIConfig ? persistedOpenAIAuthHeader : undefined)
+    persistedOpenAIAuthHeader
   if (openAIAuthHeader) {
     env.OPENAI_AUTH_HEADER = openAIAuthHeader
   } else {
@@ -1440,7 +1285,7 @@ export async function buildLaunchEnv(options: {
     processEnv.OPENAI_AUTH_SCHEME === 'raw'
       ? processEnv.OPENAI_AUTH_SCHEME
       : undefined) ||
-    (usePersistedOpenAIConfig ? persistedOpenAIAuthScheme : undefined)
+    persistedOpenAIAuthScheme
   if (openAIAuthScheme) {
     env.OPENAI_AUTH_SCHEME = openAIAuthScheme
   } else {
@@ -1448,7 +1293,7 @@ export async function buildLaunchEnv(options: {
   }
   const openAIAuthHeaderValue =
     sanitizeApiKey(processEnv.OPENAI_AUTH_HEADER_VALUE) ||
-    (usePersistedOpenAIConfig ? persistedOpenAIAuthHeaderValue : undefined)
+    persistedOpenAIAuthHeaderValue
   if (openAIAuthHeaderValue) {
     env.OPENAI_AUTH_HEADER_VALUE = openAIAuthHeaderValue
   } else {
@@ -1518,29 +1363,12 @@ export async function buildStartupEnvFromProfile(options?: {
   }
 
   if (!persisted) {
-    // No saved profile — if user already configured provider env vars
-    // (e.g. ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN), skip Codex fallback.
-    if (processEnv.ANTHROPIC_BASE_URL || processEnv.ANTHROPIC_AUTH_TOKEN) {
-      return processEnv
-    }
-    // No saved profile — default to Codex OAuth / GPT 5.5.
-    // If Codex credentials are available (OAuth or existing), use Codex.
-    // Otherwise inject the Codex env defaults so the provider picker
-    // shows GPT 5.5 as the default model when the user lands on it.
-    const codexEnv = buildCodexProfileEnv({})
-    if (codexEnv) {
-      return buildCompatibilityProcessEnv({
-        processEnv,
-        compatibilityMode: 'openai',
-        profileEnv: codexEnv,
-      })
-    }
     return buildCompatibilityProcessEnv({
       processEnv,
       compatibilityMode: 'openai',
       profileEnv: {
-        OPENAI_BASE_URL: DEFAULT_CODEX_BASE_URL,
-        OPENAI_MODEL: 'codexplan',
+        OPENAI_BASE_URL: DEFAULT_OPENAI_BASE_URL,
+        OPENAI_MODEL: 'gpt-4o',
       },
     })
   }
@@ -1571,52 +1399,10 @@ export async function applySavedProfileToCurrentSession(options: {
   processEnv?: NodeJS.ProcessEnv
 }): Promise<string | null> {
   const processEnv = options.processEnv ?? process.env
-  const hasExplicitSelection = hasExplicitProviderSelection(processEnv)
   const profileManagedEnv =
     processEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED === '1'
 
-  if (options.profileFile.profile === 'codex' && hasExplicitSelection) {
-    const isCodexOAuthProfile =
-      options.profileFile.env.CODEX_CREDENTIAL_SOURCE === 'oauth'
-    const buildEnvSource = isCodexOAuthProfile
-      ? { ...processEnv }
-      : processEnv
-    if (isCodexOAuthProfile) {
-      delete buildEnvSource.CODEX_API_KEY
-      delete buildEnvSource.CODEX_ACCOUNT_ID
-      delete buildEnvSource.CHATGPT_ACCOUNT_ID
-    }
-    const explicitEnv = await buildLaunchEnv({
-      profile: options.profileFile.profile,
-      persisted: options.profileFile,
-      goal: normalizeRecommendationGoal(processEnv.COCODE_PROFILE_GOAL),
-      processEnv: buildEnvSource,
-      getOllamaChatBaseUrl,
-    })
-    delete explicitEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED
-    delete explicitEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED_ID
-    const validationEnv = isCodexOAuthProfile
-      ? { ...explicitEnv, CODEX_API_KEY: 'codex-oauth-token-for-validation' }
-      : explicitEnv
-    const validationError = await getProviderValidationError(validationEnv)
-
-    if (profileManagedEnv) {
-      delete processEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED
-      delete processEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED_ID
-      applyProfileEnvToProcessEnv(processEnv, explicitEnv)
-      return validationError
-    }
-
-    return (
-      validationError ??
-      'current session already has an explicit provider selection'
-    )
-  }
-
   const baseEnv = { ...processEnv }
-  const isCodexOAuthProfile =
-    options.profileFile.profile === 'codex' &&
-    options.profileFile.env.CODEX_CREDENTIAL_SOURCE === 'oauth'
 
   delete baseEnv.CLAUDE_CODE_USE_OPENAI
   delete baseEnv.CLAUDE_CODE_USE_GITHUB
@@ -1628,12 +1414,6 @@ export async function applySavedProfileToCurrentSession(options: {
   delete baseEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED
   delete baseEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED_ID
 
-  if (isCodexOAuthProfile) {
-    delete baseEnv.CODEX_API_KEY
-    delete baseEnv.CODEX_ACCOUNT_ID
-    delete baseEnv.CHATGPT_ACCOUNT_ID
-  }
-
   const nextEnv = await buildLaunchEnv({
     profile: options.profileFile.profile,
     persisted: options.profileFile,
@@ -1641,10 +1421,7 @@ export async function applySavedProfileToCurrentSession(options: {
     processEnv: baseEnv,
     getOllamaChatBaseUrl,
   })
-  const validationEnv = isCodexOAuthProfile
-    ? { ...nextEnv, CODEX_API_KEY: 'codex-oauth-token-for-validation' }
-    : nextEnv
-  const validationError = await getProviderValidationError(validationEnv)
+  const validationError = await getProviderValidationError(nextEnv)
   if (validationError) {
     return validationError
   }

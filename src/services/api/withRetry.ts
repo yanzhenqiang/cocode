@@ -813,7 +813,7 @@ export function getRateLimitResetDelayMs(error: APIError): number | null {
     return Math.min(delayMs, PERSISTENT_RESET_CAP_MS)
   }
 
-  if (provider === 'openai' || provider === 'codex' || provider === 'github') {
+  if (provider === 'openai' || provider === 'github') {
     const reqHeader = error.headers?.get?.('x-ratelimit-reset-requests')
     const tokHeader = error.headers?.get?.('x-ratelimit-reset-tokens')
     const reqMs = reqHeader ? parseOpenAIDuration(reqHeader) : null

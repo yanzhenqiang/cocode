@@ -362,7 +362,6 @@ export function usesAnthropicNativeMessageFormat(options?: {
     | 'openai'
     | 'gemini'
     | 'github'
-    | 'codex'
     | 'nvidia-nim'
     | 'minimax'
     | 'mistral'

@@ -50,7 +50,6 @@ import type { APIProvider } from '../../utils/model/providers.js'
 export type CacheAwareProvider =
   | 'anthropic'
   | 'openai'
-  | 'codex'
   | 'kimi'
   | 'deepseek'
   | 'gemini'
@@ -250,7 +249,6 @@ export function resolveCacheProvider(
     return 'anthropic'
   }
   if (provider === 'gemini') return 'gemini'
-  if (provider === 'codex') return 'codex'
   if (provider === 'openai') {
     const url = hints?.openAiBaseUrl ?? ''
     // Self-hosted / private-network endpoint — detect first so a vLLM

@@ -21,9 +21,7 @@ import {
 import {
   getGithubEndpointType,
   isLocalProviderUrl,
-  resolveCodexApiCredentials,
   resolveProviderRequest,
-  shouldUseCodexTransport,
 } from '../services/api/providerConfig.js'
 import { getGlobalClaudeFile } from './env.js'
 import {
@@ -377,7 +375,6 @@ export async function getProviderValidationError(
 ): Promise<string | null> {
   const secretSource: SecretValueSource = {
     OPENAI_API_KEY: env.OPENAI_API_KEY,
-    CODEX_API_KEY: env.CODEX_API_KEY,
     GEMINI_API_KEY: env.GEMINI_API_KEY,
     GOOGLE_API_KEY: env.GOOGLE_API_KEY,
     MISTRAL_API_KEY: env.MISTRAL_API_KEY,
@@ -399,34 +396,6 @@ export async function getProviderValidationError(
     env,
     request,
   )
-
-  // Codex auth depends on transport resolution plus local auth/account state,
-  // so it intentionally stays procedural instead of moving into descriptors.
-  const explicitBaseUrl =
-    env.OPENAI_BASE_URL?.trim() || env.OPENAI_API_BASE?.trim()
-  const hasExplicitCodexIntent =
-    (env.OPENAI_MODEL?.trim()
-      ? shouldUseCodexTransport(env.OPENAI_MODEL, explicitBaseUrl)
-      : false) || Boolean(explicitBaseUrl && shouldUseCodexTransport('', explicitBaseUrl))
-
-  if (hasExplicitCodexIntent) {
-    const credentials = resolveCodexApiCredentials(env)
-    if (!credentials.apiKey) {
-      const oauthHint = ', choose Codex OAuth in /provider'
-      const authHint = credentials.authPath
-        ? `${oauthHint} or put auth.json at ${credentials.authPath}`
-        : oauthHint
-      const safeModel =
-        redactSecretValueForDisplay(env.OPENAI_MODEL, secretSource) ??
-        redactSecretValueForDisplay(request.requestedModel, secretSource) ??
-        'the requested model'
-      return `Codex auth is required for ${safeModel}. Set CODEX_API_KEY${authHint}.`
-    }
-    if (!credentials.accountId) {
-      return 'Codex auth is missing chatgpt_account_id. Re-login with Codex OAuth, Codex CLI, or set CHATGPT_ACCOUNT_ID/CODEX_ACCOUNT_ID.'
-    }
-    return null
-  }
 
   const activeRouteId = resolveActiveRouteIdFromEnv(env)
   const shouldPreferGenericRouteValidation =

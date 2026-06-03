@@ -102,11 +102,6 @@ export function detectProvider(modelOverride?: string): { name: string; model: s
     // Explicit dedicated-provider env flags win.
     if (process.env.NVIDIA_NIM) name = 'NVIDIA NIM'
     else if (process.env.MINIMAX_API_KEY) name = 'MiniMax'
-    else if (
-      resolvedRequest.transport === 'codex_responses' ||
-      baseUrl.includes('chatgpt.com/backend-api/codex')
-    )
-      name = 'Codex'
     // Base URL is authoritative — must precede rawModel checks so aggregators
     // (OpenRouter/Together/Groq) aren't mislabelled as DeepSeek/Kimi/etc.
     // when routed to models whose IDs contain a vendor prefix. See issue #855.
