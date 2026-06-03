@@ -11,7 +11,6 @@ import { getIsInteractive, getLastInteractionTime } from '../bootstrap/state.js'
 import {
   cleanupNpmCacheForAnthropicPackages,
   cleanupOldMessageFilesInBackground,
-  cleanupOldVersionsThrottled,
 } from './cleanup.js'
 
 // 24 hours in milliseconds
@@ -44,20 +43,6 @@ export function startBackgroundHousekeeping(): void {
       needsCleanup = false
       await cleanupOldMessageFilesInBackground()
     }
-
-    // If the user did something in the last minute, don't make them wait for these slow operations to run.
-    if (
-      getIsInteractive() &&
-      getLastInteractionTime() > Date.now() - 1000 * 60
-    ) {
-      setTimeout(
-        runVerySlowOps,
-        DELAY_VERY_SLOW_OPERATIONS_THAT_HAPPEN_EVERY_SESSION,
-      ).unref()
-      return
-    }
-
-    await cleanupOldVersions()
   }
 
   setTimeout(
