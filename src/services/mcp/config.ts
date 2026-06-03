@@ -18,7 +18,6 @@ import { getErrnoCode } from '../../utils/errors.js'
 import { getFsImplementation } from '../../utils/fsOperations.js'
 import { safeParseJSON } from '../../utils/json.js'
 import { logError } from '../../utils/log.js'
-const getPluginMcpServers = () => []
 const loadAllPluginsCacheOnly = async () => ({ enabled: [], errors: [] })
 import { isSettingSourceEnabled } from '../../utils/settings/constants.js'
 import { getManagedFilePath } from '../../utils/settings/managedPath.js'
@@ -1128,15 +1127,6 @@ export async function getClaudeCodeMcpConfigs(
     }
   }
 
-  // Process enabled plugins for MCP servers in parallel
-  const pluginServerResults = await Promise.all(
-    pluginResult.enabled.map(plugin => getPluginMcpServers(plugin, mcpErrors)),
-  )
-  for (const servers of pluginServerResults) {
-    if (servers) {
-      Object.assign(pluginMcpServers, servers)
-    }
-  }
 
   // Add any MCP-specific errors from server loading to plugin errors
   if (mcpErrors.length > 0) {
