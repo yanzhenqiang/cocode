@@ -244,7 +244,6 @@ import {
   setFlagSettingsInline,
   getMainThreadAgentType,
 } from 'src/bootstrap/state.js'
-import { runWithWorkload, WORKLOAD_CRON } from 'src/utils/workloadContext.js'
 import type { UUID } from 'crypto'
 import { randomUUID } from 'crypto'
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs'
@@ -338,8 +337,7 @@ export function joinPromptValues(values: PromptValue[]): PromptValue {
 
 /**
  * Whether `next` can be batched into the same ask() call as `head`. Only
- * prompt-mode commands batch, and only when the workload tag matches (so the
- * combined turn is attributed correctly) and the isMeta flag matches (so a
+ * prompt-mode commands batch, and only when the isMeta flag matches (so a
  * transcript marking when the head is spread over the merged command).
  */
 export function canBatchWith(
@@ -349,7 +347,6 @@ export function canBatchWith(
   return (
     next !== undefined &&
     next.mode === 'prompt' &&
-    next.workload === head.workload &&
     next.isMeta === head.isMeta
   )
 }
@@ -387,7 +384,6 @@ export async function runHeadless(
     rewindFiles: string | undefined
     enableAuthStatus: boolean | undefined
     agent: string | undefined
-    workload: string | undefined
     setupTrigger?: 'init' | 'maintenance' | undefined
     sessionStartHooksPromise?: ReturnType<typeof processSessionStartHooks>
     setSDKStatus?: (status: SDKStatus) => void
@@ -855,7 +851,6 @@ function runHeadlessStreaming(
     agent?: string | undefined
     setSDKStatus?: (status: SDKStatus) => void
     promptSuggestions?: boolean | undefined
-    workload?: string | undefined
   },
   turnInterruptionState?: TurnInterruptionState,
 ): AsyncIterable<StdoutMessage> {
@@ -1554,7 +1549,7 @@ function runHeadlessStreaming(
 
           // Non-prompt commands (task-notification, orphaned-permission) carry
           // side effects or orphanedPermission state, so they process singly.
-          // Prompt commands greedily collect followers with matching workload.
+          // Prompt commands greedily collect followers with matching isMeta.
           const batch: QueuedCommand[] = [command]
           if (command.mode === 'prompt') {
             while (canBatchWith(command, peek(isMainThread))) {
@@ -1722,14 +1717,10 @@ function runHeadlessStreaming(
 
           headlessProfilerCheckpoint('before_ask')
           startQueryProfile()
-          // Per-iteration ALS context so bg agents spawned inside ask()
-          // inherit workload across their detached awaits. In-process cron
-          // stamps cmd.workload; the SDK --workload flag is options.workload.
           // const-capture: TS loses `while ((command = dequeue()))` narrowing
           // inside the closure.
           const cmd = command
-          await runWithWorkload(cmd.workload ?? options.workload, async () => {
-            for await (const message of ask({
+          for await (const message of ask({
               commands: uniqBy(
                 [...currentCommands, ...appState.mcp.commands],
                 'name',
@@ -1823,7 +1814,6 @@ function runHeadlessStreaming(
                 output.enqueue(message)
               }
             }
-          }) // end runWithWorkload
 
           for (const uuid of batchUuids) {
             notifyCommandLifecycle(uuid, 'completed')
@@ -1983,11 +1973,6 @@ function runHeadlessStreaming(
           // Without this, messages.ts metaProp eval is {} → prompt leaks
           // into visible transcript when cron fires mid-turn in -p mode.
           isMeta: true,
-          // Threaded to cc_workload= in the billing-header attribution block
-          // so the API can serve cron requests at lower QoS. drainCommandQueue
-          // reads this per-iteration and hoists it into bootstrap state for
-          // the ask() call.
-          workload: WORKLOAD_CRON,
         })
         void run()
       },
