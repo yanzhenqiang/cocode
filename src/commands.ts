@@ -53,9 +53,6 @@ import {
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
 // plugin commands removed
-const getBuiltinPluginSkillCommands = () => []
-const getPluginCommands = () => []
-const getPluginSkills = async () => []
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices, isClaudeAISubscriber } from './utils/auth.js'
 import { isFirstPartyAnthropicBaseUrl } from './utils/model/providers.js'
@@ -176,12 +173,10 @@ export const builtInCommandNames = memoize(
 
 async function getSkills(cwd: string): Promise<{
   skillDirCommands: Command[]
-  pluginSkills: Command[]
   bundledSkills: Command[]
-  builtinPluginSkills: Command[]
 }> {
   try {
-    const [skillDirCommands, pluginSkills] = await Promise.all([
+    const [skillDirCommands] = await Promise.all([
       getSkillDirCommands(cwd).catch(err => {
         logError(toError(err))
         logForDebugging(
@@ -189,34 +184,22 @@ async function getSkills(cwd: string): Promise<{
         )
         return []
       }),
-      getPluginSkills().catch(err => {
-        logError(toError(err))
-        logForDebugging('Plugin skills failed to load, continuing without them')
-        return []
-      }),
     ])
     // Bundled skills are registered synchronously at startup
     const bundledSkills = getBundledSkills()
-    // Built-in plugin skills come from enabled built-in plugins
-    const builtinPluginSkills = getBuiltinPluginSkillCommands()
     logForDebugging(
-      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${pluginSkills.length} plugin skills, ${bundledSkills.length} bundled skills, ${builtinPluginSkills.length} builtin plugin skills`,
+      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${bundledSkills.length} bundled skills`,
     )
     return {
       skillDirCommands,
-      pluginSkills,
       bundledSkills,
-      builtinPluginSkills,
     }
   } catch (err) {
-    // This should never happen since we catch at the Promise level, but defensive
     logError(toError(err))
     logForDebugging('Unexpected error in getSkills, returning empty')
     return {
       skillDirCommands: [],
-      pluginSkills: [],
       bundledSkills: [],
-      builtinPluginSkills: [],
     }
   }
 }
@@ -263,20 +246,11 @@ export function meetsAvailabilityRequirement(cmd: Command | null | undefined): b
  * because loading is expensive (disk I/O, dynamic imports).
  */
 const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
-  const [
-    { skillDirCommands, pluginSkills, bundledSkills, builtinPluginSkills },
-    pluginCommands,
-  ] = await Promise.all([
-    getSkills(cwd),
-    getPluginCommands(),
-  ])
+  const { skillDirCommands, bundledSkills } = await getSkills(cwd)
 
   return [
     ...bundledSkills,
-    ...builtinPluginSkills,
     ...skillDirCommands,
-    ...pluginCommands,
-    ...pluginSkills,
     ...COMMANDS(),
   ]
 })
