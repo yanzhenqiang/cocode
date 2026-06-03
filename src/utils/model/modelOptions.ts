@@ -594,8 +594,6 @@ export function getModelOptions(fastMode = false): ModelOption[] {
     return filterModelOptionsByAllowlist([...options, getOpusPlanOption()])
   } else if (customModel === 'gpt-5.5') {
     return filterModelOptionsByAllowlist([...options, { value: 'gpt-5.5', label: 'gpt-5.5', description: 'GPT-5.5 with high reasoning' }])
-  } else if (customModel === 'gpt-5.3-codex-spark') {
-    return filterModelOptionsByAllowlist([...options, { value: 'gpt-5.3-codex-spark', label: 'gpt-5.3-codex-spark', description: 'GPT-5.3 Codex Spark for fast tool loops' }])
   } else if (customModel === 'opus' && getAPIProvider() === 'firstParty') {
     return filterModelOptionsByAllowlist([
       ...options,
