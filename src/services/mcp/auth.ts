@@ -41,7 +41,6 @@ import { logMCPDebug } from '../../utils/log.js'
 import { getPlatform } from '../../utils/platform.js'
 type SecureStorageData = any
 const getSecureStorage = (_opts?: any) => ({ name: '', read: () => null, readAsync: async () => null, update: () => ({ success: false, warning: '' }), delete: () => true })
-const clearKeychainCache = () => {}
 import { sleep } from '../../utils/sleep.js'
 import { jsonParse, jsonStringify } from '../../utils/slowOperations.js'
 import { logEvent } from '../analytics/index.js'
@@ -2179,7 +2178,6 @@ export class ClaudeAuthProvider implements OAuthClientProvider {
 
     try {
       // Re-read tokens after acquiring lock — another process may have refreshed
-      clearKeychainCache()
       const storage = getSecureStorage()
       const data = storage.read()
       const tokenData = data?.mcpOAuth?.[serverKey]
@@ -2333,7 +2331,6 @@ export class ClaudeAuthProvider implements OAuthClientProvider {
             this.serverName,
             `Token refresh failed with invalid_grant: ${error.message}`,
           )
-          clearKeychainCache()
           const storage = getSecureStorage()
           const data = storage.read()
           const serverKey = getServerKey(this.serverName, this.serverConfig)
