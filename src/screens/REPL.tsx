@@ -84,7 +84,7 @@ import { KeybindingSetup } from '../keybindings/KeybindingProviderSetup.js';
 import { useShortcutDisplay } from '../keybindings/useShortcutDisplay.js';
 import { getShortcutDisplay } from '../keybindings/shortcutFormat.js';
 import { CancelRequestHandler } from '../hooks/useCancelRequest.js';
-import { useTeammateViewAutoExit } from '../hooks/useTeammateViewAutoExit.js';
+
 import { errorMessage } from '../utils/errors.js';
 import { isHumanTurn } from '../utils/messagePredicates.js';
 import { logError } from '../utils/log.js';
@@ -216,7 +216,6 @@ import { useDeprecationWarningNotification } from 'src/hooks/notifs/useDeprecati
 import { useNpmDeprecationNotification } from 'src/hooks/notifs/useNpmDeprecationNotification.js';
 
 import { useModelMigrationNotifications } from 'src/hooks/notifs/useModelMigrationNotifications.js';
-import { useTeammateLifecycleNotification } from 'src/hooks/notifs/useTeammateShutdownNotification.js';
 import { useFastModeNotification } from 'src/hooks/notifs/useFastModeNotification.js';
 import { AutoRunIssueNotification, shouldAutoRunIssue, getAutoRunIssueReasonText, getAutoRunCommand, type AutoRunIssueReason } from '../utils/autoRunIssue.js';
 import type { HookProgress } from '../types/hooks.js';
@@ -675,7 +674,6 @@ export function REPL({
   useInstallMessages();
 
   useOfficialMarketplaceNotification();
-  useTeammateLifecycleNotification();
   const {
     recommendation: hintRecommendation,
     handleResponse: handleHintResponse
@@ -3687,7 +3685,6 @@ export function REPL({
   const transcriptStreamingToolUses = frozenTranscriptState ? streamingToolUses.slice(0, frozenTranscriptState.streamingToolUsesLength) : streamingToolUses;
 
   // Auto-exit viewing mode when teammate completes or errors
-  useTeammateViewAutoExit();
   if (screen === 'transcript') {
     // Virtual scroll replaces the 30-message cap: everything is scrollable
     // and memory is bounded by the viewport. Without it, wrapping transcript

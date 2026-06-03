@@ -14,7 +14,6 @@ import { DiagnosticsDisplay } from '../DiagnosticsDisplay.js';
 import { getContentText } from 'src/utils/messages.js';
 import type { Theme } from 'src/utils/theme.js';
 import { UserImageMessage } from './UserImageMessage.js';
-import { toInkColor } from '../../utils/ink.js';
 import { plural } from '../../utils/stringUtils.js';
 import { isEnvTruthy } from '../../utils/envUtils.js';
 import { BLACK_CIRCLE } from '../../constants/figures.js';
@@ -274,31 +273,17 @@ type TaskStatusAttachment = Extract<Attachment, {
   type: 'task_status';
 }>;
 function TaskStatusMessage(t0) {
-  const $ = _c(4);
+  const $ = _c(2);
   const {
     attachment
   } = t0;
-  if (false && attachment.status === "killed") {
-    return null;
-  }
-  if (isAgentSwarmsEnabled() && attachment.taskType === "in_process_teammate") {
-    let t1;
-    if ($[0] !== attachment) {
-      t1 = <TeammateTaskStatus attachment={attachment} />;
-      $[0] = attachment;
-      $[1] = t1;
-    } else {
-      t1 = $[1];
-    }
-    return t1;
-  }
   let t1;
-  if ($[2] !== attachment) {
+  if ($[0] !== attachment) {
     t1 = <GenericTaskStatus attachment={attachment} />;
-    $[2] = attachment;
-    $[3] = t1;
+    $[0] = attachment;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
   return t1;
 }
@@ -343,78 +328,6 @@ function GenericTaskStatus(t0) {
     t4 = $[8];
   }
   return t4;
-}
-function TeammateTaskStatus(t0) {
-  const $ = _c(16);
-  const {
-    attachment
-  } = t0;
-  const bg = useSelectedMessageBg();
-  let t1;
-  if ($[0] !== attachment.taskId) {
-    t1 = s => s.tasks[attachment.taskId];
-    $[0] = attachment.taskId;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const task = useAppState(t1);
-  if (task?.type !== "in_process_teammate") {
-    let t2;
-    if ($[2] !== attachment) {
-      t2 = <GenericTaskStatus attachment={attachment} />;
-      $[2] = attachment;
-      $[3] = t2;
-    } else {
-      t2 = $[3];
-    }
-    return t2;
-  }
-  let t2;
-  if ($[4] !== task.identity.color) {
-    t2 = toInkColor(task.identity.color);
-    $[4] = task.identity.color;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
-  }
-  const agentColor = t2;
-  const statusText = attachment.status === "completed" ? "shut down gracefully" : attachment.status;
-  let t3;
-  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <Text dimColor={true}>{BLACK_CIRCLE} </Text>;
-    $[6] = t3;
-  } else {
-    t3 = $[6];
-  }
-  let t4;
-  if ($[7] !== agentColor || $[8] !== task.identity.agentName) {
-    t4 = <Text color={agentColor} bold={true} dimColor={false}>@{task.identity.agentName}</Text>;
-    $[7] = agentColor;
-    $[8] = task.identity.agentName;
-    $[9] = t4;
-  } else {
-    t4 = $[9];
-  }
-  let t5;
-  if ($[10] !== statusText || $[11] !== t4) {
-    t5 = <Text dimColor={true}>Teammate{" "}{t4}{" "}{statusText}</Text>;
-    $[10] = statusText;
-    $[11] = t4;
-    $[12] = t5;
-  } else {
-    t5 = $[12];
-  }
-  let t6;
-  if ($[13] !== bg || $[14] !== t5) {
-    t6 = <Box flexDirection="row" width="100%" marginTop={1} backgroundColor={bg}>{t3}{t5}</Box>;
-    $[13] = bg;
-    $[14] = t5;
-    $[15] = t6;
-  } else {
-    t6 = $[15];
-  }
-  return t6;
 }
 // We allow setting dimColor to false here to help work around the dim-bold bug.
 // https://github.com/chalk/chalk/issues/290

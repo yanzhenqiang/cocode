@@ -4350,27 +4350,15 @@ export function extractAgentIdsFromMessages(messages: Message[]): string[] {
  * which is more reliable than loading from disk since each teammate turn
  * uses a random agentId for transcript storage.
  */
-export function extractTeammateTranscriptsFromTasks(tasks: {
+export function extractTeammateTranscriptsFromTasks(_tasks: {
   [taskId: string]: {
     type: string
     identity?: { agentId: string }
     messages?: Message[]
   }
 }): { [agentId: string]: Message[] } {
-  const transcripts: { [agentId: string]: Message[] } = {}
-
-  for (const task of Object.values(tasks)) {
-    if (
-      task.type === 'in_process_teammate' &&
-      task.identity?.agentId &&
-      task.messages &&
-      task.messages.length > 0
-    ) {
-      transcripts[task.identity.agentId] = task.messages
-    }
-  }
-
-  return transcripts
+  // Teammate system removed — always returns empty.
+  return {}
 }
 
 /**

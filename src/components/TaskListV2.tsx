@@ -2,19 +2,12 @@ import { c as _c } from "react-compiler-runtime";
 import figures from 'figures';
 import * as React from 'react';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { stringWidth } from '../ink/stringWidth.js';
 import { Box, Text } from '../ink.js';
-import { useAppState } from '../state/AppState.js';
-import { isInProcessTeammateTask } from '../tasks/InProcessTeammateTask/types.js';
-import { AGENT_COLOR_TO_THEME_COLOR, type AgentColorName } from '../tools/AgentTool/agentColorManager.js';
-import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js';
 import { count } from '../utils/array.js';
-import { summarizeRecentActivities } from '../utils/collapseReadSearch.js';
 import { truncateToWidth } from '../utils/format.js';
 import { isTodoV2Enabled, type Task } from '../utils/tasks.js';
 import type { Theme } from '../utils/theme.js';
 import FullWidthRow from './design-system/FullWidthRow.js';
-import ThemedText from './design-system/ThemedText.js';
 type Props = {
   tasks: Task[];
   isStandalone?: boolean;
@@ -32,8 +25,6 @@ export function TaskListV2({
   tasks,
   isStandalone = false
 }: Props): React.ReactNode {
-  const teamContext = useAppState(s => s.teamContext);
-  const appStateTasks = useAppState(s_0 => s_0.tasks);
   const [, forceUpdate] = React.useState(0);
   const {
     rows,
@@ -91,40 +82,7 @@ export function TaskListV2({
     return null;
   }
 
-  // Build a map of teammate name -> theme color
-  const teammateColors: Record<string, keyof Theme> = {};
-  if (isAgentSwarmsEnabled() && teamContext?.teammates) {
-    for (const teammate of Object.values(teamContext.teammates)) {
-      if (teammate.color) {
-        const themeColor = AGENT_COLOR_TO_THEME_COLOR[teammate.color as AgentColorName];
-        if (themeColor) {
-          teammateColors[teammate.name] = themeColor;
-        }
-      }
-    }
-  }
-
-  // Build a map of teammate name -> current activity description
-  // Map both agentName ("researcher") and agentId ("researcher@team") so
-  // task owners match regardless of which format the model used.
-  // Rolls up consecutive search/read tool uses into a compact summary.
-  // Also track which teammates are still running (not shut down).
-  const teammateActivity: Record<string, string> = {};
-  const activeTeammates = new Set<string>();
-  if (isAgentSwarmsEnabled()) {
-    for (const bgTask of Object.values(appStateTasks)) {
-      if (isInProcessTeammateTask(bgTask) && bgTask.status === 'running') {
-        activeTeammates.add(bgTask.identity.agentName);
-        activeTeammates.add(bgTask.identity.agentId);
-        const activities = bgTask.progress?.recentActivities;
-        const desc = (activities && summarizeRecentActivities(activities)) ?? bgTask.progress?.lastActivity?.activityDescription;
-        if (desc) {
-          teammateActivity[bgTask.identity.agentName] = desc;
-          teammateActivity[bgTask.identity.agentId] = desc;
-        }
-      }
-    }
-  }
+  // Teammate activity tracking removed — swarms system removed.
 
   // Get task counts for display
   const completedCount = count(tasks, t_3 => t_3.status === 'completed');
@@ -186,7 +144,7 @@ export function TaskListV2({
     hiddenSummary = ` … +${parts.join(', ')}`;
   }
   const content = <>
-      {visibleTasks.map(task_0 => <TaskItem key={task_0.id} task={task_0} ownerColor={task_0.owner ? teammateColors[task_0.owner] : undefined} openBlockers={task_0.blockedBy.filter(id_3 => unresolvedTaskIds.has(id_3))} activity={task_0.owner ? teammateActivity[task_0.owner] : undefined} ownerActive={task_0.owner ? activeTeammates.has(task_0.owner) : false} columns={columns} />)}
+      {visibleTasks.map(task_0 => <TaskItem key={task_0.id} task={task_0} openBlockers={task_0.blockedBy.filter(id_3 => unresolvedTaskIds.has(id_3))} columns={columns} />)}
       {maxDisplay > 0 && hiddenSummary && <FullWidthRow><Text dimColor>{hiddenSummary}</Text></FullWidthRow>}
     </>;
   if (isStandalone) {
@@ -212,10 +170,7 @@ export function TaskListV2({
 }
 type TaskItemProps = {
   task: Task;
-  ownerColor?: keyof Theme;
   openBlockers: string[];
-  activity?: string;
-  ownerActive: boolean;
   columns: number;
 };
 function getTaskIcon(status: Task['status']): {
@@ -241,13 +196,10 @@ function getTaskIcon(status: Task['status']): {
   }
 }
 function TaskItem(t0) {
-  const $ = _c(37);
+  const $ = _c(27);
   const {
     task,
-    ownerColor,
     openBlockers,
-    activity,
-    ownerActive,
     columns
   } = t0;
   const isCompleted = task.status === "completed";
@@ -265,110 +217,64 @@ function TaskItem(t0) {
     icon,
     color
   } = t1;
-  const showActivity = isInProgress && !isBlocked && activity;
-  const showOwner = columns >= 60 && task.owner && ownerActive;
   let t2;
-  if ($[2] !== showOwner || $[3] !== task.owner) {
-    t2 = showOwner ? stringWidth(` (@${task.owner})`) : 0;
-    $[2] = showOwner;
-    $[3] = task.owner;
-    $[4] = t2;
+  if ($[2] !== task.subject) {
+    t2 = truncateToWidth(task.subject, Math.max(15, columns - 15));
+    $[2] = task.subject;
+    $[3] = t2;
   } else {
-    t2 = $[4];
+    t2 = $[3];
   }
-  const ownerWidth = t2;
-  const maxSubjectWidth = Math.max(15, columns - 15 - ownerWidth);
+  const displaySubject = t2;
   let t3;
-  if ($[5] !== maxSubjectWidth || $[6] !== task.subject) {
-    t3 = truncateToWidth(task.subject, maxSubjectWidth);
-    $[5] = maxSubjectWidth;
-    $[6] = task.subject;
-    $[7] = t3;
+  if ($[4] !== color || $[5] !== icon) {
+    t3 = <Text color={color}>{icon} </Text>;
+    $[4] = color;
+    $[5] = icon;
+    $[6] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[6];
   }
-  const displaySubject = t3;
-  const maxActivityWidth = Math.max(15, columns - 15);
-  let t4;
-  if ($[8] !== activity || $[9] !== maxActivityWidth) {
-    t4 = activity ? truncateToWidth(activity, maxActivityWidth) : undefined;
-    $[8] = activity;
-    $[9] = maxActivityWidth;
-    $[10] = t4;
-  } else {
-    t4 = $[10];
-  }
-  const displayActivity = t4;
+  const t4 = isCompleted || isBlocked;
   let t5;
-  if ($[11] !== color || $[12] !== icon) {
-    t5 = <Text color={color}>{icon} </Text>;
-    $[11] = color;
-    $[12] = icon;
-    $[13] = t5;
+  if ($[7] !== displaySubject || $[8] !== isCompleted || $[9] !== isInProgress || $[10] !== t4) {
+    t5 = <Text bold={isInProgress} strikethrough={isCompleted} dimColor={t4}>{displaySubject}</Text>;
+    $[7] = displaySubject;
+    $[8] = isCompleted;
+    $[9] = isInProgress;
+    $[10] = t4;
+    $[11] = t5;
   } else {
-    t5 = $[13];
+    t5 = $[11];
   }
-  const t6 = isCompleted || isBlocked;
+  let t6;
+  if ($[12] !== isBlocked || $[13] !== openBlockers) {
+    t6 = isBlocked && <Text dimColor={true}>{" "}{figures.pointerSmall} blocked by{" "}{[...openBlockers].sort(_temp).map(_temp2).join(", ")}</Text>;
+    $[12] = isBlocked;
+    $[13] = openBlockers;
+    $[14] = t6;
+  } else {
+    t6 = $[14];
+  }
   let t7;
-  if ($[14] !== displaySubject || $[15] !== isCompleted || $[16] !== isInProgress || $[17] !== t6) {
-    t7 = <Text bold={isInProgress} strikethrough={isCompleted} dimColor={t6}>{displaySubject}</Text>;
-    $[14] = displaySubject;
-    $[15] = isCompleted;
-    $[16] = isInProgress;
+  if ($[15] !== t3 || $[16] !== t5 || $[17] !== t6) {
+    t7 = <FullWidthRow>{t3}{t5}{t6}</FullWidthRow>;
+    $[15] = t3;
+    $[16] = t5;
     $[17] = t6;
     $[18] = t7;
   } else {
     t7 = $[18];
   }
   let t8;
-  if ($[19] !== ownerColor || $[20] !== showOwner || $[21] !== task.owner) {
-    t8 = showOwner && <Text dimColor={true}>{" ("}{ownerColor ? <ThemedText color={ownerColor}>@{task.owner}</ThemedText> : `@${task.owner}`}{")"}</Text>;
-    $[19] = ownerColor;
-    $[20] = showOwner;
-    $[21] = task.owner;
-    $[22] = t8;
+  if ($[19] !== t7) {
+    t8 = <Box flexDirection="column" width="100%">{t7}</Box>;
+    $[19] = t7;
+    $[20] = t8;
   } else {
-    t8 = $[22];
+    t8 = $[20];
   }
-  let t9;
-  if ($[23] !== isBlocked || $[24] !== openBlockers) {
-    t9 = isBlocked && <Text dimColor={true}>{" "}{figures.pointerSmall} blocked by{" "}{[...openBlockers].sort(_temp).map(_temp2).join(", ")}</Text>;
-    $[23] = isBlocked;
-    $[24] = openBlockers;
-    $[25] = t9;
-  } else {
-    t9 = $[25];
-  }
-  let t10;
-  if ($[26] !== t5 || $[27] !== t7 || $[28] !== t8 || $[29] !== t9) {
-    t10 = <FullWidthRow>{t5}{t7}{t8}{t9}</FullWidthRow>;
-    $[26] = t5;
-    $[27] = t7;
-    $[28] = t8;
-    $[29] = t9;
-    $[30] = t10;
-  } else {
-    t10 = $[30];
-  }
-  let t11;
-  if ($[31] !== displayActivity || $[32] !== showActivity) {
-    t11 = showActivity && displayActivity && <FullWidthRow><Text dimColor={true}>{"  "}{displayActivity}{figures.ellipsis}</Text></FullWidthRow>;
-    $[31] = displayActivity;
-    $[32] = showActivity;
-    $[33] = t11;
-  } else {
-    t11 = $[33];
-  }
-  let t12;
-  if ($[34] !== t10 || $[35] !== t11) {
-    t12 = <Box flexDirection="column" width="100%">{t10}{t11}</Box>;
-    $[34] = t10;
-    $[35] = t11;
-    $[36] = t12;
-  } else {
-    t12 = $[36];
-  }
-  return t12;
+  return t8;
 }
 function _temp2(id) {
   return `#${id}`;

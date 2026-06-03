@@ -2028,18 +2028,11 @@ function runHeadlessStreaming(
         await drainCommandQueue()
 
         // Check for running background tasks before exiting.
-        // Exclude in_process_teammate — teammates are long-lived by design
-        // (status: 'running' for their whole lifetime, cleaned up by the
-        // shutdown protocol, not by transitioning to 'completed'). Waiting
-        // on them here loops forever (gh-30008). Same exclusion already
-        // exists at useBackgroundTaskNavigation.ts:55 for the same reason;
-        // L1839 above is already narrower (type === 'local_agent') so it
-        // doesn't hit this.
         waitingForAgents = false
         {
           const state = getAppState()
           const hasRunningBg = getRunningTasks(state).some(
-            t => isBackgroundTask(t) && t.type !== 'in_process_teammate',
+            t => isBackgroundTask(t),
           )
           const hasMainThreadQueued = peek(isMainThread) !== undefined
           if (hasRunningBg || hasMainThreadQueued) {
