@@ -30,10 +30,9 @@ function InvalidApiKeyMessage() {
   } else {
     t0 = $[0];
   }
-  const isKeychainLocked = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <MessageResponse><Box flexDirection="column"><Text color="error">{INVALID_API_KEY_ERROR_MESSAGE}</Text>{isKeychainLocked && <Text dimColor={true}>· Run in another terminal: security unlock-keychain</Text>}</Box></MessageResponse>;
+    t1 = <MessageResponse><Box flexDirection="column"><Text color="error">{INVALID_API_KEY_ERROR_MESSAGE}</Text></Box></MessageResponse>;
     $[1] = t1;
   } else {
     t1 = $[1];
