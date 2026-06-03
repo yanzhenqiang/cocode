@@ -1698,8 +1698,6 @@ function runHeadlessStreaming(
       // Set up hot-reload for plugin hooks now that the initial install is done.
       // In sync-install mode, setup.ts skips this to avoid racing with the install.
       // Plugin loading removed — utils/plugins/ was deleted
-      const setupPluginHookHotReload = () => {}
-      setupPluginHookHotReload()
     }
 
     // Only main-thread commands (agentId===undefined) — subagent

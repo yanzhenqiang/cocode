@@ -12,7 +12,6 @@ import { errorMessage } from '../utils/errors.js';
 // nativeInstaller removed — inline stubs
 const checkInstall = async () => []
 const cleanupNpmInstallations = async () => ({ removed: 0, errors: [], warnings: [] })
-const cleanupShellAliases = async () => []
 const installLatest = async () => ({ latestVersion: '', wasUpdated: false, lockFailed: false })
 import { getInitialSettings, updateSettingsForSource } from '../utils/settings/settings.js';
 interface InstallProps {
@@ -153,12 +152,6 @@ function Install({
         if (errors.length > 0) {
           logForDebugging(`Cleanup errors: ${errors.join(', ')}`);
           // Continue despite cleanup errors - native install already succeeded
-        }
-
-        // Clean up old shell aliases
-        const aliasMessages = await cleanupShellAliases();
-        if (aliasMessages.length > 0) {
-          logForDebugging(`Shell alias cleanup: ${aliasMessages.map(m => m.message).join('; ')}`);
         }
 
         // Log success event
