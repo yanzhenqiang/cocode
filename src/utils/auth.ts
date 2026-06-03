@@ -987,11 +987,6 @@ export function is1PApiCustomer(): boolean {
     return false
   }
 
-  // Exclude Claude.ai subscribers
-  if (isClaudeAISubscriber()) {
-    return false
-  }
-
   // Everyone else is an API customer (OAuth API customers, direct API key users, etc.)
   return true
 }
@@ -1012,8 +1007,8 @@ export function isOverageProvisioningAllowed(): boolean {
   const accountInfo = getOauthAccountInfo()
   const billingType = accountInfo?.billingType
 
-  // Must be a Claude subscriber with a supported subscription type
-  if (!isClaudeAISubscriber() || !billingType) {
+  // Extra usage provisioning is only available for Claude.ai subscribers
+  if (!billingType) {
     return false
   }
 
@@ -1231,12 +1226,8 @@ function isConsumerPlan(plan: SubscriptionType): plan is 'max' | 'pro' {
 }
 
 export function isConsumerSubscriber(): boolean {
-  const subscriptionType = getSubscriptionType()
-  return (
-    isClaudeAISubscriber() &&
-    subscriptionType !== null &&
-    isConsumerPlan(subscriptionType)
-  )
+  // isClaudeAISubscriber() always returns false, so this is always false
+  return false
 }
 
 export type UserAccountInfo = {
@@ -1260,8 +1251,6 @@ export function getAccountInformation() {
     authTokenSource === 'CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR'
   ) {
     accountInfo.tokenSource = authTokenSource
-  } else if (isClaudeAISubscriber()) {
-    accountInfo.subscription = getSubscriptionName()
   } else {
     accountInfo.tokenSource = authTokenSource
   }

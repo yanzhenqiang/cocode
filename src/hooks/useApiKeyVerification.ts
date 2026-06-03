@@ -5,7 +5,6 @@ import {
   getAnthropicApiKeyWithSource,
   getApiKeyFromApiKeyHelper,
   isAnthropicAuthEnabled,
-  isClaudeAISubscriber,
 } from '../utils/auth.js'
 
 export type VerificationStatus =

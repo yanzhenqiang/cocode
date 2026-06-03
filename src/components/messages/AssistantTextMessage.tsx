@@ -2,7 +2,6 @@ import { c as _c } from "react-compiler-runtime";
 import type { TextBlockParam } from '@anthropic-ai/sdk/resources/index.mjs';
 import React, { useContext } from 'react';
 import { ERROR_MESSAGE_USER_ABORT } from 'src/services/compact/compact.js';
-import { isRateLimitErrorMessage } from 'src/services/rateLimitMessages.js';
 import { BLACK_CIRCLE } from '../../constants/figures.js';
 import { Box, NoSelect, Text } from '../../ink.js';
 import { API_ERROR_MESSAGE_PREFIX, API_TIMEOUT_ERROR_MESSAGE, CREDIT_BALANCE_TOO_LOW_ERROR_MESSAGE, CUSTOM_OFF_SWITCH_MESSAGE, INVALID_API_KEY_ERROR_MESSAGE, INVALID_API_KEY_ERROR_MESSAGE_EXTERNAL, ORG_DISABLED_ERROR_MESSAGE, PROMPT_TOO_LONG_ERROR_MESSAGE, startsWithApiErrorPrefix, TOKEN_REVOKED_ERROR_MESSAGE } from '../../services/api/errors.js';
@@ -14,7 +13,6 @@ import { InterruptedByUser } from '../InterruptedByUser.js';
 import { Markdown } from '../Markdown.js';
 import { MessageResponse } from '../MessageResponse.js';
 import { MessageActionsSelectedContext } from '../messageActions.js';
-import { RateLimitMessage } from './RateLimitMessage.js';
 const MAX_API_ERROR_CHARS = 1000;
 type Props = {
   param: TextBlockParam;
@@ -22,7 +20,6 @@ type Props = {
   shouldShowDot: boolean;
   verbose: boolean;
   width?: number | string;
-  onOpenRateLimitOptions?: () => void;
 };
 function InvalidApiKeyMessage() {
   const $ = _c(2);
@@ -50,7 +47,6 @@ export function AssistantTextMessage(t0) {
     addMargin,
     shouldShowDot,
     verbose,
-    onOpenRateLimitOptions
   } = t0;
   const {
     text
@@ -58,18 +54,6 @@ export function AssistantTextMessage(t0) {
   const isSelected = useContext(MessageActionsSelectedContext);
   if (isEmptyMessageText(text)) {
     return null;
-  }
-  if (isRateLimitErrorMessage(text)) {
-    let t2;
-    if ($[0] !== onOpenRateLimitOptions || $[1] !== text) {
-      t2 = <RateLimitMessage text={text} onOpenRateLimitOptions={onOpenRateLimitOptions} />;
-      $[0] = onOpenRateLimitOptions;
-      $[1] = text;
-      $[2] = t2;
-    } else {
-      t2 = $[2];
-    }
-    return t2;
   }
   switch (text) {
     case NO_RESPONSE_REQUESTED:
