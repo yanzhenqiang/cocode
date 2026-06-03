@@ -42,7 +42,6 @@ const sendSandboxPermissionRequestViaMailbox = async () => {};
 const sendSandboxPermissionResponseViaMailbox = async () => {};
 import { getTeamName, getAgentName } from '../utils/teammate.js';
 import { WorkerPendingPermission } from '../components/permissions/WorkerPendingPermission.js';
-import { injectUserMessageToTeammate, getAllInProcessTeammateTasks } from '../tasks/InProcessTeammateTask/InProcessTeammateTask.js';
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 const registerLeaderToolUseConfirmQueue = () => {};
 const unregisterLeaderToolUseConfirmQueue = () => {};
@@ -160,7 +159,6 @@ import { fileHistoryMakeSnapshot, type FileHistoryState, fileHistoryRewind, type
 import { type AttributionState } from '../utils/commitAttribution.js';
 import { computeStandaloneAgentContext, restoreAgentFromSession, restoreSessionStateFromLog, restoreWorktreeForResume, exitRestoredWorktree } from '../utils/sessionRestore.js';
 import { updateSessionName, updateSessionActivity } from '../utils/concurrentSessions.js';
-import { isInProcessTeammateTask, type InProcessTeammateTaskState } from '../tasks/InProcessTeammateTask/types.js';
 // Dead code elimination: conditional import for loop mode
 /* eslint-disable @typescript-eslint/no-require-imports */
 const SUGGEST_BG_PR_NOOP = (_p: string, _n: string): boolean => false;
@@ -868,14 +866,7 @@ export function REPL({
     if (value) resetTimingRefs();
   }, [resetTimingRefs]);
 
-  // Start time of the first turn that had swarm teammates running
-  // Used to compute total elapsed time (including teammate execution) for the deferred message
-  const swarmStartTimeRef = React.useRef<number | null>(null);
-  const swarmBudgetInfoRef = React.useRef<{
-    tokens: number;
-    limit: number;
-    nudges: number;
-  } | undefined>(undefined);
+
 
   // Ref to track current focusedInputDialog for use in callbacks
   // This avoids stale closures when checking dialog state in timer callbacks
@@ -1388,25 +1379,6 @@ export function REPL({
 
   // Session backgrounding — hook is below, after getToolUseContext
 
-  const hasRunningTeammates = useMemo(() => getAllInProcessTeammateTasks(tasks).some(t => t.status === 'running'), [tasks]);
-
-  // Show deferred turn duration message once all swarm teammates finish
-  useEffect(() => {
-    if (!hasRunningTeammates && swarmStartTimeRef.current !== null) {
-      const totalMs = Date.now() - swarmStartTimeRef.current;
-      const deferredBudget = swarmBudgetInfoRef.current;
-      swarmStartTimeRef.current = null;
-      swarmBudgetInfoRef.current = undefined;
-      setMessages(prev => [...prev, createTurnDurationMessage(totalMs, deferredBudget,
-        // Count only what recordTranscript will persist — ephemeral
-        // progress ticks and non-ant attachments are filtered by
-        // isLoggableMessage and never reach disk. Using raw prev.length
-        // would make checkResumeConsistency report false delta<0 for
-        // every turn that ran a progress-emitting tool.
-        count(prev, isLoggableMessage))]);
-    }
-  }, [hasRunningTeammates, setMessages]);
-
   // Show auto permissions warning when entering auto mode
   // (either via Shift+Tab toggle or on startup). Debounced to avoid
   // flashing when the user is cycling through modes quickly.
@@ -1472,7 +1444,7 @@ export function REPL({
   const showSpinner = (!toolJSX || toolJSX.showSpinner === true) && toolUseConfirmQueue.length === 0 && promptQueue.length === 0 && (
     // Show spinner during input processing, API call, while teammates are running,
     // or while pending task notifications are queued (prevents spinner bounce between consecutive notifications)
-    isLoading || userInputOnProcessing || hasRunningTeammates ||
+    isLoading || userInputOnProcessing || false ||
     // Keep spinner visible while task notifications are queued for processing.
     // Without this, the spinner briefly disappears between consecutive notifications
     // (e.g., multiple background agents completing in rapid succession) because
@@ -2530,19 +2502,7 @@ export function REPL({
         // Defer if swarm teammates are still running (show when they finish)
         const turnDurationMs = Date.now() - loadingStartTimeRef.current - totalPausedMsRef.current;
         if ((turnDurationMs > 30000 || budgetInfo !== undefined) && !abortController.signal.aborted) {
-          const hasRunningSwarmAgents = getAllInProcessTeammateTasks(store.getState().tasks).some(t => t.status === 'running');
-          if (hasRunningSwarmAgents) {
-            // Only record start time on the first deferred turn
-            if (swarmStartTimeRef.current === null) {
-              swarmStartTimeRef.current = loadingStartTimeRef.current;
-            }
-            // Always update budget — later turns may carry the actual budget
-            if (budgetInfo) {
-              swarmBudgetInfoRef.current = budgetInfo;
-            }
-          } else {
-            setMessages(prev => [...prev, createTurnDurationMessage(turnDurationMs, budgetInfo, count(prev, isLoggableMessage))]);
-          }
+          setMessages(prev => [...prev, createTurnDurationMessage(turnDurationMs, budgetInfo, count(prev, isLoggableMessage))]);
         }
         // Cache stats line — controlled by `/config showCacheStats`. Shows
         // per-query read/hit stats using the provider-normalized metrics
@@ -3032,31 +2992,6 @@ export function REPL({
     // Heap analysis showed ~9 REPL scopes and ~15 messages array versions
     // accumulating after #20174/#20175, all traced to this dep.
     mainLoopModel, pastedContents, setUserInputOnProcessing, setAbortController, addNotification, onQuery, stashedPrompt, setStashedPrompt, setAppState, onBeforeQuery, canUseTool, setMessages, awaitPendingHooks, repinScroll]);
-
-  // Callback for when user submits input while viewing a teammate's transcript
-  const onAgentSubmit = useCallback(async (input: string, task: InProcessTeammateTaskState | LocalAgentTaskState, helpers: PromptInputHelpers) => {
-    if (isLocalAgentTask(task)) {
-      appendMessageToLocalAgent(task.id, createUserMessage({
-        content: input
-      }), setAppState);
-      if (task.status === 'running') {
-        queuePendingMessage(task.id, input, setAppState);
-      } else {
-        addNotification({
-          key: `resume-agent-unavailable-${task.id}`,
-          jsx: <Text color="warning">
-            Agent resumption is no longer supported.
-          </Text>,
-          priority: 'low'
-        });
-      }
-    } else {
-      injectUserMessageToTeammate(task.id, input, setAppState);
-    }
-    setInputValue('');
-    helpers.setCursorOffset(0);
-    helpers.clearBuffer();
-  }, [setAppState, setInputValue, getToolUseContext, canUseTool, mainLoopModel, addNotification]);
 
   // Handlers for auto-run /issue or /good-claude (defined after onSubmit)
   const handleAutoRunIssue = useCallback(() => {
@@ -3868,8 +3803,7 @@ export function REPL({
   // below. viewedTeammateTask: teammate-only narrowed, for teammate-specific
   // field access (inProgressToolUseIDs).
   const viewedTask = viewingAgentTaskId ? tasks[viewingAgentTaskId] : undefined;
-  const viewedTeammateTask = viewedTask && isInProcessTeammateTask(viewedTask) ? viewedTask : undefined;
-  const viewedAgentTask = viewedTeammateTask ?? (viewedTask && isLocalAgentTask(viewedTask) ? viewedTask : undefined);
+  const viewedAgentTask = viewedTask && isLocalAgentTask(viewedTask) ? viewedTask : undefined;
 
   // Bypass useDeferredValue when streaming text is showing so Messages renders
   // the final message in the same frame streaming text clears. Also bypass when
@@ -3935,11 +3869,11 @@ export function REPL({
     {feature('MESSAGE_ACTIONS') && isFullscreenEnvEnabled() && !disableMessageActions ? <MessageActionsKeybindings handlers={messageActionHandlers} isActive={cursor !== null} /> : null}
     <CancelRequestHandler {...cancelRequestProps} />
     <MCPConnectionManager key={remountKey} dynamicMcpConfig={dynamicMcpConfig} isStrictMcpConfig={strictMcpConfig}>
-      <FullscreenLayout scrollRef={scrollRef} overlay={toolPermissionOverlay} bottomFloat={isBuddyEnabled() && companionVisible && !companionNarrow ? <CompanionFloatingBubble /> : undefined} modal={centeredModal} modalScrollRef={modalScrollRef} dividerYRef={dividerYRef} hidePill={!!viewedAgentTask} hideSticky={!!viewedTeammateTask} newMessageCount={unseenDivider?.count ?? 0} onPillClick={() => {
+      <FullscreenLayout scrollRef={scrollRef} overlay={toolPermissionOverlay} bottomFloat={isBuddyEnabled() && companionVisible && !companionNarrow ? <CompanionFloatingBubble /> : undefined} modal={centeredModal} modalScrollRef={modalScrollRef} dividerYRef={dividerYRef} hidePill={!!viewedAgentTask} hideSticky={false} newMessageCount={unseenDivider?.count ?? 0} onPillClick={() => {
         setCursor(null);
         jumpToNew(scrollRef.current);
       }} scrollable={<>
-<Messages messages={displayedMessages} tools={tools} commands={renderCommands} verbose={verbose} toolJSX={toolJSX} toolUseConfirmQueue={toolUseConfirmQueue} inProgressToolUseIDs={viewedTeammateTask ? viewedTeammateTask.inProgressToolUseIDs ?? new Set() : inProgressToolUseIDs} isMessageSelectorVisible={isMessageSelectorVisible} conversationId={conversationId} screen={screen} streamingToolUses={streamingToolUses} showAllInTranscript={showAllInTranscript} agentDefinitions={agentDefinitions} onOpenRateLimitOptions={handleOpenRateLimitOptions} isLoading={isLoading} streamingText={isLoading && !viewedAgentTask ? visibleStreamingText : null} isBriefOnly={viewedAgentTask ? false : isBriefOnly} unseenDivider={viewedAgentTask ? undefined : unseenDivider} scrollRef={isFullscreenEnvEnabled() ? scrollRef : undefined} trackStickyPrompt={isFullscreenEnvEnabled() ? true : undefined} cursor={cursor} setCursor={setCursor} cursorNavRef={cursorNavRef} />
+<Messages messages={displayedMessages} tools={tools} commands={renderCommands} verbose={verbose} toolJSX={toolJSX} toolUseConfirmQueue={toolUseConfirmQueue} inProgressToolUseIDs={inProgressToolUseIDs} isMessageSelectorVisible={isMessageSelectorVisible} conversationId={conversationId} screen={screen} streamingToolUses={streamingToolUses} showAllInTranscript={showAllInTranscript} agentDefinitions={agentDefinitions} onOpenRateLimitOptions={handleOpenRateLimitOptions} isLoading={isLoading} streamingText={isLoading && !viewedAgentTask ? visibleStreamingText : null} isBriefOnly={viewedAgentTask ? false : isBriefOnly} unseenDivider={viewedAgentTask ? undefined : unseenDivider} scrollRef={isFullscreenEnvEnabled() ? scrollRef : undefined} trackStickyPrompt={isFullscreenEnvEnabled() ? true : undefined} cursor={cursor} setCursor={setCursor} cursorNavRef={cursorNavRef} />
         <AwsAuthStatusBox />
         {/* Hide the processing placeholder while a modal is showing —
                   it would sit at the last visible transcript row right above
@@ -3955,7 +3889,7 @@ export function REPL({
         </Box>}
         <Box flexGrow={1} />
         {showSpinner && <SpinnerWithVerb mode={streamMode} spinnerTip={spinnerTip} responseLengthRef={responseLengthRef} apiMetricsRef={apiMetricsRef} overrideMessage={spinnerMessage} spinnerSuffix={stopHookSpinnerSuffix} verbose={verbose} loadingStartTimeRef={loadingStartTimeRef} totalPausedMsRef={totalPausedMsRef} pauseStartTimeRef={pauseStartTimeRef} overrideColor={spinnerColor} overrideShimmerColor={spinnerShimmerColor} hasActiveTools={inProgressToolUseIDs.size > 0} leaderIsIdle={!isLoading} />}
-        {!showSpinner && !isLoading && !userInputOnProcessing && !hasRunningTeammates && isBriefOnly && !viewedAgentTask && <BriefIdleStatus />}
+        {!showSpinner && !isLoading && !userInputOnProcessing && !false && isBriefOnly && !viewedAgentTask && <BriefIdleStatus />}
         {isFullscreenEnvEnabled() && <PromptInputQueuedCommands />}
       </>} bottom={<Box flexDirection={isBuddyEnabled() && companionNarrow ? 'column' : 'row'} width="100%" alignItems={isBuddyEnabled() && companionNarrow ? undefined : 'flex-end'}>
         {isBuddyEnabled() && companionNarrow && isFullscreenEnvEnabled() && companionVisible ? <CompanionSprite /> : null}
@@ -4199,7 +4133,7 @@ export function REPL({
             { }
             <PromptInput debug={debug} hasSuppressedDialogs={!!hasSuppressedDialogs} isLocalJSXCommandActive={isShowingLocalJSXCommand} getToolUseContext={getToolUseContext} toolPermissionContext={toolPermissionContext} setToolPermissionContext={setToolPermissionContext} apiKeyStatus={apiKeyStatus} commands={renderCommands} agents={agentDefinitions.activeAgents} isLoading={isLoading} onExit={handleExit} verbose={verbose} messages={messages} input={inputValue} onInputChange={setInputValue} mode={inputMode} onModeChange={setInputMode} stashedPrompt={stashedPrompt} setStashedPrompt={setStashedPrompt} submitCount={submitCount} onShowMessageSelector={handleShowMessageSelector} onMessageActionsEnter={
               // Works during isLoading — edit cancels first; uuid selection survives appends.
-              feature('MESSAGE_ACTIONS') && isFullscreenEnvEnabled() && !disableMessageActions ? enterMessageActions : undefined} mcpClients={mcpClients} pastedContents={pastedContents} setPastedContents={setPastedContents} vimMode={vimMode} setVimMode={setVimMode} showBashesDialog={showBashesDialog} setShowBashesDialog={setShowBashesDialog} onSubmit={onSubmit} onAgentSubmit={onAgentSubmit} isSearchingHistory={isSearchingHistory} setIsSearchingHistory={setIsSearchingHistory} helpOpen={isHelpOpen} setHelpOpen={setIsHelpOpen} />
+              feature('MESSAGE_ACTIONS') && isFullscreenEnvEnabled() && !disableMessageActions ? enterMessageActions : undefined} mcpClients={mcpClients} pastedContents={pastedContents} setPastedContents={setPastedContents} vimMode={vimMode} setVimMode={setVimMode} showBashesDialog={showBashesDialog} setShowBashesDialog={setShowBashesDialog} onSubmit={onSubmit} isSearchingHistory={isSearchingHistory} setIsSearchingHistory={setIsSearchingHistory} helpOpen={isHelpOpen} setHelpOpen={setIsHelpOpen} />
             <SessionBackgroundHint onBackgroundSession={handleBackgroundSession} isLoading={isLoading} />
           </>}
           {cursor &&

@@ -58,16 +58,11 @@ import { stringWidth } from '../ink/stringWidth.js';
 import { getDefaultCharacters, type SpinnerMode } from './Spinner/index.js';
 import { SpinnerAnimationRow } from './Spinner/SpinnerAnimationRow.js';
 import { useSettings } from '../hooks/useSettings.js';
-import { isInProcessTeammateTask } from '../tasks/InProcessTeammateTask/types.js';
 import { isBackgroundTask } from '../tasks/types.js';
-import { getAllInProcessTeammateTasks } from '../tasks/InProcessTeammateTask/InProcessTeammateTask.js';
 import { getEffortSuffix } from '../utils/effort.js';
 import { getMainLoopModel } from '../utils/model/model.js';
-import { getViewedTeammateTask } from '../state/selectors.js';
-import { TEARDROP_ASTERISK } from '../constants/figures.js';
 import figures from 'figures';
 import { getCurrentTurnTokenBudget, getTurnOutputTokens } from '../bootstrap/state.js';
-import { TeammateSpinnerTree } from './Spinner/TeammateSpinnerTree.js';
 import { useAnimationFrame } from '../ink.js';
 import { getGlobalConfig } from '../utils/config.js';
 export type { SpinnerMode } from './Spinner/index.js';
@@ -86,8 +81,6 @@ type Props = {
   spinnerSuffix?: string | null;
   verbose: boolean;
   hasActiveTools?: boolean;
-  /** Leader's turn has completed (no active query). Used to suppress stall-red spinner when only teammates are running. */
-  leaderIsIdle?: boolean;
 };
 
 // Thin wrapper: branches on isBriefOnly so the two variants have independent
@@ -118,8 +111,7 @@ function SpinnerWithVerbInner({
   overrideMessage,
   spinnerSuffix,
   verbose,
-  hasActiveTools = false,
-  leaderIsIdle = false
+  hasActiveTools = false
 }: Props): React.ReactNode {
   const settings = useSettings();
   const reducedMotion = settings.prefersReducedMotion ?? false;
@@ -134,14 +126,7 @@ function SpinnerWithVerbInner({
   const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
   const expandedView = useAppState(s_1 => s_1.expandedView);
   const showExpandedTodos = expandedView === 'tasks';
-  const showSpinnerTree = expandedView === 'teammates';
-  const selectedIPAgentIndex = useAppState(s_2 => s_2.selectedIPAgentIndex);
-  const viewSelectionMode = useAppState(s_3 => s_3.viewSelectionMode);
-  // Get foregrounded teammate (if viewing a teammate's transcript)
-  const foregroundedTeammate = viewingAgentTaskId ? getViewedTeammateTask({
-    viewingAgentTaskId,
-    tasks
-  }) : undefined;
+  const viewSelectionMode = useAppState(s_2 => s_2.viewSelectionMode);
   const {
     columns
   } = useTerminalSize();
@@ -194,8 +179,7 @@ function SpinnerWithVerbInner({
 
   // Leader's own verb (always the leader's, regardless of who is foregrounded)
   const leaderVerb = overrideMessage ?? currentTodo?.activeForm ?? currentTodo?.subject ?? randomVerb;
-  const effectiveVerb = foregroundedTeammate && !foregroundedTeammate.isIdle ? foregroundedTeammate.spinnerVerb ?? randomVerb : leaderVerb;
-  const message = effectiveVerb + '…';
+  const message = leaderVerb + '…';
 
   // Track CLI activity when spinner is active
   useEffect(() => {
@@ -208,33 +192,11 @@ function SpinnerWithVerbInner({
   const effortValue = useAppState(s_4 => s_4.effortValue);
   const effortSuffix = getEffortSuffix(getMainLoopModel(), effortValue);
 
-  // Check if any running in-process teammates exist (needed for both modes)
-  const runningTeammates = getAllInProcessTeammateTasks(tasks).filter(t => t.status === 'running');
-  const hasRunningTeammates = runningTeammates.length > 0;
-  const allIdle = hasRunningTeammates && runningTeammates.every(t_0 => t_0.isIdle);
-
-  // Gather aggregate token stats from all running swarm teammates
-  // In spinner-tree mode, skip aggregation (teammates have their own lines in the tree)
-  let teammateTokens = 0;
-  if (!showSpinnerTree) {
-    for (const task_0 of Object.values(tasks)) {
-      if (isInProcessTeammateTask(task_0) && task_0.status === 'running') {
-        if (task_0.progress?.tokenCount) {
-          teammateTokens += task_0.progress.tokenCount;
-        }
-      }
-    }
-  }
-
   // Stale read of the refs for showBtwTip below — we're off the 50ms clock
   // so this only updates when props/app state change, which is sufficient for
   // a coarse 30s threshold.
   const elapsedSnapshot = pauseStartTimeRef.current !== null ? pauseStartTimeRef.current - loadingStartTimeRef.current - totalPausedMsRef.current : Date.now() - loadingStartTimeRef.current - totalPausedMsRef.current;
 
-  // Leader token count for TeammateSpinnerTree — read raw (non-animated) from
-  // the ref. The tree is only shown when teammates are running; teammate
-  // progress updates to s.tasks trigger re-renders that keep this fresh.
-  const leaderTokenCount = Math.round(responseLengthRef.current / 4);
   const defaultColor: keyof Theme = 'claude';
   const defaultShimmerColor = 'claudeShimmer';
   const messageColor = overrideColor ?? defaultColor;
@@ -246,32 +208,6 @@ function SpinnerWithVerbInner({
   // doesn't trigger re-renders; we pick up updates on the parent's ~25x/turn
   // re-render cadence, same as the old ApiMetricsLine did.
   let ttftText: string | null = null;
-
-  // When leader is idle but teammates are running (and we're viewing the leader),
-  // show a static dim idle display instead of the animated spinner — otherwise
-  // useStalledAnimation detects no new tokens after 3s and turns the spinner red.
-  if (leaderIsIdle && hasRunningTeammates && !foregroundedTeammate) {
-    return <Box flexDirection="column" width="100%" alignItems="flex-start">
-        <Box flexDirection="row" flexWrap="wrap" marginTop={1} width="100%">
-          <Text dimColor>
-            {TEARDROP_ASTERISK} Idle
-            {!allIdle && ' · teammates running'}
-          </Text>
-        </Box>
-        {showSpinnerTree && <TeammateSpinnerTree selectedIndex={selectedIPAgentIndex} isInSelectionMode={viewSelectionMode === 'selecting-agent'} allIdle={allIdle} leaderTokenCount={leaderTokenCount} leaderIdleText="Idle" />}
-      </Box>;
-  }
-
-  // When viewing an idle teammate, show static idle display instead of animated spinner
-  if (foregroundedTeammate?.isIdle) {
-    const idleText = allIdle ? `${TEARDROP_ASTERISK} Worked for ${formatDuration(Date.now() - foregroundedTeammate.startTime)}` : `${TEARDROP_ASTERISK} Idle`;
-    return <Box flexDirection="column" width="100%" alignItems="flex-start">
-        <Box flexDirection="row" flexWrap="wrap" marginTop={1} width="100%">
-          <Text dimColor>{idleText}</Text>
-        </Box>
-        {showSpinnerTree && hasRunningTeammates && <TeammateSpinnerTree selectedIndex={selectedIPAgentIndex} isInSelectionMode={viewSelectionMode === 'selecting-agent'} allIdle={allIdle} leaderVerb={leaderIsIdle ? undefined : leaderVerb} leaderIdleText={leaderIsIdle ? 'Idle' : undefined} leaderTokenCount={leaderTokenCount} />}
-      </Box>;
-  }
 
   // Time-based tip overrides: coarse thresholds so a stale ref read (we're
   // off the 50ms clock) is fine. Other triggers (mode change, setMessages)
@@ -302,8 +238,8 @@ function SpinnerWithVerbInner({
     }
   }
   return <Box flexDirection="column" width="100%" alignItems="flex-start">
-      <SpinnerAnimationRow mode={mode} reducedMotion={reducedMotion} hasActiveTools={hasActiveTools} responseLengthRef={responseLengthRef} message={message} messageColor={messageColor} shimmerColor={shimmerColor} overrideColor={overrideColor} loadingStartTimeRef={loadingStartTimeRef} totalPausedMsRef={totalPausedMsRef} pauseStartTimeRef={pauseStartTimeRef} spinnerSuffix={spinnerSuffix} verbose={verbose} columns={columns} hasRunningTeammates={hasRunningTeammates} teammateTokens={teammateTokens} foregroundedTeammate={foregroundedTeammate} leaderIsIdle={leaderIsIdle} thinkingStatus={thinkingStatus} effortSuffix={effortSuffix} />
-      {showSpinnerTree && hasRunningTeammates ? <TeammateSpinnerTree selectedIndex={selectedIPAgentIndex} isInSelectionMode={viewSelectionMode === 'selecting-agent'} allIdle={allIdle} leaderVerb={leaderIsIdle ? undefined : leaderVerb} leaderIdleText={leaderIsIdle ? 'Idle' : undefined} leaderTokenCount={leaderTokenCount} /> : showExpandedTodos && tasksV2 && tasksV2.length > 0 ? <Box width="100%" flexDirection="column">
+      <SpinnerAnimationRow mode={mode} reducedMotion={reducedMotion} hasActiveTools={hasActiveTools} responseLengthRef={responseLengthRef} message={message} messageColor={messageColor} shimmerColor={shimmerColor} overrideColor={overrideColor} loadingStartTimeRef={loadingStartTimeRef} totalPausedMsRef={totalPausedMsRef} pauseStartTimeRef={pauseStartTimeRef} spinnerSuffix={spinnerSuffix} verbose={verbose} columns={columns} thinkingStatus={thinkingStatus} effortSuffix={effortSuffix} />
+      {showExpandedTodos && tasksV2 && tasksV2.length > 0 ? <Box width="100%" flexDirection="column">
           <MessageResponse>
             <TaskListV2 tasks={tasksV2} />
           </MessageResponse>

@@ -18,7 +18,6 @@ import { count } from '../../utils/array.js';
 import { shouldHideTasksFooter } from '../tasks/taskStatusUtils.js';
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 const TeamStatus = (_props: any) => null;
-const isInProcessEnabled = () => false;
 import { useAppState, useAppStateStore } from 'src/state/AppState.js';
 import { usePrStatus } from '../../hooks/usePrStatus.js';
 import { KeyboardShortcutHint } from '../design-system/KeyboardShortcutHint.js';
@@ -50,7 +49,6 @@ type Props = {
   tasksSelected: boolean;
   teamsSelected: boolean;
   tmuxSelected: boolean;
-  teammateFooterIndex?: number;
   isPasting?: boolean;
   isSearching: boolean;
   historyQuery: string;
@@ -70,7 +68,6 @@ export function PromptInputFooterLeftSide(t0) {
     tasksSelected,
     teamsSelected,
     tmuxSelected,
-    teammateFooterIndex,
     isPasting,
     isSearching,
     historyQuery,
@@ -120,17 +117,16 @@ export function PromptInputFooterLeftSide(t0) {
   }
   const t4 = !suppressHint && !showVim;
   let t5;
-  if ($[13] !== isLoading || $[14] !== mode || $[15] !== onOpenTasksDialog || $[16] !== t4 || $[17] !== tasksSelected || $[18] !== teammateFooterIndex || $[19] !== teamsSelected || $[20] !== tmuxSelected || $[21] !== toolPermissionContext) {
-    t5 = <ModeIndicator mode={mode} toolPermissionContext={toolPermissionContext} showHint={t4} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} teammateFooterIndex={teammateFooterIndex} tmuxSelected={tmuxSelected} onOpenTasksDialog={onOpenTasksDialog} />;
+  if ($[13] !== isLoading || $[14] !== mode || $[15] !== onOpenTasksDialog || $[16] !== t4 || $[17] !== tasksSelected || $[18] !== teamsSelected || $[19] !== tmuxSelected || $[20] !== toolPermissionContext) {
+    t5 = <ModeIndicator mode={mode} toolPermissionContext={toolPermissionContext} showHint={t4} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} tmuxSelected={tmuxSelected} onOpenTasksDialog={onOpenTasksDialog} />;
     $[13] = isLoading;
     $[14] = mode;
     $[15] = onOpenTasksDialog;
     $[16] = t4;
     $[17] = tasksSelected;
-    $[18] = teammateFooterIndex;
-    $[19] = teamsSelected;
-    $[20] = tmuxSelected;
-    $[21] = toolPermissionContext;
+    $[18] = teamsSelected;
+    $[19] = tmuxSelected;
+    $[20] = toolPermissionContext;
     $[22] = t5;
   } else {
     t5 = $[22];
@@ -155,7 +151,6 @@ type ModeIndicatorProps = {
   tasksSelected: boolean;
   teamsSelected: boolean;
   tmuxSelected: boolean;
-  teammateFooterIndex?: number;
   onOpenTasksDialog?: (taskId?: string) => void;
 };
 function ModeIndicator({
@@ -166,7 +161,6 @@ function ModeIndicator({
   tasksSelected,
   teamsSelected,
   tmuxSelected,
-  teammateFooterIndex,
   onOpenTasksDialog
 }: ModeIndicatorProps): React.ReactNode {
   const {
@@ -174,11 +168,8 @@ function ModeIndicator({
   } = useTerminalSize();
   const modeCycleShortcut = useShortcutDisplay('chat:cycleMode', 'Chat', 'shift+tab');
   const tasks = useAppState(s => s.tasks);
-  const teamContext = useAppState(s_0 => s_0.teamContext);
-  const viewSelectionMode = useAppState(s_1 => s_1.viewSelectionMode);
-  const viewingAgentTaskId = useAppState(s_2 => s_2.viewingAgentTaskId);
-  const expandedView = useAppState(s_3 => s_3.expandedView);
-  const showSpinnerTree = expandedView === 'teammates';
+  const viewingAgentTaskId = useAppState(s_1 => s_1.viewingAgentTaskId);
+  const expandedView = useAppState(s_2 => s_2.expandedView);
   const prStatus = usePrStatus(isLoading, isPrStatusEnabled());
   const hasTmuxSession = false;
   const hasSelection = useHasSelection();
@@ -192,19 +183,13 @@ function ModeIndicator({
   const killAgentsShortcut = useShortcutDisplay('chat:killAgents', 'Chat', 'ctrl+x ctrl+k');
   const isKillAgentsConfirmShowing = useAppState(s_7 => s_7.notifications.current?.key === 'kill-agents-confirm');
 
-  // Derive team info from teamContext (no filesystem I/O needed)
-  // Match the same logic as TeamStatus to avoid trailing separator
-  // In-process mode uses Shift+Down/Up navigation, not footer teams menu
-  const hasTeams = isAgentSwarmsEnabled() && !isInProcessEnabled() && teamContext !== undefined && count(Object.values(teamContext.teammates), t_0 => t_0.name !== 'team-lead') > 0;
+  const hasTeams = false;
   if (mode === 'bash') {
     return <Text color="bashBorder">! for bash mode</Text>;
   }
   const currentMode = toolPermissionContext?.mode;
   const hasActiveMode = !isDefaultMode(currentMode);
-  const viewedTask = viewingAgentTaskId ? tasks[viewingAgentTaskId] : undefined;
-  const isViewingTeammate = viewSelectionMode === 'viewing-agent' && viewedTask?.type === 'in_process_teammate';
-  const isViewingCompletedTeammate = isViewingTeammate && viewedTask != null && viewedTask.status !== 'running';
-  const hasBackgroundTasks = runningTaskCount > 0 || isViewingTeammate;
+  const hasBackgroundTasks = runningTaskCount > 0;
 
   // Count primary items (permission mode or coordinator mode, background tasks, and teams)
   const primaryItemCount = (isCoordinator || hasActiveMode ? 1 : 0) + (hasBackgroundTasks ? 1 : 0) + (hasTeams ? 1 : 0);
@@ -218,11 +203,6 @@ function ModeIndicator({
   // Hide the shift+tab hint when there are 2 primary items
   const shouldShowModeHint = primaryItemCount < 2;
 
-  // Check if we have in-process teammates (showing pills)
-  // In spinner-tree mode, pills are disabled - teammates appear in the spinner tree instead
-  const hasInProcessTeammates = !showSpinnerTree && hasBackgroundTasks && Object.values(tasks).some(t_1 => t_1.type === 'in_process_teammate');
-  const hasTeammatePills = hasInProcessTeammates || !showSpinnerTree && isViewingTeammate;
-
   // Rendered before the tasks pill so a long pill label doesn't push the mode
   // indicator off-screen.
   const modePart = currentMode && hasActiveMode ? <Text color={getModeColor(currentMode)} key="mode">
@@ -234,42 +214,16 @@ function ModeIndicator({
           </Text>}
       </Text> : null;
 
-  // Build parts array - exclude BackgroundTaskStatus when we have teammate pills
-  // (teammate pills get their own row)
+  // Build parts array
   const parts = [
-  // BackgroundTaskStatus is NOT in parts — it renders as a Box sibling so
-  // its click-target Box isn't nested inside the <Text wrap="truncate">
-  // wrapper (reconciler throws on Box-in-Text).
-  // Tmux pill (internal-only) — appears right after tasks in nav order
-  ...(isAgentSwarmsEnabled() && hasTeams ? [<TeamStatus key="teams" teamsSelected={teamsSelected} showHint={showHint && !hasBackgroundTasks} />] : []), ...(shouldShowPrStatus ? [<PrBadge key="pr-status" number={prStatus.number!} url={prStatus.url!} reviewState={prStatus.reviewState!} />] : [])];
+  ...(shouldShowPrStatus ? [<PrBadge key="pr-status" number={prStatus.number!} url={prStatus.url!} reviewState={prStatus.reviewState!} />] : [])];
 
-  // Check if any in-process teammates exist (for hint text cycling)
-  const hasAnyInProcessTeammates = Object.values(tasks).some(t_2 => t_2.type === 'in_process_teammate' && t_2.status === 'running');
-  const hasRunningAgentTasks = Object.values(tasks).some(t_3 => t_3.type === 'local_agent' && t_3.status === 'running');
+  const hasRunningAgentTasks = Object.values(tasks).some(t_2 => t_2.type === 'local_agent' && t_2.status === 'running');
 
   // Get hint parts separately for potential second-line rendering
-  const hintParts = showHint ? getSpinnerHintParts(isLoading, escShortcut, todosShortcut, killAgentsShortcut, hasTaskItems, expandedView, hasAnyInProcessTeammates, hasRunningAgentTasks, isKillAgentsConfirmShowing) : [];
-  if (isViewingCompletedTeammate) {
-    parts.push(<Text dimColor key="esc-return">
-        <KeyboardShortcutHint shortcut={escShortcut} action="return to team lead" />
-      </Text>);
-  } else if (!hasTeammatePills && showHint) {
+  const hintParts = showHint ? getSpinnerHintParts(isLoading, escShortcut, todosShortcut, killAgentsShortcut, hasTaskItems, expandedView, hasRunningAgentTasks, isKillAgentsConfirmShowing) : [];
+  if (showHint) {
     parts.push(...hintParts);
-  }
-
-  // When we have teammate pills, always render them on their own line above other parts
-  if (hasTeammatePills) {
-    // Don't append spinner hints when viewing a completed teammate —
-    // the "esc to return to team lead" hint already replaces "esc to interrupt"
-    const otherParts = [...(modePart ? [modePart] : []), ...parts, ...(isViewingCompletedTeammate ? [] : hintParts)];
-    return <Box flexDirection="column">
-        <Box>
-          <BackgroundTaskStatus tasksSelected={tasksSelected} isViewingTeammate={isViewingTeammate} teammateFooterIndex={teammateFooterIndex} isLeaderIdle={!isLoading} onOpenDialog={onOpenTasksDialog} />
-        </Box>
-        {otherParts.length > 0 && <Box>
-            <Byline>{otherParts}</Byline>
-          </Box>}
-      </Box>;
   }
 
   // Add "↓ to manage tasks" hint when panel has visible rows
@@ -279,7 +233,7 @@ function ModeIndicator({
   // click-target Box isn't nested inside <Text wrap="truncate"> — the
   // reconciler throws on Box-in-Text. Computed here so the empty-checks
   // below still treat "pill present" as non-empty.
-  const tasksPart = hasBackgroundTasks && !hasTeammatePills && !shouldHideTasksFooter(tasks, showSpinnerTree) ? <BackgroundTaskStatus tasksSelected={tasksSelected} isViewingTeammate={isViewingTeammate} teammateFooterIndex={teammateFooterIndex} isLeaderIdle={!isLoading} onOpenDialog={onOpenTasksDialog} /> : null;
+  const tasksPart = hasBackgroundTasks && !shouldHideTasksFooter(tasks) ? <BackgroundTaskStatus tasksSelected={tasksSelected} onOpenDialog={onOpenTasksDialog} /> : null;
   if (parts.length === 0 && !tasksPart && !modePart && showHint) {
     parts.push(<Text dimColor key="shortcuts-hint">
         ? for shortcuts
@@ -347,28 +301,11 @@ function ModeIndicator({
         </Text>}
     </Box>;
 }
-function getSpinnerHintParts(isLoading: boolean, escShortcut: string, todosShortcut: string, killAgentsShortcut: string, hasTaskItems: boolean, expandedView: 'none' | 'tasks' | 'teammates', hasTeammates: boolean, hasRunningAgentTasks: boolean, isKillAgentsConfirmShowing: boolean): React.ReactElement[] {
-  let toggleAction: string;
-  if (hasTeammates) {
-    // Cycling: none → tasks → teammates → none
-    switch (expandedView) {
-      case 'none':
-        toggleAction = 'show tasks';
-        break;
-      case 'tasks':
-        toggleAction = 'show teammates';
-        break;
-      case 'teammates':
-        toggleAction = 'hide';
-        break;
-    }
-  } else {
-    toggleAction = expandedView === 'tasks' ? 'hide tasks' : 'show tasks';
-  }
+function getSpinnerHintParts(isLoading: boolean, escShortcut: string, todosShortcut: string, killAgentsShortcut: string, hasTaskItems: boolean, expandedView: 'none' | 'tasks', hasRunningAgentTasks: boolean, isKillAgentsConfirmShowing: boolean): React.ReactElement[] {
+  const toggleAction = expandedView === 'tasks' ? 'hide tasks' : 'show tasks';
 
-  // Show the toggle hint only when there are task items to display or
-  // teammates to cycle to
-  const showToggleHint = hasTaskItems || hasTeammates;
+  // Show the toggle hint only when there are task items to display
+  const showToggleHint = hasTaskItems;
   return [...(isLoading ? [<Text dimColor key="esc">
             <KeyboardShortcutHint shortcut={escShortcut} action="interrupt" />
           </Text>] : []), ...(!isLoading && hasRunningAgentTasks && !isKillAgentsConfirmShowing ? [<Text dimColor key="kill-agents">

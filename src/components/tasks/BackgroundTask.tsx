@@ -4,11 +4,9 @@ import { Text } from 'src/ink.js';
 import type { BackgroundTaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { truncate } from 'src/utils/format.js';
-import { toInkColor } from 'src/utils/ink.js';
 import { plural } from 'src/utils/stringUtils.js';
 import { DIAMOND_FILLED, DIAMOND_OPEN } from '../../constants/figures.js';
 import { ShellProgress, TaskStatusText } from './ShellProgress.js';
-import { describeTeammateActivity } from './taskStatusUtils.js';
 type Props = {
   task: DeepImmutable<BackgroundTaskState>;
   maxActivityWidth?: number;
@@ -85,76 +83,6 @@ export function BackgroundTask(t0) {
           t5 = $[31];
         }
         return t5;
-      }
-    case "in_process_teammate":
-      {
-        let T0;
-        let T1;
-        let t1;
-        let t2;
-        let t3;
-        let t4;
-        if ($[32] !== activityLimit || $[33] !== task) {
-          const activity = describeTeammateActivity(task);
-          T1 = Text;
-          let t5;
-          if ($[40] !== task.identity.color) {
-            t5 = toInkColor(task.identity.color);
-            $[40] = task.identity.color;
-            $[41] = t5;
-          } else {
-            t5 = $[41];
-          }
-          if ($[42] !== t5 || $[43] !== task.identity.agentName) {
-            t4 = <Text color={t5}>@{task.identity.agentName}</Text>;
-            $[42] = t5;
-            $[43] = task.identity.agentName;
-            $[44] = t4;
-          } else {
-            t4 = $[44];
-          }
-          T0 = Text;
-          t1 = true;
-          t2 = ": ";
-          t3 = truncate(activity, activityLimit, true);
-          $[32] = activityLimit;
-          $[33] = task;
-          $[34] = T0;
-          $[35] = T1;
-          $[36] = t1;
-          $[37] = t2;
-          $[38] = t3;
-          $[39] = t4;
-        } else {
-          T0 = $[34];
-          T1 = $[35];
-          t1 = $[36];
-          t2 = $[37];
-          t3 = $[38];
-          t4 = $[39];
-        }
-        let t5;
-        if ($[45] !== T0 || $[46] !== t1 || $[47] !== t2 || $[48] !== t3) {
-          t5 = <T0 dimColor={t1}>{t2}{t3}</T0>;
-          $[45] = T0;
-          $[46] = t1;
-          $[47] = t2;
-          $[48] = t3;
-          $[49] = t5;
-        } else {
-          t5 = $[49];
-        }
-        let t6;
-        if ($[50] !== T1 || $[51] !== t4 || $[52] !== t5) {
-          t6 = <T1>{t4}{t5}</T1>;
-          $[50] = T1;
-          $[51] = t4;
-          $[52] = t5;
-          $[53] = t6;
-        } else {
-          t6 = $[53];
-        }
-        return t6;
       }
     case "local_workflow":
       {

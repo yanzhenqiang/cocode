@@ -5,10 +5,7 @@ import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'rea
 import { useEffectEventCompat } from 'src/hooks/useEffectEventCompat.js';
 import { useTerminalSize } from 'src/hooks/useTerminalSize.js';
 import { useAppState, useSetAppState } from 'src/state/AppState.js';
-import { enterTeammateView, exitTeammateView } from 'src/state/teammateViewHelpers.js';
 import type { ToolUseContext } from 'src/Tool.js';
-import { InProcessTeammateTask } from 'src/tasks/InProcessTeammateTask/InProcessTeammateTask.js';
-import type { InProcessTeammateTaskState } from 'src/tasks/InProcessTeammateTask/types.js';
 import type { LocalAgentTaskState } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import { LocalAgentTask } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import type { LocalShellTaskState } from 'src/tasks/LocalShellTask/guards.js';
@@ -19,7 +16,6 @@ import type { MonitorMcpTaskState } from 'src/tasks/MonitorMcpTask/MonitorMcpTas
 import { type BackgroundTaskState, isBackgroundTask, type TaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { intersperse } from 'src/utils/array.js';
-const TEAM_LEAD_NAME = 'team-lead';
 import { stopUltraplan } from '../../commands/ultraplan.js';
 import type { CommandResultDisplay } from '../../commands.js';
 import { useRegisterOverlay } from '../../context/overlayContext.js';
@@ -62,12 +58,6 @@ type ListItem = {
   task: DeepImmutable<LocalAgentTaskState>;
 } | {
   id: string;
-  type: 'in_process_teammate';
-  label: string;
-  status: string;
-  task: DeepImmutable<InProcessTeammateTaskState>;
-} | {
-  id: string;
   type: 'local_workflow';
   label: string;
   status: string;
@@ -84,11 +74,6 @@ type ListItem = {
   label: string;
   status: string;
   task: DeepImmutable<DreamTaskState>;
-} | {
-  id: string;
-  type: 'leader';
-  label: string;
-  status: 'running';
 };
 
 // WORKFLOW_SCRIPTS is internal-only (build_flags.yaml). Static imports would leak
@@ -120,7 +105,6 @@ export function BackgroundTasksDialog({
 }: Props): React.ReactNode {
   const tasks = useAppState(s => s.tasks);
   const foregroundedTaskId = useAppState(s_0 => s_0.foregroundedTaskId);
-  const showSpinnerTree = useAppState(s_1 => s_1.expandedView) === 'teammates';
   const setAppState = useSetAppState();
   const killAgentsShortcut = useShortcutDisplay('chat:killAgents', 'Chat', 'ctrl+x ctrl+k');
   const typedTasks = tasks as Record<string, TaskState> | undefined;
@@ -160,7 +144,6 @@ export function BackgroundTasksDialog({
   const {
     bashTasks,
     agentTasks,
-    teammateTasks,
     workflowTasks,
     mcpMonitors,
     dreamTasks: dreamTasks_0,
@@ -184,28 +167,18 @@ export function BackgroundTasksDialog({
     const workflows = sorted.filter(item_2 => item_2.type === 'local_workflow');
     const monitorMcp = sorted.filter(item_3 => item_3.type === 'monitor_mcp');
     const dreamTasks = sorted.filter(item_4 => item_4.type === 'dream');
-    // In spinner-tree mode, exclude teammates from the dialog (they appear in the tree)
-    const teammates = showSpinnerTree ? [] : sorted.filter(item_5 => item_5.type === 'in_process_teammate');
-    // Add leader entry when there are teammates, so users can foreground back to leader
-    const leaderItem: ListItem[] = teammates.length > 0 ? [{
-      id: '__leader__',
-      type: 'leader',
-      label: `@${TEAM_LEAD_NAME}`,
-      status: 'running'
-    }] : [];
     return {
       bashTasks: bash,
       agentTasks: agent,
       workflowTasks: workflows,
       mcpMonitors: monitorMcp,
       dreamTasks,
-      teammateTasks: [...leaderItem, ...teammates],
-      // Order MUST match JSX render order (teammates \u2192 bash \u2192 monitorMcp \u2192
-      // agent \u2192 agent \u2192 workflows \u2192 dream) so \u2193/\u2191 navigation moves the cursor
+      // Order MUST match JSX render order (bash \u2192 monitorMcp \u2192
+      // agent \u2192 workflows \u2192 dream) so \u2193/\u2191 navigation moves the cursor
       // visually downward.
-      allSelectableItems: [...leaderItem, ...teammates, ...bash, ...monitorMcp, ...agent, ...workflows, ...dreamTasks]
+      allSelectableItems: [...bash, ...monitorMcp, ...agent, ...workflows, ...dreamTasks]
     };
-  }, [typedTasks, foregroundedTaskId, showSpinnerTree]);
+  }, [typedTasks, foregroundedTaskId]);
   const currentSelection = allSelectableItems[selectedIndex] ?? null;
 
   // Use configurable keybindings for standard navigation and confirm/cancel.
@@ -216,17 +189,10 @@ export function BackgroundTasksDialog({
     'confirm:yes': () => {
       const current = allSelectableItems[selectedIndex];
       if (current) {
-        if (current.type === 'leader') {
-          exitTeammateView(setAppState);
-          onDone('Viewing leader', {
-            display: 'system'
-          });
-        } else {
-          setViewState({
-            mode: 'detail',
-            itemId: current.id
-          });
-        }
+        setViewState({
+          mode: 'detail',
+          itemId: current.id
+        });
       }
     }
   }, {
@@ -257,29 +223,12 @@ export function BackgroundTasksDialog({
         void killShellTask(currentSelection_0.id);
       } else if (currentSelection_0.type === 'local_agent' && currentSelection_0.status === 'running') {
         void killAgentTask(currentSelection_0.id);
-      } else if (currentSelection_0.type === 'in_process_teammate' && currentSelection_0.status === 'running') {
-        void killTeammateTask(currentSelection_0.id);
       } else if (currentSelection_0.type === 'local_workflow' && currentSelection_0.status === 'running' && killWorkflowTask) {
         killWorkflowTask(currentSelection_0.id, setAppState);
       } else if (currentSelection_0.type === 'monitor_mcp' && currentSelection_0.status === 'running' && killMonitorMcp) {
         killMonitorMcp(currentSelection_0.id, setAppState);
       } else if (currentSelection_0.type === 'dream' && currentSelection_0.status === 'running') {
         void killDreamTask(currentSelection_0.id);
-      }
-    }
-    if (e.key === 'f') {
-      if (currentSelection_0.type === 'in_process_teammate' && currentSelection_0.status === 'running') {
-        e.preventDefault();
-        enterTeammateView(currentSelection_0.id, setAppState);
-        onDone('Viewing teammate', {
-          display: 'system'
-        });
-      } else if (currentSelection_0.type === 'leader') {
-        e.preventDefault();
-        exitTeammateView(setAppState);
-        onDone('Viewing leader', {
-          display: 'system'
-        });
       }
     }
   };
@@ -289,10 +238,7 @@ export function BackgroundTasksDialog({
   async function killAgentTask(taskId_0: string): Promise<void> {
     await LocalAgentTask.kill(taskId_0, setAppState);
   }
-  async function killTeammateTask(taskId_1: string): Promise<void> {
-    await InProcessTeammateTask.kill(taskId_1, setAppState);
-  }
-  async function killDreamTask(taskId_2: string): Promise<void> {
+  async function killDreamTask(taskId_1: string): Promise<void> {
     await DreamTask.kill(taskId_2, setAppState);
   }
   // Wrap onDone in useEffectEvent to get a stable reference that always calls
@@ -367,18 +313,14 @@ export function BackgroundTasksDialog({
   }
   const runningBashCount = count(bashTasks, _ => _.status === 'running');
   const runningAgentCount = count(agentTasks, __0 => __0.status === 'running');
-  const runningTeammateCount = count(teammateTasks, __2 => __2.status === 'running');
-  const subtitle = intersperse([...(runningTeammateCount > 0 ? [<Text key="teammates">
-              {runningTeammateCount}{' '}
-              {runningTeammateCount !== 1 ? 'agents' : 'agent'}
-            </Text>] : []), ...(runningBashCount > 0 ? [<Text key="shells">
+  const subtitle = intersperse([...(runningBashCount > 0 ? [<Text key="shells">
               {runningBashCount}{' '}
               {runningBashCount !== 1 ? 'active shells' : 'active shell'}
             </Text>] : []), ...(runningAgentCount > 0 ? [<Text key="agents">
               {runningAgentCount}{' '}
               {runningAgentCount !== 1 ? 'active agents' : 'active agent'}
             </Text>] : [])], index => <Text key={`separator-${index}`}> · </Text>);
-  const actions = [<KeyboardShortcutHint key="upDown" shortcut="↑/↓" action="select" />, <KeyboardShortcutHint key="enter" shortcut="Enter" action="view" />, ...(currentSelection?.type === 'in_process_teammate' && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="foreground" shortcut="f" action="foreground" />] : []), ...((currentSelection?.type === 'local_bash' || currentSelection?.type === 'local_agent' || currentSelection?.type === 'in_process_teammate' || currentSelection?.type === 'local_workflow' || currentSelection?.type === 'monitor_mcp' || currentSelection?.type === 'dream') && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="kill" shortcut="x" action="stop" />] : []), ...(agentTasks.some(t => t.status === 'running') ? [<KeyboardShortcutHint key="kill-all" shortcut={killAgentsShortcut} action="stop all agents" />] : []), <KeyboardShortcutHint key="esc" shortcut="←/Esc" action="close" />];
+  const actions = [<KeyboardShortcutHint key="upDown" shortcut="↑/↓" action="select" />, <KeyboardShortcutHint key="enter" shortcut="Enter" action="view" />, ...((currentSelection?.type === 'local_bash' || currentSelection?.type === 'local_agent' || currentSelection?.type === 'local_workflow' || currentSelection?.type === 'monitor_mcp' || currentSelection?.type === 'dream') && currentSelection.status === 'running' ? [<KeyboardShortcutHint key="kill" shortcut="x" action="stop" />] : []), ...(agentTasks.some(t => t.status === 'running') ? [<KeyboardShortcutHint key="kill-all" shortcut={killAgentsShortcut} action="stop all agents" />] : []), <KeyboardShortcutHint key="esc" shortcut="←/Esc" action="close" />];
   const handleCancel = () => onDone('Background tasks dialog dismissed', {
     display: 'system'
   });
@@ -391,18 +333,8 @@ export function BackgroundTasksDialog({
   return <Box flexDirection="column" tabIndex={0} autoFocus onKeyDown={handleKeyDown}>
       <Dialog title="Background tasks" subtitle={<>{subtitle}</>} onCancel={handleCancel} color="background" inputGuide={renderInputGuide}>
         {allSelectableItems.length === 0 ? <Text dimColor>No tasks currently running</Text> : <Box flexDirection="column">
-            {teammateTasks.length > 0 && <Box flexDirection="column">
-                {(bashTasks.length > 0 || agentTasks.length > 0) && <Text dimColor>
-                    <Text bold>{'  '}Agents</Text> (
-                    {count(teammateTasks, i => i.type !== 'leader')})
-                  </Text>}
-                <Box flexDirection="column">
-                  <TeammateTaskGroups teammateTasks={teammateTasks} currentSelectionId={currentSelection?.id} />
-                </Box>
-              </Box>}
-
-            {bashTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 ? 1 : 0}>
-                {(teammateTasks.length > 0 || agentTasks.length > 0) && <Text dimColor>
+            {bashTasks.length > 0 && <Box flexDirection="column">
+                {agentTasks.length > 0 && <Text dimColor>
                     <Text bold>{'  '}Shells</Text> ({bashTasks.length})
                   </Text>}
                 <Box flexDirection="column">
@@ -410,7 +342,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {mcpMonitors.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 ? 1 : 0}>
+            {mcpMonitors.length > 0 && <Box flexDirection="column" marginTop={bashTasks.length > 0 ? 1 : 0}>
                 <Text dimColor>
                   <Text bold>{'  '}Monitors</Text> ({mcpMonitors.length})
                 </Text>
@@ -419,7 +351,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {agentTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 ? 1 : 0}>
+            {agentTasks.length > 0 && <Box flexDirection="column" marginTop={bashTasks.length > 0 || mcpMonitors.length > 0 ? 1 : 0}>
                 <Text dimColor>
                   <Text bold>{'  '}Local agents</Text> ({agentTasks.length})
                 </Text>
@@ -428,7 +360,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {workflowTasks.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 ? 1 : 0}>
+            {workflowTasks.length > 0 && <Box flexDirection="column" marginTop={bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 ? 1 : 0}>
                 <Text dimColor>
                   <Text bold>{'  '}Workflows</Text> ({workflowTasks.length})
                 </Text>
@@ -437,7 +369,7 @@ export function BackgroundTasksDialog({
                 </Box>
               </Box>}
 
-            {dreamTasks_0.length > 0 && <Box flexDirection="column" marginTop={teammateTasks.length > 0 || bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 || workflowTasks.length > 0 ? 1 : 0}>
+            {dreamTasks_0.length > 0 && <Box flexDirection="column" marginTop={bashTasks.length > 0 || mcpMonitors.length > 0 || agentTasks.length > 0 || workflowTasks.length > 0 ? 1 : 0}>
                 <Box flexDirection="column">
                   {dreamTasks_0.map(item_11 => <Item key={item_11.id} item={item_11} isSelected={item_11.id === currentSelection?.id} />)}
                 </Box>
@@ -461,14 +393,6 @@ function toListItem(task: BackgroundTaskState): ListItem {
         id: task.id,
         type: 'local_agent',
         label: task.description,
-        status: task.status,
-        task
-      };
-    case 'in_process_teammate':
-      return {
-        id: task.id,
-        type: 'in_process_teammate',
-        label: `@${task.identity.agentName}`,
         status: task.status,
         task
       };
@@ -529,14 +453,13 @@ function Item(t0) {
   }
   const t5 = isSelected && !useGreyPointer ? "suggestion" : undefined;
   let t6;
-  if ($[4] !== item.task || $[5] !== item.type || $[6] !== maxActivityWidth) {
-    t6 = item.type === "leader" ? <Text>@{TEAM_LEAD_NAME}</Text> : <BackgroundTaskComponent task={item.task} maxActivityWidth={maxActivityWidth} />;
+  if ($[4] !== item.task || $[5] !== maxActivityWidth) {
+    t6 = <BackgroundTaskComponent task={item.task} maxActivityWidth={maxActivityWidth} />;
     $[4] = item.task;
-    $[5] = item.type;
-    $[6] = maxActivityWidth;
-    $[7] = t6;
+    $[5] = maxActivityWidth;
+    $[6] = t6;
   } else {
-    t6 = $[7];
+    t6 = $[6];
   }
   let t7;
   if ($[8] !== t5 || $[9] !== t6) {
@@ -557,44 +480,4 @@ function Item(t0) {
     t8 = $[13];
   }
   return t8;
-}
-function TeammateTaskGroups(t0) {
-  const $ = _c(3);
-  const {
-    teammateTasks,
-    currentSelectionId
-  } = t0;
-  let t1;
-  if ($[0] !== currentSelectionId || $[1] !== teammateTasks) {
-    const leaderItems = teammateTasks.filter(_temp);
-    const teammateItems = teammateTasks.filter(_temp2);
-    const teams = new Map();
-    for (const item of teammateItems) {
-      const teamName = item.task.identity.teamName;
-      const group = teams.get(teamName);
-      if (group) {
-        group.push(item);
-      } else {
-        teams.set(teamName, [item]);
-      }
-    }
-    const teamEntries = [...teams.entries()];
-    t1 = <>{teamEntries.map(t2 => {
-        const [teamName_0, items] = t2;
-        const memberCount = items.length + leaderItems.length;
-        return <Box key={teamName_0} flexDirection="column"><Text dimColor={true}>{"  "}Team: {teamName_0} ({memberCount})</Text>{leaderItems.map(item_0 => <Item key={`${item_0.id}-${teamName_0}`} item={item_0} isSelected={item_0.id === currentSelectionId} />)}{items.map(item_1 => <Item key={item_1.id} item={item_1} isSelected={item_1.id === currentSelectionId} />)}</Box>;
-      })}</>;
-    $[0] = currentSelectionId;
-    $[1] = teammateTasks;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
-}
-function _temp2(i_0) {
-  return i_0.type === "in_process_teammate";
-}
-function _temp(i) {
-  return i.type === "leader";
 }
