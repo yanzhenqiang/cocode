@@ -1,11 +1,10 @@
 import { useStartupNotification } from './useStartupNotification.js';
 // nativeInstaller removed
-const checkInstall = async () => []
 export function useInstallMessages() {
   useStartupNotification(_temp2);
 }
 async function _temp2() {
-  const messages = await checkInstall();
+  const messages: never[] = [];
   return messages.map(_temp);
 }
 function _temp(message, index) {

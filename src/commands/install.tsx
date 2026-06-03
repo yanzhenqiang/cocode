@@ -10,7 +10,6 @@ import { logForDebugging } from '../utils/debug.js';
 import { env } from '../utils/env.js';
 import { errorMessage } from '../utils/errors.js';
 // nativeInstaller removed — inline stubs
-const checkInstall = async () => []
 const cleanupNpmInstallations = async () => ({ removed: 0, errors: [], warnings: [] })
 const installLatest = async () => ({ latestVersion: '', wasUpdated: false, lockFailed: false })
 import { getInitialSettings, updateSettingsForSource } from '../utils/settings/settings.js';
@@ -133,7 +132,7 @@ function Install({
         setState({
           type: 'setting-up'
         });
-        const setupMessages = await checkInstall(true);
+        const setupMessages: never[] = [];
         logForDebugging(`Install: Setup launcher completed with ${setupMessages.length} messages`);
         if (setupMessages.length > 0) {
           setupMessages.forEach(msg => logForDebugging(`Install: Setup message: ${msg.message}`));

@@ -14,7 +14,6 @@ import { getAPIProvider, type APIProvider } from './model/providers.js';
 import { resolveProviderRequest } from '../services/api/providerConfig.js';
 import { getMTLSConfig } from './mtls.js';
 // nativeInstaller removed
-const checkInstall = async () => [] as any[]
 import { getProxyUrl } from './proxy.js';
 import { SandboxManager } from './sandbox/sandbox-adapter.js';
 import { getSettingsWithAllErrors } from './settings/allErrors.js';
@@ -215,7 +214,7 @@ export function buildSettingSourcesProperties(): Property[] {
   }];
 }
 export async function buildInstallationDiagnostics(): Promise<Diagnostic[]> {
-  const installWarnings = await checkInstall();
+  const installWarnings: never[] = [];
   return installWarnings.map(warning => warning.message);
 }
 export async function buildInstallationHealthDiagnostics(): Promise<Diagnostic[]> {
