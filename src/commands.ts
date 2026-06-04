@@ -26,6 +26,12 @@ import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
+import privacySettings from './commands/privacy-settings/index.js'
+import cacheProbe from './commands/cache-probe/index.js'
+import cacheStats from './commands/cacheStats/index.js'
+import rewind from './commands/rewind/index.js'
+import heapDump from './commands/heapdump/index.js'
+import btw from './commands/btw/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
 import version from './commands/version.js'
@@ -40,6 +46,11 @@ import {
   getDynamicSkills,
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
+import privacySettings from './commands/privacy-settings/index.js'
+import cacheProbe from './commands/cache-probe/index.js'
+import cacheStats from './commands/cacheStats/index.js'
+import rewind from './commands/rewind/index.js'
+import heapDump from './commands/heapdump/index.js'
 import btw from './commands/btw/index.js'
 // plugin commands removed
 import memoize from 'lodash-es/memoize.js'
@@ -100,11 +111,23 @@ const COMMANDS = memoize((): Command[] => [
   advisor,
   branch,
   btw,
+  heapDump,
+  rewind,
+  cacheStats,
+  cacheProbe,
+  privacySettings,
+  btw,
+  heapDump,
+  rewind,
+  cacheStats,
+  cacheProbe,
+  privacySettings,
   clear,
   compact,
   commitMessage,
   config,
   copy,
+  env,
   context,
   contextNonInteractive,
   cost,
@@ -114,6 +137,7 @@ const COMMANDS = memoize((): Command[] => [
   files,
   help,
   init,
+  issue,
   keybindings,
   mcp,
   memory,
@@ -122,6 +146,7 @@ const COMMANDS = memoize((): Command[] => [
   rename,
   resume,
   skills,
+  summary,
   status,
   tag,
   theme,
