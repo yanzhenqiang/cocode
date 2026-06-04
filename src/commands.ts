@@ -12,6 +12,9 @@ import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import init from './commands/init.js'
 import keybindings from './commands/keybindings/index.js'
+import heapDump from './commands/heapdump/index.js'
+import privacySettings from './commands/privacy-settings/index.js'
+import rewind from './commands/rewind/index.js'
 import mcp from './commands/mcp/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
@@ -27,6 +30,8 @@ import fast from './commands/fast/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
+import cacheProbe from './commands/cache-probe/index.js'
+import cacheStats from './commands/cacheStats/index.js'
 // /agents command removed
 import version from './commands/version.js'
 const resetLimitsNonInteractive = async () => {};
@@ -41,6 +46,11 @@ import {
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
 import btw from './commands/btw/index.js'
+import cacheProbe from './commands/cache-probe/index.js'
+import cacheStats from './commands/cacheStats/index.js'
+import heapDump from './commands/heapdump/index.js'
+import privacySettings from './commands/privacy-settings/index.js'
+import rewind from './commands/rewind/index.js'
 // plugin commands removed
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices } from './utils/auth.js'
@@ -99,12 +109,15 @@ const COMMANDS = memoize((): Command[] => [
   addDir,
   advisor,
   branch,
+  cacheProbe,
+  cacheStats,
   btw,
   clear,
   compact,
   commitMessage,
   config,
   copy,
+  env,
   context,
   contextNonInteractive,
   cost,
@@ -112,8 +125,10 @@ const COMMANDS = memoize((): Command[] => [
   exit,
   fast,
   files,
+  heapDump,
   help,
   init,
+  issue,
   keybindings,
   mcp,
   memory,
@@ -122,15 +137,18 @@ const COMMANDS = memoize((): Command[] => [
   rename,
   resume,
   skills,
+  summary,
   status,
   tag,
   theme,
   review,
+  rewind,
   ultrareview,
   securityReview,
   usageReport,
   permissions,
   plan,
+  privacySettings,
   hooks,
   exportCommand,
   tasks,
@@ -371,6 +389,7 @@ export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
     clear, // Wipe transcript
     cost, // Show session cost
     files, // List tracked files
+  heapDump,
   ].filter((c): c is Command => c !== null),
 )
 
