@@ -45,11 +45,6 @@ import {
   getDynamicSkills,
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
-import privacySettings from './commands/privacy-settings/index.js'
-import cacheProbe from './commands/cache-probe/index.js'
-import cacheStats from './commands/cacheStats/index.js'
-import rewind from './commands/rewind/index.js'
-import btw from './commands/btw/index.js'
 // plugin commands removed
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices } from './utils/auth.js'
@@ -107,11 +102,6 @@ const COMMANDS = memoize((): Command[] => [
   addDir,
   advisor,
   branch,
-  btw,
-  rewind,
-  cacheStats,
-  cacheProbe,
-  privacySettings,
   btw,
   rewind,
   cacheStats,
