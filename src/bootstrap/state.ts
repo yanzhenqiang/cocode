@@ -941,11 +941,11 @@ export function resetModelStringsForTestingOnly() {
 }
 
 export function getIsNonInteractiveSession(): boolean {
-  return !STATE.isInteractive
+  return false
 }
 
 export function getIsInteractive(): boolean {
-  return STATE.isInteractive
+  return true
 }
 
 export function setIsInteractive(value: boolean): void {

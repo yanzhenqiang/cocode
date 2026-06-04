@@ -10,7 +10,6 @@ import { checkForReleaseNotes } from 'src/utils/releaseNotes.js'
 import { setCwd } from 'src/utils/Shell.js'
 import { initSinks } from 'src/utils/sinks.js'
 import {
-  getIsNonInteractiveSession,
   getProjectRoot,
   getSessionId,
   setOriginalCwd,
@@ -74,12 +73,8 @@ export async function setup(
   // Scripted calls don't receive injected messages and don't use swarm teammates.
   // Explicit --messaging-socket-path is the escape hatch (per #23222 gate pattern).
 
-  // Terminal backup restoration — interactive only. Print mode doesn't
-  // interact with terminal settings; the next interactive session will
-  // detect and restore any interrupted setup.
-  if (!getIsNonInteractiveSession()) {
-    // iTerm2 backup check only when swarms enabled
-    if (isAgentSwarmsEnabled()) {
+  // Terminal backup restoration.
+  if (isAgentSwarmsEnabled()) {
       const restoredIterm2Backup = await checkAndRestoreITerm2Backup()
       if (restoredIterm2Backup.status === 'restored') {
         // biome-ignore lint/suspicious/noConsole:: intentional console output
@@ -120,7 +115,6 @@ export async function setup(
       // Log but don't crash if Terminal.app backup restoration fails
       logError(error)
     }
-  }
 
   // IMPORTANT: setCwd() must be called before any other code that depends on the cwd
   setCwd(cwd)
@@ -154,9 +148,7 @@ export async function setup(
   // races with the install (concurrent copyPluginToVersionedCache / cachePlugin
   // on the same directories), and the hot-reload handler fires clearPluginCache()
   // mid-install when policySettings arrives.
-  const skipPluginPrefetch =
-    (getIsNonInteractiveSession() &&
-      isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL))
+  const skipPluginPrefetch = false
   if (!skipPluginPrefetch) {
     void getCommands(getProjectRoot())
   }
@@ -179,7 +171,7 @@ export async function setup(
   // "process started" signal for release health monitoring.
   logEvent('tengu_started', {})
 
-  void prefetchApiKeyFromApiKeyHelperIfSafe(getIsNonInteractiveSession()) // Prefetch safely - only executes if trust already confirmed
+  void prefetchApiKeyFromApiKeyHelperIfSafe()
   profileCheckpoint('setup_after_prefetch')
 
   // Pre-fetch data for Logo v2 - await to ensure it's ready before logo renders.

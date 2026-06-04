@@ -3,7 +3,6 @@ import { type as osType, version as osVersion, release as osRelease } from 'os'
 import { env } from '../utils/env.js'
 import { getIsGit } from '../utils/git.js'
 import { getCwd } from '../utils/cwd.js'
-import { getIsNonInteractiveSession } from '../bootstrap/state.js'
 import { getCurrentWorktreeSession } from '../utils/worktree.js'
 import { getSessionStartDate } from './common.js'
 import { getInitialSettings } from '../utils/settings/settings.js'
@@ -298,11 +297,9 @@ function getSessionSpecificGuidanceSection(
     hasAskUserQuestionTool
       ? `If you do not understand why the user has denied a tool call, use the ${ASK_USER_QUESTION_TOOL_NAME} to ask them.`
       : null,
-    getIsNonInteractiveSession()
-      ? null
-      : `If you need the user to run a shell command themselves (e.g., an interactive login like \`gcloud auth login\`), suggest they type \`! <command>\` in the prompt — the \`!\` prefix runs the command in this session so its output lands directly in the conversation.`,
-    // getIsNonInteractiveSession() gates agent tool section — must be
-    // post-boundary or it fragments the static prefix on session type.
+    `If you need the user to run a shell command themselves (e.g., an interactive login like \`gcloud auth login\`), suggest they type \`! <command>\` in the prompt — the \`!\` prefix runs the command in this session so its output lands directly in the conversation.`,
+    // Agent tool section must be post-boundary or it fragments the
+    // static prefix on session type.
     hasAgentTool ? getAgentToolSection() : null,
     ...(hasSkills
       ? [

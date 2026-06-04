@@ -317,14 +317,6 @@ async function getMessagesForSlashCommand(commandName: string, args: string, set
               canUseTool
             }, args)).then(jsx => {
               if (jsx == null) return;
-              if (context.options.isNonInteractiveSession) {
-                void resolve({
-                  messages: [],
-                  shouldQuery: false,
-                  command
-                });
-                return;
-              }
               // Guard: if onDone fired during mod.call() (early-exit path
               // that calls onDone then returns JSX), skip setToolJSX. This
               // chain is fire-and-forget — the outer Promise resolves when

@@ -7,7 +7,6 @@ import type {
 import {
   addToTotalDurationState,
   consumePostCompaction,
-  getIsNonInteractiveSession,
   getLastApiCompletionTimestamp,
   setLastApiCompletionTimestamp,
 } from 'src/bootstrap/state.js'
@@ -409,7 +408,7 @@ function logAPISuccess({
   previousRequestId?: string | null
   betas?: string[]
 }): void {
-  const isNonInteractiveSession = getIsNonInteractiveSession()
+  const isNonInteractiveSession = false
   const isPostCompaction = consumePostCompaction()
   const hasPrintFlag =
     process.argv.includes('-p') || process.argv.includes('--print')

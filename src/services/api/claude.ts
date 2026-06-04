@@ -503,13 +503,7 @@ export function getAPIMetadata() {
 
 export async function verifyApiKey(
   apiKey: string,
-  isNonInteractiveSession: boolean,
 ): Promise<boolean> {
-  // Skip API verification if running in print mode (isNonInteractiveSession)
-  if (isNonInteractiveSession) {
-    return true
-  }
-
   try {
     // WARNING: if you change this to use a non-Haiku model, this request will fail in 1P unless it uses getCLISyspromptPrefix.
     const model = getSmallFastModel()
@@ -651,7 +645,6 @@ export type Options = {
   getToolPermissionContext: () => Promise<ToolPermissionContext>
   model: string
   toolChoice?: BetaToolChoiceTool | BetaToolChoiceAuto | undefined
-  isNonInteractiveSession: boolean
   extraToolSchemas?: BetaToolUnion[]
   maxOutputTokensOverride?: number
   fallbackModel?: string
@@ -1319,7 +1312,6 @@ async function* queryModel(
     [
       getAttributionHeader(fingerprint),
       getCLISyspromptPrefix({
-        isNonInteractive: options.isNonInteractiveSession,
         hasAppendSystemPrompt: options.hasAppendSystemPrompt,
       }),
       ...systemPrompt,

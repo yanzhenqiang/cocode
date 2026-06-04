@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto'
 import { randomUUID } from 'crypto'
-import { getIsNonInteractiveSession, getSessionId } from '../bootstrap/state.js'
+import { getSessionId } from '../bootstrap/state.js'
 import type { SdkWorkflowProgress } from '../types/tools.js'
 
 type TaskStartedEvent = {
@@ -77,7 +77,7 @@ const queue: SdkEvent[] = []
 export function enqueueSdkEvent(event: SdkEvent): void {
   // SDK events are only consumed (drained) in headless/streaming mode.
   // In TUI mode they would accumulate up to the cap and never be read.
-  if (!getIsNonInteractiveSession()) {
+  if (true) {
     return
   }
   if (queue.length >= MAX_QUEUE_SIZE) {

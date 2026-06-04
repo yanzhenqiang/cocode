@@ -31,7 +31,6 @@ export const CLI_SYSPROMPT_PREFIXES: ReadonlySet<string> = new Set(
 )
 
 export function getCLISyspromptPrefix(options?: {
-  isNonInteractive: boolean
   hasAppendSystemPrompt: boolean
 }): CLISyspromptPrefix {
   const apiProvider = getAPIProvider()
@@ -39,12 +38,6 @@ export function getCLISyspromptPrefix(options?: {
     return DEFAULT_PREFIX
   }
 
-  if (options?.isNonInteractive) {
-    if (options.hasAppendSystemPrompt) {
-      return AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX
-    }
-    return AGENT_SDK_PREFIX
-  }
   return DEFAULT_PREFIX
 }
 

@@ -2,7 +2,6 @@ import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { isAbsolute, join, normalize, sep } from 'path'
 import {
-  getIsNonInteractiveSession,
   getProjectRoot,
 } from '../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js'
@@ -64,10 +63,7 @@ export function isExtractModeActive(): boolean {
   if (!getFeatureValue_CACHED_MAY_BE_STALE('tengu_passport_quail', false)) {
     return false
   }
-  return (
-    !getIsNonInteractiveSession() ||
-    getFeatureValue_CACHED_MAY_BE_STALE('tengu_slate_thimble', false)
-  )
+  return true
 }
 
 /**

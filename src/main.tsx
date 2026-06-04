@@ -25,8 +25,6 @@ import { prefetchOllamaModels } from './utils/model/ollamaModels.js';
 import { type DownloadResult, downloadSessionFiles, type FilesApiConfig, parseFileSpecs } from './services/api/filesApi.js';
 import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
-import type { ToolInputJSONSchema } from './Tool.js';
-import { createSyntheticOutputTool, isSyntheticOutputToolEnabled } from './tools/SyntheticOutputTool/SyntheticOutputTool.js';
 import { getTools } from './tools.js';
 import { canUserConfigureAdvisor, getInitialAdvisorSetting, isAdvisorEnabled, isValidAdvisorModel, modelSupportsAdvisor } from './utils/advisor.js';
 import { isAgentSwarmsEnabled } from './utils/agentSwarmsEnabled.js';
@@ -62,7 +60,7 @@ import { SHOW_CURSOR } from './ink/termio/dec.js';
 import { exitWithError, exitWithMessage, getRenderContext, renderAndRun, showSetupScreens } from './interactiveHelpers.js';
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-import { getMcpToolsCommandsAndResources, prefetchAllMcpResources } from './services/mcp/client.js';
+import { prefetchAllMcpResources } from './services/mcp/client.js';
 import { initBundledSkills } from './skills/bundled/index.js';
 import type { AgentColorName } from './tools/AgentTool/agentColorManager.js';
 import { getActiveAgentsFromList, getAgentDefinitionsWithOverrides, isBuiltInAgent, isCustomAgent, parseAgentsFromJson } from './tools/AgentTool/loadAgentsDir.js';
@@ -108,7 +106,7 @@ import { eagerParseCliFlag } from 'src/utils/cliArgs.js';
 import { createEmptyAttributionState } from 'src/utils/commitAttribution.js';
 import { countConcurrentSessions, registerSession, updateSessionName } from 'src/utils/concurrentSessions.js';
 import { getCwd } from 'src/utils/cwd.js';
-import { logForDebugging, setHasFormattedOutput } from 'src/utils/debug.js';
+import { logForDebugging } from 'src/utils/debug.js';
 import { errorMessage, getErrnoCode, isENOENT, toError } from 'src/utils/errors.js';
 import { getFsImplementation, safeResolvePath } from 'src/utils/fsOperations.js';
 import { isInteractiveSession } from 'src/utils/interactivity.js';
@@ -120,7 +118,7 @@ import { setCwd } from 'src/utils/Shell.js';
 import { type ProcessedResume, processResumedConversation } from 'src/utils/sessionRestore.js';
 import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
-import { type ChannelEntry, getInitialMainLoopModel, getIsNonInteractiveSession, getSdkBetas, getSessionId, getUserMsgOptIn, setAllowedChannels, setAllowedSettingSources, setClientType, setCwdState, setFlagSettingsPath, setInitialMainLoopModel, setInlinePlugins, setIsInteractive, setKairosActive, setOriginalCwd, setQuestionPreviewFormat, setSdkBetas, setSessionBypassPermissionsMode, setSessionPersistenceDisabled, setUserMsgOptIn, switchSession } from './bootstrap/state.js';
+import { type ChannelEntry, getInitialMainLoopModel, setAllowedChannels, setAllowedSettingSources, setClientType, setCwdState, setInitialMainLoopModel, setInlinePlugins, setIsInteractive, setOriginalCwd, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/permissions/autoModeState.js') as typeof import('./utils/permissions/autoModeState.js') : null;
@@ -131,7 +129,6 @@ import { type AppState, getDefaultAppState, IDLE_SPECULATION_STATE } from './sta
 import { onChangeAppState } from './state/onChangeAppState.js';
 import { createStore } from './state/store.js';
 import { asSessionId } from './types/ids.js';
-import { filterAllowedSdkBetas } from './utils/betas.js';
 import { isInBundledMode, isRunningWithBun } from './utils/bundledMode.js';
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js';
 import { filterExistingPaths, getKnownPathsForRepo } from './utils/githubRepoPathMapping.js';
@@ -206,10 +203,7 @@ if (false && isBeingDebugged()) {
 }
 
 /**
- * Per-session skill/plugin telemetry. Called from both the interactive path
- * and the headless -p path (before runHeadless) — both go through
- * main.tsx but branch before the interactive startup path, so it needs two
- * call sites here rather than one here + one in QueryEngine.
+ * Per-session skill/plugin telemetry.
  */
 function getCertEnvVarTelemetry(): Record<string, boolean> {
   const result: Record<string, boolean> = {};
@@ -265,17 +259,7 @@ function runMigrations(): void {
  * non-interactive mode where trust is implicit.
  */
 function prefetchSystemContextIfSafe(): void {
-  const isNonInteractiveSession = getIsNonInteractiveSession();
-
-  // In non-interactive mode (--print), trust dialog is skipped and
-  // execution is considered trusted (as documented in help text)
-  if (isNonInteractiveSession) {
-    logForDiagnosticsNoPII('info', 'prefetch_system_context_non_interactive');
-    void getSystemContext();
-    return;
-  }
-
-  // In interactive mode, only prefetch if trust has already been established
+  // Only prefetch if trust has already been established
   const hasTrust = checkHasTrustDialogAccepted();
   if (hasTrust) {
     logForDiagnosticsNoPII('info', 'prefetch_system_context_has_trust');
@@ -283,7 +267,6 @@ function prefetchSystemContextIfSafe(): void {
   } else {
     logForDiagnosticsNoPII('info', 'prefetch_system_context_skipped_no_trust');
   }
-  // Otherwise, don't prefetch - wait for trust to be established first
 }
 
 /**
@@ -410,7 +393,7 @@ function eagerLoadSettings(): void {
   }
   profileCheckpoint('eagerLoadSettings_end');
 }
-function initializeEntrypoint(isNonInteractive: boolean): void {
+function initializeEntrypoint(): void {
   // Skip if already set (e.g., by SDK or other entrypoints)
   if (process.env.CLAUDE_CODE_ENTRYPOINT) {
     return;
@@ -431,8 +414,8 @@ function initializeEntrypoint(isNonInteractive: boolean): void {
   // Note: 'local-agent' entrypoint is set by the local agent mode launcher
   // via CLAUDE_CODE_ENTRYPOINT env var (handled by early return above)
 
-  // Set based on interactive status
-  process.env.CLAUDE_CODE_ENTRYPOINT = isNonInteractive ? 'sdk-cli' : 'cli';
+  // Cocode always runs as CLI interactive session
+  process.env.CLAUDE_CODE_ENTRYPOINT = 'cli';
 }
 
 // Set by early argv processing when `claude open <url>` is detected (interactive mode only)
@@ -457,36 +440,15 @@ export async function main() {
     resetCursor();
   });
   process.on('SIGINT', () => {
-    // In print mode, print.ts registers its own SIGINT handler that aborts
-    // the in-flight query and calls gracefulShutdown; skip here to avoid
-    // preempting it with a synchronous process.exit().
-    if (process.argv.includes('-p') || process.argv.includes('--print')) {
-      return;
-    }
     process.exit(0);
   });
   profileCheckpoint('main_warning_handler_initialized');
 
-  // Check for cc:// or cc+unix:// URL in argv — rewrite so the main command
-  // Check for interactivity early to set isInteractiveSession before init()
-  // This is needed because telemetry initialization calls auth functions that need this flag
-  const isInteractive = isInteractiveSession({
-    stdoutIsTTY: process.stdout.isTTY,
-    args: process.argv.slice(2),
-    env: process.env,
-  });
-  const isNonInteractive = !isInteractive;
+  // Cocode only runs in interactive REPL mode
+  setIsInteractive(true);
 
-  // Stop capturing early input for non-interactive modes
-  if (isNonInteractive) {
-    stopCapturingEarlyInput();
-  }
-
-  // Set simplified tracking fields
-  setIsInteractive(isInteractive);
-
-  // Initialize entrypoint based on mode - needs to be set before any event is logged
-  initializeEntrypoint(isNonInteractive);
+  // Initialize entrypoint - needs to be set before any event is logged
+  initializeEntrypoint();
 
   // Determine client type
   const clientType = (() => {
@@ -614,29 +576,18 @@ async function run(): Promise<CommanderCommand> {
     
     profileCheckpoint('preAction_after_settings_sync');
   });
-  program.name('cocode').description(`CoCode - starts an interactive session by default, use -p/--print for non-interactive output`).argument('[prompt]', 'Your prompt', String)
+  program.name('cocode').description('CoCode - starts an interactive REPL session').argument('[prompt]', 'Your prompt', String)
   // Subcommands inherit helpOption via commander's copyInheritedSettings —
   // setting it once here covers mcp, plugin, auth, and all other subcommands.
   .helpOption('-h, --help', 'Display help for command').option('-d, --debug [filter]', 'Enable debug mode with optional category filtering (e.g., "api,hooks" or "!1p,!file")', (_value: string | true) => {
-    // If value is provided, it will be the filter string
-    // If not provided but flag is present, value will be true
-    // The actual filtering is handled in debug.ts by parsing process.argv
     return true;
-  }).addOption(new Option('-d2e, --debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp()).option('--debug-file <path>', 'Write debug logs to a specific file path (implicitly enables debug mode)', () => true).option('--verbose', 'Override verbose mode setting from config', () => true).option('-p, --print', 'Print response and exit (useful for pipes). Note: The workspace trust dialog is skipped when Claude is run with the -p mode. Only use this flag in directories you trust.', () => true).addOption(new Option('--init', 'Run Setup hooks with init trigger, then continue').hideHelp()).addOption(new Option('--init-only', 'Run Setup and SessionStart:startup hooks, then exit').hideHelp()).addOption(new Option('--maintenance', 'Run Setup hooks with maintenance trigger, then continue').hideHelp()).addOption(new Option('--output-format <format>', 'Output format (only works with --print): "text" (default), "json" (single result), or "stream-json" (realtime streaming)').choices(['text', 'json', 'stream-json'])).addOption(new Option('--json-schema <schema>', 'JSON Schema for structured output validation. ' + 'Example: {"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}').argParser(String)).option('--include-hook-events', 'Include all hook lifecycle events in the output stream (only works with --output-format=stream-json)', () => true).option('--include-partial-messages', 'Include partial message chunks as they arrive (only works with --print and --output-format=stream-json)', () => true).addOption(new Option('--input-format <format>', 'Input format (only works with --print): "text" (default), or "stream-json" (realtime streaming input)').choices(['text', 'stream-json'])).option('--dangerously-skip-permissions', 'Bypass all permission checks. Recommended only for sandboxes with no internet access.', () => true).option('--allow-dangerously-skip-permissions', 'Enable bypassing all permission checks as an option, without it being enabled by default. Recommended only for sandboxes with no internet access.', () => true).addOption(new Option('--thinking <mode>', 'Thinking mode: enabled (equivalent to adaptive), disabled').choices(['enabled', 'adaptive', 'disabled']).hideHelp()).addOption(new Option('--max-turns <turns>', 'Maximum number of agentic turns in non-interactive mode. This will early exit the conversation after the specified number of turns. (only works with --print)').argParser(Number).hideHelp()).addOption(new Option('--max-budget-usd <amount>', 'Maximum dollar amount to spend on API calls (only works with --print)').argParser(value => {
-    const amount = Number(value);
-    if (isNaN(amount) || amount <= 0) {
-      throw new Error('--max-budget-usd must be a positive number greater than 0');
-    }
-    return amount;
-  })).addOption(new Option('--task-budget <tokens>', 'API-side task budget in tokens (output_config.task_budget)').argParser(value => {
+  }).addOption(new Option('-d2e, --debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp()).option('--debug-file <path>', 'Write debug logs to a specific file path (implicitly enables debug mode)', () => true).option('--verbose', 'Override verbose mode setting from config', () => true).addOption(new Option('--init', 'Run Setup hooks with init trigger, then continue').hideHelp()).addOption(new Option('--init-only', 'Run Setup and SessionStart:startup hooks, then exit').hideHelp()).addOption(new Option('--maintenance', 'Run Setup hooks with maintenance trigger, then continue').hideHelp()).option('--dangerously-skip-permissions', 'Bypass all permission checks. Recommended only for sandboxes with no internet access.', () => true).option('--allow-dangerously-skip-permissions', 'Enable bypassing all permission checks as an option, without it being enabled by default. Recommended only for sandboxes with no internet access.', () => true).addOption(new Option('--thinking <mode>', 'Thinking mode: enabled (equivalent to adaptive), disabled').choices(['enabled', 'adaptive', 'disabled']).hideHelp()).addOption(new Option('--task-budget <tokens>', 'API-side task budget in tokens (output_config.task_budget)').argParser(value => {
     const tokens = Number(value);
     if (isNaN(tokens) || tokens <= 0 || !Number.isInteger(tokens)) {
       throw new Error('--task-budget must be a positive integer');
     }
     return tokens;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : undefined;
-  }).hideHelp()).option('--from-pr [value]', 'Resume a session linked to a PR by PR number/URL, or open interactive picker with optional search term', value => value || true).option('--no-session-persistence', 'Disable session persistence - sessions will not be saved to disk and cannot be resumed (only works with --print)').addOption(new Option('--resume-session-at <message id>', 'When resuming, only messages up to and including the assistant message with <message.id> (use with --resume in print mode)').argParser(String).hideHelp()).addOption(new Option('--rewind-files <user-message-id>', 'Restore files to state at the specified user message and exit (requires --resume)').hideHelp())
+  }).hideHelp()).option('--from-pr [value]', 'Resume a session linked to a PR by PR number/URL, or open interactive picker with optional search term', value => value || true).addOption(new Option('--resume-session-at <message id>', 'When resuming, only messages up to and including the assistant message with <message.id> (use with --resume)').argParser(String).hideHelp()).addOption(new Option('--rewind-files <user-message-id>', 'Restore files to state at the specified user message and exit (requires --resume)').hideHelp())
   // @[MODEL LAUNCH]: Update the example model ID in the --model help text.
   .option('--model <model>', `Model for the current session. Provide an alias for the latest model (e.g. 'sonnet' or 'opus') or a model's full name (e.g. 'claude-sonnet-4-6').`).option('--provider <provider>', `AI provider to use (anthropic, openai, gemini, github, bedrock, vertex, ollama). Reads API keys from environment variables.`).addOption(new Option('--effort <level>', `Effort level for the current session (low, medium, high, max)`).argParser((rawValue: string) => {
     const value = rawValue.toLowerCase();
@@ -645,7 +596,7 @@ async function run(): Promise<CommanderCommand> {
       throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
     }
     return value;
-  })).option('--fallback-model <model>', 'Enable automatic fallback to specified model when default model is overloaded (only works with --print)').option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--strict-mcp-config', 'Only use MCP servers from --mcp-config, ignoring all other MCP configurations', () => true).option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
+  })).option('--fallback-model <model>', 'Enable automatic fallback to specified model when default model is overloaded').option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--strict-mcp-config', 'Only use MCP servers from --mcp-config, ignoring all other MCP configurations', () => true).option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
   // gh-33508: <paths...> (variadic) consumed everything until the next
   // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
   // `mcp` and `add` as paths, then choked on --transport as an unknown
@@ -719,8 +670,6 @@ async function run(): Promise<CommanderCommand> {
       betas = [],
       ide = false,
       sessionId,
-      includeHookEvents,
-      includePartialMessages
     } = options;
     if (options.prefill) {
       seedEarlyInput(options.prefill);
@@ -729,20 +678,13 @@ async function run(): Promise<CommanderCommand> {
     // Promise for file downloads - started early, awaited before REPL renders
     let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
 
-// Extract these separately so they can be modified if needed
-    let outputFormat = options.outputFormat;
-    let inputFormat = options.inputFormat;
     let verbose = options.verbose ?? getGlobalConfig().verbose;
-    let print = options.print;
     const init = options.init ?? false;
     const initOnly = options.initOnly ?? false;
     const maintenance = options.maintenance ?? false;
 
     // Extract disable slash commands flag
     const disableSlashCommands = options.disableSlashCommands || false;
-
-    // Allow env var to enable partial messages (used by sandbox gateway for baku)
-    const effectiveIncludePartialMessages = includePartialMessages || isEnvTruthy(process.env.CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES);
 
     // Validate session ID if provided
     if (sessionId) {
@@ -766,9 +708,6 @@ async function run(): Promise<CommanderCommand> {
         process.exit(1);
       }
     }
-
-    // Get isNonInteractiveSession from state (was set before init())
-    const isNonInteractiveSession = getIsNonInteractiveSession();
 
     // Validate that fallback model is different from main model
     if (fallbackModel && options.model && fallbackModel === options.model) {
@@ -1021,69 +960,13 @@ async function run(): Promise<CommanderCommand> {
 
     // NOTE: We do NOT call prefetchAllMcpResources here - that's deferred until after trust dialog
 
-    if (inputFormat && inputFormat !== 'text' && inputFormat !== 'stream-json') {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
-      console.error(`Error: Invalid input format "${inputFormat}".`);
-      process.exit(1);
-    }
-    if (inputFormat === 'stream-json' && outputFormat !== 'stream-json') {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
-      console.error(`Error: --input-format=stream-json requires output-format=stream-json.`);
-      process.exit(1);
-    }
-
-    // Validate replayUserMessages is only used with stream-json formats
-    if (options.replayUserMessages) {
-      if (inputFormat !== 'stream-json' || outputFormat !== 'stream-json') {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
-        console.error(`Error: --replay-user-messages requires both --input-format=stream-json and --output-format=stream-json.`);
-        process.exit(1);
-      }
-    }
-
-    // Validate includePartialMessages is only used with print mode and stream-json output
-    if (effectiveIncludePartialMessages) {
-      if (!isNonInteractiveSession || outputFormat !== 'stream-json') {
-        writeToStderr(`Error: --include-partial-messages requires --print and --output-format=stream-json.`);
-        process.exit(1);
-      }
-    }
-
-    // Validate --no-session-persistence is only used with print mode
-    if (options.sessionPersistence === false && !isNonInteractiveSession) {
-      writeToStderr(`Error: --no-session-persistence can only be used with --print mode.`);
-      process.exit(1);
-    }
     let effectivePrompt = prompt || '';
-    let inputPrompt = await getInputPrompt(effectivePrompt, (inputFormat ?? 'text') as 'text' | 'stream-json');
+    let inputPrompt = await getInputPrompt(effectivePrompt, 'text');
     profileCheckpoint('action_after_input_prompt');
 
     let tools = getTools(toolPermissionContext);
 
     profileCheckpoint('action_tools_loaded');
-    let jsonSchema: ToolInputJSONSchema | undefined;
-    if (isSyntheticOutputToolEnabled({
-      isNonInteractiveSession
-    }) && options.jsonSchema) {
-      jsonSchema = jsonParse(options.jsonSchema) as ToolInputJSONSchema;
-    }
-    if (jsonSchema) {
-      const syntheticOutputResult = createSyntheticOutputTool(jsonSchema);
-      if ('tool' in syntheticOutputResult) {
-        // Add SyntheticOutputTool to the tools array AFTER getTools() filtering.
-        // This tool is excluded from normal filtering (see tools.ts) because it's
-        // an implementation detail for structured output, not a user-controlled tool.
-        tools = [...tools, syntheticOutputResult.tool];
-        logEvent('tengu_structured_output_enabled', {
-          schema_property_count: Object.keys(jsonSchema.properties as Record<string, unknown> || {}).length as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-          has_required_fields: Boolean(jsonSchema.required) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        });
-      } else {
-        logEvent('tengu_structured_output_failure', {
-          error: 'Invalid JSON schema' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        });
-      }
-    }
 
     // IMPORTANT: setup() must be called before any other code that depends on the cwd
     profileCheckpoint('action_before_setup');
@@ -1114,52 +997,6 @@ async function run(): Promise<CommanderCommand> {
     await setupPromise;
     logForDebugging(`[STARTUP] setup() completed in ${Date.now() - setupStart}ms`);
     profileCheckpoint('action_after_setup');
-
-    // Replay user messages into stream-json only when the socket was
-    // explicitly requested. The auto-generated socket is passive — it
-    // lets tools inject if they want to, but turning it on by default
-    // shouldn't reshape stream-json for SDK consumers who never touch it.
-    // Callers who inject and also want those injections visible in the
-    // stream pass --messaging-socket-path explicitly (or --replay-user-messages).
-    let effectiveReplayUserMessages = !!options.replayUserMessages;
-    if (getIsNonInteractiveSession()) {
-      // Apply full merged settings env now (including project-scoped
-      // .claude/settings.json PATH/GIT_DIR/GIT_WORK_TREE) so gitExe() and
-      // the git spawn below see it. Trust is implicit in -p mode; the
-      // docstring at managedEnv.ts:96-97 says this applies "potentially
-      // dangerous environment variables such as LD_PRELOAD, PATH" from all
-      // sources. The later call in the isNonInteractiveSession block below
-      // is idempotent (Object.assign, configureGlobalAgents ejects prior
-      // interceptor) and picks up any plugin-contributed env after plugin
-      // init. Project settings are already loaded here:
-      // applySafeConfigEnvironmentVariables in init() called
-      // getSettings_DEPRECATED at managedEnv.ts:86 which merges all enabled
-      // sources including projectSettings/localSettings.
-      applyConfigEnvironmentVariables();
-
-      // Spawn git status/log/branch now so the subprocess execution overlaps
-      // with the getCommands await below and startDeferredPrefetches. After
-      // setup() so cwd is final and after the applyConfigEnvironmentVariables
-      // above so PATH/GIT_DIR/GIT_WORK_TREE from all sources (trusted + project)
-      // are applied. getSystemContext is memoized; the
-      // prefetchSystemContextIfSafe call in startDeferredPrefetches becomes
-      // a cache hit. The microtask from await getIsGit() drains at the
-      // getCommands Promise.all await below. Trust is implicit in -p mode
-      // (same gate as prefetchSystemContextIfSafe).
-      void getSystemContext();
-      // Kick getUserContext now too — its first await (fs.readFile in
-      // getMemoryFiles) yields naturally, so the CLAUDE.md directory walk
-      // runs during the ~280ms overlap window before the context
-      // Promise.all join in print.ts. The void getUserContext() in
-      // startDeferredPrefetches becomes a memoize cache-hit.
-      void getUserContext();
-      // Kick ensureModelStringsInitialized now — for Bedrock this triggers
-      // a 100-200ms profile fetch that was awaited serially at
-      // print.ts:739. updateBedrockModelStrings is sequential()-wrapped so
-      // the await joins the in-flight fetch. Non-Bedrock is a sync
-      // early-return (zero-cost).
-      void ensureModelStringsInitialized();
-    }
 
     // Apply --name: cache-only so no orphan file is created before the
     // session ID is finalized by --continue/--resume. materializeSessionFile
@@ -1224,52 +1061,50 @@ async function run(): Promise<CommanderCommand> {
     let stats!: StatsStore;
 
     // Show setup screens after commands are loaded
-    if (!isNonInteractiveSession) {
-      const ctx = getRenderContext(false);
-      getFpsMetrics = ctx.getFpsMetrics;
-      stats = ctx.stats;
-      // Install asciicast recorder before Ink mounts (internal-only, opt-in via CLAUDE_CODE_TERMINAL_RECORDING=1)
-      const {
-        createRoot
-      } = await import('./ink.js');
-      root = await createRoot(ctx.renderOptions);
+    const ctx = getRenderContext(false);
+    getFpsMetrics = ctx.getFpsMetrics;
+    stats = ctx.stats;
+    // Install asciicast recorder before Ink mounts (internal-only, opt-in via CLAUDE_CODE_TERMINAL_RECORDING=1)
+    const {
+      createRoot
+    } = await import('./ink.js');
+    root = await createRoot(ctx.renderOptions);
 
-      // Log startup time now, before any blocking dialog renders. Logging
-      // from REPL's first render (the old location) included however long
-      // the user sat on trust/OAuth/onboarding/resume-picker — p99 was ~70s
-      // dominated by dialog-wait time, not code-path startup.
-      logEvent('tengu_timer', {
-        event: 'startup' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        durationMs: Math.round(process.uptime() * 1000)
-      });
-      const setupScreensStart = Date.now();
-      const enableClaudeInChrome = false;
-      let onboardingShown = false;
-      try {
-        onboardingShown = await showSetupScreens(root, permissionMode, allowDangerouslySkipPermissions, commands, enableClaudeInChrome, devChannels);
-      } catch (e) {
-        throw e;
-      }
+    // Log startup time now, before any blocking dialog renders. Logging
+    // from REPL's first render (the old location) included however long
+    // the user sat on trust/OAuth/onboarding/resume-picker — p99 was ~70s
+    // dominated by dialog-wait time, not code-path startup.
+    logEvent('tengu_timer', {
+      event: 'startup' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+      durationMs: Math.round(process.uptime() * 1000)
+    });
+    const setupScreensStart = Date.now();
+    const enableClaudeInChrome = false;
+    let onboardingShown = false;
+    try {
+      onboardingShown = await showSetupScreens(root, permissionMode, allowDangerouslySkipPermissions, commands, enableClaudeInChrome, devChannels);
+    } catch (e) {
+      throw e;
+    }
 
-      // Agent memory snapshot feature removed — agents converted to Skills
+    // Agent memory snapshot feature removed — agents converted to Skills
 
-      // Skip executing /login if we just completed onboarding for it
-      if (onboardingShown && prompt?.trim().toLowerCase() === '/login') {
-        prompt = '';
-      }
-      if (onboardingShown) {
-        // Refresh auth-dependent services now that the user has logged in during onboarding.
-        // Keep in sync with the post-login logic in src/commands/login.tsx
-        // Clear user data cache BEFORE GrowthBook refresh so it picks up fresh credentials
-        resetUserCache();
-        // Refresh GrowthBook after login to get updated feature flags (e.g., for claude.ai MCPs)
-        refreshGrowthBookAfterAuthChange();
-      }
+    // Skip executing /login if we just completed onboarding for it
+    if (onboardingShown && prompt?.trim().toLowerCase() === '/login') {
+      prompt = '';
+    }
+    if (onboardingShown) {
+      // Refresh auth-dependent services now that the user has logged in during onboarding.
+      // Keep in sync with the post-login logic in src/commands/login.tsx
+      // Clear user data cache BEFORE GrowthBook refresh so it picks up fresh credentials
+      resetUserCache();
+      // Refresh GrowthBook after login to get updated feature flags (e.g., for claude.ai MCPs)
+      refreshGrowthBookAfterAuthChange();
+    }
 
-      const orgValidation = await validateForceLoginOrg();
-      if (!orgValidation.valid) {
-        await exitWithError(root, orgValidation.message);
-      }
+    const orgValidation = await validateForceLoginOrg();
+    if (!orgValidation.valid) {
+      await exitWithError(root, orgValidation.message);
     }
 
     // If gracefulShutdown was initiated (e.g., user rejected trust dialog),
@@ -1281,8 +1116,7 @@ async function run(): Promise<CommanderCommand> {
       return;
     }
 
-if (!isNonInteractiveSession) {
-      const {
+const {
         errors
       } = getSettingsWithErrors();
       const nonMcpErrors = errors.filter(e => !e.mcpErrorMetadata);
@@ -1296,7 +1130,6 @@ if (!isNonInteractiveSession) {
           onExit: () => gracefulShutdownSync(1)
         });
       }
-    }
 
     // Check quota status, fast mode, passes eligibility, and bootstrap data
     // --bare / SIMPLE: skip — these are cache-warms for the REPL's
@@ -1335,9 +1168,7 @@ if (!isNonInteractiveSession) {
       // Resolve fast mode org status from cache (no network)
       resolveFastModeStatusFromCache();
     }
-    if (!isNonInteractiveSession) {
-      void refreshExampleCommands(); // Pre-fetch example commands (runs git log, no API call)
-    }
+    void refreshExampleCommands(); // Pre-fetch example commands (runs git log, no API call)
 
     const {
       servers: existingMcpConfigs
@@ -1361,23 +1192,14 @@ if (!isNonInteractiveSession) {
     }
     profileCheckpoint('action_mcp_configs_loaded');
 
-    // Prefetch MCP resources after trust dialog (this is where execution happens).
-    // Interactive mode only: print mode defers connects until headlessStore exists
-    // and pushes per-server (below), so ToolSearch's pending-client handling works
-    // and one slow server doesn't block the batch.
-    const localMcpPromise = isNonInteractiveSession ? Promise.resolve({
-      clients: [],
-      tools: [],
-      commands: []
-    }) : prefetchAllMcpResources(regularMcpConfigs);
+    // Prefetch MCP resources after trust dialog.
+    const localMcpPromise = prefetchAllMcpResources(regularMcpConfigs);
     const mcpPromise = localMcpPromise;
 
     // Start hooks early so they run in parallel with MCP connections.
-    // Skip for initOnly/init/maintenance (handled separately), non-interactive
-    // (handled via setupTrigger), and resume/continue (conversationRecovery.ts
-    // fires 'resume' instead — without this guard, hooks fire TWICE on /resume
-    // and the second systemMessage clobbers the first. gh-30825)
-    const hooksPromise = initOnly || init || maintenance || isNonInteractiveSession || options.continue || options.resume ? null : processSessionStartHooks('startup', {
+    // Skip for initOnly/init/maintenance (handled separately) and resume/continue
+    // (conversationRecovery.ts fires 'resume' instead).
+    const hooksPromise = initOnly || init || maintenance || options.continue || options.resume ? null : processSessionStartHooks('startup', {
       agentType: undefined,
       model: resolvedInitialModel
     });
@@ -1442,9 +1264,6 @@ if (!isNonInteractiveSession) {
       verbose,
       debug,
       debugToStderr,
-      print: print ?? false,
-      outputFormat: outputFormat ?? 'text',
-      inputFormat: inputFormat ?? 'text',
       numAllowedTools: allowedTools.length,
       numDisallowedTools: disallowedTools.length,
       mcpClientCount: Object.keys(allMcpConfigs).length,
@@ -1494,8 +1313,6 @@ if (!isNonInteractiveSession) {
     // the next interactive session will reconcile. The await here was
     // blocking -p on a marketplace round-trip.
     profileCheckpoint('action_after_plugins_init');
-    if (!isNonInteractiveSession) {
-    }
     const setupTrigger = initOnly || init ? 'init' : maintenance ? 'maintenance' : null;
     if (initOnly) {
       applyConfigEnvironmentVariables();
@@ -1509,193 +1326,6 @@ if (!isNonInteractiveSession) {
       return;
     }
 
-    // --print mode
-    if (isNonInteractiveSession) {
-      if (outputFormat === 'stream-json' || outputFormat === 'json') {
-        setHasFormattedOutput(true);
-      }
-
-      // Apply full environment variables in print mode since trust dialog is bypassed
-      // This includes potentially dangerous environment variables from untrusted sources
-      // but print mode is considered trusted (as documented in help text)
-      applyConfigEnvironmentVariables();
-
-      // Initialize telemetry after env vars are applied so OTEL endpoint env vars and
-      // otelHeadersHelper (which requires trust to execute) are available.
-      initializeTelemetryAfterTrust();
-
-      // Kick SessionStart hooks now so the subprocess spawn overlaps with
-      // MCP connect + plugin init + print.ts import below. loadInitialMessages
-      // joins this at print.ts:4397. Guarded same as loadInitialMessages —
-      // continue/resume paths don't fire startup hooks (or fire them
-      // conditionally inside the resume branch, where this promise is
-      // undefined and the ?? fallback runs). Also skip when setupTrigger is
-      // set — those paths run setup hooks first (print.ts:544), and session
-      // start hooks must wait until setup completes.
-      const sessionStartHooksPromise = options.continue || options.resume || setupTrigger ? undefined : processSessionStartHooks('startup');
-      // Suppress transient unhandledRejection if this rejects before
-      // loadInitialMessages awaits it. Downstream await still observes the
-      // rejection — this just prevents the spurious global handler fire.
-      sessionStartHooksPromise?.catch(() => {});
-      profileCheckpoint('before_validateForceLoginOrg');
-      // Validate org restriction for non-interactive sessions
-      const orgValidation = await validateForceLoginOrg();
-      if (!orgValidation.valid) {
-        process.stderr.write(orgValidation.message + '\n');
-        process.exit(1);
-      }
-
-      // Headless mode supports all prompt commands and some local commands
-      // If disableSlashCommands is true, return empty array
-      const commandsHeadless = disableSlashCommands ? [] : commands.filter(command => command.type === 'prompt' && !command.disableNonInteractive || command.type === 'local' && command.supportsNonInteractive);
-      const defaultState = getDefaultAppState();
-      const headlessInitialState: AppState = {
-        ...defaultState,
-        mcp: {
-          ...defaultState.mcp,
-          clients: mcpClients,
-          commands: mcpCommands,
-          tools: mcpTools
-        },
-        toolPermissionContext,
-        effortValue: parseEffortValue(options.effort) ?? getInitialEffortSetting(),
-        ...(isFastModeEnabled() && {
-          fastMode: getInitialFastModeSetting(effectiveModel ?? null)
-        }),
-        ...(isAdvisorEnabled() && advisorModel && {
-          advisorModel
-        }),
-        // kairosEnabled gates the async fire-and-forget path in
-        // processSlashCommand and AgentTool's shouldRunAsync. The REPL
-        // initialState sets this at
-        // ~3459; headless was defaulting to false, so the daemon child's
-        // scheduled tasks and Agent-tool calls ran synchronously — N
-        // overdue cron tasks on spawn = N serial subagent turns blocking
-        // user input. Computed at :1620, well before this branch.
-      };
-
-      // Init app state
-      const headlessStore = createStore(headlessInitialState, onChangeAppState);
-
-      // Check if bypassPermissions should be disabled based on Statsig gate
-      // This runs in parallel to the code below, to avoid blocking the main loop.
-      if (toolPermissionContext.mode === 'bypassPermissions' || allowDangerouslySkipPermissions) {
-        void checkAndDisableBypassPermissions(toolPermissionContext);
-      }
-
-      // Async check of auto mode gate — corrects state and disables auto if needed.
-      // Gated on TRANSCRIPT_CLASSIFIER (not USER_TYPE) so GrowthBook kill switch runs for external builds too.
-      if (feature('TRANSCRIPT_CLASSIFIER')) {
-        void verifyAutoModeGateAccess(toolPermissionContext, headlessStore.getState().fastMode).then(({
-          updateContext
-        }) => {
-          headlessStore.setState(prev => {
-            const nextCtx = updateContext(prev.toolPermissionContext);
-            if (nextCtx === prev.toolPermissionContext) return prev;
-            return {
-              ...prev,
-              toolPermissionContext: nextCtx
-            };
-          });
-        });
-      }
-
-      // Set global state for session persistence
-      if (options.sessionPersistence === false) {
-        setSessionPersistenceDisabled(true);
-      }
-
-      // Store SDK betas in global state for context window calculation
-      // Only store allowed betas (filters by allowlist and subscriber status)
-      setSdkBetas(filterAllowedSdkBetas(betas));
-
-      // Print-mode MCP: per-server incremental push into headlessStore.
-      // Mirrors useManageMCPConnections — push pending first (so ToolSearch's
-      // pending-check at ToolSearchTool.ts:334 sees them), then replace with
-      // connected/failed as each server settles.
-      const connectMcpBatch = (configs: Record<string, ScopedMcpServerConfig>, label: string): Promise<void> => {
-        if (Object.keys(configs).length === 0) return Promise.resolve();
-        headlessStore.setState(prev => ({
-          ...prev,
-          mcp: {
-            ...prev.mcp,
-            clients: [...prev.mcp.clients, ...Object.entries(configs).map(([name, config]) => ({
-              name,
-              type: 'pending' as const,
-              config
-            }))]
-          }
-        }));
-        return getMcpToolsCommandsAndResources(({
-          client,
-          tools,
-          commands
-        }) => {
-          headlessStore.setState(prev => ({
-            ...prev,
-            mcp: {
-              ...prev.mcp,
-              clients: prev.mcp.clients.some(c => c.name === client.name) ? prev.mcp.clients.map(c => c.name === client.name ? client : c) : [...prev.mcp.clients, client],
-              tools: uniqBy([...prev.mcp.tools, ...tools], 'name'),
-              commands: uniqBy([...prev.mcp.commands, ...commands], 'name')
-            }
-          }));
-        }, configs).catch(err => logForDebugging(`[MCP] ${label} connect error: ${err}`));
-      };
-      // Await all MCP configs — print mode is often single-turn, so
-      // "late-connecting servers visible next turn" doesn't help. SDK init
-      // message and turn-1 tool list both need configured MCP tools present.
-      // Zero-server case is free via the early return in connectMcpBatch.
-      // Connectors parallelize inside getMcpToolsCommandsAndResources
-      // (processBatched with Promise.all). claude.ai is awaited too — its
-      // fetch was kicked off early (line ~2558) so only residual time blocks
-      // here. --bare skips claude.ai entirely for perf-sensitive scripts.
-      profileCheckpoint('before_connectMcp');
-      await connectMcpBatch(regularMcpConfigs, 'regular');
-      profileCheckpoint('after_connectMcp');
-      // claude.ai connector dedup/connect removed — user does not use claude.ai accounts
-
-      // In headless mode, start deferred prefetches immediately (no user typing delay)
-      // --bare / SIMPLE: startDeferredPrefetches early-returns internally.
-      // backgroundHousekeeping (initExtractMemories, pruneShellSnapshots,
-      // cleanupOldMessageFiles) and sdkHeapDumpMonitor are all bookkeeping
-      // that scripted calls don't need — the next interactive session reconciles.
-      startDeferredPrefetches();
-      void import('./utils/backgroundHousekeeping.js').then(m => m.startBackgroundHousekeeping());
-      profileCheckpoint('before_print_import');
-      const {
-        runHeadless
-      } = await import('src/cli/print.js');
-      profileCheckpoint('after_print_import');
-      void runHeadless(inputPrompt, () => headlessStore.getState(), headlessStore.setState, commandsHeadless, tools, sdkMcpConfigs, agentDefinitions.activeAgents, {
-        continue: options.continue,
-        resume: options.resume,
-        verbose: verbose,
-        outputFormat: outputFormat,
-        jsonSchema,
-        permissionPromptToolName: options.permissionPromptTool,
-        allowedTools,
-        thinkingConfig,
-        maxTurns: options.maxTurns,
-        maxBudgetUsd: options.maxBudgetUsd,
-        taskBudget: options.taskBudget ? {
-          total: options.taskBudget
-        } : undefined,
-        systemPrompt,
-        appendSystemPrompt,
-        userSpecifiedModel: effectiveModel,
-        fallbackModel: userSpecifiedFallbackModel,
-        replayUserMessages: effectiveReplayUserMessages,
-        includePartialMessages: effectiveIncludePartialMessages,
-        forkSession: options.forkSession || false,
-        resumeSessionAt: options.resumeSessionAt || undefined,
-        rewindFiles: options.rewindFiles,
-        enableAuthStatus: options.enableAuthStatus,
-        setupTrigger: setupTrigger ?? undefined,
-        sessionStartHooksPromise
-      });
-      return;
-    }
 
     // Log model config at startup
     logEvent('tengu_startup_manual_model_config', {
@@ -2106,21 +1736,6 @@ if (!isNonInteractiveSession) {
   // TODO: --agent flag kept but usage expected to change
   profileCheckpoint('run_main_options_built');
 
-  // -p/--print mode: skip subcommand registration. The 52 subcommands
-  // (mcp, auth, plugin, skill, task, config, doctor, update, etc.) are
-  // never dispatched in print mode — commander routes the prompt to the
-  // default action. The subcommand registration path was measured at ~65ms
-  // on baseline — mostly the isBridgeEnabled() call (25ms settings Zod parse
-  // + 40ms sync keychain subprocess), both hidden by the try/catch that
-  // always returns false before enableConfigs().
-  const isPrintMode = process.argv.includes('-p') || process.argv.includes('--print');
-  if (isPrintMode) {
-    profileCheckpoint('run_before_parse');
-    await program.parseAsync(process.argv);
-    profileCheckpoint('run_after_parse');
-    return program;
-  }
-
   // claude mcp
 
   const mcp = program.command('mcp').description('Configure and manage MCP servers').configureHelp(createSortedHelpConfig()).enablePositionalOptions();
@@ -2284,9 +1899,6 @@ async function logTenguInit({
   verbose,
   debug,
   debugToStderr,
-  print,
-  outputFormat,
-  inputFormat,
   numAllowedTools,
   numDisallowedTools,
   mcpClientCount,
@@ -2306,9 +1918,6 @@ async function logTenguInit({
   verbose: boolean;
   debug: boolean;
   debugToStderr: boolean;
-  print: boolean;
-  outputFormat: string;
-  inputFormat: string;
   numAllowedTools: number;
   numDisallowedTools: number;
   mcpClientCount: number;
@@ -2331,9 +1940,6 @@ async function logTenguInit({
       verbose,
       debug,
       debugToStderr,
-      print,
-      outputFormat: outputFormat as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      inputFormat: inputFormat as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       numAllowedTools,
       numDisallowedTools,
       mcpClientCount,

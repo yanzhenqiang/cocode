@@ -13,7 +13,6 @@
  */
 
 import { z } from 'zod/v4'
-import { getIsNonInteractiveSession } from '../bootstrap/state.js'
 import { logEvent } from '../services/analytics/index.js'
 import { queryHaiku } from '../services/api/claude.js'
 import type { Message } from '../types/message.js'
@@ -105,7 +104,7 @@ export async function generateSessionTitle(
         // Reflect the actual session mode — this module is called from
         // both the SDK print path (non-interactive) and the CCR remote
         // session path via useRemoteSession (interactive).
-        isNonInteractiveSession: getIsNonInteractiveSession(),
+        isNonInteractiveSession: false,
         hasAppendSystemPrompt: false,
         mcpTools: [],
       },

@@ -4,7 +4,7 @@ import {
   checkStatsigFeatureGate_CACHED_MAY_BE_STALE,
   getFeatureValue_CACHED_MAY_BE_STALE,
 } from 'src/services/analytics/growthbook.js'
-import { getIsNonInteractiveSession, getSdkBetas } from '../bootstrap/state.js'
+import { getSdkBetas } from '../bootstrap/state.js'
 import {
   CLAUDE_CODE_20250219_BETA_HEADER,
   CLI_INTERNAL_BETA_HEADER,
@@ -256,7 +256,7 @@ export const getAllModelBetas = memoize((model: string): string[] => {
   if (
     includeFirstPartyOnlyBetas &&
     modelSupportsISP(model) &&
-    !getIsNonInteractiveSession() &&
+    true &&
     getInitialSettings().showThinkingSummaries !== true
   ) {
     betaHeaders.push(REDACT_THINKING_BETA_HEADER)

@@ -154,7 +154,6 @@ export async function sideQuery(opts: SideQueryOptions): Promise<BetaMessage> {
           {
             type: 'text' as const,
             text: getCLISyspromptPrefix({
-              isNonInteractive: false,
               hasAppendSystemPrompt: false,
             }),
           },

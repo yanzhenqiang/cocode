@@ -19,7 +19,6 @@ import {
 } from 'src/utils/model/providers.js'
 import { getProxyFetchOptions } from 'src/utils/proxy.js'
 import {
-  getIsNonInteractiveSession,
   getSessionId,
 } from '../../bootstrap/state.js'
 import { getOauthConfig } from '../../constants/oauth.js'
@@ -234,7 +233,7 @@ export async function getAnthropicClient({
     shouldUseFirstPartyAnthropicAuth(providerOverride)
 
   if (shouldUseFirstPartyAuth) {
-    await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
+    await configureApiKeyHeaders(defaultHeaders)
   }
 
   const resolvedFetch = buildFetch(fetchOverride, source)
@@ -451,11 +450,10 @@ export async function getAnthropicClient({
 
 async function configureApiKeyHeaders(
   headers: Record<string, string>,
-  isNonInteractiveSession: boolean,
 ): Promise<void> {
   const token =
     process.env.ANTHROPIC_AUTH_TOKEN ||
-    (await getApiKeyFromApiKeyHelper(isNonInteractiveSession))
+    (await getApiKeyFromApiKeyHelper())
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }

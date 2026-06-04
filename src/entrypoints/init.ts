@@ -2,7 +2,6 @@ import { profileCheckpoint } from '../utils/startupProfiler.js'
 import '../bootstrap/state.js'
 import '../utils/config.js'
 import memoize from 'lodash-es/memoize.js'
-import { getIsNonInteractiveSession } from 'src/bootstrap/state.js'
 import { preconnectAnthropicApi } from '../utils/apiPreconnect.js'
 import { applyExtraCACertsFromConfig } from '../utils/caCertsConfig.js'
 import { registerCleanup } from '../utils/cleanupRegistry.js'
@@ -151,17 +150,6 @@ export const init = memoize(async (): Promise<void> => {
     profileCheckpoint('init_function_end')
   } catch (error) {
     if (error instanceof ConfigParseError) {
-      // Skip the interactive Ink dialog when we can't safely render it.
-      // The dialog breaks JSON consumers (e.g. desktop marketplace plugin
-      // manager running `plugin marketplace list --json` in a VM sandbox).
-      if (getIsNonInteractiveSession()) {
-        process.stderr.write(
-          `Configuration error in ${error.filePath}: ${error.message}\n`,
-        )
-        gracefulShutdownSync(1)
-        return
-      }
-
       // Show the invalid config dialog with the error object and wait for it to complete
       return import('../components/InvalidConfigDialog.js').then(m =>
         m.showInvalidConfigDialog({ error }),

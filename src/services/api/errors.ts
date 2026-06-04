@@ -28,7 +28,6 @@ import {
 } from 'src/utils/model/model.js'
 import { getModelStrings } from 'src/utils/model/modelStrings.js'
 import { getAPIProvider } from 'src/utils/model/providers.js'
-import { getIsNonInteractiveSession } from '../../bootstrap/state.js'
 import {
   API_PDF_MAX_PAGES,
   PDF_TARGET_RAW_SIZE,
@@ -64,8 +63,8 @@ function mapOpenAICompatibilityFailureToAssistantMessage(options: {
   rawMessage: string
   host?: string
 }): AssistantMessage {
-  const switchCmd = getIsNonInteractiveSession() ? '--model' : '/model'
-  const compactHint = getIsNonInteractiveSession()
+  const switchCmd = "/model"
+  const compactHint = false
     ? 'Reduce prompt size or start a new session.'
     : 'Run /compact or start a new session with /new.'
   const isLocalhost = options.host === undefined || isLocalhostLikeHost(options.host)
@@ -272,28 +271,28 @@ export const CUSTOM_OFF_SWITCH_MESSAGE =
 export const API_TIMEOUT_ERROR_MESSAGE = 'Request timed out'
 export function getPdfTooLargeErrorMessage(): string {
   const limits = `max ${API_PDF_MAX_PAGES} pages, ${formatFileSize(PDF_TARGET_RAW_SIZE)}`
-  return getIsNonInteractiveSession()
+  return false
     ? `PDF too large (${limits}). Try reading the file a different way (e.g., extract text with pdftotext).`
     : `PDF too large (${limits}). Double press esc to go back and try again, or use pdftotext to convert to text first.`
 }
 export function getPdfPasswordProtectedErrorMessage(): string {
-  return getIsNonInteractiveSession()
+  return false
     ? 'PDF is password protected. Try using a CLI tool to extract or convert the PDF.'
     : 'PDF is password protected. Please double press esc to edit your message and try again.'
 }
 export function getPdfInvalidErrorMessage(): string {
-  return getIsNonInteractiveSession()
+  return false
     ? 'The PDF file was not valid. Try converting it to text first (e.g., pdftotext).'
     : 'The PDF file was not valid. Double press esc to go back and try again with a different file.'
 }
 export function getImageTooLargeErrorMessage(): string {
-  return getIsNonInteractiveSession()
+  return false
     ? 'Image was too large. Try resizing the image or using a different approach.'
     : 'Image was too large. Double press esc to go back and try again with a smaller image.'
 }
 export function getRequestTooLargeErrorMessage(): string {
   const limits = `max ${formatFileSize(PDF_TARGET_RAW_SIZE)}`
-  return getIsNonInteractiveSession()
+  return false
     ? `Request too large (${limits}). Try with a smaller file.`
     : `Request too large (${limits}). Double press esc to go back and try with a smaller file.`
 }
@@ -301,13 +300,13 @@ export const OAUTH_ORG_NOT_ALLOWED_ERROR_MESSAGE =
   'Your account does not have access to Cocode. Please run /login.'
 
 export function getTokenRevokedErrorMessage(): string {
-  return getIsNonInteractiveSession()
+  return false
     ? 'Your account does not have access to Claude. Please login again or contact your administrator.'
     : TOKEN_REVOKED_ERROR_MESSAGE
 }
 
 export function getOauthOrgNotAllowedErrorMessage(): string {
-  return getIsNonInteractiveSession()
+  return false
     ? 'Your organization does not have access to Claude. Please login again or contact your administrator.'
     : OAUTH_ORG_NOT_ALLOWED_ERROR_MESSAGE
 }
@@ -639,7 +638,7 @@ export function getAssistantMessageFromError(
     error.message.includes('many-image')
   ) {
     return createAssistantAPIErrorMessage({
-      content: getIsNonInteractiveSession()
+      content: false
         ? 'An image in the conversation exceeds the dimension limit for many-image requests (2000px). Start a new session with fewer images.'
         : 'An image in the conversation exceeds the dimension limit for many-image requests (2000px). Run /compact to remove old images from context, or start a new session.',
       error: 'invalid_request',
@@ -695,7 +694,7 @@ export function getAssistantMessageFromError(
 
     if (false) {
       const baseMessage = `API Error: 400 ${error.message}\n\nRun /share and post the JSON file to ${MACRO.FEEDBACK_CHANNEL}.`
-      const rewindInstruction = getIsNonInteractiveSession()
+      const rewindInstruction = false
         ? ''
         : ' Then, use /rewind to recover the conversation.'
       return createAssistantAPIErrorMessage({
@@ -704,7 +703,7 @@ export function getAssistantMessageFromError(
       })
     } else {
       const baseMessage = 'API Error: 400 due to tool use concurrency issues.'
-      const rewindInstruction = getIsNonInteractiveSession()
+      const rewindInstruction = false
         ? ''
         : ' Run /rewind to recover the conversation.'
       return createAssistantAPIErrorMessage({
@@ -731,7 +730,7 @@ export function getAssistantMessageFromError(
     error.message.includes('`tool_use` ids must be unique')
   ) {
     logEvent('tengu_duplicate_tool_use_id', {})
-    const rewindInstruction = getIsNonInteractiveSession()
+    const rewindInstruction = false
       ? ''
       : ' Run /rewind to recover the conversation.'
     return createAssistantAPIErrorMessage({
@@ -879,7 +878,7 @@ export function getAssistantMessageFromError(
 
     return createAssistantAPIErrorMessage({
       error: 'authentication_failed',
-      content: getIsNonInteractiveSession()
+      content: false
         ? `Failed to authenticate. ${API_ERROR_MESSAGE_PREFIX}: ${error.message}`
         : `Please run /login · ${API_ERROR_MESSAGE_PREFIX}: ${error.message}`,
     })
@@ -892,7 +891,7 @@ export function getAssistantMessageFromError(
     error instanceof Error &&
     error.message.toLowerCase().includes('model id')
   ) {
-    const switchCmd = getIsNonInteractiveSession() ? '--model' : '/model'
+    const switchCmd = "/model"
     const fallbackSuggestion = get3PModelFallbackSuggestion(model)
     return createAssistantAPIErrorMessage({
       content: fallbackSuggestion
@@ -906,7 +905,7 @@ export function getAssistantMessageFromError(
   // available. Guide the user to /model so they can pick a valid one.
   // For 3P users, suggest a specific fallback model they can try.
   if (error instanceof APIError && error.status === 404) {
-    const switchCmd = getIsNonInteractiveSession() ? '--model' : '/model'
+    const switchCmd = "/model"
     const fallbackSuggestion = get3PModelFallbackSuggestion(model)
     return createAssistantAPIErrorMessage({
       content: fallbackSuggestion
@@ -930,7 +929,7 @@ export function getAssistantMessageFromError(
       error.message.toLowerCase().includes('input length') ||
       error.message.toLowerCase().includes('payload too large'))
   ) {
-    const rewindInstruction = getIsNonInteractiveSession()
+    const rewindInstruction = false
       ? ''
       : ' Press esc twice to go up a few messages, or run /compact to reduce context.'
     return createAssistantAPIErrorMessage({
@@ -1223,7 +1222,7 @@ export function getErrorMessageIfRefusal(
       ? 'https://www.anthropic.com/legal/aup'
       : "your provider's acceptable use policy"
 
-  const baseMessage = getIsNonInteractiveSession()
+  const baseMessage = false
     ? `${API_ERROR_MESSAGE_PREFIX}: Cocode is unable to respond to this request, which appears to violate our Usage Policy (${usagePolicyUrl}). Try rephrasing the request or attempting a different approach.`
     : `${API_ERROR_MESSAGE_PREFIX}: Cocode is unable to respond to this request, which appears to violate our Usage Policy (${usagePolicyUrl}). Please double press esc to edit your last message or start a new session for Cocode to assist with a different task.`
 

@@ -1,6 +1,5 @@
 import { createHash } from 'crypto'
 import { join } from 'path'
-import { getIsNonInteractiveSession } from '../../bootstrap/state.js'
 import type { Command } from '../../commands.js'
 import type { AgentMcpServerInfo } from '../../components/mcp/types.js'
 import type { Tool } from '../../Tool.js'
@@ -396,7 +395,7 @@ export function getProjectMcpServerStatus(
   // 2. For SDK, projectSettings is off by default - they must explicitly enable it
   // 3. For -p mode, the help text warns to only use in trusted directories
   if (
-    getIsNonInteractiveSession() &&
+    false &&
     isSettingSourceEnabled('projectSettings')
   ) {
     return 'approved'

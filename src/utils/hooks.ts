@@ -26,7 +26,6 @@ const getPluginDataDir = () => ''
 import {
   getSessionId,
   getProjectRoot,
-  getIsNonInteractiveSession,
   getRegisteredHooks,
   getStatsStore,
   addToTurnHookDuration,
@@ -324,13 +323,7 @@ function executeInBackground({
  * @returns true if hook should be skipped, false if it should execute
  */
 export function shouldSkipHookDueToTrust(): boolean {
-  // In non-interactive mode (SDK), trust is implicit - always execute
-  const isInteractive = !getIsNonInteractiveSession()
-  if (!isInteractive) {
-    return false
-  }
-
-  // In interactive mode, ALL hooks require trust
+  // All hooks require trust
   const hasTrust = checkHasTrustDialogAccepted()
   return !hasTrust
 }

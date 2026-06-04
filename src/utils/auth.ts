@@ -9,7 +9,6 @@ import {
 } from 'src/services/analytics/index.js'
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import {
-  getIsNonInteractiveSession,
   preferThirdPartyAuthentication,
 } from '../bootstrap/state.js'
 type OAuthTokens = any
@@ -411,9 +410,7 @@ export function getApiKeyHelperElapsedMs(): number {
   return startedAt ? Date.now() - startedAt : 0
 }
 
-export async function getApiKeyFromApiKeyHelper(
-  isNonInteractiveSession: boolean,
-): Promise<string | null> {
+export async function getApiKeyFromApiKeyHelper(): Promise<string | null> {
   if (!getConfiguredApiKeyHelper()) return null
   const ttl = calculateApiKeyHelperTTL()
   if (_apiKeyHelperCache) {
@@ -425,7 +422,6 @@ export async function getApiKeyFromApiKeyHelper(
     if (!_apiKeyHelperInflight) {
       _apiKeyHelperInflight = {
         promise: _runAndCache(
-          isNonInteractiveSession,
           false,
           _apiKeyHelperEpoch,
         ),
@@ -437,19 +433,18 @@ export async function getApiKeyFromApiKeyHelper(
   // Cold cache — deduplicate concurrent calls
   if (_apiKeyHelperInflight) return _apiKeyHelperInflight.promise
   _apiKeyHelperInflight = {
-    promise: _runAndCache(isNonInteractiveSession, true, _apiKeyHelperEpoch),
+    promise: _runAndCache(true, _apiKeyHelperEpoch),
     startedAt: Date.now(),
   }
   return _apiKeyHelperInflight.promise
 }
 
 async function _runAndCache(
-  isNonInteractiveSession: boolean,
   isCold: boolean,
   epoch: number,
 ): Promise<string | null> {
   try {
-    const value = await _executeApiKeyHelper(isNonInteractiveSession)
+    const value = await _executeApiKeyHelper()
     if (epoch !== _apiKeyHelperEpoch) return value
     if (value !== null) {
       _apiKeyHelperCache = { value, timestamp: Date.now() }
@@ -480,9 +475,7 @@ async function _runAndCache(
   }
 }
 
-async function _executeApiKeyHelper(
-  isNonInteractiveSession: boolean,
-): Promise<string | null> {
+async function _executeApiKeyHelper(): Promise<string | null> {
   const apiKeyHelper = getConfiguredApiKeyHelper()
   if (!apiKeyHelper) {
     return null
@@ -490,7 +483,7 @@ async function _executeApiKeyHelper(
 
   if (isApiKeyHelperFromProjectOrLocalSettings()) {
     const hasTrust = checkHasTrustDialogAccepted()
-    if (!hasTrust && !isNonInteractiveSession) {
+    if (!hasTrust) {
       const error = new Error(
         `Security: apiKeyHelper executed before workspace trust is confirmed. If you see this message, post in ${MACRO.FEEDBACK_CHANNEL}.`,
       )
@@ -533,9 +526,7 @@ export function clearApiKeyHelperCache(): void {
   _apiKeyHelperInflight = null
 }
 
-export function prefetchApiKeyFromApiKeyHelperIfSafe(
-  isNonInteractiveSession: boolean,
-): void {
+export function prefetchApiKeyFromApiKeyHelperIfSafe(): void {
   // Skip if trust not yet accepted — the inner _executeApiKeyHelper check
   // would catch this too, but would fire a false-positive analytics event.
   if (
@@ -544,7 +535,7 @@ export function prefetchApiKeyFromApiKeyHelperIfSafe(
   ) {
     return
   }
-  void getApiKeyFromApiKeyHelper(isNonInteractiveSession)
+  void getApiKeyFromApiKeyHelper()
 }
 
 
@@ -622,7 +613,7 @@ async function runGcpAuthRefresh(): Promise<boolean> {
     // Check if trust has been established for this project
     // Pass true to indicate this is a dangerous feature that requires trust
     const hasTrust = checkHasTrustDialogAccepted()
-    if (!hasTrust && !getIsNonInteractiveSession()) {
+    if (!hasTrust && !false) {
       const error = new Error(
         `Security: gcpAuthRefresh executed before workspace trust is confirmed. If you see this message, post in ${MACRO.FEEDBACK_CHANNEL}.`,
       )
@@ -741,7 +732,7 @@ export function prefetchGcpCredentialsIfSafe(): void {
   if (isGcpAuthRefreshFromProjectSettings()) {
     // Only prefetch if trust has already been established
     const hasTrust = checkHasTrustDialogAccepted()
-    if (!hasTrust && !getIsNonInteractiveSession()) {
+    if (!hasTrust && !false) {
       // Don't prefetch - wait for trust to be established first
       return
     }

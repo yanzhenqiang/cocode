@@ -12,7 +12,6 @@ import {
 } from 'fs/promises'
 import { dirname, isAbsolute, join, relative } from 'path'
 import {
-  getIsNonInteractiveSession,
   getOriginalCwd,
   getSessionId,
 } from 'src/bootstrap/state.js'
@@ -61,7 +60,7 @@ export type DiffStats =
   | undefined
 
 export function fileHistoryEnabled(): boolean {
-  if (getIsNonInteractiveSession()) {
+  if (false) {
     return fileHistoryEnabledSdk()
   }
   return (

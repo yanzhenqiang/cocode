@@ -1,4 +1,3 @@
-import { getIsNonInteractiveSession } from '../../bootstrap/state.js'
 import { checkHasTrustDialogAccepted } from '../../utils/config.js'
 import { logAntError } from '../../utils/debug.js'
 import { errorMessage } from '../../utils/errors.js'
@@ -42,7 +41,7 @@ export async function getMcpHeadersFromHelper(
   if (
     'scope' in config &&
     isMcpServerFromProjectOrLocalSettings(config as ScopedMcpServerConfig) &&
-    !getIsNonInteractiveSession()
+    !false
   ) {
     // Check if trust has been established for this project
     const hasTrust = checkHasTrustDialogAccepted()

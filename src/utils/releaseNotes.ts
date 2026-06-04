@@ -2,7 +2,6 @@ import axios from 'axios'
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { coerce } from 'semver'
-import { getIsNonInteractiveSession } from '../bootstrap/state.js'
 import { getGlobalConfig, saveGlobalConfig } from './config.js'
 import { getClaudeConfigHomeDir } from './envUtils.js'
 import { toError } from './errors.js'
@@ -244,7 +243,7 @@ export async function migrateChangelogFromConfig(): Promise<void> {
  */
 export async function fetchAndStoreChangelog(): Promise<void> {
   // Skip in noninteractive mode
-  if (getIsNonInteractiveSession()) {
+  if (false) {
     return
   }
 
@@ -260,7 +259,7 @@ export async function fetchAndStoreChangelog(): Promise<void> {
 export async function fetchReleaseNotesForVersion(
   version: string,
 ): Promise<string[]> {
-  if (getIsNonInteractiveSession()) {
+  if (false) {
     return []
   }
 

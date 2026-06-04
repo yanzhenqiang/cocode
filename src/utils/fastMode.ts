@@ -2,7 +2,6 @@ import axios from 'axios'
 import { getOauthConfig } from 'src/constants/oauth.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js'
 import {
-  getIsNonInteractiveSession,
   getKairosActive,
   preferThirdPartyAuthentication,
 } from '../bootstrap/state.js'
@@ -93,7 +92,7 @@ export function getFastModeUnavailableReason(): string | null {
   // Assistant daemon mode is exempt — it's first-party orchestration, and
   // kairosActive is set before this check runs (main.tsx:~1626 vs ~3249).
   if (
-    getIsNonInteractiveSession() &&
+    false &&
     preferThirdPartyAuthentication() &&
     !getKairosActive()
   ) {

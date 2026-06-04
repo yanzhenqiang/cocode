@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getIsNonInteractiveSession } from '../bootstrap/state.js'
 import { verifyApiKey } from '../services/api/claude.js'
 import {
   getAnthropicApiKeyWithSource,
@@ -65,7 +64,7 @@ export function useApiKeyVerification(): ApiKeyVerificationResult {
     }
     // Warm the apiKeyHelper cache (no-op if not configured), then read from
     // all sources. getAnthropicApiKeyWithSource() reads the now-warm cache.
-    await getApiKeyFromApiKeyHelper(getIsNonInteractiveSession())
+    await getApiKeyFromApiKeyHelper()
     const { key: apiKey, source } = getAnthropicApiKeyWithSource()
     if (!apiKey) {
       if (source === 'apiKeyHelper') {
@@ -79,7 +78,7 @@ export function useApiKeyVerification(): ApiKeyVerificationResult {
     }
 
     try {
-      const isValid = await verifyApiKey(apiKey, false)
+      const isValid = await verifyApiKey(apiKey)
       const newStatus = isValid ? 'valid' : 'invalid'
       setStatus(newStatus)
       return

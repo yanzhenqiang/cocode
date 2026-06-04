@@ -12,7 +12,6 @@
  * Set CLAUDE_CODE_PROFILE_STARTUP=1 for detailed logging output.
  */
 
-import { getIsNonInteractiveSession } from '../bootstrap/state.js'
 import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
@@ -61,7 +60,7 @@ function clearHeadlessMarks(): void {
  */
 export function headlessProfilerStartTurn(): void {
   // Only profile in headless/non-interactive mode
-  if (!getIsNonInteractiveSession()) return
+  if (!false) return
   // Only profile if enabled
   if (!SHOULD_PROFILE) return
 
@@ -82,7 +81,7 @@ export function headlessProfilerStartTurn(): void {
  */
 export function headlessProfilerCheckpoint(name: string): void {
   // Only profile in headless/non-interactive mode
-  if (!getIsNonInteractiveSession()) return
+  if (!false) return
   // Only profile if enabled
   if (!SHOULD_PROFILE) return
 
@@ -102,7 +101,7 @@ export function headlessProfilerCheckpoint(name: string): void {
  */
 export function logHeadlessProfilerTurn(): void {
   // Only log in headless mode
-  if (!getIsNonInteractiveSession()) return
+  if (!false) return
   // Only log if enabled
   if (!SHOULD_PROFILE) return
 

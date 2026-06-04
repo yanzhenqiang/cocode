@@ -19,10 +19,8 @@ export type Output = z.infer<OutputSchema>
 
 export const SYNTHETIC_OUTPUT_TOOL_NAME = 'StructuredOutput'
 
-export function isSyntheticOutputToolEnabled(opts: {
-  isNonInteractiveSession: boolean
-}): boolean {
-  return opts.isNonInteractiveSession
+export function isSyntheticOutputToolEnabled(): boolean {
+  return false
 }
 
 export const SyntheticOutputTool = buildTool({
