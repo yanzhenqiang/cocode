@@ -75,6 +75,7 @@ export const KEYBINDING_ACTIONS = [
   // Chat input actions
   'chat:cancel',
   'chat:thinkingToggle',
+  'chat:cycleMode',
   'chat:submit',
   'chat:newline',
   'chat:imagePaste',
