@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
-import { setupTerminal, shouldOfferTerminalSetup } from '../commands/terminalSetup/terminalSetup.js';
 import { PRODUCT_DISPLAY_NAME } from '../constants/product.js';
 import { useExitOnCtrlCDWithKeybindings } from '../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { Box, Newline, Text, useTheme } from '../ink.js';
@@ -15,7 +14,7 @@ import { ApproveApiKey } from './ApproveApiKey.js';
 import { Select } from './CustomSelect/select.js';
 import { WelcomeV2 } from './LogoV2/WelcomeV2.js';
 import { ThemePicker } from './ThemePicker.js';
-type StepId = 'theme' | 'api-key' | 'terminal-setup';
+type StepId = 'theme' | 'api-key';
 interface OnboardingStep {
   id: StepId;
   component: React.ReactNode;
@@ -81,50 +80,7 @@ export function Onboarding({
       component: <ApproveApiKey customApiKeyTruncated={apiKeyNeedingApproval} onDone={handleApiKeyDone} />
     });
   }
-  if (shouldOfferTerminalSetup()) {
-    steps.push({
-      id: 'terminal-setup',
-      component: <Box flexDirection="column" gap={1} paddingLeft={1}>
-          <Text bold>Use {PRODUCT_DISPLAY_NAME}&apos;s terminal setup?</Text>
-          <Box flexDirection="column" width={70} gap={1}>
-            <Text>
-              For the optimal coding experience, enable the recommended settings
-              <Newline />
-              for your terminal:{' '}
-              {env.terminal === 'Apple_Terminal' ? 'Option+Enter for newlines and visual bell' : 'Shift+Enter for newlines'}
-            </Text>
-            <Select options={[{
-            label: 'Yes, use recommended settings',
-            value: 'install'
-          }, {
-            label: 'No, maybe later with /terminal-setup',
-            value: 'no'
-          }]} onChange={value => {
-            if (value === 'install') {
-              // Errors already logged in setupTerminal, just swallow and proceed
-              void setupTerminal(theme).catch(() => {}).finally(goToNextStep);
-            } else {
-              goToNextStep();
-            }
-          }} onCancel={() => goToNextStep()} />
-            <Text dimColor>
-              {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Enter to confirm · Esc to skip</>}
-            </Text>
-          </Box>
-        </Box>
-    });
-  }
   const currentStep = steps[currentStepIndex];
-
-  const handleTerminalSetupSkip = useCallback(() => {
-    goToNextStep();
-  }, [currentStepIndex, steps.length, onDone]);
-  useKeybindings({
-    'confirm:no': handleTerminalSetupSkip
-  }, {
-    context: 'Confirmation',
-    isActive: currentStep?.id === 'terminal-setup'
-  });
   return <Box flexDirection="column">
       <WelcomeV2 />
       <Box flexDirection="column" marginTop={1}>

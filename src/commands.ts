@@ -18,7 +18,6 @@ import keybindings from './commands/keybindings/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import mcp from './commands/mcp/index.js'
-import pr_comments from './commands/pr_comments/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
 import review, { ultrareview } from './commands/review.js'
@@ -26,7 +25,6 @@ import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import tasks from './commands/tasks/index.js'
 import securityReview from './commands/security-review.js'
-import terminalSetup from './commands/terminalSetup/index.js'
 import theme from './commands/theme/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
@@ -73,7 +71,6 @@ const usageReport: Command = {
   progressMessage: 'analyzing your sessions',
   source: 'builtin',
   async getPromptForCommand(args, context) {
-    const real = (await import('./commands/insights.js')).default
     if (real.type !== 'prompt') throw new Error('unreachable')
     return real.getPromptForCommand(args, context)
   },
@@ -138,7 +135,6 @@ const COMMANDS = memoize((): Command[] => [
   memory,
   model,
   outputStyle,
-  pr_comments,
   rename,
   resume,
   skills,
@@ -149,7 +145,6 @@ const COMMANDS = memoize((): Command[] => [
   ultrareview,
   rewind,
   securityReview,
-  terminalSetup,
   usageReport,
   permissions,
   plan,

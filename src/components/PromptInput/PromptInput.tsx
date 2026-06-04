@@ -13,7 +13,6 @@ import stripAnsi from 'strip-ansi';
 // Buddy module deleted — all related functions stubbed to no-ops
 import { FastModePicker } from '../../commands/fast/fast.js';
 import { isUltrareviewEnabled } from '../../commands/review/ultrareviewEnabled.js';
-import { getNativeCSIuTerminalDisplayName } from '../../commands/terminalSetup/terminalSetup.js';
 import { type Command, hasCommand } from '../../commands.js';
 import { useIsModalOverlayActive } from '../../context/overlayContext.js';
 import { useSetPromptOverlayDialog } from '../../context/promptOverlayContext.js';
@@ -1604,7 +1603,6 @@ function PromptInput({
     // Detect failed Alt shortcuts on macOS (Option key produces special characters)
     if (getPlatform() === 'macos' && isMacosOptionChar(char)) {
       const shortcut = MACOS_OPTION_SPECIAL_CHARS[char];
-      const terminalName = getNativeCSIuTerminalDisplayName();
       const jsx = terminalName ? <Text dimColor>
           To enable {shortcut}, set <Text bold>Option as Meta</Text> in{' '}
           {terminalName} preferences (⌘,)
