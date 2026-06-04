@@ -1,1 +1,0 @@
-列出 /data/data/com.termux/files/home/cocode/.TEST 下的所有文件，然后通过 tmux send-keys -t "$PARENT_SESSION" 把文件名列表发送回主 agent。
