@@ -159,7 +159,7 @@ export function LogSelector(t0) {
   const isTerminalFocused = useTerminalFocus();
   let t3;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = isCustomTitleEnabled();
+    t3 = false;
     $[0] = t3;
   } else {
     t3 = $[0];
