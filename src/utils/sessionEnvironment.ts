@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from 'fs/promises'
+import { mkdir, readdir, readFile } from 'fs/promises'
 import { join } from 'path'
 import { getSessionId } from '../bootstrap/state.js'
 import { logForDebugging } from './debug.js'
@@ -23,33 +23,11 @@ export async function getSessionEnvDirPath(): Promise<string> {
 }
 
 export async function getHookEnvFilePath(
-  hookEvent: 'Setup' | 'SessionStart' | 'CwdChanged' | 'FileChanged',
+  hookEvent: 'Setup' | 'SessionStart',
   hookIndex: number,
 ): Promise<string> {
   const prefix = hookEvent.toLowerCase()
   return join(await getSessionEnvDirPath(), `${prefix}-hook-${hookIndex}.sh`)
-}
-
-export async function clearCwdEnvFiles(): Promise<void> {
-  try {
-    const dir = await getSessionEnvDirPath()
-    const files = await readdir(dir)
-    await Promise.all(
-      files
-        .filter(
-          f =>
-            (f.startsWith('filechanged-hook-') ||
-              f.startsWith('cwdchanged-hook-')) &&
-            HOOK_ENV_REGEX.test(f),
-        )
-        .map(f => writeFile(join(dir, f), '')),
-    )
-  } catch (e: unknown) {
-    const code = getErrnoCode(e)
-    if (code !== 'ENOENT') {
-      logForDebugging(`Failed to clear cwd env files: ${errorMessage(e)}`)
-    }
-  }
 }
 
 export function invalidateSessionEnvCache(): void {
@@ -146,11 +124,9 @@ export async function getSessionEnvironmentScript(): Promise<string | null> {
 const HOOK_ENV_PRIORITY: Record<string, number> = {
   setup: 0,
   sessionstart: 1,
-  cwdchanged: 2,
-  filechanged: 3,
 }
 const HOOK_ENV_REGEX =
-  /^(setup|sessionstart|cwdchanged|filechanged)-hook-(\d+)\.sh$/
+  /^(setup|sessionstart)-hook-(\d+)\.sh$/
 
 function sortHookEnvFiles(a: string, b: string): number {
   const aMatch = a.match(HOOK_ENV_REGEX)

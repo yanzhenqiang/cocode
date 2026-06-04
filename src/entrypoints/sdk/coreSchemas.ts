@@ -355,7 +355,6 @@ export const PermissionModeSchema = lazySchema(() =>
 export const HOOK_EVENTS = [
   'PreToolUse',
   'PostToolUse',
-  'PostToolUseFailure',
   'Notification',
   'UserPromptSubmit',
   'SessionStart',
@@ -375,8 +374,6 @@ export const HOOK_EVENTS = [
   'ElicitationResult',
   'ConfigChange',
   'InstructionsLoaded',
-  'CwdChanged',
-  'FileChanged',
 ] as const
 
 export const HookEventSchema = lazySchema(() => z.enum(HOOK_EVENTS))
@@ -438,19 +435,6 @@ export const PostToolUseHookInputSchema = lazySchema(() =>
       tool_input: z.unknown(),
       tool_response: z.unknown(),
       tool_use_id: z.string(),
-    }),
-  ),
-)
-
-export const PostToolUseFailureHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('PostToolUseFailure'),
-      tool_name: z.string(),
-      tool_input: z.unknown(),
-      tool_use_id: z.string(),
-      error: z.string(),
-      is_interrupt: z.boolean().optional(),
     }),
   ),
 )
@@ -693,26 +677,6 @@ export const InstructionsLoadedHookInputSchema = lazySchema(() =>
   ),
 )
 
-export const CwdChangedHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('CwdChanged'),
-      old_cwd: z.string(),
-      new_cwd: z.string(),
-    }),
-  ),
-)
-
-export const FileChangedHookInputSchema = lazySchema(() =>
-  BaseHookInputSchema().and(
-    z.object({
-      hook_event_name: z.literal('FileChanged'),
-      file_path: z.string(),
-      event: z.enum(['change', 'add', 'unlink']),
-    }),
-  ),
-)
-
 export const EXIT_REASONS = [
   'clear',
   'resume',
@@ -737,7 +701,6 @@ export const HookInputSchema = lazySchema(() =>
   z.union([
     PreToolUseHookInputSchema(),
     PostToolUseHookInputSchema(),
-    PostToolUseFailureHookInputSchema(),
     PermissionDeniedHookInputSchema(),
     NotificationHookInputSchema(),
     UserPromptSubmitHookInputSchema(),
@@ -757,8 +720,6 @@ export const HookInputSchema = lazySchema(() =>
     ElicitationResultHookInputSchema(),
     ConfigChangeHookInputSchema(),
     InstructionsLoadedHookInputSchema(),
-    CwdChangedHookInputSchema(),
-    FileChangedHookInputSchema(),
   ]),
 )
 
@@ -817,13 +778,6 @@ export const PostToolUseHookSpecificOutputSchema = lazySchema(() =>
   }),
 )
 
-export const PostToolUseFailureHookSpecificOutputSchema = lazySchema(() =>
-  z.object({
-    hookEventName: z.literal('PostToolUseFailure'),
-    additionalContext: z.string().optional(),
-  }),
-)
-
 export const PermissionDeniedHookSpecificOutputSchema = lazySchema(() =>
   z.object({
     hookEventName: z.literal('PermissionDenied'),
@@ -856,20 +810,6 @@ export const PermissionRequestHookSpecificOutputSchema = lazySchema(() =>
   }),
 )
 
-export const CwdChangedHookSpecificOutputSchema = lazySchema(() =>
-  z.object({
-    hookEventName: z.literal('CwdChanged'),
-    watchPaths: z.array(z.string()).optional(),
-  }),
-)
-
-export const FileChangedHookSpecificOutputSchema = lazySchema(() =>
-  z.object({
-    hookEventName: z.literal('FileChanged'),
-    watchPaths: z.array(z.string()).optional(),
-  }),
-)
-
 export const SyncHookJSONOutputSchema = lazySchema(() =>
   z.object({
     continue: z.boolean().optional(),
@@ -886,14 +826,11 @@ export const SyncHookJSONOutputSchema = lazySchema(() =>
         SetupHookSpecificOutputSchema(),
         SubagentStartHookSpecificOutputSchema(),
         PostToolUseHookSpecificOutputSchema(),
-        PostToolUseFailureHookSpecificOutputSchema(),
         PermissionDeniedHookSpecificOutputSchema(),
         NotificationHookSpecificOutputSchema(),
         PermissionRequestHookSpecificOutputSchema(),
         ElicitationHookSpecificOutputSchema(),
         ElicitationResultHookSpecificOutputSchema(),
-        CwdChangedHookSpecificOutputSchema(),
-        FileChangedHookSpecificOutputSchema(),
       ])
       .optional(),
   }),

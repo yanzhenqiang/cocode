@@ -44,15 +44,6 @@ export const getHookEventMetadata = memoize(
           values: toolNames,
         },
       },
-      PostToolUseFailure: {
-        summary: 'After tool execution fails',
-        description:
-          'Input to command is JSON with tool_name, tool_input, tool_use_id, error, error_type, is_interrupt, and is_timeout.\nExit code 0 - stdout shown in transcript mode (ctrl+o)\nExit code 2 - show stderr to model immediately\nOther exit codes - show stderr to user only',
-        matcherMetadata: {
-          fieldToMatch: 'tool_name',
-          values: toolNames,
-        },
-      },
       PermissionDenied: {
         summary: 'After auto mode classifier denies a tool call',
         description:
@@ -236,16 +227,6 @@ export const getHookEventMetadata = memoize(
           ],
         },
       },
-      CwdChanged: {
-        summary: 'After the working directory changes',
-        description:
-          'Input to command is JSON with old_cwd and new_cwd.\nCLAUDE_ENV_FILE is set — write bash exports there to apply env to subsequent BashTool commands.\nHook output can include hookSpecificOutput.watchPaths (array of absolute paths) to register with the FileChanged watcher.\nExit code 0 - command completes successfully\nOther exit codes - show stderr to user only',
-      },
-      FileChanged: {
-        summary: 'When a watched file changes',
-        description:
-          'Input to command is JSON with file_path and event (change, add, unlink).\nCLAUDE_ENV_FILE is set — write bash exports there to apply env to subsequent BashTool commands.\nThe matcher field specifies filenames to watch in the current directory (e.g. ".envrc|.env").\nHook output can include hookSpecificOutput.watchPaths (array of absolute paths) to dynamically update the watch list.\nExit code 0 - command completes successfully\nOther exit codes - show stderr to user only',
-      },
     }
   },
   toolNames => toolNames.slice().sort().join(','),
@@ -259,7 +240,6 @@ export function groupHooksByEventAndMatcher(
   const grouped: Record<HookEvent, Record<string, IndividualHookConfig[]>> = {
     PreToolUse: {},
     PostToolUse: {},
-    PostToolUseFailure: {},
     PermissionDenied: {},
     Notification: {},
     UserPromptSubmit: {},
@@ -279,8 +259,6 @@ export function groupHooksByEventAndMatcher(
     ElicitationResult: {},
     ConfigChange: {},
     InstructionsLoaded: {},
-    CwdChanged: {},
-    FileChanged: {},
   }
 
   const metadata = getHookEventMetadata(toolNames)

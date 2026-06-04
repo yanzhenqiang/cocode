@@ -3,7 +3,6 @@
  * Hooks are user-defined shell commands that can be executed at various points
  * in Claude Code's lifecycle.
  */
-import { basename } from 'path'
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import { pathExists } from './file.js'
 import { wrapSpawn } from './ShellCommand.js'
@@ -69,7 +68,6 @@ import type {
   HookJSONOutput,
   NotificationHookInput,
   PostToolUseHookInput,
-  PostToolUseFailureHookInput,
   PermissionDeniedHookInput,
   PreCompactHookInput,
   PostCompactHookInput,
@@ -84,8 +82,6 @@ import type {
   TaskCreatedHookInput,
   TaskCompletedHookInput,
   ConfigChangeHookInput,
-  CwdChangedHookInput,
-  FileChangedHookInput,
   InstructionsLoadedHookInput,
   UserPromptSubmitHookInput,
   PermissionRequestHookInput,
@@ -194,7 +190,7 @@ function dedupeRegisteredPluginHooks(
 
 
 async function dispatchHookChainFromHookRuntime(args: {
-  eventName: 'PostToolUseFailure' | 'TaskCompleted'
+  eventName: 'TaskCompleted'
   payload: Record<string, unknown>
   signal?: AbortSignal
   toolUseContext?: ToolUseContext
@@ -679,9 +675,6 @@ function processHookJSONOutput({
             json.hookSpecificOutput.updatedMCPToolOutput
         }
         break
-      case 'PostToolUseFailure':
-        result.additionalContext = json.hookSpecificOutput.additionalContext
-        break
       case 'PermissionDenied':
         result.retry = json.hookSpecificOutput.retry
         break
@@ -920,10 +913,7 @@ async function execCommandHook(
   // definitions into; getSessionEnvironmentScript() concatenates them and
   // bashProvider injects the content into bash commands.
   if (
-    (hookEvent === 'SessionStart' ||
-      hookEvent === 'Setup' ||
-      hookEvent === 'CwdChanged' ||
-      hookEvent === 'FileChanged') &&
+    (hookEvent === 'SessionStart' || hookEvent === 'Setup') &&
     hookIndex !== undefined
   ) {
     envVars.CLAUDE_ENV_FILE = await getHookEnvFilePath(hookEvent, hookIndex)
@@ -1379,7 +1369,6 @@ async function prepareIfConditionMatcher(
   if (
     hookInput.hook_event_name !== 'PreToolUse' &&
     hookInput.hook_event_name !== 'PostToolUse' &&
-    hookInput.hook_event_name !== 'PostToolUseFailure' &&
     hookInput.hook_event_name !== 'PermissionRequest'
   ) {
     return undefined
@@ -1601,7 +1590,6 @@ export async function getMatchingHooks(
     switch (hookInput.hook_event_name) {
       case 'PreToolUse':
       case 'PostToolUse':
-      case 'PostToolUseFailure':
       case 'PermissionRequest':
       case 'PermissionDenied':
         matchQuery = hookInput.tool_name
@@ -1645,9 +1633,6 @@ export async function getMatchingHooks(
         break
       case 'InstructionsLoaded':
         matchQuery = hookInput.load_reason
-        break
-      case 'FileChanged':
-        matchQuery = basename(hookInput.file_path)
         break
       default:
         break
@@ -3376,79 +3361,6 @@ export async function* executePostToolHooks<ToolInput, ToolResponse>(
   })
 }
 
-/**
- * Execute post-tool-use-failure hooks if configured
- * @param toolName The name of the tool (e.g., 'Write', 'Edit', 'Bash')
- * @param toolUseID The ID of the tool use
- * @param toolInput The input that was passed to the tool
- * @param error The error message from the failed tool call
- * @param toolUseContext ToolUseContext for prompt-based hooks
- * @param isInterrupt Whether the tool was interrupted by user
- * @param permissionMode Optional permission mode from toolPermissionContext
- * @param signal Optional AbortSignal to cancel hook execution
- * @param timeoutMs Optional timeout in milliseconds for hook execution
- * @returns Async generator that yields progress messages and blocking errors
- */
-export async function* executePostToolUseFailureHooks<ToolInput>(
-  toolName: string,
-  toolUseID: string,
-  toolInput: ToolInput,
-  error: string,
-  toolUseContext: ToolUseContext,
-  isInterrupt?: boolean,
-  permissionMode?: string,
-  signal?: AbortSignal,
-  timeoutMs: number = TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-): AsyncGenerator<AggregatedHookResult> {
-  const appState = toolUseContext.getAppState()
-  const sessionId = toolUseContext.agentId ?? getSessionId()
-  const hasPostToolFailureHooks = hasHookForEvent(
-    'PostToolUseFailure',
-    appState,
-    sessionId,
-  )
-
-  const hookInput: PostToolUseFailureHookInput = {
-    ...createBaseHookInput(permissionMode, undefined, toolUseContext),
-    hook_event_name: 'PostToolUseFailure',
-    tool_name: toolName,
-    tool_input: toolInput,
-    tool_use_id: toolUseID,
-    error,
-    is_interrupt: isInterrupt,
-  }
-
-  let blockingHookCount = 0
-
-  if (hasPostToolFailureHooks) {
-    for await (const result of executeHooks({
-      hookInput,
-      toolUseID,
-      matchQuery: toolName,
-      signal,
-      timeoutMs,
-      toolUseContext,
-    })) {
-      if (result.blockingError) {
-        blockingHookCount++
-      }
-      yield result
-    }
-  }
-
-  await dispatchHookChainFromHookRuntime({
-    eventName: 'PostToolUseFailure',
-    outcome: 'failed',
-    payload: {
-      ...hookInput,
-      hook_blocking_error_count: blockingHookCount,
-      hook_execution_skipped: !hasPostToolFailureHooks,
-    },
-    signal,
-    toolUseContext,
-  })
-}
-
 export async function* executePermissionDeniedHooks<ToolInput>(
   toolName: string,
   toolUseID: string,
@@ -4151,61 +4063,6 @@ export async function executeConfigChangeHooks(
   }
 
   return results
-}
-
-async function executeEnvHooks(
-  hookInput: HookInput,
-  timeoutMs: number,
-): Promise<{
-  results: HookOutsideReplResult[]
-  watchPaths: string[]
-  systemMessages: string[]
-}> {
-  const results = await executeHooksOutsideREPL({ hookInput, timeoutMs })
-  if (results.length > 0) {
-    invalidateSessionEnvCache()
-  }
-  const watchPaths = results.flatMap(r => r.watchPaths ?? [])
-  const systemMessages = results
-    .map(r => r.systemMessage)
-    .filter((m): m is string => !!m)
-  return { results, watchPaths, systemMessages }
-}
-
-export function executeCwdChangedHooks(
-  oldCwd: string,
-  newCwd: string,
-  timeoutMs: number = TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-): Promise<{
-  results: HookOutsideReplResult[]
-  watchPaths: string[]
-  systemMessages: string[]
-}> {
-  const hookInput: CwdChangedHookInput = {
-    ...createBaseHookInput(undefined),
-    hook_event_name: 'CwdChanged',
-    old_cwd: oldCwd,
-    new_cwd: newCwd,
-  }
-  return executeEnvHooks(hookInput, timeoutMs)
-}
-
-export function executeFileChangedHooks(
-  filePath: string,
-  event: 'change' | 'add' | 'unlink',
-  timeoutMs: number = TOOL_HOOK_EXECUTION_TIMEOUT_MS,
-): Promise<{
-  results: HookOutsideReplResult[]
-  watchPaths: string[]
-  systemMessages: string[]
-}> {
-  const hookInput: FileChangedHookInput = {
-    ...createBaseHookInput(undefined),
-    hook_event_name: 'FileChanged',
-    file_path: filePath,
-    event,
-  }
-  return executeEnvHooks(hookInput, timeoutMs)
 }
 
 export type InstructionsLoadReason =

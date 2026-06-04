@@ -29,7 +29,6 @@ import { which } from './which.js'
 export type { ExecResult } from './ShellCommand.js'
 
 import { accessSync } from 'fs'
-import { onCwdChangedForHooks } from './hooks/fileChangedWatcher.js'
 import { getClaudeTempDirName } from './permissions/filesystem.js'
 import { getPlatform } from './platform.js'
 import { SandboxManager } from './sandbox/sandbox-adapter.js'
@@ -393,7 +392,6 @@ export async function exec(
           if (newCwd.normalize('NFC') !== cwd) {
             setCwd(newCwd, cwd)
             invalidateSessionEnvCache()
-            void onCwdChangedForHooks(cwd, newCwd)
           }
         } catch {
           logEvent('tengu_shell_set_cwd', { success: false })

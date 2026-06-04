@@ -112,7 +112,6 @@ import {
 } from '../mcp/utils.js'
 import {
   resolveHookPermissionDecision,
-  runPostToolUseFailureHooks,
   runPostToolUseHooks,
   runPreToolUseHooks,
 } from './toolHooks.js'
@@ -1568,34 +1567,6 @@ async function checkPermissionsAndCallTool(
     // Determine if this was a user interrupt
     const isInterrupt = error instanceof AbortError
 
-    // Run PostToolUseFailure hooks
-    const hookMessages: MessageUpdateLazy<
-      AttachmentMessage | ProgressMessage<HookProgress>
-    >[] = []
-    const hookChainsContext = toolUseContext as ToolUseContext & {
-      hookChainsCanUseTool?: CanUseToolFn
-    }
-    hookChainsContext.hookChainsCanUseTool = canUseTool
-    try {
-      for await (const hookResult of runPostToolUseFailureHooks(
-        toolUseContext,
-        tool,
-        toolUseID,
-        messageId,
-        processedInput,
-        content,
-        isInterrupt,
-        requestId,
-        mcpServerType,
-        mcpServerBaseUrl,
-      )) {
-        hookMessages.push(hookResult)
-      }
-    } finally {
-      if (hookChainsContext.hookChainsCanUseTool === canUseTool) {
-        delete hookChainsContext.hookChainsCanUseTool
-      }
-    }
 
     return [
       {
@@ -1618,7 +1589,6 @@ async function checkPermissionsAndCallTool(
           sourceToolAssistantUUID: assistantMessage.uuid,
         }),
       },
-      ...hookMessages,
     ]
   } finally {
     stopSessionActivity('tool_exec')

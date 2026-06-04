@@ -106,10 +106,6 @@ export const syncHookResponseSchema = lazySchema(() =>
             .optional(),
         }),
         z.object({
-          hookEventName: z.literal('PostToolUseFailure'),
-          additionalContext: z.string().optional(),
-        }),
-        z.object({
           hookEventName: z.literal('PermissionDenied'),
           retry: z.boolean().optional(),
         }),
@@ -141,20 +137,6 @@ export const syncHookResponseSchema = lazySchema(() =>
           hookEventName: z.literal('ElicitationResult'),
           action: z.enum(['accept', 'decline', 'cancel']).optional(),
           content: z.record(z.string(), z.unknown()).optional(),
-        }),
-        z.object({
-          hookEventName: z.literal('CwdChanged'),
-          watchPaths: z
-            .array(z.string())
-            .describe('Absolute paths to watch for FileChanged hooks')
-            .optional(),
-        }),
-        z.object({
-          hookEventName: z.literal('FileChanged'),
-          watchPaths: z
-            .array(z.string())
-            .describe('Absolute paths to watch for FileChanged hooks')
-            .optional(),
         }),
       ])
       .optional(),

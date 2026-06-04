@@ -1,7 +1,6 @@
 import { getMainThreadAgentType } from '../bootstrap/state.js'
 import type { HookResultMessage } from '../types/message.js'
 import { createAttachmentMessage } from './attachments.js'
-import { updateWatchPaths } from './hooks/fileChangedWatcher.js'
 import { executeSessionStartHooks, executeSetupHooks } from './hooks.js'
 
 type SessionStartHooksOptions = {
@@ -37,7 +36,6 @@ export async function processSessionStartHooks(
 ): Promise<HookResultMessage[]> {
   const hookMessages: HookResultMessage[] = []
   const additionalContexts: string[] = []
-  const allWatchPaths: string[] = []
 
   // Execute SessionStart hooks, ignoring blocking errors
   // Use the provided agentType or fall back to the one stored in bootstrap state
@@ -63,13 +61,6 @@ export async function processSessionStartHooks(
     if (hookResult.initialUserMessage) {
       pendingInitialUserMessage = hookResult.initialUserMessage
     }
-    if (hookResult.watchPaths && hookResult.watchPaths.length > 0) {
-      allWatchPaths.push(...hookResult.watchPaths)
-    }
-  }
-
-  if (allWatchPaths.length > 0) {
-    updateWatchPaths(allWatchPaths)
   }
 
   // If hooks provided additional context, add it as a message

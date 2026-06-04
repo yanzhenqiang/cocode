@@ -140,7 +140,6 @@ Hooks run commands at specific points in Claude Code's lifecycle.
 | PermissionRequest | Tool name | Run before permission prompt |
 | PreToolUse | Tool name | Run before tool, can block |
 | PostToolUse | Tool name | Run after successful tool |
-| PostToolUseFailure | Tool name | Run after tool fails |
 | Notification | Notification type | Run on notifications |
 | Stop | - | Run when Claude stops (including clear, resume, compact) |
 | PreCompact | "manual"/"auto" | Before compaction |

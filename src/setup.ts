@@ -30,7 +30,6 @@ import { envDynamic } from './utils/envDynamic.js'
 import { isEnvTruthy } from './utils/envUtils.js'
 import { errorMessage } from './utils/errors.js'
 import { findCanonicalGitRoot, findGitRoot, getIsGit } from './utils/git.js'
-import { initializeFileChangedWatcher } from './utils/hooks/fileChangedWatcher.js'
 import {
   captureHooksConfigSnapshot,
   updateHooksConfigSnapshot,
@@ -126,9 +125,6 @@ export async function setup(
   logForDiagnosticsNoPII('info', 'setup_hooks_captured', {
     duration_ms: Date.now() - hooksStart,
   })
-
-  // Initialize FileChanged hook watcher — sync, reads hook config snapshot
-  initializeFileChangedWatcher(cwd)
 
   // Background jobs - only critical registrations that must happen before first query
   logForDiagnosticsNoPII('info', 'setup_background_jobs_starting')

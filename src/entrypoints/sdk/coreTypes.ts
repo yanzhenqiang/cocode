@@ -25,7 +25,6 @@ export type { NonNullableUsage } from './sdkUtilityTypes.js'
 export const HOOK_EVENTS = [
   'PreToolUse',
   'PostToolUse',
-  'PostToolUseFailure',
   'Notification',
   'UserPromptSubmit',
   'SessionStart',
@@ -45,8 +44,6 @@ export const HOOK_EVENTS = [
   'ElicitationResult',
   'ConfigChange',
   'InstructionsLoaded',
-  'CwdChanged',
-  'FileChanged',
 ] as const
 
 export const EXIT_REASONS = [

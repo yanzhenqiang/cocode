@@ -288,7 +288,7 @@ export type PermissionResult = ({
 /** Permission mode for controlling how tool executions are handled. 'default' - Standard behavior, prompts for dangerous operations. 'acceptEdits' - Auto-accept file edit operations. 'bypassPermissions' - Bypass all permission checks (requires allowDangerouslySkipPermissions). 'plan' - Planning mode, no actual tool execution. 'dontAsk' - Don't prompt for permissions, deny if not pre-approved. */
 export type PermissionMode = "default" | "acceptEdits" | "bypassPermissions" | "plan" | "dontAsk"
 
-export type HookEvent = "PreToolUse" | "PostToolUse" | "PostToolUseFailure" | "Notification" | "UserPromptSubmit" | "SessionStart" | "SessionEnd" | "Stop" | "StopFailure" | "SubagentStart" | "SubagentStop" | "PreCompact" | "PostCompact" | "PermissionRequest" | "PermissionDenied" | "Setup" | "TaskCreated" | "TaskCompleted" | "Elicitation" | "ElicitationResult" | "ConfigChange" | "InstructionsLoaded" | "CwdChanged" | "FileChanged"
+export type HookEvent = "PreToolUse" | "PostToolUse" | "Notification" | "UserPromptSubmit" | "SessionStart" | "SessionEnd" | "Stop" | "StopFailure" | "SubagentStart" | "SubagentStop" | "PreCompact" | "PostCompact" | "PermissionRequest" | "PermissionDenied" | "Setup" | "TaskCreated" | "TaskCompleted" | "Elicitation" | "ElicitationResult" | "ConfigChange" | "InstructionsLoaded"
 
 export type BaseHookInput = {
   session_id: string
@@ -326,22 +326,6 @@ export type PostToolUseHookInput = {
   tool_input: unknown
   tool_response: unknown
   tool_use_id: string
-}
-
-export type PostToolUseFailureHookInput = {
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "PostToolUseFailure"
-  tool_name: string
-  tool_input: unknown
-  tool_use_id: string
-  error: string
-  is_interrupt?: boolean
 }
 
 export type PermissionDeniedHookInput = {
@@ -652,32 +636,6 @@ export type InstructionsLoadedHookInput = {
   parent_file_path?: string
 }
 
-export type CwdChangedHookInput = {
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "CwdChanged"
-  old_cwd: string
-  new_cwd: string
-}
-
-export type FileChangedHookInput = {
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "FileChanged"
-  file_path: string
-  event: "change" | "add" | "unlink"
-}
-
 export type HookInput = ({
   session_id: string
   transcript_path: string
@@ -703,20 +661,6 @@ export type HookInput = ({
   tool_input: unknown
   tool_response: unknown
   tool_use_id: string
-}) | ({
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "PostToolUseFailure"
-  tool_name: string
-  tool_input: unknown
-  tool_use_id: string
-  error: string
-  is_interrupt?: boolean
 }) | ({
   session_id: string
   transcript_path: string
@@ -985,28 +929,6 @@ export type HookInput = ({
   globs?: string[]
   trigger_file_path?: string
   parent_file_path?: string
-}) | ({
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "CwdChanged"
-  old_cwd: string
-  new_cwd: string
-}) | ({
-  session_id: string
-  transcript_path: string
-  cwd: string
-  permission_mode?: string
-  agent_id?: string
-  agent_type?: string
-} & {
-  hook_event_name: "FileChanged"
-  file_path: string
-  event: "change" | "add" | "unlink"
 })
 
 export type AsyncHookJSONOutput = {
@@ -1048,11 +970,6 @@ export type PostToolUseHookSpecificOutput = {
   hookEventName: "PostToolUse"
   additionalContext?: string
   updatedMCPToolOutput?: unknown
-}
-
-export type PostToolUseFailureHookSpecificOutput = {
-  hookEventName: "PostToolUseFailure"
-  additionalContext?: string
 }
 
 export type PermissionDeniedHookSpecificOutput = {
@@ -1114,16 +1031,6 @@ export type PermissionRequestHookSpecificOutput = {
   })
 }
 
-export type CwdChangedHookSpecificOutput = {
-  hookEventName: "CwdChanged"
-  watchPaths?: string[]
-}
-
-export type FileChangedHookSpecificOutput = {
-  hookEventName: "FileChanged"
-  watchPaths?: string[]
-}
-
 /** Hook-specific output for the Elicitation event. Return this to programmatically accept or decline an MCP elicitation request. */
 export type ElicitationHookSpecificOutput = {
   hookEventName: "Elicitation"
@@ -1170,9 +1077,6 @@ export type SyncHookJSONOutput = {
     additionalContext?: string
     updatedMCPToolOutput?: unknown
   }) | ({
-    hookEventName: "PostToolUseFailure"
-    additionalContext?: string
-  }) | ({
     hookEventName: "PermissionDenied"
     retry?: boolean
   }) | ({
@@ -1233,12 +1137,6 @@ export type SyncHookJSONOutput = {
     hookEventName: "ElicitationResult"
     action?: "accept" | "decline" | "cancel"
     content?: Record<string, unknown>
-  }) | ({
-    hookEventName: "CwdChanged"
-    watchPaths?: string[]
-  }) | ({
-    hookEventName: "FileChanged"
-    watchPaths?: string[]
   })
 }
 
@@ -1277,9 +1175,6 @@ export type HookJSONOutput = ({
     additionalContext?: string
     updatedMCPToolOutput?: unknown
   }) | ({
-    hookEventName: "PostToolUseFailure"
-    additionalContext?: string
-  }) | ({
     hookEventName: "PermissionDenied"
     retry?: boolean
   }) | ({
@@ -1340,12 +1235,6 @@ export type HookJSONOutput = ({
     hookEventName: "ElicitationResult"
     action?: "accept" | "decline" | "cancel"
     content?: Record<string, unknown>
-  }) | ({
-    hookEventName: "CwdChanged"
-    watchPaths?: string[]
-  }) | ({
-    hookEventName: "FileChanged"
-    watchPaths?: string[]
   })
 })
 

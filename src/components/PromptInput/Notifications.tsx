@@ -15,7 +15,6 @@ import { getApiKeyHelperElapsedMs, getConfiguredApiKeyHelper, getSubscriptionTyp
 import { getExternalEditor } from '../../utils/editor.js';
 import { isEnvTruthy } from '../../utils/envUtils.js';
 import { formatDuration } from '../../utils/format.js';
-import { setEnvHookNotifier } from '../../utils/hooks/fileChangedWatcher.js';
 import { toIDEDisplayName } from '../../utils/ide.js';
 import { getMessagesAfterCompactBoundary } from '../../utils/messages.js';
 import { tokenCountFromLastAPIResponse } from '../../utils/tokens.js';
@@ -84,31 +83,6 @@ export function Notifications(t0) {
     addNotification,
     removeNotification
   } = useNotifications();
-
-  let t5;
-  let t6;
-  if ($[5] !== addNotification) {
-    t5 = () => {
-      setEnvHookNotifier((text, isError) => {
-        addNotification({
-          key: "env-hook",
-          text,
-          color: isError ? "error" : undefined,
-          priority: isError ? "medium" : "low",
-          timeoutMs: isError ? 8000 : 5000
-        });
-      });
-      return _temp2;
-    };
-    t6 = [addNotification];
-    $[5] = addNotification;
-    $[6] = t5;
-    $[7] = t6;
-  } else {
-    t5 = $[6];
-    t6 = $[7];
-  }
-  useEffect(t5, t6);
   let t7;
   if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
     t7 = getSubscriptionType();
@@ -182,9 +156,6 @@ export function Notifications(t0) {
     t14 = $[33];
   }
   return t14;
-}
-function _temp2() {
-  return setEnvHookNotifier(null);
 }
 function _temp(s) {
   return s.notifications;
