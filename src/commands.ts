@@ -1,7 +1,5 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
 import addDir from './commands/add-dir/index.js'
-import btw from './commands/btw/index.js'
-import issue from './commands/issue/index.js'
 import clear from './commands/clear/index.js'
 import commit from './commands/commit.js'
 import commitMessage from './commands/commit-message/index.js'
@@ -14,8 +12,6 @@ import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import init from './commands/init.js'
 import keybindings from './commands/keybindings/index.js'
-import cacheProbe from './commands/cache-probe/index.js'
-import cacheStats from './commands/cacheStats/index.js'
 import mcp from './commands/mcp/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
@@ -28,15 +24,11 @@ import theme from './commands/theme/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
-import privacySettings from './commands/privacy-settings/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
-import rewind from './commands/rewind/index.js'
-import heapDump from './commands/heapdump/index.js'
 import version from './commands/version.js'
-import summary from './commands/summary/index.js'
 const resetLimitsNonInteractive = async () => {};
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
@@ -52,7 +44,6 @@ import { getBundledSkills } from './skills/bundledSkills.js'
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices } from './utils/auth.js'
 import { isFirstPartyAnthropicBaseUrl } from './utils/model/providers.js'
-import env from './commands/env/index.js'
 import exit from './commands/exit/index.js'
 import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
@@ -97,11 +88,8 @@ export { getCommandName, isCommandEnabled } from './types/command.js'
 // Commands that get eliminated from the external build
 export const INTERNAL_ONLY_COMMANDS = [
   commit,
-  issue,
   version,
   resetLimitsNonInteractive,
-  summary,
-  env,
 ].filter(Boolean)
 
 // Declared as a function so that we don't run this until getCommands is called,
@@ -110,9 +98,6 @@ const COMMANDS = memoize((): Command[] => [
   addDir,
   advisor,
   branch,
-  btw,
-  cacheProbe,
-  cacheStats,
   clear,
   compact,
   commitMessage,
@@ -125,7 +110,6 @@ const COMMANDS = memoize((): Command[] => [
   exit,
   fast,
   files,
-  heapDump,
   help,
   init,
   keybindings,
@@ -141,12 +125,10 @@ const COMMANDS = memoize((): Command[] => [
   theme,
   review,
   ultrareview,
-  rewind,
   securityReview,
   usageReport,
   permissions,
   plan,
-  privacySettings,
   hooks,
   exportCommand,
   tasks,
@@ -386,7 +368,6 @@ export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
     compact, // Shrink context — useful mid-session from a phone
     clear, // Wipe transcript
     cost, // Show session cost
-    summary, // Summarize conversation
     files, // List tracked files
   ].filter((c): c is Command => c !== null),
 )
