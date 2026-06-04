@@ -1,4 +1,3 @@
-import { feature } from 'bun:bundle'
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs'
 import { randomUUID } from 'crypto'
 import last from 'lodash-es/last.js'
@@ -105,16 +104,6 @@ import {
   normalizeMessage,
 } from './utils/queryHelpers.js'
 
-// Dead code elimination: conditional import for snip compaction
-/* eslint-disable @typescript-eslint/no-require-imports */
-const snipModule = feature('HISTORY_SNIP')
-  ? (require('./services/compact/snipCompact.js') as typeof import('./services/compact/snipCompact.js'))
-  : null
-const snipProjection = feature('HISTORY_SNIP')
-  ? (require('./services/compact/snipProjection.js') as typeof import('./services/compact/snipProjection.js'))
-  : null
-/* eslint-enable @typescript-eslint/no-require-imports */
-
 export type QueryEngineConfig = {
   cwd: string
   tools: Tools
@@ -143,21 +132,6 @@ export type QueryEngineConfig = {
   setSDKStatus?: (status: SDKStatus) => void
   abortController?: AbortController
   orphanedPermission?: OrphanedPermission
-  /**
-   * Snip-boundary handler: receives each yielded system message plus the
-   * current mutableMessages store. Returns undefined if the message is not a
-   * snip boundary; otherwise returns the replayed snip result. Injected by
-   * ask() when HISTORY_SNIP is enabled so feature-gated strings stay inside
-   * the gated module (keeps QueryEngine free of excluded strings and testable
-   * despite feature() returning false under bun test). SDK-only: the REPL
-   * keeps full history for UI scrollback and projects on demand via
-   * projectSnippedView; QueryEngine truncates here to bound memory in long
-   * headless sessions (no UI to preserve).
-   */
-  snipReplay?: (
-    yieldedSystemMsg: Message,
-    store: Message[],
-  ) => { messages: Message[]; executed: boolean } | undefined
 }
 
 /**
@@ -886,24 +860,6 @@ export class QueryEngine {
           // Don't yield stream request start messages
           break
         case 'system': {
-          // Snip boundary: replay on our store to remove zombie messages and
-          // stale markers. The yielded boundary is a signal, not data to push —
-          // the replay produces its own equivalent boundary. Without this,
-          // markers persist and re-trigger on every turn, and mutableMessages
-          // never shrinks (memory leak in long SDK sessions). The subtype
-          // check lives inside the injected callback so feature-gated strings
-          // stay out of this file (excluded-strings check).
-          const snipResult = this.config.snipReplay?.(
-            message,
-            this.mutableMessages,
-          )
-          if (snipResult !== undefined) {
-            if (snipResult.executed) {
-              this.mutableMessages.length = 0
-              this.mutableMessages.push(...snipResult.messages)
-            }
-            break
-          }
           this.mutableMessages.push(message)
           // Yield compact boundary messages to SDK
           if (
@@ -1388,15 +1344,6 @@ export async function* ask({
     setSDKStatus,
     abortController,
     orphanedPermission,
-    ...(feature('HISTORY_SNIP')
-      ? {
-          snipReplay: (yielded: Message, store: Message[]) => {
-            if (!snipProjection!.isSnipBoundaryMessage(yielded))
-              return undefined
-            return snipModule!.snipCompactIfNeeded(store, { force: true })
-          },
-        }
-      : {}),
   })
 
   try {
