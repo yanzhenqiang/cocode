@@ -30,7 +30,6 @@ import privacySettings from './commands/privacy-settings/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import rewind from './commands/rewind/index.js'
-import heapDump from './commands/heapdump/index.js'
 import btw from './commands/btw/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
@@ -50,7 +49,6 @@ import privacySettings from './commands/privacy-settings/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import rewind from './commands/rewind/index.js'
-import heapDump from './commands/heapdump/index.js'
 import btw from './commands/btw/index.js'
 // plugin commands removed
 import memoize from 'lodash-es/memoize.js'
@@ -60,7 +58,6 @@ import exit from './commands/exit/index.js'
 import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
-import outputStyle from './commands/output-style/index.js'
 import effort from './commands/effort/index.js'
 // stats command removed
 // insights.ts is 113KB (3200 lines, includes diffLines/html rendering). Lazy
@@ -111,13 +108,11 @@ const COMMANDS = memoize((): Command[] => [
   advisor,
   branch,
   btw,
-  heapDump,
   rewind,
   cacheStats,
   cacheProbe,
   privacySettings,
   btw,
-  heapDump,
   rewind,
   cacheStats,
   cacheProbe,
@@ -140,7 +135,6 @@ const COMMANDS = memoize((): Command[] => [
   mcp,
   memory,
   model,
-  outputStyle,
   rename,
   resume,
   skills,
