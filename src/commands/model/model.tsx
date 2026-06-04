@@ -48,7 +48,6 @@ import {
 } from '../../utils/model/check1mAccess.js'
 import type { ModelOption } from '../../utils/model/modelOptions.js'
 import { buildRouteCatalogModelOptions, mergeRouteCatalogEntries } from '../../utils/model/routeCatalogOptions.js'
-import { discoverOpenAICompatibleModelOptions } from '../../utils/model/openaiModelDiscovery.js'
 import {
   getDefaultMainLoopModelSetting,
   isOpus1mMergeEnabled,
@@ -481,7 +480,7 @@ function ModelPickerWrapper({
     }
 
     try {
-      const discoveredOptions = await discoverOpenAICompatibleModelOptions()
+      const discoveredOptions = []
       const currentOptions = getActiveOpenAIModelOptionsCache()
       const changed =
         discoveredOptions.length > 0 &&
@@ -753,7 +752,7 @@ async function refreshModelsAndSummarize(): Promise<string> {
   }
 
   try {
-    const discoveredOptions = await discoverOpenAICompatibleModelOptions()
+    const discoveredOptions = []
     const currentOptions = getActiveOpenAIModelOptionsCache()
     const changed =
       discoveredOptions.length > 0 &&

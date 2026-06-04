@@ -6,16 +6,25 @@
  */
 
 import type { Message } from '../types/message.js'
-import {
-  addGlobalEntity,
-  addGlobalRelation,
-  addGlobalSummary,
-  addGlobalRule,
-  getGlobalGraph,
-  getGlobalGraphSummary,
-  getOrchestratedMemory,
-  extractKeywords
-} from './knowledgeGraph.js'
+
+// Stub implementations (knowledgeGraph module has been removed)
+interface Entity { id: string; type: string; name: string; attributes: Record<string, string> }
+interface KnowledgeGraph {
+  entities: Record<string, Entity>
+  relations: { sourceId: string; targetId: string; type: string }[]
+  summaries: { id: string; content: string; keywords: string[]; timestamp: number }[]
+  rules: string[]
+  lastUpdateTime: number
+}
+
+const addGlobalEntity = async (_type: string, _name: string, _attributes?: Record<string, string>): Promise<Entity> => ({ id: '', type: _type, name: _name, attributes: _attributes ?? {} })
+const addGlobalRelation = async (_sourceId: string, _targetId: string, _type: string): Promise<void> => {}
+const addGlobalSummary = async (_content: string, _keywords: string[]): Promise<void> => {}
+const addGlobalRule = async (_rule: string): Promise<void> => {}
+const getGlobalGraph = (): KnowledgeGraph => ({ entities: {}, relations: [], summaries: [], rules: [], lastUpdateTime: Date.now() })
+const getGlobalGraphSummary = (): string => ''
+const getOrchestratedMemory = async (_query: string): Promise<string> => ''
+const extractKeywords = (_text: string): string[] => []
 
 // ... (Goal, Decision, Milestone interfaces)
 
