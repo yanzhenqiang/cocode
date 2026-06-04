@@ -1414,7 +1414,7 @@ function getConfig<A>(
       encoding: 'utf-8',
     })
     try {
-      // Strip BOM before parsing - PowerShell 5.x adds BOM to UTF-8 files
+      // Strip BOM before parsing - some editors add BOM to UTF-8 files
       const parsedConfig = jsonParse(stripBOM(fileContent))
       return {
         ...createDefault(),

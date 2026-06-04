@@ -190,9 +190,9 @@ export function isMemoryDirectory(dirPath: string): boolean {
 }
 
 /**
- * Check if a shell command string (Bash or PowerShell) targets memory files
+ * Check if a shell command string (Bash) targets memory files
  * by extracting absolute path tokens and checking them against memory
- * detection functions. Used for Bash/PowerShell grep/search commands in the
+ * detection functions. Used for Bash grep/search commands in the
  * collapse logic.
  */
 export function isShellCommandTargetingMemory(command: string): boolean {
@@ -203,7 +203,7 @@ export function isShellCommandTargetingMemory(command: string): boolean {
     : ''
 
   // Quick check: does the command mention the config, memory base, or
-  // auto-mem directory? Compare in forward-slash form (PowerShell on Windows
+  // auto-mem directory? Compare in forward-slash form (on Windows
   // may use either separator while configDir uses the platform-native one).
   // On Windows also check the MinGW form (/c/...) since BashTool runs under
   // Git Bash which emits that encoding. On Linux/Mac, configDir is already

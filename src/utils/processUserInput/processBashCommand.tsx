@@ -17,9 +17,7 @@ export async function processBashCommand(inputString: string, precedingInputBloc
   messages: (UserMessage | AttachmentMessage | SystemMessage)[];
   shouldQuery: boolean;
 }> {
-  logEvent('tengu_input_bash', {
-    powershell: false
-  });
+  logEvent('tengu_input_bash', {});
   const userMessage = createUserMessage({
     content: prepareUserContent({
       inputString: `<bash-input>${inputString}</bash-input>`,

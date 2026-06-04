@@ -183,7 +183,6 @@ function isLegacyProgressEntry(entry: unknown): entry is LegacyProgressEntry {
  */
 const EPHEMERAL_PROGRESS_TYPES = new Set([
   'bash_progress',
-  'powershell_progress',
   'mcp_progress',
   ...(false
     ? (['sleep_progress'] as const)

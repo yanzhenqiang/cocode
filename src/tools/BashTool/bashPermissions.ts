@@ -84,8 +84,6 @@ const BARE_SHELL_PREFIXES = new Set([
   'ksh',
   'dash',
   'cmd',
-  'powershell',
-  'pwsh',
   'env',
   'xargs',
   'nice',

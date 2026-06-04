@@ -1,14 +1,13 @@
 /**
  * Pattern lists for dangerous shell-tool allow-rule prefixes.
  *
- * An allow rule like `Bash(python:*)` or `PowerShell(node:*)` lets the model
+ * An allow rule like `Bash(python:*)` lets the model
  * run arbitrary code via that interpreter, bypassing the auto-mode classifier.
- * These lists feed the isDangerous{Bash,PowerShell}Permission predicates in
+ * These lists feed the isDangerousBashPermission predicate in
  * permissionSetup.ts, which strip such rules at auto-mode entry.
  *
  * The matcher in each predicate handles the rule-shape variants (exact, `:*`,
- * trailing `*`, ` *`, ` -…*`). PS-specific cmdlet strings live in
- * isDangerousPowerShellPermission (permissionSetup.ts).
+ * trailing `*`, ` *`, ` -…*`).
  */
 
 /**

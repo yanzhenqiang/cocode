@@ -67,7 +67,7 @@ export function safeParseJSONC(json: string | null | undefined): unknown {
     return null
   }
   try {
-    // Strip BOM before parsing - PowerShell 5.x adds BOM to UTF-8 files
+    // Strip BOM before parsing - some editors add BOM to UTF-8 files
     return parseJsonc(stripBOM(json))
   } catch (e) {
     logError(e)
@@ -232,7 +232,7 @@ export function addItemToJSONCArray(content: string, newItem: unknown): string {
       return jsonStringify([newItem], null, 4)
     }
 
-    // Strip BOM before parsing - PowerShell 5.x adds BOM to UTF-8 files
+    // Strip BOM before parsing - some editors add BOM to UTF-8 files
     const cleanContent = stripBOM(content)
 
     // Parse the content to check if it's valid JSON

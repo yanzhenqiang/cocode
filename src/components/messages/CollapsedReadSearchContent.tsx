@@ -273,7 +273,7 @@ export function CollapsedReadSearchContent({
     for (const id_1 of toolUseIds) {
       if (!inProgressToolUseIDs.has(id_1)) continue;
       const data = lookups.progressMessagesByToolUseID.get(id_1)?.at(-1)?.data;
-      if (data?.type !== 'bash_progress' && data?.type !== 'powershell_progress') {
+      if (data?.type !== 'bash_progress') {
         continue;
       }
       if (elapsed === undefined || data.elapsedTimeSeconds > elapsed) {

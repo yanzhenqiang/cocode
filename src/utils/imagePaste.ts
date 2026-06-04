@@ -95,10 +95,9 @@ function getClipboardCommands() {
       deleteFile: `rm -f "${screenshotPath}"`,
     },
     win32: {
-      checkImage:
-        'powershell -NoProfile -Command "(Get-Clipboard -Format Image) -ne $null"',
-      saveImage: `powershell -NoProfile -Command "$img = Get-Clipboard -Format Image; if ($img) { $img.Save('${screenshotPath.replace(/\\/g, '\\\\')}', [System.Drawing.Imaging.ImageFormat]::Png) }"`,
-      getPath: 'powershell -NoProfile -Command "Get-Clipboard"',
+      checkImage: '',
+      saveImage: '',
+      getPath: '',
       deleteFile: `del /f "${screenshotPath}"`,
     },
   }

@@ -155,8 +155,7 @@ export function* normalizeMessage(message: Message): Generator<SDKMessage> {
           }
         }
       } else if (
-        message.data.type === 'bash_progress' ||
-        message.data.type === 'powershell_progress'
+        message.data.type === 'bash_progress'
       ) {
         // Filter bash progress to send only one per minute
         // Only emit for Claude Code Remote for now
@@ -190,7 +189,7 @@ export function* normalizeMessage(message: Message): Generator<SDKMessage> {
             type: 'tool_progress',
             tool_use_id: message.toolUseID,
             tool_name:
-              message.data.type === 'bash_progress' ? 'Bash' : 'PowerShell',
+              'Bash',
             parent_tool_use_id: message.parentToolUseID,
             elapsed_time_seconds: message.data.elapsedTimeSeconds,
             task_id: message.data.taskId,

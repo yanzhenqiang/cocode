@@ -990,7 +990,7 @@ async function run(): Promise<CommanderCommand> {
       overlyBroadBashPermissions
     } = initResult;
 
-    // Handle overly broad shell allow rules for ant users (Bash(*), PowerShell(*))
+    // Handle overly broad shell allow rules for ant users (Bash(*))
     if (feature('TRANSCRIPT_CLASSIFIER') && dangerousPermissions.length > 0) {
       toolPermissionContext = stripDangerousPermissionsForAutoMode(toolPermissionContext);
     }

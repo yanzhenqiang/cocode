@@ -1,10 +1,10 @@
 /**
- * Shared command validation maps for shell tools (BashTool, PowerShellTool, etc.).
+ * Shared command validation maps for shell tools (BashTool).
  *
  * Exports complete command configuration maps that any shell tool can import:
  * - GIT_READ_ONLY_COMMANDS: all git subcommands with safe flags and callbacks
  * - GH_READ_ONLY_COMMANDS: internal-only gh CLI commands (network-dependent)
- * - EXTERNAL_READONLY_COMMANDS: cross-shell commands that work in both bash and PowerShell
+ * - EXTERNAL_READONLY_COMMANDS: cross-shell commands that work identically across platforms
  * - containsVulnerableUncPath: UNC path detection for credential leak prevention
  * - outputLimits are in outputLimits.ts
  */
@@ -1532,18 +1532,18 @@ export const PYRIGHT_READ_ONLY_COMMANDS: Record<string, ExternalCommandConfig> =
 
 // ---------------------------------------------------------------------------
 // EXTERNAL_READONLY_COMMANDS — cross-shell read-only commands
-// Only commands that work identically in bash and PowerShell on Windows.
+// Only commands that work identically across platforms.
 // Unix-specific commands (cat, head, wc, etc.) belong in BashTool's READONLY_COMMANDS.
 // ---------------------------------------------------------------------------
 
 export const EXTERNAL_READONLY_COMMANDS: readonly string[] = [
-  // Cross-platform external tools that work the same in bash and PowerShell on Windows
+  // Cross-platform external tools
   'docker ps',
   'docker images',
 ] as const
 
 // ---------------------------------------------------------------------------
-// UNC path detection (shared across Bash and PowerShell)
+// UNC path detection
 // ---------------------------------------------------------------------------
 
 /**
@@ -1673,7 +1673,7 @@ export function validateFlagArgument(
  * Validates the flags/arguments portion of a tokenized command against a config.
  * This is the flag-walking loop extracted from BashTool's isCommandSafeViaFlagParsing.
  *
- * @param tokens - Pre-tokenized args (from bash shell-quote or PowerShell AST)
+ * @param tokens - Pre-tokenized args (from bash shell-quote)
  * @param startIndex - Where to start validating (after command tokens)
  * @param config - The safe flags config
  * @param options.commandName - For command-specific handling (git numeric shorthand, grep/rg attached numeric)

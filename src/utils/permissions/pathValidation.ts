@@ -330,7 +330,7 @@ const WINDOWS_DRIVE_CHILD_REGEX = /^[A-Za-z]:\/[^/]+$/
  */
 export function isDangerousRemovalPath(resolvedPath: string): boolean {
   // Callers pass both slash forms; collapse runs so C:\\Windows (valid in
-  // PowerShell) doesn't bypass the drive-child check.
+  // doesn't bypass the drive-child check.
   const forwardSlashed = resolvedPath.replace(/[\\/]+/g, '/')
 
   if (forwardSlashed === '*' || forwardSlashed.endsWith('/*')) {

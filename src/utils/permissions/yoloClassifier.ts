@@ -1484,16 +1484,6 @@ function isJsonlTranscriptEnabled(): boolean {
   return config?.jsonlTranscript === true
 }
 
-/**
- * PowerShell-specific deny guidance for the classifier. Appended to the
- * deny list in buildYoloSystemPrompt when PowerShell auto mode is active.
- * Maps PS idioms to the existing BLOCK categories so the classifier
- * recognizes `iex (iwr ...)` as "Code from External", `Remove-Item
- * -Recurse -Force` as "Irreversible Local Destruction", etc.
- *
- * Guarded at definition for DCE — with external:false, the string content
- * is absent from external builds (same pattern as the .txt requires above).
- */
 
 type AutoModeOutcome =
   | 'success'

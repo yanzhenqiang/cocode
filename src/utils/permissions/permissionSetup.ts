@@ -146,20 +146,6 @@ export function isDangerousBashPermission(
   return false
 }
 
-/**
- * Checks if a PowerShell permission rule is dangerous for auto mode.
- * A rule is dangerous if it would auto-allow commands that execute arbitrary
- * code (nested shells, Invoke-Expression, Start-Process, etc.), bypassing the
- * classifier's safety evaluation.
- *
- * PowerShell is case-insensitive, so rule content is lowercased before matching.
- */
-export function isDangerousPowerShellPermission(
-  _toolName: string,
-  _ruleContent: string | undefined,
-): boolean {
-  return false
-}
 
 /**
  * Checks if an Agent (sub-agent) permission rule is dangerous for auto mode.
@@ -208,7 +194,6 @@ function isDangerousClassifierPermission(
   }
   return (
     isDangerousBashPermission(toolName, ruleContent) ||
-    isDangerousPowerShellPermission(toolName, ruleContent) ||
     isDangerousTaskPermission(toolName, ruleContent)
   )
 }
@@ -217,9 +202,8 @@ function isDangerousClassifierPermission(
  * Finds all dangerous permissions from rules loaded from disk and CLI arguments.
  * Returns structured info about each dangerous permission found.
  *
- * Checks Bash permissions (wildcard/interpreter patterns), PowerShell permissions
- * (wildcard/iex/Start-Process patterns), and Agent permissions (any allow rule
- * bypasses the classifier's sub-agent evaluation).
+ * Checks Bash permissions (wildcard/interpreter patterns) and Agent permissions
+ * (any allow rule bypasses the classifier's sub-agent evaluation).
  */
 export function findDangerousClassifierPermissions(
   rules: PermissionRule[],
@@ -286,18 +270,6 @@ export function isOverlyBroadBashAllowRule(
 }
 
 /**
- * PowerShell equivalent of isOverlyBroadBashAllowRule.
- *
- * Matches: PowerShell, PowerShell(*), PowerShell() — all parse to
- * { toolName: 'PowerShell' } with no ruleContent.
- */
-export function isOverlyBroadPowerShellAllowRule(
-  _ruleValue: PermissionRuleValue,
-): boolean {
-  return false
-}
-
-/**
  * Finds all overly broad Bash allow rules from settings and CLI arguments.
  * An overly broad rule allows ALL bash commands (e.g., Bash or Bash(*)),
  * which is effectively equivalent to YOLO/bypass-permissions mode.
@@ -337,43 +309,6 @@ export function findOverlyBroadBashPermissions(
   return overlyBroad
 }
 
-/**
- * PowerShell equivalent of findOverlyBroadBashPermissions.
- */
-export function findOverlyBroadPowerShellPermissions(
-  rules: PermissionRule[],
-  cliAllowedTools: string[],
-): DangerousPermissionInfo[] {
-  const overlyBroad: DangerousPermissionInfo[] = []
-
-  for (const rule of rules) {
-    if (
-      rule.ruleBehavior === 'allow' &&
-      isOverlyBroadPowerShellAllowRule(rule.ruleValue)
-    ) {
-      overlyBroad.push({
-        ruleValue: rule.ruleValue,
-        source: rule.source,
-        ruleDisplay: `PowerShell(*)`,
-        sourceDisplay: formatPermissionSource(rule.source),
-      })
-    }
-  }
-
-  for (const toolSpec of cliAllowedTools) {
-    const parsed = permissionRuleValueFromString(toolSpec)
-    if (isOverlyBroadPowerShellAllowRule(parsed)) {
-      overlyBroad.push({
-        ruleValue: parsed,
-        source: 'cliArg',
-        ruleDisplay: `PowerShell(*)`,
-        sourceDisplay: '--allowed-tools',
-      })
-    }
-  }
-
-  return overlyBroad
-}
 
 /**
  * Type guard to check if a PermissionRuleSource is a valid PermissionUpdateDestination.
@@ -874,9 +809,8 @@ export async function initializeToolPermissionContext({
   const rulesFromDisk = loadAllPermissionRulesFromDisk()
 
   // Ant-only: Detect overly broad shell allow rules for all modes.
-  // Bash(*) or PowerShell(*) are equivalent to YOLO mode for that shell.
+  // Bash(*) is equivalent to YOLO mode for that shell.
   // Skip in CCR/BYOC where --allowed-tools is the intended pre-approval mechanism.
-  // Variable name kept for return-field compat; contains both shells.
   let overlyBroadBashPermissions: DangerousPermissionInfo[] = []
   if (
     false &&
@@ -885,15 +819,11 @@ export async function initializeToolPermissionContext({
   ) {
     overlyBroadBashPermissions = [
       ...findOverlyBroadBashPermissions(rulesFromDisk, parsedAllowedToolsCli),
-      ...findOverlyBroadPowerShellPermissions(
-        rulesFromDisk,
-        parsedAllowedToolsCli,
-      ),
     ]
   }
 
   // Ant-only: Detect dangerous shell permissions for auto mode
-  // Dangerous permissions (like Bash(*), Bash(python:*), PowerShell(iex:*)) would auto-allow
+  // Dangerous permissions (like Bash(*), Bash(python:*)) would auto-allow
   // before the classifier can evaluate them, defeating the purpose of safer YOLO mode
   let dangerousPermissions: DangerousPermissionInfo[] = []
   if (feature('TRANSCRIPT_CLASSIFIER') && permissionMode === 'auto') {

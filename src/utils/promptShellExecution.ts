@@ -52,7 +52,7 @@ export async function executeShellCommandsInPrompt(
 ): Promise<string> {
   let result = text
 
-  // Always use BashTool. PowerShell support has been removed.
+  // Always use BashTool.
   const shellTool: PromptShellTool = BashTool
 
   // INLINE_PATTERN's lookbehind is ~100x slower than BLOCK_PATTERN on large
@@ -107,7 +107,7 @@ export async function executeShellCommandsInPrompt(
                 )
           // Function replacer — String.replace interprets $$, $&, $`, $' in
           // the replacement string even with a string search pattern. Shell
-          // output (especially PowerShell: $env:PATH, $$, $PSVersionTable)
+          // output (especially $$, $PSVersionTable)
           // is arbitrary user data; a bare string arg would corrupt it.
           result = result.replace(match[0], () => output)
         } catch (e) {

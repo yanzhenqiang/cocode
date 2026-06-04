@@ -428,26 +428,6 @@ async function checkIdeConnection(
 }
 
 /**
- * Resolve the Windows USERPROFILE path. WSL often doesn't pass USERPROFILE
- * through, so fall back to shelling out to powershell.exe. That spawn is
- * ~500ms–2s cold; the value is static per session.
- */
-const getWindowsUserProfile = memoize(async (): Promise<string | undefined> => {
-  if (process.env.USERPROFILE) return process.env.USERPROFILE
-  const { stdout, code } = await execFileNoThrow('powershell.exe', [
-    '-NoProfile',
-    '-NonInteractive',
-    '-Command',
-    '$env:USERPROFILE',
-  ])
-  if (code === 0 && stdout.trim()) return stdout.trim()
-  logForDebugging(
-    'Unable to get Windows USERPROFILE via PowerShell - IDE detection may be incomplete',
-  )
-  return undefined
-})
-
-/**
  * Gets the potential IDE lockfiles directories path based on platform.
  * Paths are not pre-checked for existence — the consumer readdirs each
  * and handles ENOENT. Pre-checking with stat() would double syscalls,
@@ -464,7 +444,7 @@ export async function getIdeLockfilesPaths(): Promise<string[]> {
   // For Windows, use heuristics to find the potential paths.
   // See https://learn.microsoft.com/en-us/windows/wsl/filesystems
 
-  const windowsHome = await getWindowsUserProfile()
+  const windowsHome = process.env.USERPROFILE
 
   if (windowsHome) {
     const converter = new WindowsToWSLConverter(process.env.WSL_DISTRO_NAME)

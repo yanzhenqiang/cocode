@@ -131,7 +131,7 @@ export async function tmuxLoadBuffer(text: string): Promise<boolean> {
  * Local (no SSH_CONNECTION): also shell out to a native clipboard utility.
  * OSC 52 and tmux -w both depend on terminal settings — iTerm2 disables
  * OSC 52 by default, VS Code shows a permission prompt on first use. Native
- * utilities (pbcopy/wl-copy/xclip/xsel/PowerShell Set-Clipboard) always work locally. Over
+ * utilities (pbcopy/wl-copy/xclip/xsel) always work locally. Over
  * SSH these would write to the remote clipboard — OSC 52 is the right path there.
  *
  * Returns the sequence for the caller to write to stdout (raw OSC 52
@@ -212,34 +212,6 @@ function copyNative(text: string): void {
       })
       return
     }
-    case 'win32':
-      // Avoid piping non-ASCII text through the Windows stdin/codepage
-      // boundary. Write UTF-8 text to a temp file and let PowerShell read it
-      // directly as UTF-8 before calling Set-Clipboard.
-      void (async () => {
-        const tempPath = generateTempFilePath('cocode-clipboard', '.txt')
-        const escapedTempPath = tempPath.replace(/'/g, "''")
-        try {
-          await writeFile(tempPath, text, { encoding: 'utf8' })
-          await execFileNoThrow(
-            'powershell',
-            [
-              '-NoProfile',
-              '-NonInteractive',
-              '-Command',
-              `$text = [System.IO.File]::ReadAllText('${escapedTempPath}', [System.Text.Encoding]::UTF8); Set-Clipboard -Value $text`,
-            ],
-            {
-              useCwd: false,
-              timeout: opts.timeout,
-              stdin: 'ignore',
-            },
-          )
-        } finally {
-          await unlink(tempPath).catch(() => {})
-        }
-      })().catch(() => {})
-      return
   }
 }
 

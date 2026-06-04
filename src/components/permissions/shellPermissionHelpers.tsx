@@ -58,7 +58,7 @@ function formatPathList(paths: string[]): ReactNode {
 
 /**
  * Generate the label for the "Yes, and apply suggestions" option in shell
- * permission dialogs (Bash, PowerShell). Parametrized by the shell tool name
+ * permission dialogs (Bash). Parametrized by the shell tool name
  * and an optional command transform (e.g., Bash strips output redirections so
  * filenames don't show as commands).
  */

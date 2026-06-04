@@ -157,7 +157,6 @@ const TEXT_FILE_EXTENSIONS = new Set([
   '.bash',
   '.zsh',
   '.fish',
-  '.ps1',
   '.bat',
   '.cmd',
   // Config

@@ -36,10 +36,6 @@ const DANGEROUS_SHELL_PREFIXES = new Set([
   'dash',
   'cmd',
   'cmd.exe',
-  'powershell',
-  'powershell.exe',
-  'pwsh',
-  'pwsh.exe',
   'bash.exe',
 ])
 
