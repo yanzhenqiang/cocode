@@ -40,7 +40,6 @@ const isSwarmWorker = () => false;
 const generateSandboxRequestId = () => '';
 const sendSandboxPermissionRequestViaMailbox = async () => {};
 const sendSandboxPermissionResponseViaMailbox = async () => {};
-import { WorkerPendingPermission } from '../components/permissions/WorkerPendingPermission.js';
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 const registerLeaderToolUseConfirmQueue = () => {};
 const unregisterLeaderToolUseConfirmQueue = () => {};
@@ -3794,7 +3793,7 @@ export function REPL({
   // agent — displayedMessages is a different array there, and onAgentSubmit
   // doesn't use the placeholder anyway.
   const placeholderText = userInputOnProcessing && !viewedAgentTask && displayedMessages.length <= userInputBaselineRef.current ? userInputOnProcessing : undefined;
-  const toolPermissionOverlay = focusedInputDialog === 'tool-permission' ? <PermissionRequest key={toolUseConfirmQueue[0]?.toolUseID} onDone={() => setToolUseConfirmQueue(([_, ...tail]) => tail)} onReject={handleQueuedCommandOnCancel} toolUseConfirm={toolUseConfirmQueue[0]!} toolUseContext={getToolUseContext(messages, messages, abortController ?? createAbortController(), mainLoopModel)} verbose={verbose} workerBadge={toolUseConfirmQueue[0]?.workerBadge} setStickyFooter={isFullscreenEnvEnabled() ? setPermissionStickyFooter : undefined} /> : null;
+  const toolPermissionOverlay = focusedInputDialog === 'tool-permission' ? <PermissionRequest key={toolUseConfirmQueue[0]?.toolUseID} onDone={() => setToolUseConfirmQueue(([_, ...tail]) => tail)} onReject={handleQueuedCommandOnCancel} toolUseConfirm={toolUseConfirmQueue[0]!} toolUseContext={getToolUseContext(messages, messages, abortController ?? createAbortController(), mainLoopModel)} verbose={verbose} setStickyFooter={isFullscreenEnvEnabled() ? setPermissionStickyFooter : undefined} /> : null;
 
   // Narrow terminals: companion collapses to a one-liner that REPL stacks
   // on its own row (above input in fullscreen, below in scrollback) instead
@@ -3943,10 +3942,6 @@ export function REPL({
             item.reject(new Error('Prompt cancelled by user'));
             setPromptQueue(([, ...tail]) => tail);
           }} />}
-          {/* Show pending indicator on worker while waiting for leader approval */}
-          {pendingWorkerRequest && <WorkerPendingPermission toolName={pendingWorkerRequest.toolName} description={pendingWorkerRequest.description} />}
-          {/* Show pending indicator for sandbox permission on worker side */}
-          {pendingSandboxRequest && <WorkerPendingPermission toolName="Network Access" description={`Waiting for leader to approve network access to ${pendingSandboxRequest.host}`} />}
           {/* Worker sandbox permission requests from swarm workers */}
           {focusedInputDialog === 'worker-sandbox-permission' && <SandboxPermissionRequest key={workerSandboxPermissions.queue[0]!.requestId} hostPattern={{
             host: workerSandboxPermissions.queue[0]!.host,

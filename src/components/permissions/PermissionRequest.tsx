@@ -40,7 +40,6 @@ import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs
 /* eslint-enable @typescript-eslint/no-require-imports */
 import type { z } from 'zod/v4';
 import type { PermissionUpdate } from '../../utils/permissions/PermissionUpdateSchema.js';
-import type { WorkerBadgeProps } from './WorkerBadge.js';
 function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionRequestProps> {
   switch (tool) {
     case FileEditTool:
@@ -79,7 +78,6 @@ export type PermissionRequestProps<Input extends AnyObject = AnyObject> = {
   onDone(): void;
   onReject(): void;
   verbose: boolean;
-  workerBadge: WorkerBadgeProps | undefined;
   /**
    * Register JSX to render in a sticky footer below the scrollable area.
    * Fullscreen mode only (non-fullscreen has no sticky area — terminal
@@ -110,7 +108,6 @@ export type ToolUseConfirm<Input extends AnyObject = AnyObject> = {
   classifierCheckInProgress?: boolean;
   classifierAutoApproved?: boolean;
   classifierMatchedRule?: string;
-  workerBadge?: WorkerBadgeProps;
   onUserInteraction(): void;
   onAbort(): void;
   onDismissCheckmark?(): void;
@@ -141,7 +138,6 @@ export function PermissionRequest(t0) {
     onDone,
     onReject,
     verbose,
-    workerBadge,
     setStickyFooter
   } = t0;
   let t1;
@@ -188,8 +184,8 @@ export function PermissionRequest(t0) {
   }
   const PermissionComponent = t4;
   let t5;
-  if ($[9] !== PermissionComponent || $[10] !== onDone || $[11] !== onReject || $[12] !== setStickyFooter || $[13] !== toolUseConfirm || $[14] !== toolUseContext || $[15] !== verbose || $[16] !== workerBadge) {
-    t5 = <PermissionComponent toolUseContext={toolUseContext} toolUseConfirm={toolUseConfirm} onDone={onDone} onReject={onReject} verbose={verbose} workerBadge={workerBadge} setStickyFooter={setStickyFooter} />;
+  if ($[9] !== PermissionComponent || $[10] !== onDone || $[11] !== onReject || $[12] !== setStickyFooter || $[13] !== toolUseConfirm || $[14] !== toolUseContext || $[15] !== verbose) {
+    t5 = <PermissionComponent toolUseContext={toolUseContext} toolUseConfirm={toolUseConfirm} onDone={onDone} onReject={onReject} verbose={verbose} setStickyFooter={setStickyFooter} />;
     $[9] = PermissionComponent;
     $[10] = onDone;
     $[11] = onReject;
@@ -197,10 +193,9 @@ export function PermissionRequest(t0) {
     $[13] = toolUseConfirm;
     $[14] = toolUseContext;
     $[15] = verbose;
-    $[16] = workerBadge;
-    $[17] = t5;
+    $[16] = t5;
   } else {
-    t5 = $[17];
+    t5 = $[16];
   }
   return t5;
 }
