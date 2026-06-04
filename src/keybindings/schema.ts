@@ -74,7 +74,6 @@ export const KEYBINDING_ACTIONS = [
   'history:next',
   // Chat input actions
   'chat:cancel',
-  'chat:cycleMode',
   'chat:modelPicker',
   'chat:thinkingToggle',
   'chat:submit',
@@ -92,7 +91,6 @@ export const KEYBINDING_ACTIONS = [
   'confirm:next',
   'confirm:nextField',
   'confirm:previousField',
-  'confirm:cycleMode',
   'confirm:toggle',
   'confirm:toggleExplanation',
   // Tabs navigation actions
