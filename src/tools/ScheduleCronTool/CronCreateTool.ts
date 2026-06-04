@@ -64,7 +64,7 @@ export const CronCreateTool = buildTool({
     return outputSchema()
   },
   isEnabled() {
-    return isKairosCronEnabled()
+    return true
   },
   toAutoClassifierInput(input) {
     return `${input.cron}: ${input.prompt}`

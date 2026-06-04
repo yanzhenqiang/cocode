@@ -45,7 +45,7 @@ export const CronListTool = buildTool({
     return outputSchema()
   },
   isEnabled() {
-    return isKairosCronEnabled()
+    return true
   },
   isConcurrencySafe() {
     return true

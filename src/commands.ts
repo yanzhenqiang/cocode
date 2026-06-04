@@ -24,7 +24,6 @@ import theme from './commands/theme/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
-import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import privacySettings from './commands/privacy-settings/index.js'
 import cacheProbe from './commands/cache-probe/index.js'
@@ -137,7 +136,6 @@ const COMMANDS = memoize((): Command[] => [
   usageReport,
   permissions,
   plan,
-  hooks,
   exportCommand,
   tasks,
   ...(false && !process.env.IS_DEMO
