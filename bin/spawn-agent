@@ -23,10 +23,22 @@ printf '%s\n' "$PROMPT" > "$AGENT_DIR/prompt.txt"
 # Get parent tmux session
 PARENT=$(tmux display-message -p '#S' 2>/dev/null || echo "unknown")
 
+# Inherit the main agent's environment (API keys, model config, etc.)
+# so the subagent can connect to the same backend.
+env_args=()
+for var in ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL \
+  ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL \
+  CLAUDE_CODE_SUBAGENT_MODEL CLAUDE_CODE_EFFORT_LEVEL; do
+  if [ -n "${!var:-}" ]; then
+    env_args+=(-e "$var=${!var}")
+  fi
+done
+
 # Launch tmux session with bash first (same as main agent approach).
 # Starting cocode directly as the tmux command breaks send-keys input.
 # Set TMPDIR to the agent workspace to avoid /tmp permission issues.
 tmux new-session -d -s "$SESSION_NAME" \
+  "${env_args[@]}" \
   -e "PARENT_SESSION=$PARENT" \
   -e "AGENT_ID=$SESSION_NAME" \
   -e "AGENT_WORKSPACE=$AGENT_DIR" \
