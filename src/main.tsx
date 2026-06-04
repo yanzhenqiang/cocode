@@ -1945,7 +1945,7 @@ if (!isNonInteractiveSession) {
         logError(error);
         return await exitWithError(root, errorMessage(error), () => gracefulShutdown(1));
       }
-    } else if (options.resume || options.fromPr) {
+    } else if (options.resume || false) {
       // Handle resume flow - from file (internal-only), session ID, or interactive selector
 
       // Clear stale caches before resuming to ensure fresh file/skill discovery
@@ -1963,13 +1963,13 @@ if (!isNonInteractiveSession) {
       let filterByPr: boolean | number | string | undefined = undefined;
 
       // Handle --from-pr flag
-      if (options.fromPr) {
-        if (options.fromPr === true) {
+      if (false) {
+        if (false === true) {
           // Show all sessions with linked PRs
           filterByPr = true;
-        } else if (typeof options.fromPr === 'string') {
+        } else if (typeof false === 'string') {
           // Could be a PR number or URL
-          filterByPr = options.fromPr;
+          filterByPr = false;
         }
       }
 
@@ -2212,15 +2212,6 @@ if (!isNonInteractiveSession) {
   // END internal-only
 
   // Setup token command
-  program.command('setup-token').description('Set up a long-lived authentication token (requires Claude subscription)').action(async () => {
-    const [{
-      setupTokenHandler
-    }, {
-      createRoot
-    }] = await Promise.all([import('./cli/handlers/util.js'), import('./ink.js')]);
-    const root = await createRoot(getBaseRenderOptions(false));
-    await setupTokenHandler(root);
-  });
 
   // Agents command - list configured agents
   program.command('agents').description('List configured agents').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).').action(async () => {
@@ -2268,31 +2259,12 @@ if (!isNonInteractiveSession) {
   // (25ms settings Zod parse + 40ms sync `security` keychain subprocess).
 
   // Doctor command - check installation health
-  program.command('doctor').description('Check the health of your Cocode auto-updater. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.').action(async () => {
-    const [{
-      doctorHandler
-    }, {
-      createRoot
-    }] = await Promise.all([import('./cli/handlers/util.js'), import('./ink.js')]);
-    const root = await createRoot(getBaseRenderOptions(false));
-    await doctorHandler(root);
-  });
 
   // claude update
   // claude up — run the project's CLAUDE.md "# claude up" setup instructions.
 
   // claude rollback (internal-only)
   // Rolls back to previous releases
-
-  // claude install
-  program.command('install [target]').description('Install Cocode native build. Use [target] to specify version (stable, latest, or specific version)').option('--force', 'Force installation even if already installed').action(async (target: string | undefined, options: {
-    force?: boolean;
-  }) => {
-    const {
-      installHandler
-    } = await import('./cli/handlers/util.js');
-    await installHandler(target, options);
-  });
 
   // internal-only commands
   profileCheckpoint('run_before_parse');
