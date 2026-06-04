@@ -1229,7 +1229,6 @@ function PromptInput({
     }
   }, [input, cursorOffset, stashedPrompt, trackAndSetInput, setStashedPrompt, pastedContents, setPastedContents]);
 
-  // Handler for chat:modelPicker - toggle model picker
   const handleModelPicker = useCallback(() => {
     setShowModelPicker(prev => !prev);
     if (helpOpen) {
@@ -1466,7 +1465,6 @@ function PromptInput({
   // fall through to history when the cursor can't move further.
   const chatHandlers = useMemo(() => ({
     'chat:newline': handleNewline,
-    'chat:modelPicker': handleModelPicker,
     'chat:thinkingToggle': handleThinkingToggle,
     'chat:cycleMode': handleCycleMode,
     'chat:imagePaste': handleImagePaste

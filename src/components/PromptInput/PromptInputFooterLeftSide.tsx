@@ -134,7 +134,6 @@ function ModeIndicator({
   const {
     columns
   } = useTerminalSize();
-  const modeCycleShortcut = useShortcutDisplay('chat:cycleMode', 'Chat', 'shift+tab');
   const tasks = useAppState(s => s.tasks);
   const viewingAgentTaskId = useAppState(s_1 => s_1.viewingAgentTaskId);
   const expandedView = useAppState(s_2 => s_2.expandedView);
@@ -178,7 +177,6 @@ function ModeIndicator({
         {permissionModeTitle(currentMode).toLowerCase()} on
         {shouldShowModeHint && <Text dimColor>
             {' '}
-            <KeyboardShortcutHint shortcut={modeCycleShortcut} action="cycle" parens />
           </Text>}
       </Text> : null;
 

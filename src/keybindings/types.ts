@@ -31,7 +31,6 @@ export type KeybindingAction =
   | 'history:previous'
   | 'history:next'
   | 'chat:cancel'
-  | 'chat:modelPicker'
   | 'chat:thinkingToggle'
   | 'chat:submit'
   | 'chat:newline'

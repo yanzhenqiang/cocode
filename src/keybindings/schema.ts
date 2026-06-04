@@ -74,7 +74,6 @@ export const KEYBINDING_ACTIONS = [
   'history:next',
   // Chat input actions
   'chat:cancel',
-  'chat:modelPicker',
   'chat:thinkingToggle',
   'chat:submit',
   'chat:newline',
