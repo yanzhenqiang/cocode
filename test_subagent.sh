@@ -91,11 +91,36 @@ else
   fail "3.1 spawn-agent 未创建 agent session"
 fi
 
-# 主 agent 存活
+# Step 4: 验证环境变量和生命周期
+if [ -n "$AGENT_SESSION" ]; then
+  ENV_OUTPUT=$(tmux show-environment -t "$AGENT_SESSION" 2>/dev/null)
+
+  if echo "$ENV_OUTPUT" | grep -q "PARENT_SESSION=main"; then
+    pass "4.1 PARENT_SESSION=main 注入正确"
+  else
+    fail "4.1 PARENT_SESSION 未正确注入"
+  fi
+
+  if echo "$ENV_OUTPUT" | grep -q "AGENT_ID=$AGENT_SESSION"; then
+    pass "4.2 AGENT_ID 注入正确"
+  else
+    fail "4.2 AGENT_ID 未正确注入"
+  fi
+
+  # Kill subagent and verify main survives
+  tmux kill-session -t "$AGENT_SESSION" 2>/dev/null
+  sleep 1
+  if ! tmux has-session -t "$AGENT_SESSION" 2>/dev/null; then
+    pass "4.3 kill subagent 后 session 被清除"
+  else
+    fail "4.3 kill subagent 后 session 仍存在"
+  fi
+fi
+
 if tmux has-session -t main 2>/dev/null; then
-  pass "3.5 主 agent 在子 agent 执行后仍存活"
+  pass "4.4 主 agent 在子 agent kill 后仍存活"
 else
-  fail "3.5 主 agent 被终止"
+  fail "4.4 主 agent 被连带终止"
 fi
 
 cleanup
