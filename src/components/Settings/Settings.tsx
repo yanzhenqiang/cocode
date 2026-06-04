@@ -10,14 +10,13 @@ import { Pane } from '../design-system/Pane.js';
 import { Tabs, Tab } from '../design-system/Tabs.js';
 import { Status, buildDiagnostics } from './Status.js';
 import { Config } from './Config.js';
-import { Usage } from './Usage.js';
 import type { LocalJSXCommandContext, CommandResultDisplay } from '../../commands.js';
 type Props = {
   onClose: (result?: string, options?: {
     display?: CommandResultDisplay;
   }) => void;
   context: LocalJSXCommandContext;
-  defaultTab: 'Status' | 'Config' | 'Usage' | 'Gates';
+  defaultTab: 'Status' | 'Config'  | 'Gates';
 };
 export function Settings(t0) {
   const $ = _c(25);
@@ -88,7 +87,7 @@ export function Settings(t0) {
   }
   let t6;
   if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
-    t6 = <Tab key="usage" title="Usage"><Usage /></Tab>;
+    t6 = null;
     $[12] = t6;
   } else {
     t6 = $[12];
