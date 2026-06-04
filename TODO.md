@@ -1,36 +1,9 @@
 # TODO
 
-## All Cleanup Complete
+## Resume 功能优化
+- [ ] 删除 /resume 中的搜索框 (SearchBox)，会话列表直接展示，无需搜索过滤
 
-### Round 1: Feature & Stub Cleanup (~9,700 lines)
-- [x] 33/33 dead feature flags removed
-- [x] 70+ stubs eliminated to zero
-- [x] LSP, trust dialog, ctrl+r, --bare, --worktree, --agent removed
-- [x] Plugin management system deleted (5 files)
-- [x] Swarm/Teammate references ~75% eliminated
-
-### Round 2: Dead Keyword Cleanup (~8,600 lines)
-- [x] Vim mode — 169→2 refs (-366 lines)
-- [x] MiniMax usage tracking — 6 files deleted
-- [x] Codex provider — 430→0 code refs, 3 files deleted
-- [x] Console OAuth — 1 file deleted
-- [x] /diff command — 3 files deleted
-- [x] Claude AI rate limit system — 4 files deleted
-- [x] claude.ai MCP connectors — 1 file deleted
-- [x] --workload CLI flag
-
-### Remaining (harmless / kept)
-| Category | Refs | Reason |
-|----------|------|--------|
-| Vim | 2 | Function def + editor name |
-| MiniMax | 145 | Live provider registration |
-| Codex | ~15 | Comments only |
-| MCP OAuth | 567 | MCP servers (Notion) |
-| claude.ai | ~58 | isClaudeAISubscriber() always false |
-| subscriber | ~187 | isClaudeAISubscriber() callers |
-
-### Stats
-- Total: 354,397 → 336,xxx lines (~-18,000)
-- Files: 1,425 → ~1,350 (~-75)
-- Commits: 65
-- Tests: 8/8 throughout
+## 代码清理 (低优先级)
+- [ ] 剩余死 feature flags: EXPERIMENTAL_SKILL_SEARCH (仅注释)、TREE_SITTER_BASH (bash parser)
+- [ ] claude.ai 残余引用 (~26 个，主要是 URL 字符串)
+- [ ] Subscriber 残余引用 (~185 个，subscribe 在 React 模式中的误匹配)

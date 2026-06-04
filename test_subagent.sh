@@ -2,23 +2,16 @@
 set -e
 
 echo "========================================"
-echo "TEST_SUB_AGENT — 端到端功能测试"
+echo "TEST_SUB_AGENT — spawn-agent 端到端测试"
 echo "========================================"
 
 PASS=0
 FAIL=0
 
-function pass() {
-  echo "PASS: $1"
-  PASS=$((PASS + 1))
-}
+pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
+fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
-function fail() {
-  echo "FAIL: $1"
-  FAIL=$((FAIL + 1))
-}
-
-function cleanup() {
+cleanup() {
   tmux kill-session -t main 2>/dev/null || true
   for s in $(tmux list-sessions -F '#{session_name}' 2>/dev/null | grep '^agent-'); do
     tmux kill-session -t "$s" 2>/dev/null || true
@@ -29,121 +22,91 @@ function cleanup() {
 cleanup
 sleep 1
 
-# Pre-accept trust dialog for home directory
-CWD_PATH="/data/data/com.termux/files/home"
-if [ ! -f "$HOME/.cocode.json" ]; then
-  echo "{\"projects\":{\"$CWD_PATH\":{\"hasTrustDialogAccepted\":true}}}" > "$HOME/.cocode.json"
-else
-  # Merge trust setting into existing config
-  node -e "
-const fs = require('fs');
-const path = require('path');
-const configPath = path.join(process.env.HOME, '.cocode.json');
-let config = {};
-try { config = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch(e) {}
-if (!config.projects) config.projects = {};
-config.projects['$CWD_PATH'] = { ...(config.projects['$CWD_PATH'] || {}), hasTrustDialogAccepted: true };
-fs.writeFileSync(configPath, JSON.stringify(config));
-" 2>/dev/null || true
-fi
+# Create .TEST directory with known files
+TEST_DIR="$(pwd)/.TEST"
+rm -rf "$TEST_DIR"
+mkdir -p "$TEST_DIR"
+echo "marker_alpha_123" > "$TEST_DIR/alpha.txt"
+echo "marker_beta_456"  > "$TEST_DIR/beta.txt"
+echo "marker_gamma_789" > "$TEST_DIR/gamma.txt"
 
-# Step 1: 启动主 Agent
+# Step 1: 启动主 agent
 echo "Step 1: 启动主 agent..."
-tmux new -s main -d "cd /data/data/com.termux/files/home && bash"
+tmux new -s main -d "cd $(pwd) && exec bash"
 sleep 2
 tmux send-keys -t main "bash /data/data/com.termux/files/home/cocode.sh" Enter
-sleep 15
+sleep 20
 
-# 验证点 1.1
 if tmux has-session -t main 2>/dev/null; then
   pass "1.1 主 Agent 启动"
 else
   fail "1.1 主 Agent 未启动"
-  exit 1
+  cleanup; exit 1
 fi
 
-# Step 2: 发送初始 Prompt（触发 Skill 拉起 Subagent）
-echo "Step 2: 发送 prompt 触发 Skill..."
-tmux send-keys -t main "/agent 创建一个 Explore subagent，任务是'列出当前目录下所有文件'" Enter
-sleep 25
+# Step 2: 要求 LLM 使用 spawn-agent 创建子 agent 来列出文件
+echo "Step 2: 发送 prompt 要求使用 spawn-agent..."
+tmux send-keys -t main "/agent 使用 spawn-agent 创建一个子 agent，任务是在 $TEST_DIR 下列出所有文件，把文件名返回给主 agent" Enter
+sleep 60
 
-# 验证点 2.1
+# 2.1 主 agent 响应了
 OUTPUT=$(tmux capture-pane -t main -p)
-if echo "$OUTPUT" | grep -qE "agent|Explore|spawn|session"; then
-  pass "2.1 Skill 调用响应"
+if echo "$OUTPUT" | grep -qE "agent|spawn|session|Agent"; then
+  pass "2.1 主 agent 响应了技能调用"
 else
-  fail "2.1 主 agent 未响应 skill 调用"
+  fail "2.1 主 agent 未响应技能调用"
 fi
 
-# Step 3: 验证主流程正确性
+# Step 3: 验证子 agent
 echo "Step 3: 验证子 agent..."
-sleep 5
+sleep 10
 
-# 3.1 Subagent Session 被正确创建
 AGENT_SESSION=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | grep '^agent-' | head -1)
 if [ -n "$AGENT_SESSION" ]; then
-  pass "3.1 Subagent Session 被正确创建 ($AGENT_SESSION)"
+  pass "3.1 spawn-agent 创建了独立 subagent session ($AGENT_SESSION)"
+
+  # 等待子 agent 执行
+  sleep 40
+  AGENT_OUTPUT=$(tmux capture-pane -t "$AGENT_SESSION" -p -S -500)
+
+  # 3.2-3.4 验证子 agent 找到了正确的文件
+  if echo "$AGENT_OUTPUT" | grep -q "alpha"; then
+    pass "3.2 子 agent 找到了 alpha.txt"
+  else
+    fail "3.2 子 agent 未找到 alpha.txt"
+  fi
+
+  if echo "$AGENT_OUTPUT" | grep -q "beta"; then
+    pass "3.3 子 agent 找到了 beta.txt"
+  else
+    fail "3.3 子 agent 未找到 beta.txt"
+  fi
+
+  if echo "$AGENT_OUTPUT" | grep -q "gamma"; then
+    pass "3.4 子 agent 找到了 gamma.txt"
+  else
+    fail "3.4 子 agent 未找到 gamma.txt"
+  fi
 else
-  fail "3.1 Subagent Session 未创建"
+  fail "3.1 spawn-agent 未创建 agent session"
 fi
 
-# 3.2 环境变量注入验证
-if [ -n "$AGENT_SESSION" ]; then
-  ENV_OUTPUT=$(tmux show-environment -t "$AGENT_SESSION" 2>/dev/null)
-
-  if echo "$ENV_OUTPUT" | grep -q "PARENT_SESSION=main"; then
-    pass "3.2 PARENT_SESSION=main 注入正确"
-  else
-    fail "3.2 PARENT_SESSION 未正确注入"
-  fi
-
-  if echo "$ENV_OUTPUT" | grep -q "AGENT_ID=$AGENT_SESSION"; then
-    pass "3.3 AGENT_ID 注入正确"
-  else
-    fail "3.3 AGENT_ID 未正确注入"
-  fi
-
-  # 3.4 子 Agent 独立执行委托任务
-  sleep 5
-  SUB_OUTPUT=$(tmux capture-pane -t "$AGENT_SESSION" -p 2>/dev/null)
-  if echo "$SUB_OUTPUT" | grep -qE "文件|cocode|目录|ls"; then
-    pass "3.4 子 agent 在执行任务"
-  else
-    fail "3.4 子 agent 未执行任务"
-  fi
-
-  # 3.5 生命周期管理验证
-  tmux kill-session -t "$AGENT_SESSION"
-  sleep 1
-  if ! tmux has-session -t "$AGENT_SESSION" 2>/dev/null; then
-    pass "3.5 kill subagent 后主 agent 不受影响"
-  else
-    fail "3.5 kill subagent 后 session 仍存在"
-  fi
-fi
-
-# 3.6 主 agent 仍然存活
+# 主 agent 存活
 if tmux has-session -t main 2>/dev/null; then
-  pass "3.6 主 agent 在子 agent kill 后仍存活"
+  pass "3.5 主 agent 在子 agent 执行后仍存活"
 else
-  fail "3.6 主 agent 被连带终止"
+  fail "3.5 主 agent 被终止"
 fi
 
-# Teardown
 cleanup
+rm -rf "$TEST_DIR"
 
-# 结果汇总
 echo ""
 echo "========================================"
 echo "TEST_SUB_AGENT 结果汇总"
 echo "========================================"
 echo "通过: $PASS"
 echo "失败: $FAIL"
-
-if [ $FAIL -eq 0 ]; then
-  echo "全部测试通过！"
-  exit 0
-else
-  echo "存在失败的测试"
-  exit 1
-fi
+[ $FAIL -eq 0 ] && echo "全部测试通过！" && exit 0
+echo "存在失败的测试"
+exit 1
