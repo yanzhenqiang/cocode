@@ -154,7 +154,6 @@ import { stableStringifyJson } from './stableStringify.js'
 import { isEnvTruthy } from './envUtils.js'
 import { errorMessage, getErrnoCode } from './errors.js'
 import type {
-  HookChainOutcome,
 } from './hookChains.js'
 
 const TOOL_HOOK_EXECUTION_TIMEOUT_MS = 10 * 60 * 1000
@@ -196,7 +195,6 @@ function dedupeRegisteredPluginHooks(
 
 async function dispatchHookChainFromHookRuntime(args: {
   eventName: 'PostToolUseFailure' | 'TaskCompleted'
-  outcome: HookChainOutcome
   payload: Record<string, unknown>
   signal?: AbortSignal
   toolUseContext?: ToolUseContext
