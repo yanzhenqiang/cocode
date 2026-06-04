@@ -1,6 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
-import { Box, Text, useTheme, useThemeSetting, useTerminalFocus } from '../../ink.js';
+import { Box, Text, useTheme, useThemeSetting } from '../../ink.js';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import * as React from 'react';
 import { useState, useCallback } from 'react';
@@ -32,7 +32,6 @@ import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { Byline } from '../design-system/Byline.js';
 import { useTabHeaderFocus } from '../design-system/Tabs.js';
 import { useIsInsideModal } from '../../context/modalContext.js';
-import { SearchBox } from '../SearchBox.js';
 import { isSupportedTerminal, toIDEDisplayName } from '../../utils/ide.js';
 import { getInitialSettings, getSettingsForSource, updateSettingsForSource } from '../../utils/settings/settings.js';
 import { getUserMsgOptIn, setUserMsgOptIn } from '../../bootstrap/state.js';
@@ -44,7 +43,6 @@ import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 const getCliTeammateModeOverride = () => undefined;
 const clearCliTeammateModeOverride = () => {};
 const getHardcodedTeammateModelFallback = () => undefined;
-import { useSearchInput } from '../../hooks/useSearchInput.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { clearFastModeCooldown, FAST_MODE_MODEL_DISPLAY, isFastModeAvailable, isFastModeEnabled, getFastModeModel, isFastModeSupportedByModel } from '../../utils/fastMode.js';
 import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
@@ -54,16 +52,11 @@ type Props = {
   }) => void;
   context: LocalJSXCommandContext;
   setTabsHidden: (hidden: boolean) => void;
-  onIsSearchModeChange?: (inSearchMode: boolean) => void;
   contentHeight?: number;
 };
 type SettingBase = {
   id: string;
-  label: string;
-} | {
-  id: string;
-  label: React.ReactNode;
-  searchText: string;
+  label: string | React.ReactNode;
 };
 type Setting = (SettingBase & {
   value: boolean;
@@ -86,12 +79,10 @@ export function Config({
   onClose,
   context,
   setTabsHidden,
-  onIsSearchModeChange,
   contentHeight
 }: Props): React.ReactNode {
   const {
-    headerFocused,
-    focusHeader
+    headerFocused
   } = useTabHeaderFocus();
   const insideModal = useIsInsideModal();
   const [, setTheme] = useTheme();
@@ -106,14 +97,12 @@ export function Config({
   const initialLanguage = React.useRef(currentLanguage);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
-  const [isSearchMode, setIsSearchMode] = useState(true);
-  const isTerminalFocused = useTerminalFocus();
   const {
     rows
   } = useTerminalSize();
   // contentHeight is set by Settings.tsx (same value passed to Tabs to fix
   // pane height across all tabs — prevents layout jank when switching).
-  // Reserve ~10 rows for chrome (search box, gaps, footer, scroll hints).
+  // Reserve ~10 rows for chrome (gaps, footer, scroll hints).
   // Fallback calc for standalone rendering (tests).
   const paneCap = contentHeight ?? Math.min(Math.floor(rows * 0.8), 30);
   const maxVisible = Math.max(5, paneCap - 10);
@@ -168,26 +157,7 @@ export function Config({
   const isDirty = React.useRef(false);
   const [showThinkingWarning, setShowThinkingWarning] = useState(false);
   const [showSubmenu, setShowSubmenu] = useState<SubMenu | null>(null);
-  const {
-    query: searchQuery,
-    setQuery: setSearchQuery,
-    cursorOffset: searchCursorOffset
-  } = useSearchInput({
-    isActive: isSearchMode && showSubmenu === null && !headerFocused,
-    onExit: () => setIsSearchMode(false),
-    onExitUp: focusHeader,
-    // Ctrl+C/D must reach Settings' useExitOnCtrlCD; 'd' also avoids
-    // double-action (delete-char + exit-pending).
-    passthroughCtrlKeys: ['c', 'd']
-  });
 
-  // Tell the parent when Config's own Esc handler is active so Settings cedes
-  // confirm:no. Only true when search mode owns the keyboard — not when the
-  // tab header is focused (then Settings must handle Esc-to-close).
-  const ownsEsc = isSearchMode && !headerFocused;
-  React.useEffect(() => {
-    onIsSearchModeChange?.(ownsEsc);
-  }, [ownsEsc, onIsSearchModeChange]);
   const isFileCheckpointingAvailable = !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING);
   const memoryFiles = React.use(getMemoryFiles(true));
   const shouldShowExternalIncludesToggle = hasExternalClaudeMdIncludes(memoryFiles);
@@ -839,7 +809,6 @@ export function Config({
                   {normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY)}
                 </Text>
               </Text>,
-    searchText: 'Use custom API key',
     value: Boolean(process.env.ANTHROPIC_API_KEY && globalConfig.customApiKeyResponses?.approved?.includes(normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY))),
     type: 'boolean' as const,
     onChange(useCustomKey: boolean) {
@@ -887,16 +856,7 @@ export function Config({
     }
   }] : [])];
 
-  // Filter settings based on search query
-  const filteredSettingsItems = React.useMemo(() => {
-    if (!searchQuery) return settingsItems;
-    const lowerQuery = searchQuery.toLowerCase();
-    return settingsItems.filter(setting => {
-      if (setting.id.toLowerCase().includes(lowerQuery)) return true;
-      const searchableText = 'searchText' in setting ? setting.searchText : setting.label;
-      return searchableText.toLowerCase().includes(lowerQuery);
-    });
-  }, [settingsItems, searchQuery]);
+  const filteredSettingsItems = settingsItems;
 
   // Adjust selected index when filtered list shrinks, and keep the selected
   // item visible when maxVisible changes (e.g., terminal resize).
@@ -1091,22 +1051,17 @@ export function Config({
     });
   }, [showSubmenu, revertChanges, onClose]);
 
-  // Disable when submenu is open so the submenu's Dialog handles ESC, and in
-  // search mode so the onKeyDown handler (which clears-then-exits search)
-  // wins — otherwise Escape in search would jump straight to revert+close.
   useKeybinding('confirm:no', handleEscape, {
     context: 'Settings',
-    isActive: showSubmenu === null && !isSearchMode && !headerFocused
+    isActive: showSubmenu === null && !headerFocused
   });
-  // Save-and-close fires on Enter only when not in search mode (Enter there
-  // exits search to the list — see the isSearchMode branch in handleKeyDown).
   useKeybinding('settings:close', handleSaveAndClose, {
     context: 'Settings',
-    isActive: showSubmenu === null && !isSearchMode && !headerFocused
+    isActive: showSubmenu === null && !headerFocused
   });
 
   // Settings navigation and toggle actions via configurable keybindings.
-  // Only active when not in search mode and no submenu is open.
+  // Only active when no submenu is open.
   const toggleSetting = useCallback(() => {
     const setting_0 = filteredSettingsItems[selectedIndex];
     if (!setting_0 || !setting_0.onChange) {
@@ -1171,18 +1126,7 @@ export function Config({
     adjustScrollOffset(newIndex_1);
   };
   useKeybindings({
-    'select:previous': () => {
-      if (selectedIndex === 0) {
-        // ↑ at top enters search mode so users can type-to-filter after
-        // reaching the list boundary. Wheel-up (scroll:lineUp) clamps
-        // instead — overshoot shouldn't move focus away from the list.
-        setShowThinkingWarning(false);
-        setIsSearchMode(true);
-        setScrollOffset(0);
-      } else {
-        moveSelection(-1);
-      }
-    },
+    'select:previous': () => moveSelection(-1),
     'select:next': () => moveSelection(1),
     // Wheel. ScrollKeybindingHandler's scroll:line* returns false (not
     // consumed) when the ScrollBox content fits — which it always does
@@ -1190,61 +1134,22 @@ export function Config({
     // to this handler which navigates the list, clamping at boundaries.
     'scroll:lineUp': () => moveSelection(-1),
     'scroll:lineDown': () => moveSelection(1),
-    'select:accept': toggleSetting,
-    'settings:search': () => {
-      setIsSearchMode(true);
-      setSearchQuery('');
-    }
+    'select:accept': toggleSetting
   }, {
     context: 'Settings',
-    isActive: showSubmenu === null && !isSearchMode && !headerFocused
+    isActive: showSubmenu === null && !headerFocused
   });
 
-  // Combined key handling across search/list modes. Branch order mirrors
-  // the original useInput gate priority: submenu and header short-circuit
-  // first (their own handlers own input), then search vs. list.
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (showSubmenu !== null) return;
     if (headerFocused) return;
-    // Search mode: Esc clears then exits, Enter/↓ moves to the list.
-    if (isSearchMode) {
-      if (e.key === 'escape') {
-        e.preventDefault();
-        if (searchQuery.length > 0) {
-          setSearchQuery('');
-        } else {
-          setIsSearchMode(false);
-        }
-        return;
-      }
-      if (e.key === 'return' || e.key === 'down' || e.key === 'wheeldown') {
-        e.preventDefault();
-        setIsSearchMode(false);
-        setSelectedIndex(0);
-        setScrollOffset(0);
-      }
-      return;
-    }
-    // List mode: left/right/tab cycle the selected option's value. These
-    // keys used to switch tabs; now they only do so when the tab row is
-    // explicitly focused (see headerFocused in Settings.tsx).
+    // List mode: left/right/tab cycle the selected option's value.
     if (e.key === 'left' || e.key === 'right' || e.key === 'tab') {
       e.preventDefault();
       toggleSetting();
       return;
     }
-    // Fallback: printable characters (other than those bound to actions)
-    // enter search mode. Carve out j/k// — useKeybindings (still on the
-    // useInput path) consumes these via stopImmediatePropagation, but
-    // onKeyDown dispatches independently so we must skip them explicitly.
-    if (e.ctrl || e.meta) return;
-    if (e.key === 'j' || e.key === 'k' || e.key === '/') return;
-    if (e.key.length === 1 && e.key !== ' ') {
-      e.preventDefault();
-      setIsSearchMode(true);
-      setSearchQuery(e.key);
-    }
-  }, [showSubmenu, headerFocused, isSearchMode, searchQuery, setSearchQuery, toggleSetting]);
+  }, [showSubmenu, headerFocused, toggleSetting]);
   return <Box flexDirection="column" width="100%" tabIndex={0} autoFocus onKeyDown={handleKeyDown}>
       {showSubmenu === 'Theme' ? <>
           <ThemePicker onThemeSelect={setting_1 => {
@@ -1380,17 +1285,16 @@ export function Config({
             </Byline>
           </Text>
         </> : <Box flexDirection="column" gap={1} marginY={insideModal ? undefined : 1}>
-          <SearchBox query={searchQuery} isFocused={isSearchMode && !headerFocused} isTerminalFocused={isTerminalFocused} cursorOffset={searchCursorOffset} placeholder="Search settings…" />
           <Box flexDirection="column">
             {filteredSettingsItems.length === 0 ? <Text dimColor italic>
-                No settings match &quot;{searchQuery}&quot;
+                No settings
               </Text> : <>
                 {scrollOffset > 0 && <Text dimColor>
                     {figures.arrowUp} {scrollOffset} more above
                   </Text>}
                 {filteredSettingsItems.slice(scrollOffset, scrollOffset + maxVisible).map((setting_2, i) => {
             const actualIndex = scrollOffset + i;
-            const isSelected = actualIndex === selectedIndex && !headerFocused && !isSearchMode;
+            const isSelected = actualIndex === selectedIndex && !headerFocused;
             return <React.Fragment key={setting_2.id}>
                         <Box>
                           <Box width={44}>
@@ -1436,18 +1340,10 @@ export function Config({
                 <KeyboardShortcutHint shortcut="↓" action="return" />
                 <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="close" />
               </Byline>
-            </Text> : isSearchMode ? <Text dimColor>
-              <Byline>
-                <Text>Type to filter</Text>
-                <KeyboardShortcutHint shortcut="Enter/↓" action="select" />
-                <KeyboardShortcutHint shortcut="↑" action="tabs" />
-                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="clear" />
-              </Byline>
             </Text> : <Text dimColor>
               <Byline>
                 <ConfigurableShortcutHint action="select:accept" context="Settings" fallback="Space" description="change" />
                 <ConfigurableShortcutHint action="settings:close" context="Settings" fallback="Enter" description="save" />
-                <ConfigurableShortcutHint action="settings:search" context="Settings" fallback="/" description="search" />
                 <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
               </Byline>
             </Text>}
