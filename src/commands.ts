@@ -61,7 +61,6 @@ import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
 import outputStyle from './commands/output-style/index.js'
-import statusline from './commands/statusline.js'
 import effort from './commands/effort/index.js'
 // stats command removed
 // insights.ts is 113KB (3200 lines, includes diffLines/html rendering). Lazy
@@ -144,7 +143,6 @@ const COMMANDS = memoize((): Command[] => [
   resume,
   skills,
   status,
-  statusline,
   tag,
   theme,
   review,
