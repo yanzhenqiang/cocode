@@ -12,7 +12,6 @@ import { buildTool, type ToolDef } from '../../Tool.js';
 import { backgroundExistingForegroundTask, markTaskNotified, registerForeground, spawnShellTask, unregisterForeground } from '../../tasks/LocalShellTask/LocalShellTask.js';
 import type { AgentId } from '../../types/ids.js';
 import type { AssistantMessage } from '../../types/message.js';
-import { parseForSecurity } from '../../utils/bash/ast.js';
 import { splitCommand_DEPRECATED, splitCommandWithOperators } from '../../utils/bash/commands.js';
 import { extractClaudeCodeHints } from '../../utils/claudeCodeHints.js';
 import { detectCodeIndexingFromCommand } from '../../utils/codeIndexing.js';
@@ -36,7 +35,7 @@ import { TaskOutput } from '../../utils/task/TaskOutput.js';
 import { isOutputLineTruncated } from '../../utils/terminal.js';
 import { buildLargeToolResultMessage, ensureToolResultsDir, generatePreview, getToolResultPath, PREVIEW_SIZE_BYTES } from '../../utils/toolResultStorage.js';
 import { trackGitOperations } from '../shared/gitOperationTracking.js';
-import { bashToolHasPermission, commandHasAnyCd, matchWildcardPattern, permissionRuleExtractPrefix } from './bashPermissions.js';
+import { bashToolHasPermission } from './bashPermissions.js';
 import { interpretCommandResult } from './commandSemantics.js';
 import { getDefaultTimeoutMs, getMaxTimeoutMs, getSimplePrompt } from './prompt.js';
 import { BASH_TOOL_NAME } from './toolName.js';
@@ -361,29 +360,10 @@ export const BashTool = buildTool({
   toAutoClassifierInput(input) {
     return input.command;
   },
-  async preparePermissionMatcher({
-    command
-  }) {
-    // Hook `if` filtering is "no match → skip hook" (deny-like semantics), so
-    // compound commands must fire the hook if ANY subcommand matches. Without
-    // splitting, `ls && git push` would bypass a `Bash(git *)` security hook.
-    const parsed = await parseForSecurity(command);
-    if (parsed.kind !== 'simple') {
-      // parse-unavailable / too-complex: fail safe by running the hook.
-      return () => true;
-    }
-    // Match on argv (strips leading VAR=val) so `FOO=bar git push` still
-    // matches `Bash(git *)`.
-    const subcommands = parsed.commands.map(c => c.argv.join(' '));
-    return pattern => {
-      const prefix = permissionRuleExtractPrefix(pattern);
-      return subcommands.some(cmd => {
-        if (prefix !== null) {
-          return cmd === prefix || cmd.startsWith(`${prefix} `);
-        }
-        return matchWildcardPattern(pattern, cmd);
-      });
-    };
+  async preparePermissionMatcher() {
+    // Tree-sitter bash parser is not available in this build.
+    // Run the hook (fail-safe) for all commands.
+    return () => true;
   },
   isSearchOrReadCommand(input) {
     const parsed = inputSchema().safeParse(input);

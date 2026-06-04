@@ -100,8 +100,8 @@ const BARE_SHELL_PREFIXES = new Set([
 
 /**
  * UI-only fallback: extract the first word alone when getSimpleCommandPrefix
- * declines. In external builds TREE_SITTER_BASH is off, so the async
- * tree-sitter refinement in BashPermissionRequest never fires — without this,
+ * declines. The tree-sitter bash parser is not available in this build,
+ * so the async refinement in BashPermissionRequest never fires — without this,
  * pipes and compounds dump into the editable field verbatim.
  */
 export function getFirstWordPrefix(command: string): string | null {

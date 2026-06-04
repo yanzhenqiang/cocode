@@ -258,7 +258,7 @@ export function filterControlOperators(
 
 /**
  * @deprecated Legacy regex/shell-quote path. Only used when tree-sitter is
- * unavailable. The primary gate is parseForSecurity (ast.ts).
+ * unavailable.
  *
  * Splits a command string into individual commands based on shell operators
  */
@@ -604,7 +604,7 @@ function isCommandList(command: string): boolean {
 
 /**
  * @deprecated Legacy regex/shell-quote path. Only used when tree-sitter is
- * unavailable. The primary gate is parseForSecurity (ast.ts).
+ * unavailable.
  */
 export function isUnsafeCompoundCommand_DEPRECATED(command: string): boolean {
   // Defense-in-depth: if shell-quote can't parse the command at all,

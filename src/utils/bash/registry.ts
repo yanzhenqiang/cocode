@@ -1,5 +1,4 @@
 import { memoizeWithLRU } from '../memoize.js'
-import specs from './specs/index.js'
 
 export type CommandSpec = {
   name: string
@@ -43,10 +42,7 @@ export async function loadFigSpec(
 }
 export const getCommandSpec = memoizeWithLRU(
   async (command: string): Promise<CommandSpec | null> => {
-    const spec =
-      specs.find(s => s.name === command) ||
-      (await loadFigSpec(command)) ||
-      null
+    const spec = (await loadFigSpec(command)) || null
     return spec
   },
   (command: string) => command,

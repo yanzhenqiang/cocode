@@ -6,12 +6,7 @@ import { spawnShellTask } from '../../tasks/LocalShellTask/LocalShellTask.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { exec } from '../../utils/Shell.js'
 import { getTaskOutputPath } from '../../utils/task/diskOutput.js'
-import {
-  bashToolHasPermission,
-  matchWildcardPattern,
-  permissionRuleExtractPrefix,
-} from '../BashTool/bashPermissions.js'
-import { parseForSecurity } from '../../utils/bash/ast.js'
+import { bashToolHasPermission } from '../BashTool/bashPermissions.js'
 
 export const MONITOR_TOOL_NAME = 'Monitor'
 
@@ -59,21 +54,10 @@ export const MonitorTool = buildTool({
     return input.command
   },
 
-  async preparePermissionMatcher({ command }) {
-    const parsed = await parseForSecurity(command)
-    if (parsed.kind !== 'simple') {
-      return () => true
-    }
-    const subcommands = parsed.commands.map(c => c.argv.join(' '))
-    return (pattern: string) => {
-      const prefix = permissionRuleExtractPrefix(pattern)
-      return subcommands.some(cmd => {
-        if (prefix !== null) {
-          return cmd === prefix || cmd.startsWith(`${prefix} `)
-        }
-        return matchWildcardPattern(pattern, cmd)
-      })
-    }
+  async preparePermissionMatcher() {
+    // Tree-sitter bash parser is not available in this build.
+    // Run the hook (fail-safe) for all commands.
+    return () => true
   },
 
   async checkPermissions(input, context) {
