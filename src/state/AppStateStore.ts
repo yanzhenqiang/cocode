@@ -97,7 +97,6 @@ export type AppState = DeepImmutable<{
   expandedView: 'none' | 'tasks' | 'teammates'
   isBriefOnly: boolean
   // Optional - only present when ENABLE_AGENT_SWARMS is true (for dead code elimination)
-  showTeammateMessagePreview?: boolean
   selectedIPAgentIndex: number
   // CoordinatorTaskPanel selection: -1 = pill, 0 = main, 1..N = agent rows.
   // AppState (not local) so the panel can read it directly without prop-drilling
@@ -130,7 +129,6 @@ export type AppState = DeepImmutable<{
   // Latest companion reaction from the friend observer (src/buddy/observer.ts)
   companionReaction?: string
   // Timestamp of last /buddy pet — CompanionSprite renders hearts while recent
-  companionPetAt?: number
   // TODO (ashwin): see if we can use utility-types DeepReadonly for this
   mcp: {
     clients: MCPServerConnection[]
