@@ -16,7 +16,7 @@ type Props = {
     display?: CommandResultDisplay;
   }) => void;
   context: LocalJSXCommandContext;
-  defaultTab: 'Status' | 'Config'  | 'Gates';
+  defaultTab: 'Status' | 'Config'  ;
 };
 export function Settings(t0) {
   const $ = _c(25);
@@ -28,7 +28,6 @@ export function Settings(t0) {
   const [selectedTab, setSelectedTab] = useState(defaultTab);
   const [tabsHidden, setTabsHidden] = useState(false);
   const [configOwnsEsc, setConfigOwnsEsc] = useState(false);
-  const [gatesOwnsEsc, setGatesOwnsEsc] = useState(false);
   const insideModal = useIsInsideModal();
   const {
     rows
@@ -94,7 +93,7 @@ export function Settings(t0) {
   }
   let t7;
   if ($[13] !== contentHeight) {
-    t7 = false ? [<Tab key="gates" title="Gates"><Gates onOwnsEscChange={setGatesOwnsEsc} contentHeight={contentHeight} /></Tab>] : [];
+    t7 = [];
     $[13] = contentHeight;
     $[14] = t7;
   } else {
@@ -111,7 +110,6 @@ export function Settings(t0) {
     t8 = $[18];
   }
   const tabs = t8;
-  const t9 = defaultTab !== "Config" && defaultTab !== "Gates";
   const t10 = tabsHidden || insideModal ? undefined : contentHeight;
   let t11;
   if ($[19] !== selectedTab || $[20] !== t10 || $[21] !== t9 || $[22] !== tabs || $[23] !== tabsHidden) {
