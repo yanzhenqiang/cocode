@@ -43,6 +43,7 @@
     "cli-highlight": "2.1.11",
     "commander": "12.1.0",
     "cross-spawn": "7.0.6",
+    "diff": "^9.0.0",
     "emoji-regex": "10.6.0",
     "env-paths": "3.0.0",
     "execa": "9.6.1",
