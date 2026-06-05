@@ -256,15 +256,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
         },
       ]
     : []),
-  // Model picker effort cycling (internal-only)
-  {
-    context: 'ModelPicker',
-    bindings: {
-      left: 'modelPicker:decreaseEffort',
-      right: 'modelPicker:increaseEffort',
-      r: 'modelPicker:refresh',
-    },
-  },
   // Select component navigation (used by /model, /resume, permission prompts, etc.)
   {
     context: 'Select',
@@ -278,15 +269,6 @@ export const DEFAULT_BINDINGS: KeybindingBlock[] = [
       enter: 'select:accept',
       return: 'select:accept',
       escape: 'select:cancel',
-    },
-  },
-  // Plugin dialog actions (manage, browse, discover plugins)
-  // Navigation (select:*) uses the Select context above
-  {
-    context: 'Plugin',
-    bindings: {
-      space: 'plugin:toggle',
-      i: 'plugin:install',
     },
   },
 ]
