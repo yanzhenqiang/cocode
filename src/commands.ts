@@ -19,7 +19,6 @@ import review, { ultrareview } from './commands/review.js'
 import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import tasks from './commands/tasks/index.js'
-import securityReview from './commands/security-review.js'
 import theme from './commands/theme/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
@@ -132,7 +131,6 @@ const COMMANDS = memoize((): Command[] => [
   theme,
   review,
   ultrareview,
-  securityReview,
   usageReport,
   permissions,
   plan,
