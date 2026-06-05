@@ -587,7 +587,7 @@ async function run(): Promise<CommanderCommand> {
       throw new Error('--task-budget must be a positive integer');
     }
     return tokens;
-  }).hideHelp()).option('--from-pr [value]', 'Resume a session linked to a PR by PR number/URL, or open interactive picker with optional search term', value => value || true).addOption(new Option('--resume-session-at <message id>', 'When resuming, only messages up to and including the assistant message with <message.id> (use with --resume)').argParser(String).hideHelp()).addOption(new Option('--rewind-files <user-message-id>', 'Restore files to state at the specified user message and exit (requires --resume)').hideHelp())
+  }).hideHelp()).hideHelp()).addOption(new Option('--rewind-files <user-message-id>', 'Restore files to state at the specified user message and exit (requires --resume)').hideHelp())
   // @[MODEL LAUNCH]: Update the example model ID in the --model help text.
   .option('--model <model>', `Model for the current session. Provide an alias for the latest model (e.g. 'sonnet' or 'opus') or a model's full name (e.g. 'claude-sonnet-4-6').`).option('--provider <provider>', `AI provider to use (anthropic, openai, gemini, github, bedrock, vertex, ollama). Reads API keys from environment variables.`).addOption(new Option('--effort <level>', `Effort level for the current session (low, medium, high, max)`).argParser((rawValue: string) => {
     const value = rawValue.toLowerCase();
@@ -1582,19 +1582,6 @@ const {
       let searchTerm: string | undefined = undefined;
       // Store full LogOption when found by custom title (for cross-worktree resume)
       let matchedLog: LogOption | null = null;
-      // PR filter for --from-pr flag
-      let filterByPr: boolean | number | string | undefined = undefined;
-
-      // Handle --from-pr flag
-      if (false) {
-        if (false === true) {
-          // Show all sessions with linked PRs
-          filterByPr = true;
-        } else if (typeof false === 'string') {
-          // Could be a PR number or URL
-          filterByPr = false;
-        }
-      }
 
       // If resume value is not a UUID, try exact match by custom title first
       if (options.resume && typeof options.resume === 'string' && !maybeSessionId) {
