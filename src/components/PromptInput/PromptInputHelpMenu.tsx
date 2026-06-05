@@ -285,25 +285,11 @@ export function PromptInputHelpMenu(props) {
     t39 = $[72];
   }
   let t40;
-  if ($[73] !== dimColor || $[74] !== fastModeShortcut) {
-    t40 = isFastModeEnabled() && isFastModeAvailable() && <Box><Text dimColor={dimColor}>{fastModeShortcut} to toggle fast mode</Text></Box>;
-    $[73] = dimColor;
-    $[74] = fastModeShortcut;
-    $[75] = t40;
-  } else {
-    t40 = $[75];
-  }
+  t40 = null;
   let t41;
   t41 = null;
   let t42;
-  if ($[79] !== dimColor || $[80] !== externalEditorShortcut) {
-    t42 = <Box><Text dimColor={dimColor}>{externalEditorShortcut} to edit in $EDITOR</Text></Box>;
-    $[79] = dimColor;
-    $[80] = externalEditorShortcut;
-    $[81] = t42;
-  } else {
-    t42 = $[81];
-  }
+  t42 = null;
   let t43;
   if ($[82] !== dimColor) {
     t43 = isKeybindingCustomizationEnabled() && <Box><Text dimColor={dimColor}>/keybindings to customize</Text></Box>;
