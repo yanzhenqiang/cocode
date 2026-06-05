@@ -118,14 +118,16 @@ export type ImageWithDimensions = {
  * Check if clipboard contains an image without retrieving it.
  */
 export async function hasImageInClipboard(): Promise<boolean> {
-  if (process.platform !== 'darwin') {
+  const { commands } = getClipboardCommands()
+  try {
+    const result = await execa(commands.checkImage, {
+      shell: true,
+      reject: false,
+    })
+    return result.exitCode === 0
+  } catch {
     return false
   }
-  const result = await execFileNoThrowWithCwd('osascript', [
-    '-e',
-    'the clipboard as «class PNGf»',
-  ])
-  return result.code === 0
 }
 
 export async function getImageFromClipboard(): Promise<ImageWithDimensions | null> {
