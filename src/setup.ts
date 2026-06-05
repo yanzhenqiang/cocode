@@ -19,7 +19,6 @@ import {
 import { getCommands } from './commands.js'
 import { initSessionMemory } from './services/SessionMemory/sessionMemory.js'
 import { asSessionId } from './types/ids.js'
-import { isAgentSwarmsEnabled } from './utils/agentSwarmsEnabled.js'
 import { checkAndRestoreTerminalBackup } from './utils/appleTerminalBackup.js'
 import { prefetchApiKeyFromApiKeyHelperIfSafe } from './utils/auth.js'
 import { clearMemoryFileCaches } from './utils/claudemd.js'
@@ -34,7 +33,6 @@ import {
   captureHooksConfigSnapshot,
   updateHooksConfigSnapshot,
 } from './utils/hooks/hooksConfigSnapshot.js'
-import { checkAndRestoreITerm2Backup } from './utils/iTermBackup.js'
 import { logError } from './utils/log.js'
 import { getRecentActivity } from './utils/logoV2Utils.js'
 import type { PermissionMode } from './utils/permissions/PermissionMode.js'
@@ -72,27 +70,7 @@ export async function setup(
   // Scripted calls don't receive injected messages and don't use swarm teammates.
   // Explicit --messaging-socket-path is the escape hatch (per #23222 gate pattern).
 
-  // Terminal backup restoration.
-  if (isAgentSwarmsEnabled()) {
-      const restoredIterm2Backup = await checkAndRestoreITerm2Backup()
-      if (restoredIterm2Backup.status === 'restored') {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
-        console.log(
-          chalk.yellow(
-            'Detected an interrupted iTerm2 setup. Your original settings have been restored. You may need to restart iTerm2 for the changes to take effect.',
-          ),
-        )
-      } else if (restoredIterm2Backup.status === 'failed') {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
-        console.error(
-          chalk.red(
-            `Failed to restore iTerm2 settings. Please manually restore your original settings with: defaults import com.googlecode.iterm2 ${restoredIterm2Backup.backupPath}.`,
-          ),
-        )
-      }
-    }
-
-    // Check and restore Terminal.app backup if setup was interrupted
+  // Check and restore Terminal.app backup if setup was interrupted
     try {
       const restoredTerminalBackup = await checkAndRestoreTerminalBackup()
       if (restoredTerminalBackup.status === 'restored') {

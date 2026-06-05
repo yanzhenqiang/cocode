@@ -17,7 +17,6 @@ import { useShortcutDisplay } from '../keybindings/useShortcutDisplay.js';
 import { useAppState, useAppStateStore } from '../state/AppState.js';
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js';
 import type { InlineGhostText, PromptInputMode } from '../types/textInputTypes.js';
-import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js';
 import { generateProgressiveArgumentHint, parseArguments } from '../utils/argumentSubstitution.js';
 import { getShellCompletions, type ShellCompletionType } from '../utils/bash/shellCompletion.js';
 import { formatLogMetadata } from '../utils/format.js';
@@ -601,18 +600,6 @@ export function useTypeahead({
       const state = store.getState();
       const members: SuggestionItem[] = [];
       const seen = new Set<string>();
-      if (isAgentSwarmsEnabled() && state.teamContext) {
-        for (const t of Object.values(state.teamContext.teammates ?? {})) {
-          if (t.name === TEAM_LEAD_NAME) continue;
-          if (!t.name.toLowerCase().startsWith(partialName)) continue;
-          seen.add(t.name);
-          members.push({
-            id: `dm-${t.name}`,
-            displayText: `@${t.name}`,
-            description: 'send message'
-          });
-        }
-      }
       for (const [name, agentId] of state.agentNameRegistry) {
         if (seen.has(name)) continue;
         if (!name.toLowerCase().startsWith(partialName)) continue;

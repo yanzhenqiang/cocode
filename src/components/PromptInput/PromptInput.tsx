@@ -39,7 +39,6 @@ import type { AgentDefinition } from '../../tools/AgentTool/loadAgentsDir.js';
 import type { Message } from '../../types/message.js';
 import type { PermissionMode } from '../../types/permissions.js';
 import type { BaseTextInputProps, PromptInputMode } from '../../types/textInputTypes.js';
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 import { count } from '../../utils/array.js';
 import { Cursor } from '../../utils/Cursor.js';
 import { getGlobalConfig, type PastedContent, saveGlobalConfig } from '../../utils/config.js';
@@ -365,19 +364,8 @@ function PromptInput({
   // Derive team info from teamContext (no filesystem I/O needed)
   // A session can only lead one team at a time
   const cachedTeams: TeamSummary[] = useMemo(() => {
-    if (!isAgentSwarmsEnabled()) return [];
-    if (false) return [];
-    if (!teamContext) {
-      return [];
-    }
-    const teammateCount = count(Object.values(teamContext.teammates), t => t.name !== 'team-lead');
-    return [{
-      name: teamContext.teamName,
-      memberCount: teammateCount,
-      runningCount: 0,
-      idleCount: 0
-    }];
-  }, [teamContext]);
+    return [];
+  }, []);
 
   // ─── Footer pill navigation ─────────────────────────────────────────────
   // Which pills render below the input box. Order here IS the nav order
@@ -474,41 +462,8 @@ function PromptInput({
     end: number;
     themeColor: keyof Theme;
   }> => {
-    if (!isAgentSwarmsEnabled()) return [];
-    if (!teamContext?.teammates) return [];
-    const highlights: Array<{
-      start: number;
-      end: number;
-      themeColor: keyof Theme;
-    }> = [];
-    const members = teamContext.teammates;
-    if (!members) return highlights;
-
-    // Find all @name patterns in the input
-    const regex = /(^|\s)@([\w-]+)/g;
-    const memberValues = Object.values(members);
-    let match;
-    while ((match = regex.exec(displayedValue)) !== null) {
-      const leadingSpace = match[1] ?? '';
-      const nameStart = match.index + leadingSpace.length;
-      const fullMatch = match[0].trimStart();
-      const name = match[2];
-
-      // Check if this name matches a team member
-      const member = memberValues.find(t => t.name === name);
-      if (member?.color) {
-        const themeColor = AGENT_COLOR_TO_THEME_COLOR[member.color as AgentColorName];
-        if (themeColor) {
-          highlights.push({
-            start: nameStart,
-            end: nameStart + fullMatch.length,
-            themeColor
-          });
-        }
-      }
-    }
-    return highlights;
-  }, [displayedValue, teamContext]);
+    return [];
+  }, []);
   const imageRefPositions = useMemo(() => parseReferences(displayedValue).filter(r => r.match.startsWith('[Image')).map(r => ({
     start: r.index,
     end: r.index + r.match.length
@@ -1845,11 +1800,6 @@ function PromptInput({
   useSetPromptOverlayDialog(isFullscreenEnvEnabled() ? autoModeOptInDialog : null);
   if (showBashesDialog) {
     return <BackgroundTasksDialog onDone={() => setShowBashesDialog(false)} toolUseContext={getToolUseContext(messages, [], new AbortController(), mainLoopModel)} initialDetailTaskId={typeof showBashesDialog === 'string' ? showBashesDialog : undefined} />;
-  }
-  if (isAgentSwarmsEnabled() && showTeamsDialog) {
-    return <TeamsDialog initialTeams={cachedTeams} onDone={() => {
-      setShowTeamsDialog(false);
-    }} />;
   }
   if (feature('QUICK_SEARCH')) {
     const insertWithSpacing = (text: string) => {

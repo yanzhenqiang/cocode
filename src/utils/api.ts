@@ -30,12 +30,10 @@ import type { z } from 'zod/v4'
 import { CLI_SYSPROMPT_PREFIXES } from '../constants/system.js'
 import { roughTokenCountEstimation } from '../services/tokenEstimation.js'
 import type { Tool, ToolPermissionContext, Tools } from '../Tool.js'
-import { AGENT_TOOL_NAME } from '../tools/AgentTool/constants.js'
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../tools/ExitPlanModeTool/constants.js'
 import { TASK_OUTPUT_TOOL_NAME } from '../tools/TaskOutputTool/constants.js'
 import type { Message } from '../types/message.js'
-import { isAgentSwarmsEnabled } from './agentSwarmsEnabled.js'
 import {
   modelSupportsStructuredOutputs,
   shouldUseGlobalCacheScope,
@@ -82,46 +80,6 @@ export type CacheScope = 'global' | 'org'
 export type SystemPromptBlock = {
   text: string
   cacheScope: CacheScope | null
-}
-
-// Fields to filter from tool schemas when swarms are not enabled
-const SWARM_FIELDS_BY_TOOL: Record<string, string[]> = {
-  [EXIT_PLAN_MODE_V2_TOOL_NAME]: ['launchSwarm', 'teammateCount'],
-  [AGENT_TOOL_NAME]: ['name', 'team_name', 'mode'],
-}
-
-/**
- * Filter swarm-related fields from a tool's input schema.
- * Called at runtime when isAgentSwarmsEnabled() returns false.
- */
-function filterSwarmFieldsFromSchema(
-  toolName: string,
-  schema: Anthropic.Tool.InputSchema,
-): Anthropic.Tool.InputSchema {
-  const fieldsToRemove = SWARM_FIELDS_BY_TOOL[toolName]
-  if (!fieldsToRemove || fieldsToRemove.length === 0) {
-    return schema
-  }
-
-  // Clone the schema to avoid mutating the original
-  const filtered = { ...schema }
-  const props = filtered.properties
-  if (props && typeof props === 'object') {
-    const filteredProps = { ...(props as Record<string, unknown>) }
-    for (const field of fieldsToRemove) {
-      delete filteredProps[field]
-    }
-    filtered.properties = filteredProps
-
-    // Keep `required` in sync after removing properties
-    if (Array.isArray(filtered.required)) {
-      filtered.required = filtered.required.filter(
-        (key: string) => key in filteredProps,
-      )
-    }
-  }
-
-  return filtered
 }
 
 /**
@@ -209,12 +167,6 @@ export async function toolToAPISchema(
         ? sanitizeSchemaRequired(tool.inputJSONSchema as Anthropic.Tool.InputSchema)
         : zodToJsonSchema(tool.inputSchema)
     ) as Anthropic.Tool.InputSchema
-
-    // Filter out swarm-related fields when swarms are not enabled
-    // This ensures external non-EAP users don't see swarm features in the schema
-    if (!isAgentSwarmsEnabled()) {
-      input_schema = filterSwarmFieldsFromSchema(tool.name, input_schema)
-    }
 
     base = {
       name: tool.name,

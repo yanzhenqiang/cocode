@@ -13,10 +13,8 @@ import {
   buildTool,
   type Tool,
   type ToolDef,
-  toolMatchesName,
 } from '../../Tool.js'
 import { formatAgentId, generateRequestId } from '../../utils/agentId.js'
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
@@ -25,7 +23,6 @@ import {
   getPlanFilePath,
   persistFileSnapshotIfRemote,
 } from '../../utils/plans.js'
-import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from './constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_PROMPT } from './prompt.js'
 import {
@@ -303,16 +300,12 @@ export const ExitPlanModeV2Tool: Tool<InputSchema, Output> = buildTool({
       }
     })
 
-    const hasTaskTool =
-      isAgentSwarmsEnabled() &&
-      context.options.tools.some(t => toolMatchesName(t, AGENT_TOOL_NAME))
-
     return {
       data: {
         plan,
         isAgent,
         filePath,
-        hasTaskTool: hasTaskTool || undefined,
+        hasTaskTool: undefined,
         planWasEdited: inputPlan !== undefined || undefined,
       },
     }

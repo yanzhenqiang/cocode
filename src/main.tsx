@@ -27,7 +27,6 @@ import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
 import { getTools } from './tools.js';
 import { canUserConfigureAdvisor, getInitialAdvisorSetting, isAdvisorEnabled, isValidAdvisorModel, modelSupportsAdvisor } from './utils/advisor.js';
-import { isAgentSwarmsEnabled } from './utils/agentSwarmsEnabled.js';
 import { count, uniq } from './utils/array.js';
 import { installAsciicastRecorder } from './utils/asciicast.js';
 import { getSubscriptionType, prefetchGcpCredentialsIfSafe, validateForceLoginOrg } from './utils/auth.js';
@@ -1382,7 +1381,7 @@ const {
       mainLoopModelForSession: null,
       isBriefOnly: initialIsBriefOnly,
       expandedView: getGlobalConfig().showSpinnerTree ? 'teammates' : getGlobalConfig().showExpandedTodos ? 'tasks' : 'none',
-      showTeammateMessagePreview: isAgentSwarmsEnabled() ? false : undefined,
+      showTeammateMessagePreview: undefined,
       selectedIPAgentIndex: -1,
       coordinatorTaskIndex: -1,
       viewSelectionMode: 'none',

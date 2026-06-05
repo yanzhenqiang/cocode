@@ -114,7 +114,6 @@ import type { ThinkingConfig } from '../utils/thinking.js';
 import { gracefulShutdownSync, isShuttingDown } from '../utils/gracefulShutdown.js';
 import { handlePromptSubmit, type PromptInputHelpers } from '../utils/handlePromptSubmit.js';
 import { useQueueProcessor } from '../hooks/useQueueProcessor.js';
-import { useMailboxBridge } from '../hooks/useMailboxBridge.js';
 import { queryCheckpoint, logQueryProfileReport } from '../utils/queryProfiler.js';
 import type { Message as MessageType, UserMessage, ProgressMessage, HookResultMessage, PartialCompactDirection } from '../types/message.js';
 import { query } from '../query.js';
@@ -161,7 +160,6 @@ import { updateSessionName, updateSessionActivity } from '../utils/concurrentSes
 const SUGGEST_BG_PR_NOOP = (_p: string, _n: string): boolean => false;
 const useScheduledTasks = require('../hooks/useScheduledTasks.js').useScheduledTasks;
 /* eslint-enable @typescript-eslint/no-require-imports */
-import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js';
 import { useTaskListWatcher } from '../hooks/useTaskListWatcher.js';
 import type { SandboxAskCallback, NetworkHostPattern } from '../utils/sandbox/sandbox-adapter.js';
 import { type IDEExtensionInstallationStatus, type IdeType } from '../utils/ide.js';
@@ -1844,25 +1842,6 @@ export function REPL({
     }
   }, [messages, showCostDialog, haveShownCostDialog]);
   const sandboxAskCallback: SandboxAskCallback = useCallback(async (hostPattern: NetworkHostPattern) => {
-    // If running as a swarm worker, forward the request to the leader via mailbox
-    if (isAgentSwarmsEnabled() && isSwarmWorker()) {
-      const requestId = generateSandboxRequestId();
-
-      // Send the request to the leader via mailbox
-      const sent = await sendSandboxPermissionRequestViaMailbox(hostPattern.host, requestId);
-      return new Promise(resolveShouldAllowHost => {
-        if (!sent) {
-          // If we couldn't send via mailbox, fall back to local handling
-          setSandboxPermissionRequestQueue(prev => [...prev, {
-            hostPattern,
-            resolvePromise: resolveShouldAllowHost
-          }]);
-          return;
-        }
-
-      });
-    }
-
     // Normal flow for non-workers: show local UI and optionally race
     // against the REPL bridge (Remote Control) if connected.
     return new Promise(resolveShouldAllowHost => {
@@ -3351,11 +3330,6 @@ export function REPL({
     void onQuery([userMessage], newAbortController, true, [], mainLoopModel);
     return true;
   }, [onQuery, mainLoopModel, store]);
-
-  useMailboxBridge({
-    isLoading,
-    onSubmitMessage: handleIncomingPrompt
-  });
 
   // Scheduled tasks from .claude/scheduled_tasks.json (CronCreate/Delete/List)
   // and session-only /loop runs.

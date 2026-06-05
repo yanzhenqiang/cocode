@@ -15,8 +15,6 @@ import { isPanelAgentTask } from '../../tasks/LocalAgentTask/LocalAgentTask.js';
 import { getVisibleAgentTasks } from '../CoordinatorAgentStatus.js';
 import { count } from '../../utils/array.js';
 import { shouldHideTasksFooter } from '../tasks/taskStatusUtils.js';
-import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
-const TeamStatus = (_props: any) => null;
 import { useAppState, useAppStateStore } from 'src/state/AppState.js';
 import { usePrStatus } from '../../hooks/usePrStatus.js';
 import { KeyboardShortcutHint } from '../design-system/KeyboardShortcutHint.js';

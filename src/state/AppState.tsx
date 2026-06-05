@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import { feature } from 'bun:bundle';
 import React, { useContext, useEffect, useState, useSyncExternalStore } from 'react';
-import { MailboxProvider } from '../context/mailbox.js';
 import { useEffectEventCompat } from '../hooks/useEffectEventCompat.js';
 import { useSettingsChange } from '../hooks/useSettingsChange.js';
 import { logForDebugging } from '../utils/debug.js';
@@ -82,23 +81,15 @@ export function AppStateProvider(t0) {
   const onSettingsChange = useEffectEventCompat(t4);
   useSettingsChange(onSettingsChange);
   let t5;
-  if ($[8] !== children) {
-    t5 = <MailboxProvider>{children}</MailboxProvider>;
-    $[8] = children;
-    $[9] = t5;
+  if ($[8] !== store || $[9] !== children) {
+    t5 = <HasAppStateContext.Provider value={true}><AppStoreContext.Provider value={store}>{children}</AppStoreContext.Provider></HasAppStateContext.Provider>;
+    $[8] = store;
+    $[9] = children;
+    $[10] = t5;
   } else {
-    t5 = $[9];
+    t5 = $[10];
   }
-  let t6;
-  if ($[10] !== store || $[11] !== t5) {
-    t6 = <HasAppStateContext.Provider value={true}><AppStoreContext.Provider value={store}>{t5}</AppStoreContext.Provider></HasAppStateContext.Provider>;
-    $[10] = store;
-    $[11] = t5;
-    $[12] = t6;
-  } else {
-    t6 = $[12];
-  }
-  return t6;
+  return t5;
 }
 function _temp(prev) {
   return {
