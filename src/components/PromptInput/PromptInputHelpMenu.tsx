@@ -283,8 +283,8 @@ export function PromptInputHelpMenu(props) {
     t38 = $[69];
   }
   let t39;
-  if ($[70] !== dimColor || $[71] !== modelPickerShortcut) {
-    t39 = <Box><Text dimColor={dimColor}>{modelPickerShortcut} to switch model</Text></Box>;
+  if ($[70] !== dimColor) {
+    t39 = <Box></Box>;
     $[70] = dimColor;
     $[71] = modelPickerShortcut;
     $[72] = t39;
