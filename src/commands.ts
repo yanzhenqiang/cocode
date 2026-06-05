@@ -18,7 +18,6 @@ import resume from './commands/resume/index.js'
 import review, { ultrareview } from './commands/review.js'
 import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
-import shiftTab from './commands/shiftTab.js'
 import tasks from './commands/tasks/index.js'
 import theme from './commands/theme/index.js'
 import permissions from './commands/permissions/index.js'
@@ -128,7 +127,6 @@ const COMMANDS = memoize((): Command[] => [
   resume,
   skills,
   status,
-  switchMode,
   tag,
   theme,
   review,
