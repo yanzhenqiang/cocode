@@ -49,5 +49,5 @@ export function PermissionRequestTitle(t0) {
   } else {
     t5 = $[9];
   }
-  return t6;
+  return t5;
 }
