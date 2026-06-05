@@ -27,6 +27,8 @@ import {
  *   5. Default: enabled
  */
 export function isAutoMemoryEnabled(): boolean {
+  // Auto-memory disabled by default in cocode. Set CLAUDE_CODE_ENABLE_AUTO_MEMORY=1 to enable.
+  if (!isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_AUTO_MEMORY)) return false
   const envVal = process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY
   if (isEnvTruthy(envVal)) {
     return false
