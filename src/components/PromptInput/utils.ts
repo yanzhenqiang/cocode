@@ -9,7 +9,7 @@ export function isVimModeEnabled(): boolean {
 }
 
 export function getNewlineInstructions(): string {
-  return 'backslash (\\) + return (⏎) for newline'
+  return 'Shift+Enter for newline'
 }
 
 /**
