@@ -257,14 +257,7 @@ export function PromptInputHelpMenu(props) {
     t35 = $[61];
   }
   let t36;
-  if ($[62] !== dimColor || $[63] !== undoShortcut) {
-    t36 = <Box><Text dimColor={dimColor}>{undoShortcut} to undo</Text></Box>;
-    $[62] = dimColor;
-    $[63] = undoShortcut;
-    $[64] = t36;
-  } else {
-    t36 = $[64];
-  }
+  t36 = null;
   let t37;
   if ($[65] !== dimColor) {
     t37 = getPlatform() !== "windows" && <Box><Text dimColor={dimColor}>ctrl + z to suspend</Text></Box>;
@@ -301,14 +294,7 @@ export function PromptInputHelpMenu(props) {
     t40 = $[75];
   }
   let t41;
-  if ($[76] !== dimColor || $[77] !== stashShortcut) {
-    t41 = <Box><Text dimColor={dimColor}>{stashShortcut} to stash prompt</Text></Box>;
-    $[76] = dimColor;
-    $[77] = stashShortcut;
-    $[78] = t41;
-  } else {
-    t41 = $[78];
-  }
+  t41 = null;
   let t42;
   if ($[79] !== dimColor || $[80] !== externalEditorShortcut) {
     t42 = <Box><Text dimColor={dimColor}>{externalEditorShortcut} to edit in $EDITOR</Text></Box>;
