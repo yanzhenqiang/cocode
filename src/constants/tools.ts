@@ -21,8 +21,6 @@ import { TASK_LIST_TOOL_NAME } from '../tools/TaskListTool/constants.js'
 import { TASK_UPDATE_TOOL_NAME } from '../tools/TaskUpdateTool/constants.js'
 import { TOOL_SEARCH_TOOL_NAME } from '../tools/ToolSearchTool/prompt.js'
 import { SYNTHETIC_OUTPUT_TOOL_NAME } from '../tools/SyntheticOutputTool/SyntheticOutputTool.js'
-import { ENTER_WORKTREE_TOOL_NAME } from '../tools/EnterWorktreeTool/constants.js'
-import { EXIT_WORKTREE_TOOL_NAME } from '../tools/ExitWorktreeTool/constants.js'
 import { WORKFLOW_TOOL_NAME } from '../tools/WorkflowTool/constants.js'
 import {
   CRON_CREATE_TOOL_NAME,
@@ -60,8 +58,6 @@ export const ASYNC_AGENT_ALLOWED_TOOLS = new Set([
   SKILL_TOOL_NAME,
   SYNTHETIC_OUTPUT_TOOL_NAME,
   TOOL_SEARCH_TOOL_NAME,
-  ENTER_WORKTREE_TOOL_NAME,
-  EXIT_WORKTREE_TOOL_NAME,
 ])
 /**
  * Tools allowed only for in-process teammates (not general async agents).

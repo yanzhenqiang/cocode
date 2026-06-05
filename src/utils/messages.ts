@@ -70,7 +70,6 @@ import type {
   UserMessage,
 } from '../types/message.js'
 import { isAdvisorBlock } from './advisor.js'
-import { isAgentSwarmsEnabled } from './agentSwarmsEnabled.js'
 import { count } from './array.js'
 import { isEnvTruthy } from './envUtils.js'
 import {
@@ -3321,56 +3320,6 @@ function getAutoModeSparseInstructions(): UserMessage[] {
 export function normalizeAttachmentForAPI(
   attachment: Attachment,
 ): UserMessage[] {
-  if (isAgentSwarmsEnabled()) {
-    if (attachment.type === 'teammate_mailbox') {
-      return [
-        createUserMessage({
-          content: getTeammateMailbox().formatTeammateMessages(
-            attachment.messages,
-          ),
-          isMeta: true,
-        }),
-      ]
-    }
-    if (attachment.type === 'team_context') {
-      return [
-        createUserMessage({
-          content: `<system-reminder>
-# Team Coordination
-
-You are a teammate in team "${attachment.teamName}".
-
-**Your Identity:**
-- Name: ${attachment.agentName}
-
-**Team Resources:**
-- Team config: ${attachment.teamConfigPath}
-- Task list: ${attachment.taskListPath}
-
-**Team Leader:** The team lead's name is "team-lead". Send updates and completion notifications to them.
-
-Read the team config to discover your teammates' names. Check the task list periodically. Create new tasks when work should be divided. Mark tasks resolved when complete.
-
-**IMPORTANT:** Always refer to teammates by their NAME (e.g., "team-lead", "analyzer", "researcher"), never by UUID. When messaging, use the name directly:
-
-\`\`\`json
-{
-  "to": "team-lead",
-  "message": "Your message here",
-  "summary": "Brief 5-10 word preview"
-}
-\`\`\`
-</system-reminder>`,
-          isMeta: true,
-        }),
-      ]
-    }
-  }
-
-
-
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- teammate_mailbox/team_context/skill_discovery/bagel_console handled above
-  // biome-ignore lint/nursery/useExhaustiveSwitchCases: teammate_mailbox/team_context/max_turns_reached/skill_discovery/bagel_console handled above, can't add case for dead code elimination
   switch (attachment.type) {
     case 'directory': {
       return wrapMessagesInSystemReminder([

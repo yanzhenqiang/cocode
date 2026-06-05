@@ -5,10 +5,8 @@ import {
   getSessionId,
   setMainLoopModelOverride,
   setMainThreadAgentType,
-  setOriginalCwd,
   switchSession,
 } from '../bootstrap/state.js'
-import { clearSystemPromptSections } from '../constants/systemPromptSections.js'
 import { restoreCostStateForSession } from '../cost-tracker.js'
 import type { AppState } from '../state/AppState.js'
 import type { AgentColorName } from '../tools/AgentTool/agentColorManager.js'
@@ -27,34 +25,25 @@ import type {
 } from '../types/logs.js'
 import type { Message } from '../types/message.js'
 import { renameRecordingForSession } from './asciicast.js'
-import { clearMemoryFileCaches } from './claudemd.js'
 import {
   type AttributionState,
 } from './commitAttribution.js'
 import { updateSessionName } from './concurrentSessions.js'
-import { getCwd } from './cwd.js'
 import { logForDebugging } from './debug.js'
 import type { FileHistorySnapshot } from './fileHistory.js'
 import { fileHistoryRestoreStateFromLog } from './fileHistory.js'
 import { createSystemMessage } from './messages.js'
 import { parseUserSpecifiedModel } from './model/model.js'
-import { getPlansDirectory } from './plans.js'
-import { setCwd } from './Shell.js'
 import {
   adoptResumedSessionFile,
   recordContentReplacement,
   resetSessionFilePointer,
   restoreSessionMetadata,
-  saveWorktreeState,
 } from './sessionStorage.js'
 import { isTodoV2Enabled } from './tasks.js'
 import type { TodoList } from './todo/types.js'
 import { TodoListSchema } from './todo/types.js'
 import type { ContentReplacementRecord } from './toolResultStorage.js'
-import {
-  getCurrentWorktreeSession,
-  restoreWorktreeSession,
-} from './worktree.js'
 
 type ResumeResult = {
   messages?: Message[]
@@ -252,88 +241,19 @@ type ResumeLoadResult = {
 }
 
 /**
- * Restore the worktree working directory on resume. The transcript records
- * the last worktree enter/exit; if the session crashed while inside a
- * worktree (last entry = session object, not null), cd back into it.
- *
- * process.chdir is the TOCTOU-safe existence check — it throws ENOENT if
- * the /exit dialog removed the directory, or if the user deleted it
- * manually between sessions.
- *
- * When --worktree already created a fresh worktree, that takes precedence
- * over the resumed session's state. restoreSessionMetadata just overwrote
- * project.currentSessionWorktree with the stale transcript value, so
- * re-assert the fresh worktree here before adoptResumedSessionFile writes
- * it back to disk.
+ * Restore worktree for resume — no-op since worktrees are not supported.
  */
 export function restoreWorktreeForResume(
-  worktreeSession: PersistedWorktreeSession | null | undefined,
+  _worktreeSession: PersistedWorktreeSession | null | undefined,
 ): void {
-  const fresh = getCurrentWorktreeSession()
-  if (fresh) {
-    saveWorktreeState(fresh)
-    return
-  }
-  if (!worktreeSession) return
-
-  try {
-    process.chdir(worktreeSession.worktreePath)
-  } catch {
-    // Directory is gone. Override the stale cache so the next
-    // reAppendSessionMetadata records "exited" instead of re-persisting
-    // a path that no longer exists.
-    saveWorktreeState(null)
-    return
-  }
-
-  setCwd(worktreeSession.worktreePath)
-  setOriginalCwd(getCwd())
-  // projectRoot is intentionally NOT set here. The transcript doesn't record
-  // whether the worktree was entered via --worktree (which sets projectRoot)
-  // or EnterWorktreeTool (which doesn't). Leaving projectRoot stable matches
-  // EnterWorktreeTool's behavior — skills/history stay anchored to the
-  // original project.
-  restoreWorktreeSession(worktreeSession)
-  // The /resume slash command calls this mid-session after caches have been
-  // populated against the old cwd. Cheap no-ops for the CLI-flag path
-  // (caches aren't populated yet there).
-  clearMemoryFileCaches()
-  clearSystemPromptSections()
-  getPlansDirectory.cache.clear?.()
+  // no-op
 }
 
 /**
- * Undo restoreWorktreeForResume before a mid-session /resume switches to
- * another session. Without this, /resume from a worktree session to a
- * non-worktree session leaves the user in the old worktree directory with
- * currentWorktreeSession still pointing at the prior session. /resume to a
- * *different* worktree fails entirely — the getCurrentWorktreeSession()
- * guard above blocks the switch.
- *
- * Not needed by CLI --resume/--continue: those run once at startup where
- * getCurrentWorktreeSession() is only truthy if --worktree was used (fresh
- * worktree that should take precedence, handled by the re-assert above).
+ * Exit restored worktree — no-op since worktrees are not supported.
  */
 export function exitRestoredWorktree(): void {
-  const current = getCurrentWorktreeSession()
-  if (!current) return
-
-  restoreWorktreeSession(null)
-  // Worktree state changed, so cached prompt sections that reference it are
-  // stale whether or not chdir succeeds below.
-  clearMemoryFileCaches()
-  clearSystemPromptSections()
-  getPlansDirectory.cache.clear?.()
-
-  try {
-    process.chdir(current.originalCwd)
-  } catch {
-    // Original dir is gone (rare). Stay put — restoreWorktreeForResume
-    // will cd into the target worktree next if there is one.
-    return
-  }
-  setCwd(current.originalCwd)
-  setOriginalCwd(getCwd())
+  // no-op
 }
 
 /**

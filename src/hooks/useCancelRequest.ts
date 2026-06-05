@@ -20,7 +20,6 @@ import { useCommandQueue } from '../hooks/useCommandQueue.js'
 import { getShortcutDisplay } from '../keybindings/shortcutFormat.js'
 import { useKeybinding } from '../keybindings/useKeybinding.js'
 import type { Screen } from '../screens/REPL.js'
-import { exitTeammateView } from '../state/teammateViewHelpers.js'
 import {
   killAllRunningAgentTasks,
   markAgentsNotified,
@@ -77,7 +76,6 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
   const queuedCommandsLength = useCommandQueue().length
   const { addNotification, removeNotification } = useNotifications()
   const lastKillAgentsPressRef = useRef<number>(0)
-  const viewSelectionMode = useAppState(s => s.viewSelectionMode)
 
   const handleCancel = useCallback(() => {
     const cancelProps = {
@@ -128,8 +126,6 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
   // This only applies to Escape, not Ctrl+C which should always cancel.
   const isInSpecialModeWithEmptyInput =
     inputMode !== undefined && inputMode !== 'prompt' && !inputValue
-  // When viewing a teammate's transcript, let useBackgroundTaskNavigation handle Escape
-  const isViewingTeammate = viewSelectionMode === 'viewing-agent'
   // Context guards: other screens/overlays handle their own cancel
   const isContextActive =
     screen !== 'transcript' &&
@@ -138,21 +134,18 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
     !isHelpOpen &&
     !isOverlayActive
 
-  // Escape (chat:cancel) defers to mode-exit when in special mode with empty
-  // input, and to useBackgroundTaskNavigation when viewing a teammate
+  // Escape (chat:cancel) defers to mode-exit when in special mode with empty input.
   const isEscapeActive =
     isContextActive &&
     (canCancelRunningTask || hasQueuedCommands) &&
-    !isInSpecialModeWithEmptyInput &&
-    !isViewingTeammate
+    !isInSpecialModeWithEmptyInput
 
-  // Ctrl+C (app:interrupt): when viewing a teammate, stops everything and
-  // returns to main thread. Otherwise just handleCancel. Must NOT claim
+  // Ctrl+C (app:interrupt): when Claude is busy, cancel the request. Must NOT claim
   // ctrl+c when main is idle at the prompt — that blocks the copy-selection
   // handler and double-press-to-exit from ever seeing the keypress.
   const isCtrlCActive =
     isContextActive &&
-    (canCancelRunningTask || hasQueuedCommands || isViewingTeammate)
+    (canCancelRunningTask || hasQueuedCommands)
 
   useKeybinding('chat:cancel', handleCancel, {
     context: 'Chat',
@@ -187,21 +180,12 @@ export function CancelRequestHandler(props: CancelRequestHandlerProps): null {
     return true
   }, [store, setAppState, onAgentsKilled])
 
-  // Ctrl+C (app:interrupt). Scoped to teammate-view: killing agents from the
-  // main prompt stays a deliberate gesture (chat:killAgents), not a
-  // side-effect of cancelling a turn.
+  // Ctrl+C (app:interrupt). When Claude is busy, cancel the request.
   const handleInterrupt = useCallback(() => {
-    if (isViewingTeammate) {
-      killAllAgentsAndNotify()
-      exitTeammateView(setAppState)
-    }
     if (canCancelRunningTask || hasQueuedCommands) {
       handleCancel()
     }
   }, [
-    isViewingTeammate,
-    killAllAgentsAndNotify,
-    setAppState,
     canCancelRunningTask,
     hasQueuedCommands,
     handleCancel,

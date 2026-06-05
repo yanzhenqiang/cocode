@@ -200,12 +200,10 @@ import { isPDFExtension } from './pdfUtils.js'
 import { getLocalISODate } from '../constants/common.js'
 import { getPDFPageCount } from './pdf.js'
 import { PDF_AT_MENTION_INLINE_THRESHOLD } from '../constants/apiLimits.js'
-import { isAgentSwarmsEnabled } from './agentSwarmsEnabled.js'
 import { findRelevantMemories } from '../memdir/findRelevantMemories.js'
 import { memoryAge, memoryFreshnessText } from '../memdir/memoryAge.js'
 import { getAutoMemPath, isAutoMemoryEnabled } from '../memdir/paths.js'
 import { getAgentMemoryDir } from '../tools/AgentTool/agentMemory.js'
-import { unassignTeammateTasks } from './tasks.js'
 export const TODO_REMINDER_CONFIG = {
   TURNS_SINCE_WRITE: 10,
   TURNS_BETWEEN_REMINDERS: 10,
@@ -594,8 +592,6 @@ export type Attachment =
       type: 'structured_output'
       data: unknown
     }
-  | TeammateMailboxAttachment
-  | TeamContextAttachment
   | HookAttachment
   | {
       type: 'invoked_skills'
@@ -618,10 +614,6 @@ export type Attachment =
       content: string
       path: string
       tokenCount: number
-    }
-  | {
-      type: 'teammate_shutdown_batch'
-      count: number
     }
   | {
       type: 'compaction_reminder'
@@ -670,26 +662,6 @@ export type Attachment =
       warningCount: number
       sample: string
     }
-
-export type TeammateMailboxAttachment = {
-  type: 'teammate_mailbox'
-  messages: Array<{
-    from: string
-    text: string
-    timestamp: string
-    color?: string
-    summary?: string
-  }>
-}
-
-export type TeamContextAttachment = {
-  type: 'team_context'
-  agentId: string
-  agentName: string
-  teamName: string
-  teamConfigPath: string
-  taskListPath: string
-}
 
 /**
  * This is janky
@@ -829,21 +801,7 @@ export async function getAttachments(
         ? getTaskReminderAttachments(messages, toolUseContext)
         : getTodoReminderAttachments(messages, toolUseContext),
     ),
-    ...(isAgentSwarmsEnabled()
-      ? [
-          // Skip teammate mailbox for the session_memory forked agent.
-          // It shares AppState.teamContext with the leader, so isTeamLead resolves
-          // true and it reads+marks-as-read the leader's DMs as ephemeral attachments,
-          // silently stealing messages that should be delivered as permanent turns.
-          ...(querySource === 'session_memory'
-            ? []
-            : [
-                maybe('teammate_mailbox', async () =>
-                  getTeammateMailboxAttachments(toolUseContext),
-                ),
-              ]),
-        ]
-      : []),    maybe('agent_pending_messages', async () =>
+    maybe('agent_pending_messages', async () =>
       getAgentPendingMessageAttachments(toolUseContext),
     ),
     maybe('critical_system_reminder', () =>
@@ -3258,28 +3216,6 @@ async function getAsyncHookResponseAttachments(): Promise<Attachment[]> {
   return attachments
 }
 
-/**
- * Get teammate mailbox attachments for agent swarm communication
- * Teammates are independent Claude Code sessions running in parallel (swarms),
- * not parent-child subagent relationships.
- *
- * This function checks two sources for messages:
- * 1. File-based mailbox (for messages that arrived between polls)
- * 2. AppState.inbox (for messages queued mid-turn by useInboxPoller)
- *
- * Messages from AppState.inbox are delivered mid-turn as attachments,
- * allowing teammates to receive messages without waiting for the turn to end.
- */
-async function getTeammateMailboxAttachments(
-  _toolUseContext: ToolUseContext,
-): Promise<Attachment[]> {
-  return []
-}
-
-/**
- * Get team context attachment for teammates in a swarm.
- * Only injected on the first turn to provide team coordination instructions.
- */
 function getTokenUsageAttachment(
   messages: Message[],
   model: string,

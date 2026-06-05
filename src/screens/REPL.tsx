@@ -2985,14 +2985,6 @@ export function REPL({
   }, []);
   const handleExit = useCallback(async () => {
     setIsExiting(true);
-    const showWorktree = getCurrentWorktreeSession() !== null;
-    if (showWorktree) {
-      setExitFlow(<ExitFlow showWorktree onDone={() => { }} onCancel={() => {
-        setExitFlow(null);
-        setIsExiting(false);
-      }} />);
-      return;
-    }
     const exitMod = await exit.load();
     const exitFlowResult = await exitMod.call(() => { });
     setExitFlow(exitFlowResult);

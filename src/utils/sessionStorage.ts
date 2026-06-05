@@ -2957,42 +2957,12 @@ export function saveMode(mode: 'coordinator' | 'normal'): void {
 }
 
 /**
- * Record the session's worktree state for --resume. Written to disk by
- * materializeSessionFile on the first user message and re-stamped by
- * reAppendSessionMetadata on exit. Pass null when exiting a worktree
- * so --resume knows not to cd back into it.
+ * Worktree session state recording — no-op since worktrees are not supported.
  */
 export function saveWorktreeState(
-  worktreeSession: PersistedWorktreeSession | null,
+  _worktreeSession: PersistedWorktreeSession | null,
 ): void {
-  // Strip ephemeral fields (creationDurationMs, usedSparsePaths) that callers
-  // may pass via full WorktreeSession objects — TypeScript structural typing
-  // allows this, but we don't want them serialized to the transcript.
-  const stripped: PersistedWorktreeSession | null = worktreeSession
-    ? {
-        originalCwd: worktreeSession.originalCwd,
-        worktreePath: worktreeSession.worktreePath,
-        worktreeName: worktreeSession.worktreeName,
-        worktreeBranch: worktreeSession.worktreeBranch,
-        originalBranch: worktreeSession.originalBranch,
-        originalHeadCommit: worktreeSession.originalHeadCommit,
-        sessionId: worktreeSession.sessionId,
-        tmuxSessionName: worktreeSession.tmuxSessionName,
-        hookBased: worktreeSession.hookBased,
-      }
-    : null
-  const project = getProject()
-  project.currentSessionWorktree = stripped
-  // Write eagerly when the file already exists (mid-session enter/exit).
-  // For --worktree startup, sessionFile is null — materializeSessionFile
-  // will write it on the first message via reAppendSessionMetadata.
-  if (project.sessionFile) {
-    appendEntryToFile(project.sessionFile, {
-      type: 'worktree-state',
-      worktreeSession: stripped,
-      sessionId: getSessionId(),
-    })
-  }
+  // no-op
 }
 
 /**
