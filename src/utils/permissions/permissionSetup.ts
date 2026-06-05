@@ -549,8 +549,10 @@ function isSymlinkTo({
  */
 export function initialPermissionModeFromCLI({
   permissionModeCli,
+  dangerouslySkipPermissions,
 }: {
   permissionModeCli: string | undefined
+  dangerouslySkipPermissions: boolean | undefined
 }): { mode: PermissionMode; notification?: string } {
   const settings = getSettings_DEPRECATED() || {}
 
@@ -581,6 +583,7 @@ export function initialPermissionModeFromCLI({
   const orderedModes: PermissionMode[] = []
   let notification: string | undefined
 
+  if (dangerouslySkipPermissions) {
     orderedModes.push('bypassPermissions')
   }
   if (permissionModeCli) {
@@ -732,12 +735,14 @@ export async function initializeToolPermissionContext({
   disallowedToolsCli,
   baseToolsCli,
   permissionMode,
+  allowDangerouslySkipPermissions,
   addDirs,
 }: {
   allowedToolsCli: string[]
   disallowedToolsCli: string[]
   baseToolsCli?: string[]
   permissionMode: PermissionMode
+  allowDangerouslySkipPermissions: boolean
   addDirs: string[]
 }): Promise<{
   toolPermissionContext: ToolPermissionContext
@@ -795,6 +800,7 @@ export async function initializeToolPermissionContext({
   const settingsAllowBypassPermissionsMode = hasAllowBypassPermissionsMode()
   const isBypassPermissionsModeAvailable =
     (permissionMode === 'bypassPermissions' ||
+      allowDangerouslySkipPermissions ||
       settingsAllowBypassPermissionsMode ||
       true) &&
     !growthBookDisableBypassPermissionsMode &&

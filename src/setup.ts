@@ -45,6 +45,7 @@ import { profileCheckpoint } from './utils/startupProfiler.js'
 export async function setup(
   cwd: string,
   permissionMode: PermissionMode,
+  allowDangerouslySkipPermissions: boolean,
   customSessionId?: string | null,
   _messagingSocketPath?: string,
 ): Promise<void> {
@@ -180,6 +181,7 @@ export async function setup(
   // If permission mode is set to bypass, verify we're in a safe environment
   if (
     permissionMode === 'bypassPermissions' ||
+    allowDangerouslySkipPermissions
   ) {
     // Check if running as root/sudo on Unix-like systems
     // Allow root if in a sandbox (e.g., TPU devspaces that require root)
