@@ -658,8 +658,6 @@ async function run(): Promise<CommanderCommand> {
     const {
       debug = false,
       debugToStderr = false,
-      dangerouslySkipPermissions,
-      allowDangerouslySkipPermissions = false,
       tools: baseTools = [],
       allowedTools = [],
       disallowedTools = [],
@@ -763,7 +761,6 @@ async function run(): Promise<CommanderCommand> {
       notification: permissionModeNotification
     } = initialPermissionModeFromCLI({
       permissionModeCli,
-      dangerouslySkipPermissions
     });
 
     // Store session bypass permissions mode for trust dialog check
@@ -919,7 +916,6 @@ async function run(): Promise<CommanderCommand> {
       disallowedToolsCli: disallowedTools,
       baseToolsCli: baseTools,
       permissionMode,
-      allowDangerouslySkipPermissions,
       addDirs: addDir
     });
     let toolPermissionContext = initResult.toolPermissionContext;
@@ -987,9 +983,9 @@ async function run(): Promise<CommanderCommand> {
     if (process.env.CLAUDE_CODE_ENTRYPOINT !== 'local-agent') {
       initBundledSkills();
     }
-    const setupPromise = setup(preSetupCwd, permissionMode, allowDangerouslySkipPermissions, sessionId ? validateUuid(sessionId) : undefined, messagingSocketPath);
     const commandsPromise = getCommands(preSetupCwd);
     const agentDefsPromise = getAgentDefinitionsWithOverrides(preSetupCwd);
+    const setupPromise = setup(preSetupCwd, permissionMode, sessionId ? validateUuid(sessionId) : undefined, messagingSocketPath);
     // Suppress transient unhandledRejection if these reject during the
     // ~28ms setupPromise await before Promise.all joins them below.
     commandsPromise.catch(() => {});
@@ -1082,7 +1078,6 @@ async function run(): Promise<CommanderCommand> {
     const enableClaudeInChrome = false;
     let onboardingShown = false;
     try {
-      onboardingShown = await showSetupScreens(root, permissionMode, allowDangerouslySkipPermissions, commands, enableClaudeInChrome, devChannels);
     } catch (e) {
       throw e;
     }
@@ -1269,10 +1264,8 @@ const {
       mcpClientCount: Object.keys(allMcpConfigs).length,
       skipWebFetchPreflight: getInitialSettings().skipWebFetchPreflight,
       githubActionInputs: process.env.GITHUB_ACTION_INPUTS,
-      dangerouslySkipPermissionsPassed: dangerouslySkipPermissions ?? false,
       permissionMode,
       modeIsBypass: permissionMode === 'bypassPermissions',
-      allowDangerouslySkipPermissionsPassed: allowDangerouslySkipPermissions,
       systemPromptFlag: systemPrompt ? options.systemPromptFile ? 'file' : 'flag' : undefined,
       appendSystemPromptFlag: appendSystemPrompt ? options.appendSystemPromptFile ? 'file' : 'flag' : undefined,
       thinkingConfig,
@@ -1904,10 +1897,8 @@ async function logTenguInit({
   mcpClientCount,
   skipWebFetchPreflight,
   githubActionInputs,
-  dangerouslySkipPermissionsPassed,
   permissionMode,
   modeIsBypass,
-  allowDangerouslySkipPermissionsPassed,
   systemPromptFlag,
   appendSystemPromptFlag,
   thinkingConfig,
@@ -1923,10 +1914,8 @@ async function logTenguInit({
   mcpClientCount: number;
   skipWebFetchPreflight: boolean | undefined;
   githubActionInputs: string | undefined;
-  dangerouslySkipPermissionsPassed: boolean;
   permissionMode: string;
   modeIsBypass: boolean;
-  allowDangerouslySkipPermissionsPassed: boolean;
   systemPromptFlag: 'file' | 'flag' | undefined;
   appendSystemPromptFlag: 'file' | 'flag' | undefined;
   thinkingConfig: ThinkingConfig;
@@ -1947,11 +1936,9 @@ async function logTenguInit({
       ...(githubActionInputs && {
         githubActionInputs: githubActionInputs as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
       }),
-      dangerouslySkipPermissionsPassed,
       permissionMode: permissionMode as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       modeIsBypass,
       inProtectedNamespace: isInProtectedNamespace(),
-      allowDangerouslySkipPermissionsPassed,
       thinkingType: thinkingConfig.type as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       ...(systemPromptFlag && {
         systemPromptFlag: systemPromptFlag as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
