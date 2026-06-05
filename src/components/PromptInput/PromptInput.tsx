@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNotifications } from 'src/context/notifications.js';
 import { useCommandQueue } from 'src/hooks/useCommandQueue.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
@@ -66,7 +66,6 @@ import { editPromptInEditor } from '../../utils/promptEditor.js';
 import { hasAutoModeOptIn } from '../../utils/settings/settings.js';
 import { findBtwTriggerPositions } from '../../utils/sideQuestion.js';
 import { findSlashCommandPositions } from '../../utils/suggestions/commandSuggestions.js';
-import { findSlackChannelPositions, getKnownChannelsVersion, hasSlackMcpServer, subscribeKnownChannels } from '../../utils/suggestions/slackChannelSuggestions.js';
 import type { TextHighlight } from '../../utils/textHighlighting.js';
 import type { Theme } from '../../utils/theme.js';
 import { findThinkingTriggerPositions, getRainbowColor, isUltrathinkEnabled } from '../../utils/thinking.js';
@@ -451,10 +450,7 @@ function PromptInput({
     });
   }, [displayedValue, commands]);
   const tokenBudgetTriggers = useMemo(() => feature('TOKEN_BUDGET') ? findTokenBudgetPositions(displayedValue) : [], [displayedValue]);
-  const knownChannelsVersion = useSyncExternalStore(subscribeKnownChannels, getKnownChannelsVersion);
-  const slackChannelTriggers = useMemo(() => hasSlackMcpServer(store.getState().mcp.clients) ? findSlackChannelPositions(displayedValue) : [],
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a stable ref
-  [displayedValue, knownChannelsVersion]);
+  const slackChannelTriggers: {start: number; end: number}[] = [];
 
   // Find @name mentions and highlight with team member's color
   const memberMentionHighlights = useMemo((): Array<{
@@ -538,15 +534,6 @@ function PromptInput({
         priority: 5
       });
     }
-    for (const trigger of slackChannelTriggers) {
-      highlights.push({
-        start: trigger.start,
-        end: trigger.end,
-        color: 'suggestion',
-        priority: 5
-      });
-    }
-
     // Add @name highlighting with team member's color
     for (const mention of memberMentionHighlights) {
       highlights.push({
@@ -598,7 +585,7 @@ function PromptInput({
       }
     }
     return highlights;
-  }, [isSearchingHistory, historyQuery, historyMatch, historyFailedMatch, cursorOffset, btwTriggers, imageRefPositions, memberMentionHighlights, slashCommandTriggers, tokenBudgetTriggers, slackChannelTriggers, displayedValue, thinkTriggers, ultraplanTriggers, ultrareviewTriggers, buddyTriggers]);
+  }, [isSearchingHistory, historyQuery, historyMatch, historyFailedMatch, cursorOffset, btwTriggers, imageRefPositions, memberMentionHighlights, slashCommandTriggers, tokenBudgetTriggers, displayedValue, thinkTriggers, ultraplanTriggers, ultrareviewTriggers, buddyTriggers]);
   const {
     addNotification,
     removeNotification
