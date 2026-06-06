@@ -21,7 +21,6 @@ import { getProxyFetchOptions } from 'src/utils/proxy.js'
 import {
   getSessionId,
 } from '../../bootstrap/state.js'
-import { getOauthConfig } from '../../constants/oauth.js'
 import { isDebugToStdErr, logForDebugging } from '../../utils/debug.js'
 import {
   getVertexRegionForModel,
@@ -437,10 +436,6 @@ export async function getAnthropicClient({
   const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
     apiKey: apiKey || getAnthropicApiKey(),
     // Set baseURL from OAuth config when using staging OAuth
-    ...(false &&
-    isEnvTruthy(process.env.USE_STAGING_OAUTH)
-      ? { baseURL: getOauthConfig().BASE_API_URL }
-      : {}),
     ...ARGS,
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
   }

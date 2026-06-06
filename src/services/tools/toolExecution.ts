@@ -70,7 +70,6 @@ import { logError } from '../../utils/log.js'
 import {
   CANCEL_MESSAGE,
   createProgressMessage,
-  createStopHookSummaryMessage,
   createToolResultStopMessage,
   createUserMessage,
   withMemoryCorrectionHint,
@@ -871,24 +870,6 @@ async function checkPermissionsAndCallTool(
 
   // Emit PreToolUse summary immediately so it's visible while the tool executes.
   // Use wall-clock time (not sum of individual durations) since hooks run in parallel.
-  if (false && preToolHookInfos.length > 0) {
-    if (preToolHookDurationMs > HOOK_TIMING_DISPLAY_THRESHOLD_MS) {
-      resultingMessages.push({
-        message: createStopHookSummaryMessage(
-          preToolHookInfos.length,
-          preToolHookInfos,
-          [],
-          false,
-          undefined,
-          false,
-          'suggestion',
-          undefined,
-          'PreToolUse',
-          preToolHookDurationMs,
-        ),
-      })
-    }
-  }
 
   const toolAttributes: Record<string, string | number | boolean> = {}
   if (processedInput && typeof processedInput === 'object') {
@@ -1439,24 +1420,6 @@ async function checkPermissionsAndCallTool(
 
     // Show PostToolUse hook timing inline below tool result when > 500ms.
     // Use wall-clock time (not sum of individual durations) since hooks run in parallel.
-    if (false && postToolHookInfos.length > 0) {
-      if (postToolHookDurationMs > HOOK_TIMING_DISPLAY_THRESHOLD_MS) {
-        resultingMessages.push({
-          message: createStopHookSummaryMessage(
-            postToolHookInfos.length,
-            postToolHookInfos,
-            [],
-            false,
-            undefined,
-            false,
-            'suggestion',
-            undefined,
-            'PostToolUse',
-            postToolHookDurationMs,
-          ),
-        })
-      }
-    }
 
     // If the tool provided new messages, add them to the list to return.
     if (result.newMessages && result.newMessages.length > 0) {

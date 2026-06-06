@@ -3,7 +3,6 @@ import figures from 'figures';
 import * as React from 'react';
 import { useState } from 'react';
 import { useAppState } from 'src/state/AppState.js';
-import { isPanelAgentTask } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import { getPillLabel, pillNeedsCta } from 'src/tasks/pillLabel.js';
 import { type BackgroundTaskState, isBackgroundTask, type TaskState } from 'src/tasks/types.js';
 import { Box, Text } from '../../ink.js';
@@ -69,7 +68,7 @@ export function BackgroundTaskStatus(t0) {
   return t11;
 }
 function _temp3(t) {
-  return isBackgroundTask(t) && !(false && isPanelAgentTask(t));
+  return isBackgroundTask(t);
 }
 function _temp(s) {
   return s.tasks;

@@ -440,11 +440,7 @@ export function LogSelector(t0) {
   let t23;
   let t24;
   if ($[42] !== debouncedDeepSearchQuery || $[43] !== deferredSearchQuery) {
-    t23 = () => {
-      if (false && deferredSearchQuery && deferredSearchQuery !== debouncedDeepSearchQuery) {
-        setIsSearching(true);
-      }
-    };
+    t23 = () => {};
     t24 = [deferredSearchQuery, debouncedDeepSearchQuery, false];
     $[42] = debouncedDeepSearchQuery;
     $[43] = deferredSearchQuery;
@@ -1049,7 +1045,7 @@ export function LogSelector(t0) {
             exitSearchMode();
           } else {
             if (key.return || key.downArrow) {
-              if (searchQuery.trim() && onAgenticSearch && false && agenticSearchState.status !== "results") {
+              if (false) {
                 setIsAgenticSearchOptionFocused(true);
               }
             }
@@ -1339,7 +1335,7 @@ export function LogSelector(t0) {
   }
   let t69;
   if ($[197] !== agenticSearchState.status || $[198] !== isAgenticSearchOptionFocused || $[199] !== onAgenticSearch || $[200] !== searchQuery) {
-    t69 = Boolean(searchQuery.trim()) && onAgenticSearch && false && agenticSearchState.status !== "searching" && agenticSearchState.status !== "results" && agenticSearchState.status !== "error" && <Box flexShrink={0} flexDirection="column"><Box flexDirection="row" gap={1}><Text color={isAgenticSearchOptionFocused ? "suggestion" : undefined}>{isAgenticSearchOptionFocused ? figures.pointer : " "}</Text><Text color={isAgenticSearchOptionFocused ? "suggestion" : undefined} bold={isAgenticSearchOptionFocused}>Search deeply using Claude →</Text></Box><Box height={1} /></Box>;
+    t69 = false;
     $[197] = agenticSearchState.status;
     $[198] = isAgenticSearchOptionFocused;
     $[199] = onAgenticSearch;

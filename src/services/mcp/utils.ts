@@ -394,12 +394,6 @@ export function getProjectMcpServerStatus(
   // 1. The user/developer explicitly chose to run in this mode
   // 2. For SDK, projectSettings is off by default - they must explicitly enable it
   // 3. For -p mode, the help text warns to only use in trusted directories
-  if (
-    false &&
-    isSettingSourceEnabled('projectSettings')
-  ) {
-    return 'approved'
-  }
 
   return 'pending'
 }

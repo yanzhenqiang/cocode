@@ -267,10 +267,7 @@ export function shouldMaintainProjectWorkingDir(): boolean {
  * Check if running on Homespace (ant-internal cloud environment)
  */
 export function isRunningOnHomespace(): boolean {
-  return (
-    false &&
-    isEnvTruthy(process.env.COO_RUNNING_ON_HOMESPACE)
-  )
+  return false
 }
 
 /**

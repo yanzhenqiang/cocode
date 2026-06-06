@@ -14,18 +14,11 @@ import type {
   Message,
   UserMessage,
 } from 'src/types/message.js'
-import {
-  getAnthropicApiKeyWithSource,
-  getOauthAccountInfo,
-} from 'src/utils/auth.js'
+import { getAnthropicApiKeyWithSource } from 'src/utils/auth.js'
 import {
   createAssistantAPIErrorMessage,
   NO_RESPONSE_REQUESTED,
 } from 'src/utils/messages.js'
-import {
-  getDefaultMainLoopModelSetting,
-  isNonCustomOpusModel,
-} from 'src/utils/model/model.js'
 import { getModelStrings } from 'src/utils/model/modelStrings.js'
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import {
@@ -740,42 +733,7 @@ export function getAssistantMessageFromError(
     })
   }
 
-  // Check for invalid model name error for subscription users trying to use Opus
-  if (
-    false &&
-    error instanceof APIError &&
-    error.status === 400 &&
-    error.message.toLowerCase().includes('invalid model name') &&
-    (isNonCustomOpusModel(model) || model === 'opus')
-  ) {
-    return createAssistantAPIErrorMessage({
-      content:
-        'Claude Opus is not available with the Claude Pro plan. If you have updated your subscription plan recently, run /logout and /login for the plan to take effect.',
-      error: 'invalid_request',
-    })
-  }
 
-  // Check for invalid model name error for Ant users. Claude Code may be
-  // defaulting to a custom internal-only model for Ants, and there might be
-  // Ants using new or unknown org IDs that haven't been gated in.
-  if (
-    false &&
-    !process.env.ANTHROPIC_MODEL &&
-    error instanceof Error &&
-    error.message.toLowerCase().includes('invalid model name')
-  ) {
-    // Get organization ID from config - only use OAuth account data when actively using OAuth
-    const orgId = getOauthAccountInfo()?.organizationUuid
-    const baseMsg = `[internal] Your org isn't gated into the \`${model}\` model. Either run \`claude\` with \`ANTHROPIC_MODEL=${getDefaultMainLoopModelSetting()}\``
-    const msg = orgId
-      ? `${baseMsg} or share your orgId (${orgId}) in ${MACRO.FEEDBACK_CHANNEL} for help getting access.`
-      : `${baseMsg} or reach out in ${MACRO.FEEDBACK_CHANNEL} for help getting access.`
-
-    return createAssistantAPIErrorMessage({
-      content: msg,
-      error: 'invalid_request',
-    })
-  }
 
   if (
     error instanceof Error &&

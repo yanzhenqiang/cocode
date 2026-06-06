@@ -203,12 +203,6 @@ export async function createBashShellProvider(
       //
       // See tmuxSocket.ts for the full isolation architecture documentation.
       const commandUsesTmux = command.includes('tmux')
-      if (
-        false &&
-        (hasTmuxToolBeenUsed() || commandUsesTmux)
-      ) {
-        await ensureSocketInitialized()
-      }
       const claudeTmuxEnv = getClaudeTmuxEnv()
       const env: Record<string, string> = {}
       // CRITICAL: Override TMUX to isolate ALL tmux commands to Claude's socket.

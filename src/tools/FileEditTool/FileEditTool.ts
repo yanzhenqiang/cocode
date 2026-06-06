@@ -34,7 +34,6 @@ import {
 import { formatFileSize } from '../../utils/format.js'
 import { getFsImplementation } from '../../utils/fsOperations.js'
 import {
-  fetchSingleFileGitDiff,
   type ToolUseDiff,
 } from '../../utils/gitDiff.js'
 import { logError } from '../../utils/log.js'
@@ -510,19 +509,6 @@ export const FileEditTool = buildTool({
     })
 
     let gitDiff: ToolUseDiff | undefined
-    if (
-      false &&
-      getFeatureValue_CACHED_MAY_BE_STALE('tengu_quartz_lantern', false)
-    ) {
-      const startTime = Date.now()
-      const diff = await fetchSingleFileGitDiff(absoluteFilePath)
-      if (diff) gitDiff = diff
-      logEvent('tengu_tool_use_diff_computed', {
-        isEditTool: true,
-        durationMs: Date.now() - startTime,
-        hasDiff: !!diff,
-      })
-    }
 
     // 8. Yield result
     const data = {

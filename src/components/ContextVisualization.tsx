@@ -43,7 +43,7 @@ interface Props {
   data: ContextData;
 }
 export function ContextVisualization(t0) {
-  const $ = _c(87);
+  const $ = _c(84);
   const {
     data
   } = t0;
@@ -68,7 +68,6 @@ export function ContextVisualization(t0) {
   let t2;
   let t3;
   let t4;
-  let t5;
   let t6;
   let t7;
   let t8;
@@ -206,7 +205,6 @@ export function ContextVisualization(t0) {
     } else {
       t4 = $[53];
     }
-    t5 = (systemTools && systemTools.length > 0 || hasDeferredBuiltinTools) && false && <Box flexDirection="column" marginTop={1}><Box><Text bold={true}>[internal] System tools</Text>{hasDeferredBuiltinTools && <Text dimColor={true}> (some loaded on-demand)</Text>}</Box><Box flexDirection="column" marginTop={1}><Text dimColor={true}>Loaded</Text>{systemTools?.map(_temp14)}{deferredBuiltinTools.filter(_temp15).map(_temp16)}</Box>{hasDeferredBuiltinTools && deferredBuiltinTools.some(_temp17) && <Box flexDirection="column" marginTop={1}><Text dimColor={true}>Available</Text>{deferredBuiltinTools.filter(_temp18).map(_temp19)}</Box>}</Box>;
     $[0] = categories;
     $[1] = gridRows;
     $[2] = mcpTools;
@@ -221,7 +219,6 @@ export function ContextVisualization(t0) {
     $[11] = t2;
     $[12] = t3;
     $[13] = t4;
-    $[14] = t5;
     $[15] = t6;
     $[16] = t7;
     $[17] = t8;
@@ -232,19 +229,10 @@ export function ContextVisualization(t0) {
     t2 = $[11];
     t3 = $[12];
     t4 = $[13];
-    t5 = $[14];
     t6 = $[15];
     t7 = $[16];
     t8 = $[17];
     t9 = $[18];
-  }
-  let t10;
-  if ($[54] !== systemPromptSections) {
-    t10 = systemPromptSections && systemPromptSections.length > 0 && false && <Box flexDirection="column" marginTop={1}><Text bold={true}>[internal] System prompt sections</Text>{systemPromptSections.map(_temp20)}</Box>;
-    $[54] = systemPromptSections;
-    $[55] = t10;
-  } else {
-    t10 = $[55];
   }
   let t11;
   if ($[56] !== agents) {
@@ -270,60 +258,49 @@ export function ContextVisualization(t0) {
   } else {
     t13 = $[61];
   }
-  let t14;
-  if ($[62] !== messageBreakdown) {
-    t14 = messageBreakdown && false && <Box flexDirection="column" marginTop={1}><Text bold={true}>[internal] Message breakdown</Text><Box flexDirection="column" marginLeft={1}><Box><Text>Tool calls: </Text><Text dimColor={true}>{formatTokens(messageBreakdown.toolCallTokens)} tokens</Text></Box><Box><Text>Tool results: </Text><Text dimColor={true}>{formatTokens(messageBreakdown.toolResultTokens)} tokens</Text></Box><Box><Text>Attachments: </Text><Text dimColor={true}>{formatTokens(messageBreakdown.attachmentTokens)} tokens</Text></Box><Box><Text>Assistant messages (non-tool): </Text><Text dimColor={true}>{formatTokens(messageBreakdown.assistantMessageTokens)} tokens</Text></Box><Box><Text>User messages (non-tool-result): </Text><Text dimColor={true}>{formatTokens(messageBreakdown.userMessageTokens)} tokens</Text></Box></Box>{messageBreakdown.toolCallsByType.length > 0 && <Box flexDirection="column" marginTop={1}><Text bold={true}>[internal] Top tools</Text>{messageBreakdown.toolCallsByType.slice(0, 5).map(_temp26)}</Box>}{messageBreakdown.attachmentsByType.length > 0 && <Box flexDirection="column" marginTop={1}><Text bold={true}>[internal] Top attachments</Text>{messageBreakdown.attachmentsByType.slice(0, 5).map(_temp27)}</Box>}</Box>;
-    $[62] = messageBreakdown;
-    $[63] = t14;
-  } else {
-    t14 = $[63];
-  }
   let t15;
-  if ($[64] !== T0 || $[65] !== t10 || $[66] !== t11 || $[67] !== t12 || $[68] !== t13 || $[69] !== t14 || $[70] !== t2 || $[71] !== t3 || $[72] !== t4 || $[73] !== t5) {
-    t15 = <T0 flexDirection={t2} marginLeft={t3}>{t4}{t5}{t10}{t11}{t12}{t13}{t14}</T0>;
+  if ($[64] !== T0 || $[65] !== t11 || $[66] !== t12 || $[67] !== t13 || $[68] !== t2 || $[69] !== t3 || $[70] !== t4) {
+    t15 = <T0 flexDirection={t2} marginLeft={t3}>{t4}{t11}{t12}{t13}</T0>;
     $[64] = T0;
-    $[65] = t10;
-    $[66] = t11;
-    $[67] = t12;
-    $[68] = t13;
-    $[69] = t14;
-    $[70] = t2;
-    $[71] = t3;
-    $[72] = t4;
-    $[73] = t5;
-    $[74] = t15;
+    $[65] = t11;
+    $[66] = t12;
+    $[67] = t13;
+    $[68] = t2;
+    $[69] = t3;
+    $[70] = t4;
+    $[71] = t15;
   } else {
-    t15 = $[74];
+    t15 = $[71];
   }
   let t16;
-  if ($[75] !== data) {
+  if ($[72] !== data) {
     t16 = generateContextSuggestions(data);
-    $[75] = data;
-    $[76] = t16;
+    $[72] = data;
+    $[73] = t16;
   } else {
-    t16 = $[76];
+    t16 = $[73];
   }
   let t17;
-  if ($[77] !== t16) {
+  if ($[74] !== t16) {
     t17 = <ContextSuggestions suggestions={t16} />;
-    $[77] = t16;
-    $[78] = t17;
+    $[74] = t16;
+    $[75] = t17;
   } else {
-    t17 = $[78];
+    t17 = $[75];
   }
   let t18;
-  if ($[79] !== T1 || $[80] !== t15 || $[81] !== t17 || $[82] !== t6 || $[83] !== t7 || $[84] !== t8 || $[85] !== t9) {
+  if ($[76] !== T1 || $[77] !== t15 || $[78] !== t17 || $[79] !== t6 || $[80] !== t7 || $[81] !== t8 || $[82] !== t9) {
     t18 = <T1 flexDirection={t6} paddingLeft={t7}>{t8}{t9}{t15}{t17}</T1>;
-    $[79] = T1;
-    $[80] = t15;
-    $[81] = t17;
-    $[82] = t6;
-    $[83] = t7;
-    $[84] = t8;
-    $[85] = t9;
-    $[86] = t18;
+    $[76] = T1;
+    $[77] = t15;
+    $[78] = t17;
+    $[79] = t6;
+    $[80] = t7;
+    $[81] = t8;
+    $[82] = t9;
+    $[83] = t18;
   } else {
-    t18 = $[86];
+    t18 = $[83];
   }
   return t18;
 }

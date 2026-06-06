@@ -7,21 +7,18 @@ import {
 import { getSdkBetas } from '../bootstrap/state.js'
 import {
   CLAUDE_CODE_20250219_BETA_HEADER,
-  CLI_INTERNAL_BETA_HEADER,
   CONTEXT_1M_BETA_HEADER,
   CONTEXT_MANAGEMENT_BETA_HEADER,
   INTERLEAVED_THINKING_BETA_HEADER,
   PROMPT_CACHING_SCOPE_BETA_HEADER,
   REDACT_THINKING_BETA_HEADER,
   STRUCTURED_OUTPUTS_BETA_HEADER,
-  SUMMARIZE_CONNECTOR_TEXT_BETA_HEADER,
-  TOKEN_EFFICIENT_TOOLS_BETA_HEADER,
   TOOL_SEARCH_BETA_HEADER_1P,
   TOOL_SEARCH_BETA_HEADER_3P,
   WEB_SEARCH_BETA_HEADER,
 } from '../constants/betas.js'
 import { has1mContext } from './context.js'
-import { isEnvDefinedFalsy, isEnvTruthy } from './envUtils.js'
+import { isEnvTruthy } from './envUtils.js'
 import { getCanonicalName } from './model/model.js'
 import { get3PModelCapabilityOverride } from './model/modelSupportOverrides.js'
 import { getAPIProvider } from './model/providers.js'
@@ -215,14 +212,6 @@ export const getAllModelBetas = memoize((model: string): string[] => {
 
   if (!isHaiku) {
     betaHeaders.push(CLAUDE_CODE_20250219_BETA_HEADER)
-    if (
-      false &&
-      process.env.CLAUDE_CODE_ENTRYPOINT === 'cli'
-    ) {
-      if (CLI_INTERNAL_BETA_HEADER) {
-        betaHeaders.push(CLI_INTERNAL_BETA_HEADER)
-      }
-    }
   }
   if (has1mContext(model)) {
     betaHeaders.push(CONTEXT_1M_BETA_HEADER)
@@ -247,27 +236,6 @@ export const getAllModelBetas = memoize((model: string): string[] => {
     getInitialSettings().showThinkingSummaries !== true
   ) {
     betaHeaders.push(REDACT_THINKING_BETA_HEADER)
-  }
-
-  // POC: server-side connector-text summarization (anti-distillation). The
-  // API buffers assistant text between tool calls, summarizes it, and returns
-  // the summary with a signature so the original can be restored on subsequent
-  // turns — same mechanism as thinking blocks. Ant-only while we measure
-  // TTFT/TTLT/capacity; betas already flow to tengu_api_success for splitting.
-  // Backend independently requires Capability.ANTHROPIC_INTERNAL_RESEARCH.
-  //
-  // USE_CONNECTOR_TEXT_SUMMARIZATION is tri-state: =1 forces on (opt-in even
-  // if GB is off), =0 forces off (opt-out of a GB rollout you were bucketed
-  // into), unset defers to GB.
-  if (
-    SUMMARIZE_CONNECTOR_TEXT_BETA_HEADER &&
-    false &&
-    includeFirstPartyOnlyBetas &&
-    !isEnvDefinedFalsy(process.env.USE_CONNECTOR_TEXT_SUMMARIZATION) &&
-    (isEnvTruthy(process.env.USE_CONNECTOR_TEXT_SUMMARIZATION) ||
-      getFeatureValue_CACHED_MAY_BE_STALE('tengu_slate_prism', false))
-  ) {
-    betaHeaders.push(SUMMARIZE_CONNECTOR_TEXT_BETA_HEADER)
   }
 
   // Add context management beta for tool clearing (ant opt-in) or thinking preservation
@@ -302,17 +270,6 @@ export const getAllModelBetas = memoize((model: string): string[] => {
     strictToolsEnabled
   ) {
     betaHeaders.push(STRUCTURED_OUTPUTS_BETA_HEADER)
-  }
-  // JSON tool_use format (FC v3) — ~4.5% output token reduction vs ANTML.
-  // Sends the v2 header (2026-03-28) added in anthropics/anthropic#337072 to
-  // isolate the CC A/B cohort from ~9.2M/week existing v1 senders. Ant-only
-  // while the restored JsonToolUseOutputParser soaks.
-  if (
-    false &&
-    includeFirstPartyOnlyBetas &&
-    tokenEfficientToolsEnabled
-  ) {
-    betaHeaders.push(TOKEN_EFFICIENT_TOOLS_BETA_HEADER)
   }
 
   // Add web search beta for Vertex Claude 4.0+ models only
@@ -368,14 +325,6 @@ export function getMergedBetas(
   if (options?.isAgenticQuery) {
     if (!baseBetas.includes(CLAUDE_CODE_20250219_BETA_HEADER)) {
       baseBetas.push(CLAUDE_CODE_20250219_BETA_HEADER)
-    }
-    if (
-      false &&
-      process.env.CLAUDE_CODE_ENTRYPOINT === 'cli' &&
-      CLI_INTERNAL_BETA_HEADER &&
-      !baseBetas.includes(CLI_INTERNAL_BETA_HEADER)
-    ) {
-      baseBetas.push(CLI_INTERNAL_BETA_HEADER)
     }
   }
 

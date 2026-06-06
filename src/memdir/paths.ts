@@ -36,12 +36,6 @@ export function isAutoMemoryEnabled(): boolean {
   if (isEnvDefinedFalsy(envVal)) {
     return true
   }
-  if (
-    false &&
-    !process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR
-  ) {
-    return false
-  }
   const settings = getInitialSettings()
   if (settings.autoMemoryEnabled !== undefined) {
     return settings.autoMemoryEnabled

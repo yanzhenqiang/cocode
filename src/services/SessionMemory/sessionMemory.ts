@@ -266,8 +266,6 @@ const initSessionMemoryConfigIfNeeded = memoize((): void => {
  * Session memory post-sampling hook that extracts and updates session notes
  */
 // Track if we've logged the gate check failure this session (to avoid spam)
-let hasLoggedGateFailure = false
-
 const extractSessionMemory = sequential(async function (
   context: REPLHookContext,
 ): Promise<void> {
@@ -282,10 +280,6 @@ const extractSessionMemory = sequential(async function (
   // Check gate lazily when hook runs (cached, non-blocking)
   if (!isSessionMemoryGateEnabled()) {
     // Log gate failure once per session (internal-only)
-    if (false && !hasLoggedGateFailure) {
-      hasLoggedGateFailure = true
-      logEvent('tengu_session_memory_gate_disabled', {})
-    }
     return
   }
 

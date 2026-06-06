@@ -602,20 +602,7 @@ export function initialPermissionModeFromCLI({
     // CCR only supports acceptEdits and plan — ignore other defaultModes from
     // settings (e.g. bypassPermissions would otherwise silently grant full
     // access in a remote environment).
-    if (
-      false &&
-      !['acceptEdits', 'plan', 'default'].includes(settingsMode)
-    ) {
-      logForDebugging(
-        `settings defaultMode "${settingsMode}" is not supported in CLAUDE_CODE_REMOTE — only acceptEdits and plan are allowed`,
-        { level: 'warn' },
-      )
-      logEvent('tengu_ccr_unsupported_default_mode_ignored', {
-        mode: settingsMode as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      })
-    }
-    // auto from settings requires the same gate check as from CLI
-    else if (feature('TRANSCRIPT_CLASSIFIER') && settingsMode === 'auto') {
+    if (feature('TRANSCRIPT_CLASSIFIER') && settingsMode === 'auto') {
       if (autoModeCircuitBrokenSync) {
         logForDebugging(
           'auto mode circuit breaker active (cached) — falling back to default',
@@ -809,15 +796,6 @@ export async function initializeToolPermissionContext({
   // Bash(*) is equivalent to YOLO mode for that shell.
   // Skip in CCR/BYOC where --allowed-tools is the intended pre-approval mechanism.
   let overlyBroadBashPermissions: DangerousPermissionInfo[] = []
-  if (
-    false &&
-    !false &&
-    process.env.CLAUDE_CODE_ENTRYPOINT !== 'local-agent'
-  ) {
-    overlyBroadBashPermissions = [
-      ...findOverlyBroadBashPermissions(rulesFromDisk, parsedAllowedToolsCli),
-    ]
-  }
 
   // Ant-only: Detect dangerous shell permissions for auto mode
   // Dangerous permissions (like Bash(*), Bash(python:*)) would auto-allow
@@ -949,9 +927,7 @@ export async function verifyAutoModeGateAccess(
   // Remove once auto+fast mode interaction is validated.
   const disableFastModeBreakerFires =
     !!autoModeConfig?.disableFastMode &&
-    (!!fastMode ||
-      (false &&
-        mainModel.toLowerCase().includes('-fast')))
+    !!fastMode
   const modelSupported =
     modelSupportsAutoMode(mainModel) && !disableFastModeBreakerFires
   let carouselAvailable = false

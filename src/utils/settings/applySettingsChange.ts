@@ -3,9 +3,7 @@ import { logForDebugging } from '../debug.js'
 import { updateHooksConfigSnapshot } from '../hooks/hooksConfigSnapshot.js'
 import {
   createDisabledBypassPermissionsContext,
-  findOverlyBroadBashPermissions,
   isBypassPermissionsModeDisabled,
-  removeDangerousPermissions,
   transitionPlanAutoMode,
 } from '../permissions/permissionSetup.js'
 import { syncPermissionRulesFromDisk } from '../permissions/permissions.js'
@@ -48,15 +46,6 @@ export function applySettingsChange(
     )
 
     // Ant-only: re-strip overly broad Bash allow rules after settings sync
-    if (
-      false &&
-      process.env.CLAUDE_CODE_ENTRYPOINT !== 'local-agent'
-    ) {
-      const overlyBroad = findOverlyBroadBashPermissions(updatedRules, [])
-      if (overlyBroad.length > 0) {
-        newContext = removeDangerousPermissions(newContext, overlyBroad)
-      }
-    }
 
     if (
       newContext.isBypassPermissionsModeAvailable &&

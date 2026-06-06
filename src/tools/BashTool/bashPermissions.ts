@@ -59,8 +59,7 @@ export function getSimpleCommandPrefix(command: string): string | null {
   let i = 0
   while (i < tokens.length && ENV_VAR_ASSIGN_RE.test(tokens[i]!)) {
     const varName = tokens[i]!.split('=')[0]!
-    const isAntOnlySafe =
-      false && ANT_ONLY_SAFE_ENV_VARS.has(varName)
+    const isAntOnlySafe = false
     if (!SAFE_ENV_VARS.has(varName) && !isAntOnlySafe) {
       return null
     }
@@ -108,8 +107,7 @@ export function getFirstWordPrefix(command: string): string | null {
   let i = 0
   while (i < tokens.length && ENV_VAR_ASSIGN_RE.test(tokens[i]!)) {
     const varName = tokens[i]!.split('=')[0]!
-    const isAntOnlySafe =
-      false && ANT_ONLY_SAFE_ENV_VARS.has(varName)
+    const isAntOnlySafe = false
     if (!SAFE_ENV_VARS.has(varName) && !isAntOnlySafe) {
       return null
     }
@@ -180,6 +178,7 @@ const SAFE_ENV_VARS = new Set([
 ])
 
 const ANT_ONLY_SAFE_ENV_VARS = new Set([
+  // Currently unused - reserved for future ant-internal use
   'KUBECONFIG',
   'DOCKER_HOST',
   'AWS_PROFILE',
@@ -189,8 +188,7 @@ const ANT_ONLY_SAFE_ENV_VARS = new Set([
   'COO_CLUSTER_NAME',
   'COO_NAMESPACE',
   'COO_LAUNCH_YAML_DRY_RUN',
-  'SKIP_NODE_VERSION_CHECK',
-  'EXPECTTEST_ACCEPT',
+  'SKIP_NODE_VERSION_CHECK',  'EXPECTTEST_ACCEPT',
   'CI',
   'GIT_LFS_SKIP_SMUDGE',
   'CUDA_VISIBLE_DEVICES',

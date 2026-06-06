@@ -8,11 +8,10 @@ import { sanitizeToolNameForAnalytics } from 'src/services/analytics/index.js';
 import type { ToolUseConfirm } from '../components/permissions/PermissionRequest.js';
 import { Text } from '../ink.js';
 import type { ToolPermissionContext, Tool as ToolType, ToolUseContext } from '../Tool.js';
-import { consumeSpeculativeClassifierCheck, peekSpeculativeClassifierCheck } from '../tools/BashTool/bashPermissions.js';
 import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js';
 import type { AssistantMessage } from '../types/message.js';
 import { recordAutoModeDenial } from '../utils/autoModeDenials.js';
-import { clearClassifierChecking, setClassifierApproval, setYoloClassifierApproval } from '../utils/classifierApprovals.js';
+import { clearClassifierChecking, setYoloClassifierApproval } from '../utils/classifierApprovals.js';
 import { logForDebugging } from '../utils/debug.js';
 import { AbortError } from '../utils/errors.js';
 import { logError } from '../utils/log.js';
@@ -94,9 +93,6 @@ function useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext) {
               if (appState.toolPermissionContext.awaitAutomatedChecksBeforeDialog) {
                 const coordinatorDecision = await handleCoordinatorPermission({
                   ctx,
-                  ...(feature("BASH_CLASSIFIER") ? {
-                    pendingClassifierCheck: result.pendingClassifierCheck
-                  } : {}),
                   updatedInput: result.updatedInput,
                   suggestions: result.suggestions,
                   permissionMode: appState.toolPermissionContext.mode
@@ -109,46 +105,12 @@ function useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext) {
               if (ctx.resolveIfAborted(resolve)) {
                 return;
               }
-              if (feature("BASH_CLASSIFIER") && result.pendingClassifierCheck && tool.name === BASH_TOOL_NAME && !appState.toolPermissionContext.awaitAutomatedChecksBeforeDialog) {
-                const speculativePromise = peekSpeculativeClassifierCheck((input as {
-                  command: string;
-                }).command);
-                if (speculativePromise) {
-                  const raceResult = await Promise.race([speculativePromise.then(_temp), new Promise(_temp2)]);
-                  if (ctx.resolveIfAborted(resolve)) {
-                    return;
-                  }
-                  if (raceResult.type === "result" && raceResult.result.matches && raceResult.result.confidence === "high" && feature("BASH_CLASSIFIER")) {
-                    consumeSpeculativeClassifierCheck((input as {
-                      command: string;
-                    }).command);
-                    const matchedRule = raceResult.result.matchedDescription ?? undefined;
-                    if (matchedRule) {
-                      setClassifierApproval(toolUseID, matchedRule);
-                    }
-                    ctx.logDecision({
-                      decision: "accept",
-                      source: {
-                        type: "classifier"
-                      }
-                    });
-                    resolve(ctx.buildAllow(result.updatedInput ?? input as Record<string, unknown>, {
-                      decisionReason: {
-                        type: "classifier" as const,
-                        classifier: "bash_allow" as const,
-                        reason: `Allowed by prompt rule: "${raceResult.result.matchedDescription}"`
-                      }
-                    }));
-                    return;
-                  }
-                }
-              }
               handleInteractivePermission({
                 ctx,
                 description,
                 result,
                 awaitAutomatedChecksBeforeDialog: appState.toolPermissionContext.awaitAutomatedChecksBeforeDialog,
-                channelCallbacks: feature("KAIROS") || undefined
+                channelCallbacks: undefined
               }, resolve);
               return;
             }
@@ -173,16 +135,5 @@ function useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext) {
     t0 = $[2];
   }
   return t0;
-}
-function _temp2(res) {
-  return setTimeout(res, 2000, {
-    type: "timeout" as const
-  });
-}
-function _temp(r) {
-  return {
-    type: "result" as const,
-    result: r
-  };
 }
 export default useCanUseTool;

@@ -7,12 +7,6 @@ import { getPlatform } from '../platform.js'
  */
 export const getManagedFilePath = memoize(function (): string {
   // Allow override for testing/demos (Ant-only, eliminated from external builds)
-  if (
-    false &&
-    process.env.CLAUDE_CODE_MANAGED_SETTINGS_PATH
-  ) {
-    return process.env.CLAUDE_CODE_MANAGED_SETTINGS_PATH
-  }
 
   switch (getPlatform()) {
     case 'macos':

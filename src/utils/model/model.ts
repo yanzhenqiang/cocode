@@ -368,14 +368,6 @@ export function getDefaultMainLoopModelSetting(): ModelName | ModelAlias {
     return process.env.OPENAI_MODEL || 'mimo-v2.5-pro'
   }
 
-  // Ants default to defaultModel from flag config, or Opus 1M if not configured
-  if (false) {
-    return (
-      getAntModelOverrideConfig()?.defaultModel ??
-      getDefaultOpusModel() + '[1m]'
-    )
-  }
-
   // Max users get Opus as default
   if (isMaxSubscriber()) {
     return getDefaultOpusModel() + (isOpus1mMergeEnabled() ? '[1m]' : '')
@@ -631,20 +623,6 @@ export function renderModelName(model: ModelName): string {
   if (model === 'github:copilot') {
     return 'GPT-4o'
   }
-  if (false) {
-    const resolved = parseUserSpecifiedModel(model)
-    const antModel = resolveAntModel(model)
-    if (antModel) {
-      const baseName = antModel.model.replace(/\[1m\]$/i, '')
-      const masked = maskModelCodename(baseName)
-      const suffix = has1mContext(resolved) ? '[1m]' : ''
-      return masked + suffix
-    }
-    if (resolved !== model) {
-      return `${model} (${resolved})`
-    }
-    return resolved
-  }
   return model
 }
 
@@ -718,21 +696,6 @@ export function parseUserSpecifiedModel(
     isLegacyModelRemapEnabled()
   ) {
     return getDefaultOpusModel() + (has1mTag ? '[1m]' : '')
-  }
-
-  if (false) {
-    const has1mAntTag = has1mContext(normalizedModel)
-    const baseAntModel = normalizedModel.replace(/\[1m]$/i, '').trim()
-
-    const antModel = resolveAntModel(baseAntModel)
-    if (antModel) {
-      const suffix = has1mAntTag ? '[1m]' : ''
-      return antModel.model + suffix
-    }
-
-    // Fall through to the alias string if we cannot load the config. The API calls
-    // will fail with this string, but we should hear about it through feedback and
-    // can tell the user to restart/wait for flag cache refresh to get the latest values.
   }
 
   // Preserve original case for custom model names (e.g., Azure Foundry deployment IDs)

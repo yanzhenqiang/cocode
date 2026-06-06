@@ -2,10 +2,6 @@ import axios from 'axios'
 import { getOauthConfig } from 'src/constants/oauth.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js'
 import {
-  getKairosActive,
-  preferThirdPartyAuthentication,
-} from '../bootstrap/state.js'
-import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from '../services/analytics/index.js'
@@ -24,7 +20,6 @@ import { getAPIProvider } from './model/providers.js'
 import { isEssentialTrafficOnly } from './privacyLevel.js'
 import {
   getInitialSettings,
-  getSettingsForSource,
   updateSettingsForSource,
 } from './settings/settings.js'
 import { createSignal } from './signal.js'
@@ -91,18 +86,6 @@ export function getFastModeUnavailableReason(): string | null {
   // Not available in the SDK unless explicitly opted in via --settings.
   // Assistant daemon mode is exempt — it's first-party orchestration, and
   // kairosActive is set before this check runs (main.tsx:~1626 vs ~3249).
-  if (
-    false &&
-    preferThirdPartyAuthentication() &&
-    !getKairosActive()
-  ) {
-    const flagFastMode = getSettingsForSource('flagSettings')?.fastMode
-    if (!flagFastMode) {
-      const reason = 'Fast mode is not available in the Agent SDK'
-      logForDebugging(`Fast mode unavailable: ${reason}`)
-      return reason
-    }
-  }
 
   if (orgStatus.status === 'disabled') {
     if (

@@ -90,15 +90,6 @@ export type { SkillToolProgress as Progress } from '../../types/tools.js'
 import type { SkillToolProgress as Progress } from '../../types/tools.js'
 
 // Conditional require for remote skill modules — static imports here would
-// pull in akiBackend.ts (via remoteSkillLoader → akiBackend), which has
-// module-level memoize()/lazySchema() consts that survive tree-shaking as
-// side-effecting initializers. All usages are inside
-// feature('EXPERIMENTAL_SKILL_SEARCH') guards, so remoteSkillModules is
-// non-null at every call site.
-/* eslint-disable @typescript-eslint/no-require-imports */
-const remoteSkillModules = null
-/* eslint-enable @typescript-eslint/no-require-imports */
-
 export const inputSchema = lazySchema(() =>
   z.object({
     skill: z
@@ -420,22 +411,6 @@ export const SkillTool: Tool<InputSchema, Output, Progress> = buildTool({
           parentAgentId as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       }),
       ...wasDiscoveredField,
-      ...(false && {
-        skill_name:
-          commandName as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        ...(command?.type === 'prompt' && {
-          skill_source:
-            command.source as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        }),
-        ...(command?.loadedFrom && {
-          skill_loaded_from:
-            command.loadedFrom as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        }),
-        ...(command?.kind && {
-          skill_kind:
-            command.kind as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        }),
-      }),
       ...(command?.type === 'prompt' &&
         command.pluginInfo && {
           _PROTO_plugin_name: command.pluginInfo.pluginManifest

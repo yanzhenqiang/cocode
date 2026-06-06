@@ -25,7 +25,6 @@ import { logFileOperation } from '../../utils/fileOperationAnalytics.js'
 import { readFileSyncWithMetadata } from '../../utils/fileRead.js'
 import { getFsImplementation } from '../../utils/fsOperations.js'
 import {
-  fetchSingleFileGitDiff,
   type ToolUseDiff,
 } from '../../utils/gitDiff.js'
 import { lazySchema } from '../../utils/lazySchema.js'
@@ -313,19 +312,6 @@ export const FileWriteTool = buildTool({
     }
 
     let gitDiff: ToolUseDiff | undefined
-    if (
-      false &&
-      getFeatureValue_CACHED_MAY_BE_STALE('tengu_quartz_lantern', false)
-    ) {
-      const startTime = Date.now()
-      const diff = await fetchSingleFileGitDiff(fullFilePath)
-      if (diff) gitDiff = diff
-      logEvent('tengu_tool_use_diff_computed', {
-        isWriteTool: true,
-        durationMs: Date.now() - startTime,
-        hasDiff: !!diff,
-      })
-    }
 
     if (oldContent) {
       const patch = getPatchForDisplay({

@@ -56,10 +56,7 @@ import { ReadMcpResourceTool } from '../../tools/ReadMcpResourceTool/ReadMcpReso
 import { createAbortController } from '../../utils/abortController.js'
 import { AbortError, isAbortError } from '../../utils/errors.js'
 import { count } from '../../utils/array.js'
-import {
-  checkAndRefreshOAuthTokenIfNeeded,
-  handleOAuth401Error,
-} from '../../utils/auth.js'
+import { handleOAuth401Error } from '../../utils/auth.js'
 import { registerCleanup } from '../../utils/cleanupRegistry.js'
 import { detectCodeIndexingFromMcpServerName } from '../../utils/codeIndexing.js'
 import { logForDebugging } from '../../utils/debug.js'

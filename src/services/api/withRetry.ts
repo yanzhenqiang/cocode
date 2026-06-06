@@ -15,7 +15,6 @@ import {
   clearApiKeyHelperCache,
   clearGcpCredentialsCache,
   handleOAuth401Error,
-  isEnterpriseSubscriber,
 } from '../../utils/auth.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 import { errorMessage } from '../../utils/errors.js'
@@ -666,12 +665,6 @@ function shouldRetry(error: APIError): boolean {
   // transient blip (auth service flap, network hiccup) rather than bad
   // credentials. Bypass x-should-retry:false — the server assumes we'd retry
   // the same bad key, but our key is fine.
-  if (
-    false &&
-    (error.status === 401 || error.status === 403)
-  ) {
-    return true
-  }
 
   // Check for overloaded errors first by examining the message content
   // The SDK sometimes fails to properly pass the 529 status code during streaming,
@@ -698,10 +691,7 @@ function shouldRetry(error: APIError): boolean {
   // Ants can ignore x-should-retry: false for 5xx server errors only.
   // For other status codes (401, 403, 400, 429, etc.), respect the header.
   if (shouldRetryHeader === false) {
-    const is5xxError = error.status !== undefined && error.status >= 500
-    if (!(false && is5xxError)) {
       return false
-    }
   }
 
   if (error instanceof APIConnectionError) {

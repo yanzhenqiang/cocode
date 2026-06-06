@@ -940,13 +940,6 @@ export async function getClaudeAIOAuthTokensAsync(): Promise<OAuthTokens | null>
   return getClaudeAIOAuthTokens()
 }
 
-export function checkAndRefreshOAuthTokenIfNeeded(): Promise<boolean> {
-  return Promise.resolve(false)
-}
-
-export function isClaudeAISubscriber(): boolean {
-  return false
-}
 
 /**
  * Check if the current OAuth token has the user:profile scope.
@@ -1216,10 +1209,6 @@ function isConsumerPlan(plan: SubscriptionType): plan is 'max' | 'pro' {
   return plan === 'max' || plan === 'pro'
 }
 
-export function isConsumerSubscriber(): boolean {
-  // isClaudeAISubscriber() always returns false, so this is always false
-  return false
-}
 
 export type UserAccountInfo = {
   subscription?: string

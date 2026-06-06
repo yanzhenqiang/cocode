@@ -605,14 +605,7 @@ function PromptInput({
     }
   }, [addNotification, removeNotification, thinkTriggers.length]);
   useEffect(() => {
-    if (false && ultrareviewTriggers.length) {
-      addNotification({
-        key: 'ultrareview-active',
-        text: 'Run /ultrareview after Claude finishes to review these changes in the cloud',
-        priority: 'immediate',
-        timeoutMs: 5000
-      });
-    }
+    // ultrareview notification removed (dead code)
   }, [addNotification, ultrareviewTriggers.length]);
 
   // Track input length for stash hint

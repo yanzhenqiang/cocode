@@ -1,6 +1,5 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
 import clear from './commands/clear/index.js'
-import commit from './commands/commit.js'
 import commitMessage from './commands/commit-message/index.js'
 import copy from './commands/copy/index.js'
 import compact from './commands/compact/index.js'
@@ -30,8 +29,6 @@ import rewind from './commands/rewind/index.js'
 import btw from './commands/btw/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
-import version from './commands/version.js'
-const resetLimitsNonInteractive = async () => {};
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'
@@ -71,12 +68,7 @@ export type {
 } from './types/command.js'
 export { getCommandName, isCommandEnabled } from './types/command.js'
 
-// Commands that get eliminated from the external build
-export const INTERNAL_ONLY_COMMANDS = [
-  commit,
-  version,
-  resetLimitsNonInteractive,
-].filter(Boolean)
+// (INTERNAL_ONLY_COMMANDS removed - was gated by false &&)
 
 // Declared as a function so that we don't run this until getCommands is called,
 // since underlying functions read from config, which can't be read at module initialization time
@@ -120,9 +112,6 @@ const COMMANDS = memoize((): Command[] => [
   plan,
   exportCommand,
   tasks,
-  ...(false && !process.env.IS_DEMO
-    ? INTERNAL_ONLY_COMMANDS
-    : []),
 ].filter(isCommand))
 
 export const builtInCommandNames = memoize(
@@ -177,8 +166,6 @@ export function meetsAvailabilityRequirement(cmd: Command | null | undefined): b
   for (const a of cmd.availability) {
     switch (a) {
       case 'claude-ai':
-        // isClaudeAISubscriber() always returns false, so claude-ai commands
-        // are never available
         break
       case 'console':
         // Console API key user = direct 1P API customer (not 3P, not claude.ai).

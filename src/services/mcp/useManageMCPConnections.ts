@@ -1,4 +1,3 @@
-import { basename } from 'path'
 import { useCallback, useEffect, useRef } from 'react'
 import { getSessionId } from '../../bootstrap/state.js'
 import type { Command } from '../../commands.js'
@@ -642,7 +641,6 @@ export function useManageMCPConnections(
         user: 0,
         plugin: 0,
       }
-      const stdioCommands: string[] = []
       for (const [name, serverConfig] of Object.entries(configs)) {
         if (serverConfig.scope === 'enterprise') counts.enterprise++
         else if (serverConfig.scope === 'user') counts.global++
@@ -650,26 +648,9 @@ export function useManageMCPConnections(
         else if (serverConfig.scope === 'local') counts.user++
         else if (serverConfig.scope === 'dynamic') counts.plugin++
 
-        if (
-          false &&
-          !isMcpServerDisabled(name) &&
-          (serverConfig.type === undefined || serverConfig.type === 'stdio') &&
-          'command' in serverConfig
-        ) {
-          stdioCommands.push(basename(serverConfig.command))
-        }
       }
       logEvent('tengu_mcp_servers', {
         ...counts,
-        ...(false && stdioCommands.length > 0
-          ? {
-              stdio_commands: stdioCommands
-                .sort()
-                .join(
-                  ',',
-                ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-            }
-          : {}),
       })
     }
 
