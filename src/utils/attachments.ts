@@ -3088,9 +3088,6 @@ async function getTaskReminderAttachments(
   }
 
   // Skip for ant users
-  if (false) {
-    return []
-  }
 
   // When SendUserMessage is in the toolkit, it's the primary communication
   // Brief mode removed — KAIROS/KAIROS_BRIEF are false in external builds.

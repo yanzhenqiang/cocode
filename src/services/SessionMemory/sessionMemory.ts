@@ -358,11 +358,6 @@ export function initSessionMemory(): void {
   const autoCompactEnabled = isAutoCompactEnabled()
 
   // Log initialization state (internal-only to avoid noise in external logs)
-  if (false) {
-    logEvent('tengu_session_memory_init', {
-      auto_compact_enabled: autoCompactEnabled,
-    })
-  }
 
   if (!autoCompactEnabled) {
     return

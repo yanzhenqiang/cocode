@@ -60,9 +60,6 @@ export type DiffStats =
   | undefined
 
 export function fileHistoryEnabled(): boolean {
-  if (false) {
-    return fileHistoryEnabledSdk()
-  }
   return (
     getGlobalConfig().fileCheckpointingEnabled !== false &&
     !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING)

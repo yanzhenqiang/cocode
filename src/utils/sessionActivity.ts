@@ -33,9 +33,6 @@ function startHeartbeatTimer(): void {
     logForDiagnosticsNoPII('debug', 'session_keepalive_heartbeat', {
       refcount,
     })
-    if (false) {
-      activityCallback?.()
-    }
   }, SESSION_ACTIVITY_INTERVAL_MS)
 }
 
@@ -76,9 +73,6 @@ export function unregisterSessionActivityCallback(): void {
 }
 
 export function sendSessionActivitySignal(): void {
-  if (false) {
-    activityCallback?.()
-  }
 }
 
 export function isSessionActivityTrackingActive(): boolean {
