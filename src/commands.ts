@@ -1,5 +1,4 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
-import addDir from './commands/add-dir/index.js'
 import clear from './commands/clear/index.js'
 import commit from './commands/commit.js'
 import commitMessage from './commands/commit-message/index.js'
@@ -15,13 +14,13 @@ import keybindings from './commands/keybindings/index.js'
 import mcp from './commands/mcp/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
-import review, { ultrareview } from './commands/review.js'
+
 import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import shiftTab from './commands/shiftTab/index.js'
 import tasks from './commands/tasks/index.js'
 import theme from './commands/theme/index.js'
-import permissions from './commands/permissions/index.js'
+
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import files from './commands/files/index.js'
@@ -53,21 +52,6 @@ import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
 import effort from './commands/effort/index.js'
-// stats command removed
-// insights.ts is 113KB (3200 lines, includes diffLines/html rendering). Lazy
-// shim defers the heavy module until /insights is actually invoked.
-const usageReport: Command = {
-  type: 'prompt',
-  name: 'insights',
-  description: 'Generate a report analyzing your Cocode sessions',
-  contentLength: 0,
-  progressMessage: 'analyzing your sessions',
-  source: 'builtin',
-  async getPromptForCommand(args, context) {
-    if (real.type !== 'prompt') throw new Error('unreachable')
-    return real.getPromptForCommand(args, context)
-  },
-}
 import { getSettingSourceName } from './utils/settings/constants.js'
 import {
   type Command,
@@ -98,7 +82,7 @@ export const INTERNAL_ONLY_COMMANDS = [
 // Declared as a function so that we don't run this until getCommands is called,
 // since underlying functions read from config, which can't be read at module initialization time
 const COMMANDS = memoize((): Command[] => [
-  addDir,
+
   advisor,
   branch,
   btw,
@@ -131,10 +115,10 @@ const COMMANDS = memoize((): Command[] => [
   shiftTab,
   tag,
   theme,
-  review,
-  ultrareview,
-  usageReport,
-  permissions,
+
+
+
+
   plan,
   exportCommand,
   tasks,

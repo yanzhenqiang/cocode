@@ -1807,42 +1807,6 @@ const {
 
   // Setup token command
 
-  // Agents command - list configured agents
-  program.command('agents').description('List configured agents').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).').action(async () => {
-    const {
-      agentsHandler
-    } = await import('./cli/handlers/agents.js');
-    await agentsHandler();
-    process.exit(0);
-  });
-  if (feature('TRANSCRIPT_CLASSIFIER')) {
-    // Skip when tengu_auto_mode_config.enabled === 'disabled' (circuit breaker).
-    // Reads from disk cache — GrowthBook isn't initialized at registration time.
-    if (getAutoModeEnabledStateIfCached() !== 'disabled') {
-      const autoModeCmd = program.command('auto-mode').description('Inspect auto mode classifier configuration');
-      autoModeCmd.command('defaults').description('Print the default auto mode environment, allow, and deny rules as JSON').action(async () => {
-        const {
-          autoModeDefaultsHandler
-        } = await import('./cli/handlers/autoMode.js');
-        autoModeDefaultsHandler();
-        process.exit(0);
-      });
-      autoModeCmd.command('config').description('Print the effective auto mode config as JSON: your settings where set, defaults otherwise').action(async () => {
-        const {
-          autoModeConfigHandler
-        } = await import('./cli/handlers/autoMode.js');
-        autoModeConfigHandler();
-        process.exit(0);
-      });
-      autoModeCmd.command('critique').description('Get AI feedback on your custom auto mode rules').option('--model <model>', 'Override which model is used').action(async options => {
-        const {
-          autoModeCritiqueHandler
-        } = await import('./cli/handlers/autoMode.js');
-        await autoModeCritiqueHandler(options);
-        process.exit();
-      });
-    }
-  }
 
   // Remote Control command — connect local environment to claude.ai/code.
   // The actual command is intercepted by the fast-path in cli.tsx before

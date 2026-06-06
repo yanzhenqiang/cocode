@@ -12,7 +12,7 @@ import { isQueuedCommandEditable, popAllEditable } from 'src/utils/messageQueueM
 import stripAnsi from 'strip-ansi';
 // Buddy module deleted — all related functions stubbed to no-ops
 import { FastModePicker } from '../../commands/fast/fast.js';
-import { isUltrareviewEnabled } from '../../commands/review/ultrareviewEnabled.js';
+
 import { type Command, hasCommand } from '../../commands.js';
 import { useIsModalOverlayActive } from '../../context/overlayContext.js';
 import { useSetPromptOverlayDialog } from '../../context/promptOverlayContext.js';
@@ -70,7 +70,7 @@ import type { TextHighlight } from '../../utils/textHighlighting.js';
 import type { Theme } from '../../utils/theme.js';
 import { findThinkingTriggerPositions, getRainbowColor, isUltrathinkEnabled } from '../../utils/thinking.js';
 import { findTokenBudgetPositions } from '../../utils/tokenBudget.js';
-import { findUltraplanTriggerPositions, findUltrareviewTriggerPositions } from '../../utils/ultraplan/keyword.js';
+import { findUltraplanTriggerPositions } from '../../utils/ultraplan/keyword.js';
 import { AutoModeOptInDialog } from '../AutoModeOptInDialog.js';
 const BridgeDialog = () => null;
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
@@ -438,7 +438,7 @@ function PromptInput({
   const ultraplanSessionUrl = useAppState(s => s.ultraplanSessionUrl);
   const ultraplanLaunching = useAppState(s => s.ultraplanLaunching);
   const ultraplanTriggers = useMemo(() => [], [displayedValue, ultraplanSessionUrl, ultraplanLaunching]);
-  const ultrareviewTriggers = useMemo(() => isUltrareviewEnabled() ? findUltrareviewTriggerPositions(displayedValue) : [], [displayedValue]);
+  const ultrareviewTriggers = useMemo(() => [], [displayedValue]);
   const btwTriggers = useMemo(() => findBtwTriggerPositions(displayedValue), [displayedValue]);
   const buddyTriggers = useMemo(() => [] as {start: number, end: number, style: string}[], [displayedValue]);
   const slashCommandTriggers = useMemo(() => {
@@ -605,7 +605,7 @@ function PromptInput({
     }
   }, [addNotification, removeNotification, thinkTriggers.length]);
   useEffect(() => {
-    if (isUltrareviewEnabled() && ultrareviewTriggers.length) {
+    if (false && ultrareviewTriggers.length) {
       addNotification({
         key: 'ultrareview-active',
         text: 'Run /ultrareview after Claude finishes to review these changes in the cloud',

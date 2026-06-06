@@ -42,10 +42,6 @@ import {
   getFeatureValue_CACHED_MAY_BE_STALE,
 } from 'src/services/analytics/growthbook.js'
 import {
-  addDirHelpMessage,
-  validateDirectoryForWorkspace,
-} from '../../commands/add-dir/validation.js'
-import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from '../../services/analytics/index.js'
@@ -854,33 +850,19 @@ export async function initializeToolPermissionContext({
     ...(settings.permissions?.additionalDirectories || []),
     ...addDirs,
   ]
-  // Parallelize fs validation; apply updates serially (cumulative context).
-  // validateDirectoryForWorkspace only reads permissionContext to check if the
-  // dir is already covered — behavioral difference from parallelizing is benign
-  // (two overlapping --add-dirs both succeed instead of one being flagged
-  // alreadyInWorkingDirectory, which was silently skipped anyway).
-  const validationResults = await Promise.all(
-    allAdditionalDirectories.map(dir =>
-      validateDirectoryForWorkspace(dir, toolPermissionContext),
-    ),
-  )
-  for (const result of validationResults) {
-    if (result.resultType === 'success') {
-      toolPermissionContext = applyPermissionUpdate(toolPermissionContext, {
-        type: 'addDirectories',
-        directories: [result.absolutePath],
-        destination: 'cliArg',
-      })
-    } else if (
-      result.resultType !== 'alreadyInWorkingDirectory' &&
-      result.resultType !== 'pathNotFound'
-    ) {
-      // Warn for actual config mistakes (e.g. specifying a file instead of a
-      // directory). But if the directory doesn't exist anymore (e.g. someone
-      // was working under /tmp and it got cleared), silently skip. They'll get
-      // prompted again if they try to access it later.
-      warnings.push(addDirHelpMessage(result))
-    }
+  const { isAbsolute, resolve } = await import('path')
+  const { existsSync, statSync } = await import('fs')
+  for (const dir of allAdditionalDirectories) {
+    try {
+      const absolutePath = resolve(isAbsolute(dir) ? dir : resolve(dir))
+      if (existsSync(absolutePath) && statSync(absolutePath).isDirectory()) {
+        toolPermissionContext = applyPermissionUpdate(toolPermissionContext, {
+          type: 'addDirectories',
+          directories: [absolutePath],
+          destination: 'cliArg',
+        })
+      }
+    } catch {}
   }
 
   return {
@@ -1167,7 +1149,7 @@ export function getAutoModeUnavailableReason(): AutoModeUnavailableReason | null
  */
 export type AutoModeEnabledState = 'enabled' | 'disabled' | 'opt-in'
 
-const AUTO_MODE_ENABLED_DEFAULT: AutoModeEnabledState = 'disabled'
+const AUTO_MODE_ENABLED_DEFAULT: AutoModeEnabledState = 'enabled'
 
 function parseAutoModeEnabledState(value: unknown): AutoModeEnabledState {
   if (value === 'enabled' || value === 'disabled' || value === 'opt-in') {

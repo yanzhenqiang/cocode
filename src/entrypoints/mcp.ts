@@ -16,7 +16,6 @@ import {
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js'
 import { getDefaultAppState } from 'src/state/AppStateStore.js'
-import review from '../commands/review.js'
 import type { Command } from '../commands.js'
 import { getMcpToolsCommandsAndResources } from '../services/mcp/client.js'
 import type { MCPServerConnection } from '../services/mcp/types.js'
@@ -41,7 +40,7 @@ import { zodToJsonSchema } from '../utils/zodToJsonSchema.js'
 type ToolInput = Tool['inputSchema']
 type ToolOutput = Tool['outputSchema']
 
-const MCP_COMMANDS: Command[] = [review]
+const MCP_COMMANDS: Command[] = []
 
 export function getCombinedTools(
   builtins: InternalTool[],
