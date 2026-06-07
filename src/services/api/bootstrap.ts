@@ -1,12 +1,6 @@
 import axios from 'axios'
 import isEqual from 'lodash-es/isEqual.js'
 import {
-  discoverModelsForRoute,
-  resolveDiscoveryRouteIdFromBaseUrl,
-} from '../../integrations/discoveryService.js'
-import { getGateway, getVendor } from '../../integrations/index.js'
-import { resolveRouteCredentialValue } from '../../integrations/routeMetadata.js'
-import {
   getAnthropicApiKey,
 } from 'src/utils/auth.js'
 import { z } from 'zod'
@@ -19,15 +13,9 @@ import { logError } from '../../utils/log.js'
 import { getAPIProvider } from '../../utils/model/providers.js'
 import { isEssentialTrafficOnly } from '../../utils/privacyLevel.js'
 import type { ModelOption } from '../../utils/model/modelOptions.js'
-import {
-  getLocalOpenAICompatibleProviderLabel,
-  listOpenAICompatibleModels,
-} from '../../utils/providerDiscovery.js'
 import { getClaudeCodeUserAgent } from '../../utils/userAgent.js'
-import { parseCustomHeadersEnv } from '../../utils/providerCustomHeaders.js'
 import {
   getAdditionalModelOptionsCacheScope,
-  resolveProviderRequest,
 } from './providerConfig.js'
 
 const bootstrapResponseSchema = lazySchema(() =>
@@ -70,7 +58,7 @@ async function fetchBootstrapAPI(): Promise<BootstrapResponse | null> {
     return null
   }
 
-  // OAuth preferred (requires user:profile scope — service-key OAuth tokens
+  // OAuth preferred (requires user:profile scope - service-key OAuth tokens
   // lack it and would 403). Fall back to API key auth for console users.
   const apiKey = getAnthropicApiKey()
   if (!apiKey) {
@@ -81,7 +69,7 @@ async function fetchBootstrapAPI(): Promise<BootstrapResponse | null> {
   const endpoint = `${getOauthConfig().BASE_API_URL}/api/claude_cli/bootstrap`
 
   // withOAuth401Retry handles the refresh-and-retry. API key users fail
-  // through on 401 (no refresh mechanism — no OAuth token to pass).
+  // through on 401 (no refresh mechanism - no OAuth token to pass).
   try {
     return await withOAuth401Retry(async () => {
       logForDebugging('[Bootstrap] Fetching')
@@ -123,91 +111,30 @@ async function fetchBootstrapAPI(): Promise<BootstrapResponse | null> {
   }
 }
 
-async function fetchLocalOpenAIModelOptions(): Promise<BootstrapCachePayload | null> {
-  if (isEssentialTrafficOnly()) {
-    logForDebugging('[Bootstrap] Skipped local model discovery: Nonessential traffic disabled')
-    return null
-  }
-
-  const scope = getAdditionalModelOptionsCacheScope()
-  if (!scope?.startsWith('openai:')) {
-    return null
-  }
-
-  const { baseUrl } = resolveProviderRequest()
-  const routeId = resolveDiscoveryRouteIdFromBaseUrl(baseUrl)
-  const routeLabel =
-    (routeId
-      ? getGateway(routeId)?.label ?? getVendor(routeId)?.label
-      : undefined) ?? getLocalOpenAICompatibleProviderLabel(baseUrl)
-  const apiKey = resolveRouteCredentialValue({
-    routeId: routeId ?? 'custom',
-    baseUrl,
-    processEnv: process.env,
-  })
-
-  const discovered = routeId
-    ? await discoverModelsForRoute(routeId, {
-        baseUrl,
-        apiKey,
-        headers: parseCustomHeadersEnv(process.env.ANTHROPIC_CUSTOM_HEADERS),
-      })
-    : null
-  const models =
-    (discovered && discovered.source !== 'error'
-      ? discovered.models.map(model => model.apiName)
-      : null) ??
-    (await listOpenAICompatibleModels({
-      baseUrl,
-      apiKey,
-      headers: parseCustomHeadersEnv(process.env.ANTHROPIC_CUSTOM_HEADERS),
-    }))
-
-  if (models === null) {
-    logForDebugging('[Bootstrap] Local OpenAI model discovery failed')
-    return null
-  }
-
-  return {
-    clientData: getGlobalConfig().clientDataCache ?? null,
-    additionalModelOptionsScope: scope,
-    additionalModelOptions: models.map(model => ({
-      value: model,
-      label: model,
-      description: `Detected from ${routeLabel}`,
-    })),
-  }
-}
-
 /**
  * Fetch bootstrap data from the API and persist to disk cache.
  */
 export async function fetchBootstrapData(): Promise<void> {
   try {
     const scope = getAdditionalModelOptionsCacheScope()
-    let payload: BootstrapCachePayload | null = null
-
-    if (scope === 'firstParty') {
-      const response = await fetchBootstrapAPI()
-      if (!response) return
-
-      payload = {
-        clientData: response.client_data ?? null,
-        additionalModelOptions: response.additional_model_options ?? [],
-        additionalModelOptionsScope: scope,
-      }
-    } else if (scope?.startsWith('openai:')) {
-      payload = await fetchLocalOpenAIModelOptions()
-      if (!payload) return
-    } else {
+    if (scope !== 'firstParty') {
       logForDebugging('[Bootstrap] Skipped: no additional model source')
       return
+    }
+
+    const response = await fetchBootstrapAPI()
+    if (!response) return
+
+    const payload: BootstrapCachePayload = {
+      clientData: response.client_data ?? null,
+      additionalModelOptions: response.additional_model_options ?? [],
+      additionalModelOptionsScope: scope,
     }
 
     const { clientData, additionalModelOptions, additionalModelOptionsScope } =
       payload
 
-    // Only persist if data actually changed — avoids a config write on every startup.
+    // Only persist if data actually changed -- avoids a config write on every startup.
     const config = getGlobalConfig()
     if (
       isEqual(config.clientDataCache, clientData) &&

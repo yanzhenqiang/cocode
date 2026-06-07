@@ -8,7 +8,7 @@ import { getGlobalConfig, saveGlobalConfig } from '../utils/config.js'
 import { toError } from '../utils/errors.js'
 import { logError } from '../utils/log.js'
 import { applyConfigEnvironmentVariables } from '../utils/managedEnv.js'
-import { persistActiveProviderProfileModel } from '../utils/providerProfiles.js'
+
 import {
   permissionModeFromString,
   toExternalPermissionMode,
@@ -111,11 +111,6 @@ export function onChangeAppState({
     updateSettingsForSource('userSettings', { model: newState.mainLoopModel })
     setMainLoopModelOverride(newState.mainLoopModel)
 
-    // Keep active provider profiles in sync with /model choices so restarts
-    // keep using the last selected model instead of the profile's old default.
-    if (process.env.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED === '1') {
-      persistActiveProviderProfileModel(newState.mainLoopModel)
-    }
   }
 
   // expandedView → persist as showExpandedTodos + showSpinnerTree for backwards compat

@@ -10,53 +10,19 @@ import { isEnvTruthy } from '../envUtils.js'
 // this compatibility surface stable until later cleanup packets retire it.
 export type LegacyAPIProvider =
   | 'firstParty'
-  | 'bedrock'
-  | 'vertex'
-  | 'foundry'
   | 'openai'
-  | 'gemini'
-  | 'github'
-  | 'nvidia-nim'
-  | 'minimax'
-  | 'mistral'
-  | 'xai'
-  | 'xiaomi-mimo'
+  | 'ollama'
 
 // Backward-compatible public alias. Keep importing APIProvider where callers
 // intentionally consume the legacy category surface.
 export type APIProvider = LegacyAPIProvider
 
 export function getAPIProvider(): LegacyAPIProvider {
-  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)) {
-    return 'foundry'
-  }
-
   const activeRouteId = resolveActiveRouteIdFromEnv(process.env)
 
   switch (activeRouteId) {
-    case 'gemini':
-      return 'gemini'
-    case 'mistral':
-      return 'mistral'
-    case 'github':
-      return 'github'
-    case 'bedrock':
-      return 'bedrock'
-    case 'vertex':
-      return 'vertex'
-    case 'nvidia-nim':
-      return 'nvidia-nim'
-    case 'minimax':
-      return 'minimax'
-    case 'xiaomi-mimo':
-      return 'xiaomi-mimo'
-    case 'xai':
-      return 'xai'
     case 'openai':
     case 'custom':
-      if (isEnvTruthy(process.env.NVIDIA_NIM)) {
-        return 'nvidia-nim'
-      }
       return 'openai'
     case 'anthropic':
     default:
@@ -70,10 +36,6 @@ export function getAPIProvider(): LegacyAPIProvider {
         return 'openai'
       }
 
-      if (isEnvTruthy(process.env.NVIDIA_NIM)) {
-        return 'nvidia-nim'
-      }
-
       return 'firstParty'
   }
 }
@@ -82,23 +44,6 @@ export function usesAnthropicAccountFlow(): boolean {
   return getAPIProvider() === 'firstParty'
 }
 
-/**
- * Returns true when the GitHub provider should use Anthropic's native API
- * format instead of the OpenAI-compatible shim.
- *
- * Enabled when CLAUDE_CODE_USE_GITHUB=1 and the model string contains "claude-"
- * anywhere (handles bare names like "claude-sonnet-4" and compound formats like
- * "github:copilot:claude-sonnet-4" or any future provider-prefixed variants).
- *
- * api.githubcopilot.com supports Anthropic native format for Claude models,
- * enabling prompt caching via cache_control blocks which significantly reduces
- * per-turn token costs by caching the system prompt and tool definitions.
- */
-export function isGithubNativeAnthropicMode(resolvedModel?: string): boolean {
-  if (!isEnvTruthy(process.env.CLAUDE_CODE_USE_GITHUB)) return false
-  const model = resolvedModel?.trim() || process.env.OPENAI_MODEL?.trim() || ''
-  return model.toLowerCase().includes('claude-')
-}
 export function getAPIProviderForStatsig(): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS {
   return getAPIProvider() as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
 }

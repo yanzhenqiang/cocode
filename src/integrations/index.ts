@@ -113,7 +113,6 @@ export {
   getRouteLabel,
   getRouteProviderTypeLabel,
   getTransportKindForRoute,
-  normalizeXiaomiMimoBaseUrl,
   resolveActiveRouteIdFromEnv,
   resolveRouteIdFromBaseUrl,
   routeSupportsApiFormatSelection,

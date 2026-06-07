@@ -27,15 +27,6 @@ import {
 } from './model.js'
 import { has1mContext } from '../context.js'
 import { getGlobalConfig } from '../config.js'
-import {
-  getActiveOpenAIModelOptionsCache,
-  getActiveProviderProfile,
-  getProfileModelOptions,
-} from '../providerProfiles.js'
-import { getCachedOllamaModelOptions, isOllamaProvider } from './ollamaModels.js'
-import { getCachedNvidiaNimModelOptions, isNvidiaNimProvider } from './nvidiaNimModels.js'
-import { getCachedMiniMaxModelOptions, isMiniMaxProvider } from './minimaxModels.js'
-import { getCachedXiaomiMimoModelOptions, isXiaomiMimoProvider } from './xiaomi-mimoModels.js'
 import { getAntModels } from './antModels.js'
 
 // @[MODEL LAUNCH]: Update all the available and default model option strings below.
@@ -68,18 +59,6 @@ function getScopedAdditionalModelOptions(): ModelOption[] {
 
 export function getDefaultOptionForUser(fastMode = false): ModelOption {
   const is3P = getAPIProvider() !== 'firstParty'
-
-  if (false) {
-    const currentModel = renderDefaultModelSetting(
-      getDefaultMainLoopModelSetting(),
-    )
-    return {
-      value: null,
-      label: 'Default (recommended)',
-      description: `Use the default model for Ants (currently ${currentModel})`,
-      descriptionForModel: `Default model (currently ${currentModel})`,
-    }
-  }
 
   if (is3P) {
     return {
@@ -310,100 +289,6 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
     return [getDefaultOptionForUser(fastMode), ...getCopilotModelOptions()]
   }
 
-  // When using Ollama, show models from the Ollama server instead of Claude models
-  if (getAPIProvider() === 'openai' && isOllamaProvider()) {
-    const defaultOption = getDefaultOptionForUser(fastMode)
-    const ollamaModels = getCachedOllamaModelOptions()
-    if (ollamaModels.length > 0) {
-      return [defaultOption, ...ollamaModels]
-    }
-    // Fallback: if models not yet fetched, show current model instead of Claude models
-    const currentModel = getUserSpecifiedModelSetting() ?? getInitialMainLoopModel()
-    if (currentModel != null) {
-      return [
-        defaultOption,
-        {
-          value: currentModel,
-          label: currentModel,
-          description: 'Currently configured Ollama model',
-        },
-      ]
-    }
-    return [defaultOption]
-  }
-
-  // When using NVIDIA NIM, show models from the NVIDIA catalog
-  if (isNvidiaNimProvider()) {
-    const defaultOption = getDefaultOptionForUser(fastMode)
-    const nvidiaModels = getCachedNvidiaNimModelOptions()
-    if (nvidiaModels.length > 0) {
-      return [defaultOption, ...nvidiaModels]
-    }
-    return [defaultOption]
-  }
-
-  // When using MiniMax, show models from the MiniMax catalog
-  if (isMiniMaxProvider()) {
-    const defaultOption = getDefaultOptionForUser(fastMode)
-    const minimaxModels = getCachedMiniMaxModelOptions()
-    if (minimaxModels.length > 0) {
-      return [defaultOption, ...minimaxModels]
-    }
-    return [defaultOption]
-  }
-
-  // When using Xiaomi MiMo, show models from the MiMo catalog
-  if (isXiaomiMimoProvider()) {
-    const defaultOption = getDefaultOptionForUser(fastMode)
-    const xiaomiMimoModels = getCachedXiaomiMimoModelOptions()
-    if (xiaomiMimoModels.length > 0) {
-      return [defaultOption, ...xiaomiMimoModels]
-    }
-    return [defaultOption]
-  }
-
-  if (false) {
-    // Build options from antModels config
-    const antModelOptions: ModelOption[] = getAntModels().map(m => ({
-      value: m.alias,
-      label: m.label,
-      description: m.description ?? `[internal] ${m.label} (${m.model})`,
-    }))
-
-    return [
-      getDefaultOptionForUser(),
-      ...antModelOptions,
-      getMergedOpus1MOption(fastMode),
-      getSonnet46Option(),
-      getSonnet46_1MOption(),
-      getHaiku45Option(),
-    ]
-  }
-
-  if (getAdditionalModelOptionsCacheScope()?.startsWith('openai:')) {
-    const activeOpenAIOptions = getActiveOpenAIModelOptionsCache()
-    return [
-      getDefaultOptionForUser(fastMode),
-      ...(activeOpenAIOptions.length > 0
-        ? activeOpenAIOptions
-        : getScopedAdditionalModelOptions()),
-    ]
-  }
-
-  // When a provider profile's env is applied, collect its models so they
-  // can be appended to the standard picker options below.
-  // We check PROFILE_ENV_APPLIED to avoid the ?? profiles[0] fallback in
-  // getActiveProviderProfile which would affect users with inactive profiles.
-  const profileEnvApplied = process.env.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED === '1'
-  const profileModelOptions: ModelOption[] = []
-  if (profileEnvApplied) {
-    const activeProfile = getActiveProviderProfile()
-    if (activeProfile) {
-      const models = getProfileModelOptions(activeProfile)
-      profileModelOptions.push(...models)
-    }
-  }
-
   // PAYG 1P API: Default (Sonnet) + Sonnet 1M + Opus 4.7 + Opus 4.6 + Opus 1M + Haiku
   if (getAPIProvider() === 'firstParty') {
     const payg1POptions = [getDefaultOptionForUser(fastMode)]
@@ -420,7 +305,6 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
       }
     }
     payg1POptions.push(getHaiku45Option())
-    payg1POptions.push(...profileModelOptions)
     return payg1POptions
   }
 
@@ -456,7 +340,6 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
   } else {
     payg3pOptions.push(getHaikuOption())
   }
-  payg3pOptions.push(...profileModelOptions)
   return payg3pOptions
 }
 

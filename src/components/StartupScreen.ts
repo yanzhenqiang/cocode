@@ -10,10 +10,8 @@ import {
   getRouteLabel,
   resolveRouteIdFromBaseUrl,
 } from '../integrations/routeMetadata.js'
-import { getLocalOpenAICompatibleProviderLabel } from '../utils/providerDiscovery.js'
 import { getSettings_DEPRECATED } from '../utils/settings/settings.js'
 import { parseUserSpecifiedModel } from '../utils/model/model.js'
-import { DEFAULT_GEMINI_MODEL } from '../utils/providerProfile.js'
 import { getGlobalConfig } from '../utils/config.js'
 import { ANSI_DIM, ANSI_RESET, ansiRgb } from '../utils/terminalAnsi.js'
 import {
@@ -71,7 +69,7 @@ export function detectProvider(modelOverride?: string): { name: string; model: s
   const useMistral = process.env.CLAUDE_CODE_USE_MISTRAL === '1' || process.env.CLAUDE_CODE_USE_MISTRAL === true
 
   if (useGemini) {
-    const model = modelOverride || process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL
+    const model = modelOverride || process.env.GEMINI_MODEL || 'gemini-3-flash-preview'
     const baseUrl = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai'
     return { name: 'Google Gemini', model, baseUrl, isLocal: false }
   }
@@ -129,7 +127,7 @@ export function detectProvider(modelOverride?: string): { name: string; model: s
     else if (/llama/i.test(rawModel)) name = 'Meta Llama'
     else if (/bankr/i.test(baseUrl)) name = 'Bankr'
     else if (/bankr/i.test(rawModel)) name = 'Bankr'
-    else if (isLocal) name = getLocalOpenAICompatibleProviderLabel(baseUrl)
+    else if (isLocal) name = 'Local AI provider'
     
     // Resolve model alias to actual model name + reasoning effort
     let displayModel = resolvedRequest.resolvedModel

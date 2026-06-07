@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 const extraUsageCommand = { isEnabled: () => false };
 import { formatCost } from 'src/cost-tracker.js';
 import { getSubscriptionType } from 'src/utils/auth.js';
-import { getActiveProviderProfile } from 'src/utils/providerProfiles.js';
+
+
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';

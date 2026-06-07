@@ -18,7 +18,7 @@ import { getSettingsWithAllErrors } from './settings/allErrors.js';
 import { getEnabledSettingSources, getSettingSourceDisplayNameCapitalized } from './settings/constants.js';
 import { getManagedFileSettingsPresence, getPolicySettingsOrigin, getSettingsForSource } from './settings/settings.js';
 import type { ThemeName } from './theme.js';
-import { redactSecretValueForDisplay, type SecretValueSource } from './providerSecrets.js';
+
 export type Property = {
   label?: string;
   value: React.ReactNode | Array<string>;
@@ -95,7 +95,6 @@ function pushRedactedProperty(
   properties: Property[],
   label: string,
   value: string | undefined,
-  secretSource: SecretValueSource,
 ): void {
   if (!value) {
     return;
@@ -103,7 +102,7 @@ function pushRedactedProperty(
 
   properties.push({
     label,
-    value: redactSecretValueForDisplay(value, secretSource) ?? value
+    value,
   });
 }
 export function buildSandboxProperties(): Property[] {
@@ -274,13 +273,6 @@ export function buildAccountProperties(): Property[] {
 export function buildAPIProviderProperties(): Property[] {
   const apiProvider = getAPIProvider();
   const properties: Property[] = [];
-  const secretSource: SecretValueSource = {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
-    BNKR_API_KEY: process.env.BNKR_API_KEY,
-    MISTRAL_API_KEY: process.env.MISTRAL_API_KEY
-  };
   if (apiProvider !== 'firstParty') {
     const providerLabel = API_PROVIDER_LABELS[apiProvider];
     properties.push({
@@ -364,14 +356,14 @@ export function buildAPIProviderProperties(): Property[] {
     }
   } else if (apiProvider === 'gemini') {
     const geminiBaseUrl = process.env.GEMINI_BASE_URL;
-    pushRedactedProperty(properties, 'Gemini base URL', geminiBaseUrl, secretSource);
+    pushRedactedProperty(properties, 'Gemini base URL', geminiBaseUrl);
     const geminiModel = process.env.GEMINI_MODEL;
-    pushRedactedProperty(properties, 'Model', geminiModel, secretSource);
+    pushRedactedProperty(properties, 'Model', geminiModel);
   } else if (apiProvider === 'mistral') {
     const mistralBaseUrl = process.env.MISTRAL_BASE_URL;
-    pushRedactedProperty(properties, 'Mistral base URL', mistralBaseUrl, secretSource);
+    pushRedactedProperty(properties, 'Mistral base URL', mistralBaseUrl);
     const mistralModel = process.env.MISTRAL_MODEL;
-    pushRedactedProperty(properties, 'Model', mistralModel, secretSource);
+    pushRedactedProperty(properties, 'Model', mistralModel);
   }
   const proxyUrl = getProxyUrl();
   if (proxyUrl) {

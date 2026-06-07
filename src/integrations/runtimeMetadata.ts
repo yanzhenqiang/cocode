@@ -1,11 +1,6 @@
 import type {
   ModelCatalogEntry,
-  OpenAIShimTransportConfig,
 } from './descriptors.js'
-import {
-  getOpenAIContextWindow,
-  getOpenAIMaxOutputTokens,
-} from '../utils/model/openaiContextWindows.js'
 import { ensureIntegrationsLoaded } from './index.js'
 import {
   getAllModels,
@@ -70,168 +65,9 @@ function getCatalogEntryForModel(
   )
 }
 
-function mergeRemoveBodyFields(
-  ...sources: Array<string[] | undefined>
-): string[] | undefined {
-  const merged = new Set<string>()
-
-  for (const source of sources) {
-    for (const field of source ?? []) {
-      const normalized = field.trim()
-      if (normalized) {
-        merged.add(normalized)
-      }
-    }
-  }
-
-  return merged.size > 0 ? [...merged] : undefined
-}
-
-function mergeOpenAIShimConfig(
-  baseConfig: OpenAIShimTransportConfig | undefined,
-  entryConfig: Partial<OpenAIShimTransportConfig> | undefined,
-  inferredConfig: Partial<OpenAIShimTransportConfig> | undefined,
-): OpenAIShimTransportConfig {
-  return {
-    ...baseConfig,
-    ...entryConfig,
-    ...inferredConfig,
-    removeBodyFields: mergeRemoveBodyFields(
-      baseConfig?.removeBodyFields,
-      entryConfig?.removeBodyFields,
-      inferredConfig?.removeBodyFields,
-    ),
-  }
-}
-
-function normalizePrefix(value: string): string {
-  return value.trim().toLowerCase()
-}
-
-export function openAIShimSupportsApiFormatForModel(
-  config:
-    | Pick<OpenAIShimTransportConfig, 'responsesApiModelPrefixes'>
-    | undefined,
-  apiFormat: 'responses',
-  modelApiName: string | undefined,
-): boolean {
-  const prefixes =
-    apiFormat === 'responses'
-      ? config?.responsesApiModelPrefixes
-          ?.map(normalizePrefix)
-          .filter(Boolean)
-      : undefined
-
-  if (!prefixes || prefixes.length === 0) {
-    return true
-  }
-
-  const normalizedModel = normalizeModelApiName(modelApiName)
-  if (!normalizedModel) {
-    return false
-  }
-
-  return prefixes.some(prefix => normalizedModel.startsWith(prefix))
-}
-
-function inferRemoteModelOpenAIShimConfig(
-  modelApiName: string | undefined,
-): Partial<OpenAIShimTransportConfig> | undefined {
-  const normalizedModel = normalizeModelApiName(modelApiName)
-  if (!normalizedModel) {
-    return undefined
-  }
-
-  if (normalizedModel.includes('deepseek')) {
-    return {
-      preserveReasoningContent: true,
-      requireReasoningContentOnAssistantMessages: true,
-      reasoningContentFallback: '',
-      thinkingRequestFormat: 'deepseek-compatible',
-      maxTokensField: 'max_tokens',
-      removeBodyFields: ['store'],
-    }
-  }
-
-  if (normalizedModel.includes('kimi') || normalizedModel.includes('moonshot')) {
-    return {
-      preserveReasoningContent: true,
-      requireReasoningContentOnAssistantMessages: true,
-      reasoningContentFallback: '',
-      maxTokensField: 'max_tokens',
-      removeBodyFields: ['store'],
-    }
-  }
-
-  return undefined
-}
-
-export type OpenAIShimRuntimeContext = {
-  routeId: string | null
-  descriptor: RouteDescriptor | null
-  catalogEntry: ModelCatalogEntry | null
-  openaiShimConfig: OpenAIShimTransportConfig
-}
-
 export type ModelRuntimeLimits = {
   contextWindow?: number
   maxOutputTokens?: number
-}
-
-export function resolveOpenAIShimRuntimeContext(options?: {
-  processEnv?: NodeJS.ProcessEnv
-  baseUrl?: string
-  model?: string
-  activeProfileProvider?: string
-  treatAsLocal?: boolean
-}): OpenAIShimRuntimeContext {
-  const processEnv = options?.processEnv ?? process.env
-  const runtimeEnv: NodeJS.ProcessEnv = {
-    ...processEnv,
-  }
-
-  if (options?.baseUrl !== undefined) {
-    runtimeEnv.OPENAI_BASE_URL = options.baseUrl
-  }
-
-  if (options?.model !== undefined) {
-    runtimeEnv.OPENAI_MODEL = options.model
-  }
-
-  const activeRouteId = resolveActiveRouteIdFromEnv(runtimeEnv, {
-    activeProfileProvider: options?.activeProfileProvider,
-  })
-  const baseUrlRouteId = resolveRouteIdFromBaseUrl(options?.baseUrl)
-  const routeId =
-    baseUrlRouteId &&
-    (!activeRouteId || activeRouteId === 'anthropic' || activeRouteId === 'openai')
-      ? baseUrlRouteId
-      : activeRouteId
-  const descriptor =
-    routeId && routeId !== 'anthropic'
-      ? getRouteDescriptor(routeId)
-      : null
-  const catalogEntry =
-    descriptor && routeId
-      ? getCatalogEntryForModel(routeId, options?.model)
-      : null
-  const inferredConfig =
-    options?.treatAsLocal === true
-      ? {
-          maxTokensField: 'max_tokens' as const,
-        }
-      : inferRemoteModelOpenAIShimConfig(options?.model)
-
-  return {
-    routeId,
-    descriptor,
-    catalogEntry,
-    openaiShimConfig: mergeOpenAIShimConfig(
-      descriptor?.transportConfig.openaiShim,
-      catalogEntry?.transportOverrides?.openaiShim,
-      inferredConfig,
-    ),
-  }
 }
 
 function getModelDescriptorForCatalogEntry(entry: ModelCatalogEntry | null) {
@@ -332,19 +168,12 @@ export function resolveModelRuntimeLimits(options: {
   const modelDescriptor =
     getModelDescriptorForCatalogEntry(catalogEntry) ??
     findModelDescriptorForApiName(routeId, options.model)
-  const externalContextWindow = getOpenAIContextWindow(options.model, runtimeEnv)
-  const externalMaxOutputTokens = getOpenAIMaxOutputTokens(
-    options.model,
-    runtimeEnv,
-  )
 
   return {
     contextWindow:
-      externalContextWindow ??
       catalogEntry?.contextWindow ??
       modelDescriptor?.contextWindow,
     maxOutputTokens:
-      externalMaxOutputTokens ??
       catalogEntry?.maxOutputTokens ??
       modelDescriptor?.maxOutputTokens,
   }
@@ -356,29 +185,16 @@ export function usesAnthropicNativeMessageFormat(options?: {
   activeProfileProvider?: string
   providerCategory?:
     | 'firstParty'
-    | 'bedrock'
-    | 'vertex'
-    | 'foundry'
     | 'openai'
-    | 'gemini'
-    | 'github'
-    | 'nvidia-nim'
-    | 'minimax'
-    | 'mistral'
 }): boolean {
   const processEnv = options?.processEnv ?? process.env
   const providerCategory = options?.providerCategory
 
-  if (
-    providerCategory === 'firstParty' ||
-    providerCategory === 'bedrock' ||
-    providerCategory === 'vertex' ||
-    providerCategory === 'foundry'
-  ) {
+  if (providerCategory === 'firstParty') {
     return true
   }
 
-  if (providerCategory && providerCategory !== 'github') {
+  if (providerCategory === 'openai') {
     return false
   }
 
@@ -386,18 +202,9 @@ export function usesAnthropicNativeMessageFormat(options?: {
     activeProfileProvider: options?.activeProfileProvider,
   })
 
-  if (
-    routeId === 'anthropic' ||
-    routeId === 'bedrock' ||
-    routeId === 'vertex'
-  ) {
+  if (routeId === 'anthropic') {
     return true
   }
 
-  if (routeId !== 'github') {
-    return false
-  }
-
-  const model = options?.model?.trim() || processEnv.OPENAI_MODEL?.trim() || ''
-  return model.toLowerCase().includes('claude-')
+  return false
 }

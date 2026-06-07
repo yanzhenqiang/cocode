@@ -8,7 +8,7 @@ import {
   recordRequest as recordCacheRequest,
   resetSessionCacheStats,
 } from './services/api/cacheStatsTracker.js'
-import { getAPIProvider, isGithubNativeAnthropicMode } from './utils/model/providers.js'
+import { getAPIProvider } from './utils/model/providers.js'
 import {
   addToTotalCostState,
   addToTotalLinesChanged,
@@ -322,7 +322,6 @@ export function addToTotalSessionCost(
   // (vanilla Copilot, Ollama), resolveCacheProvider steers us to
   // supported:false so the UI shows "N/A" instead of lying with "0%".
   const cacheProvider = resolveCacheProvider(getAPIProvider(), {
-    githubNativeAnthropic: isGithubNativeAnthropicMode(model),
     openAiBaseUrl: process.env.OPENAI_BASE_URL ?? process.env.OPENAI_API_BASE,
   })
   const cacheMetrics = extractCacheMetrics(

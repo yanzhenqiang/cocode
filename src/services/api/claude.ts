@@ -23,7 +23,6 @@ import { randomUUID } from 'crypto'
 import {
   getAPIProvider,
   isFirstPartyAnthropicBaseUrl,
-  isGithubNativeAnthropicMode,
 } from 'src/utils/model/providers.js'
 import {
   getAttributionHeader,
@@ -310,8 +309,7 @@ export function getPromptCachingEnabled(model: string): boolean {
   // mode (CLAUDE_CODE_GITHUB_ANTHROPIC_API=1), requests are sent in Anthropic
   // format, so cache_control blocks are supported.
   const provider = getAPIProvider()
-  const isNativeGithub = isGithubNativeAnthropicMode(model)
-  if (provider !== 'firstParty' && provider !== 'vertex' && !isNativeGithub) {
+  if (provider !== 'firstParty') {
     return false
   }
 

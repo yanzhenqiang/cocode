@@ -1,12 +1,3 @@
-import {
-  applyProfileEnvToProcessEnv,
-  buildStartupEnvFromProfile,
-} from '../utils/providerProfile.js'
-import {
-  getProviderValidationError,
-  validateProviderEnvForStartupOrExit,
-} from '../utils/providerValidation.js'
-
 // Cocode: polyfill globalThis.File for Node < 20.
 // undici v7 references `File` at module evaluation time (webidl type
 // assertions). Node 18 lacks the global, causing a ReferenceError inside
@@ -89,28 +80,6 @@ async function main(): Promise<void> {
     const { applySafeConfigEnvironmentVariables } = await import('../utils/managedEnv.js')
     applySafeConfigEnvironmentVariables()
   }
-
-  const hasConfiguredProviderProfile = await (async () => {
-    const { getActiveProviderProfile } = await import('../utils/providerProfiles.js')
-    return getActiveProviderProfile() !== undefined
-  })()
-
-  const startupEnv = await buildStartupEnvFromProfile({
-    processEnv: process.env,
-    hasConfiguredProviderProfile,
-  })
-  if (startupEnv !== process.env) {
-    const startupProfileError = await getProviderValidationError(startupEnv)
-    if (startupProfileError) {
-      console.error(
-        `Warning: ignoring saved provider profile. ${startupProfileError}`,
-      )
-    } else {
-      applyProfileEnvToProcessEnv(process.env, startupEnv)
-    }
-  }
-
-  await validateProviderEnvForStartupOrExit()
 
   // #808: --model alone (no --provider) — route to the env var matching the
   // active provider before the banner prints so the override is visible.
