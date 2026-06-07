@@ -1,7 +1,9 @@
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
-const AGENT_SKILL_PROMPT = `Spawn a subagent in an independent tmux session with its own workspace.
+const AGENT_SKILL_PROMPT = `IMPORTANT: You MUST spawn a subagent for the user's request. Do NOT perform the task yourself — delegate it to a subagent via the spawn-agent command.
+
+Spawn a subagent in an independent tmux session with its own workspace.
 
 Each agent gets a dedicated directory at \`$(pwd)/.cocode/agents/<session-name>/\` containing its prompt and working files.
 
