@@ -1,7 +1,9 @@
 import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
-const AGENT_SKILL_PROMPT = `Spawn a subagent in an independent tmux session with its own workspace.
+const AGENT_SKILL_PROMPT = `IMPORTANT: You MUST spawn a subagent for the user's request. Do NOT perform the task yourself — delegate it to a subagent via the spawn-agent command.
+
+Spawn a subagent in an independent tmux session with its own workspace.
 
 Each agent gets a dedicated directory at \`$(pwd)/.cocode/agents/<session-name>/\` containing its prompt and working files.
 
@@ -10,7 +12,7 @@ Each agent gets a dedicated directory at \`$(pwd)/.cocode/agents/<session-name>/
 Run the \`spawn-agent\` command:
 
 \`\`\`bash
-SESSION_NAME="agent-$(uuidgen | tr -d '-')"
+SESSION_NAME="agent-$(date +%s)-$$"
 spawn-agent "$SESSION_NAME" "<task description>"
 \`\`\`
 TODO: Support fork-mode subagents that inherit the parent's full conversation
@@ -49,6 +51,7 @@ export function registerAgentSkill(): void {
   registerBundledSkill({
     name: 'agent',
     description: 'Spawn and manage subagents in independent tmux sessions',
+    whenToUse: 'When the user asks you to spawn, create, or launch a subagent, or delegate a task to an agent. You MUST spawn a subagent via the Bash tool — never perform the delegated task yourself.',
     aliases: ['spawn'],
     userInvocable: true,
     allowedTools: [BASH_TOOL_NAME, 'Glob', 'Grep', 'Read', 'FileEdit'],
