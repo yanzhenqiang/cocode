@@ -3,51 +3,13 @@ import { c as _c } from "react-compiler-runtime";
 import { Box, Text } from '../ink.js';
 import * as React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getGraphemeSegmenter } from '../utils/intl.js';
-
-// Bridge module deleted — inline stubs for shimmer functions
-const SHIMMER_INTERVAL_MS = 150;
-function computeGlimmerIndex(tick: number, messageWidth: number): number {
-  const cycleLength = messageWidth + 20;
-  return messageWidth + 10 - (tick % cycleLength);
-}
-function computeShimmerSegments(
-  text: string,
-  glimmerIndex: number,
-): { before: string; shimmer: string; after: string } {
-  const messageWidth = stringWidth(text);
-  const shimmerStart = glimmerIndex - 1;
-  const shimmerEnd = glimmerIndex + 1;
-  if (shimmerStart >= messageWidth || shimmerEnd < 0) {
-    return { before: text, shimmer: '', after: '' };
-  }
-  const clampedStart = Math.max(0, shimmerStart);
-  let colPos = 0;
-  let before = '';
-  let shimmer = '';
-  let after = '';
-  for (const { segment } of getGraphemeSegmenter().segment(text)) {
-    const segWidth = stringWidth(segment);
-    if (colPos + segWidth <= clampedStart) {
-      before += segment;
-    } else if (colPos > shimmerEnd) {
-      after += segment;
-    } else {
-      shimmer += segment;
-    }
-    colPos += segWidth;
-  }
-  return { before, shimmer, after };
-}
 import { getKairosActive, getUserMsgOptIn } from '../bootstrap/state.js';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js';
 import { isEnvTruthy } from '../utils/envUtils.js';
 import { count } from '../utils/array.js';
-import sample from 'lodash-es/sample.js';
 import { formatDuration, formatNumber, formatSecondsShort } from '../utils/format.js';
 import type { Theme } from 'src/utils/theme.js';
 import { activityManager } from '../utils/activityManager.js';
-import { getSpinnerVerbs } from '../constants/spinnerVerbs.js';
 import { MessageResponse } from './MessageResponse.js';
 import { TaskListV2 } from './TaskListV2.js';
 import { useTasksV2 } from '../hooks/useTasksV2.js';
@@ -175,7 +137,7 @@ function SpinnerWithVerbInner({
   const nextTask = findNextPendingTask(tasksV2);
 
   // Use useState with initializer to pick a random verb once on mount
-  const [randomVerb] = useState(() => sample(getSpinnerVerbs()));
+  const randomVerb = 'Thinking';
 
   // Leader's own verb (always the leader's, regardless of who is foregrounded)
   const leaderVerb = overrideMessage ?? currentTodo?.activeForm ?? currentTodo?.subject ?? randomVerb;
@@ -327,24 +289,9 @@ function BriefSpinner(t0) {
     t4 = $[7];
   }
   const verbWidth = t4;
-  let t5;
-  if ($[8] !== reducedMotion || $[9] !== showConnWarning || $[10] !== time || $[11] !== verb || $[12] !== verbWidth) {
-    const glimmerIndex = reducedMotion || showConnWarning ? -100 : computeGlimmerIndex(Math.floor(time / SHIMMER_INTERVAL_MS), verbWidth);
-    t5 = computeShimmerSegments(verb, glimmerIndex);
-    $[8] = reducedMotion;
-    $[9] = showConnWarning;
-    $[10] = time;
-    $[11] = verb;
-    $[12] = verbWidth;
-    $[13] = t5;
-  } else {
-    t5 = $[13];
-  }
-  const {
-    before,
-    shimmer,
-    after
-  } = t5;
+  const before = showConnWarning ? '' : verb;
+  const shimmer = '';
+  const after = '';
   const {
     columns
   } = useTerminalSize();
@@ -406,7 +353,7 @@ function _temp5() {
   return 'connected';
 }
 function _temp4() {
-  return sample(getSpinnerVerbs()) ?? "Working";
+  return 'Thinking';
 }
 export function BriefIdleStatus() {
   const $ = _c(9);

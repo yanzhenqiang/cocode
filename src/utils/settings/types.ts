@@ -684,15 +684,6 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'Show at most 1 sponsored tip per N spinner picks. Default 10. Set 0 to disable sponsored tips.',
         ),
-      spinnerVerbs: z
-        .object({
-          mode: z.enum(['append', 'replace']),
-          verbs: z.array(z.string()),
-        })
-        .optional()
-        .describe(
-          'Customize spinner verbs. mode: "append" adds verbs to defaults, "replace" uses only your verbs.',
-        ),
       spinnerTipsOverride: z
         .object({
           excludeDefault: z.boolean().optional(),

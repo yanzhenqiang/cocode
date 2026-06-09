@@ -99,7 +99,6 @@ Plugin syntax: \`plugin-name@source\` where source is \`claude-code-marketplace\
 - \`cleanupPeriodDays\`: Days to keep transcripts (default: 30; 0 disables persistence entirely)
 - \`respectGitignore\`: Whether to respect .gitignore (default: true)
 - \`spinnerTipsEnabled\`: Show tips in spinner
-- \`spinnerVerbs\`: Customize spinner verbs (\`{ "mode": "append" | "replace", "verbs": [...] }\`)
 - \`spinnerTipsOverride\`: Override spinner tips (\`{ "excludeDefault": true, "tips": ["Custom tip"] }\`)
 - \`syntaxHighlightingDisabled\`: Disable diff highlighting
 `
