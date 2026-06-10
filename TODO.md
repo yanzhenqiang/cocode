@@ -7,43 +7,47 @@
 - [x] KAIROS 整树枯死代码
 - [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings)
 - [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool)
-- [x] AppState 死字段 × 11: thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview, kairosEnabled, channelPermissionCallbacks, bagel*, replContext, teamContext
+- [x] AppState 死字段 × 22: thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview, kairosEnabled, channelPermissionCallbacks, bagel*×3, replContext, teamContext, promptSuggestionEnabled, promptSuggestion×5, denialTracking, companionReaction, tungsten*×5, spinnerTip
 
 ---
 
-## AppState 待清理字段
+## AppState 下一批待清理字段
 
-### 1. `promptSuggestionEnabled` — 枯死功能
-- `shouldEnablePromptSuggestion()` stub 永远返回 `false`（AppStateStore L41）
-- main.tsx 初始化 `false`，永远不翻
-- Config.tsx 有 UI 开关，但开关了也没用（底层 stub 返回 false）
-- 附带可删：`promptSuggestion` 字段（纯读但永远空）、`usePromptInputPlaceholder.ts`
+### 1. `agent` (987 refs) — Agent 名称可能用不到
+- --agent CLI 参数 + settings 里的 agent 名
+- 如果只用单 agent，这个字段只是字符串传递
 
-### 2. `denialTracking` — classifier 残留
-- 跟踪工具拒绝次数，防止无限拒绝循环
-- 之前 classifier (auto mode) 重度使用，现已删
-- 现在只在 headless agent 的 `shouldAvoidPermissionPrompts` 路径上用
-- AppState 层存储 + 读写都在 permissions.ts 内部，可下沉到 permissions.ts 局部状态
+### 2. `agentNameRegistry` (5 refs) — Agent 名→ID 映射
+- CoordinatorAgentStatus + useTypeahead 在用
+- 不用多 Agent 协作的话可能死
 
-### 3. `tungsten*` (5 字段) — 内部 tmux 面板
-- `tungstenActiveSession`, `tungstenLastCapturedTime`, `tungstenLastCommand`, `tungstenPanelVisible`, `tungstenPanelAutoHidden`
-- 内部功能，REPL.tsx + onChangeAppState 使用
-- 如果不做 tmux 集成，可以全删
+### 3. `fastMode` (191 refs) — 检查是否默认开启
+- 快速模式（低延迟模型），191 处引用说明到处在用
+- 需确认默认值
 
-### 4. `companionReaction` — 可下沉到 REPL 局部
-- 只有 REPL.tsx 读写（4 处引用），纯 UI 状态
-- 不需要在全局 AppState
+### 4. `isUltraplanMode` (4 refs) — Ultraplan 模式
+- 只在 onChangeAppState 里设置和检查
+- 不用 ultraplan 远程任务的话死
 
-### 5. `promptSuggestion` — 跟着 promptSuggestionEnabled 死
-- `text/promptId/shownAt/acceptedAt/generationRequestId` — 永远 null/0
-- promptSuggestionEnabled=false 时这些字段没意义
+### 5. `viewSelectionMode` (6 refs) — Agent 视图选择
+- Spinner + PromptInput 用
+- 不用多 Agent 协作的话永远 'none'
 
-### 6. `speculation` + `speculationSessionTimeSavedMs` — 可内聚
-- PromptInput + REPL 使用，后台推测状态
-- 8 处引用，可下沉到 REPL/PromptInput 局部
+### 6. `speculationSessionTimeSavedMs` (7 refs) — 推测节省时间
+- 纯统计数字，PromptInput + REPL 传递
+- 删了不影响功能
 
-### 7. `spinnerTip` — 可下沉
-- 17 处引用，只在 Spinner 组件使用
+### 7. `pendingWorkerRequest` + `pendingSandboxRequest` (12 refs) — Worker 系统
+- 子进程等待 Leader 批准的请求
+- 不用 worker-leader 模式的话永远 null
+
+### 8. `skillImprovement` (10 refs) — 技能改进建议
+- useSkillImprovementSurvey hook 在用
+- 需确认是否实际触发过
+
+### 9. `standaloneAgentContext` (16 refs) — 独立 Agent 上下文
+- rename/clear/REPL/ResumeConversation 都在写
+- 活代码，暂留
 
 ---
 
