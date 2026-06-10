@@ -18,9 +18,6 @@ export const COMMON_EXTERNALS: string[] = [
   // would freeze the build host's absolute path into dist/cli.mjs, so we
   // keep it external and rely on the npm package being installed.
   '@vscode/ripgrep',
-  // Orama search engine
-  '@orama/orama',
-  '@orama/plugin-data-persistence',
 ]
 
 // Additional packages external only in the SDK bundle (TUI + heavy deps)
@@ -56,7 +53,6 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   'bidi-js',
   'chalk',
   'cli-boxes',
-  'cli-highlight',
   'commander',
   'emoji-regex',
   'env-paths',
@@ -69,6 +65,7 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   // Data formats
   'jsonc-parser',
   'yaml',
+  'cli-highlight',
   'marked',
   'turndown',
   'xss',
@@ -93,6 +90,7 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   'axios',
   'cross-spawn',
   'duck-duck-scrape',
+  '@mendable/firecrawl-js',
   'execa',
   'https-proxy-agent',
   'tree-kill',
@@ -112,8 +110,6 @@ export const INTENTIONALLY_BUNDLED: string[] = [
     // gRPC (bundled into CLI, not external)
   '@grpc/grpc-js',
   '@grpc/proto-loader',
-  // Web scraping
-  '@mendable/firecrawl-js',
   // Language server protocol
   'vscode-languageserver-protocol',
   // File watching
