@@ -548,8 +548,8 @@ export function REPL({
   // These fields contain excluded strings that must not appear in external builds.
   const spinnerTip = undefined;
   const showExpandedTodos = useAppState(s => s.expandedView) === 'tasks';
-  const pendingWorkerRequest = useAppState(s => s.pendingWorkerRequest);
-  const pendingSandboxRequest = useAppState(s => s.pendingSandboxRequest);
+  const pendingWorkerRequest = null;
+  const pendingSandboxRequest = null;
   const teamContext = undefined;
   const tasks = useAppState(s => s.tasks);
   const workerSandboxPermissions = useAppState(s => s.workerSandboxPermissions);

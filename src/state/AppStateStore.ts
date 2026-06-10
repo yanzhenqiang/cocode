@@ -183,24 +183,7 @@ export type AppState = DeepImmutable<{
     }>
     selectedIndex: number
   }
-  // Pending permission request on worker side (shown while waiting for leader approval)
-  pendingWorkerRequest: {
-    toolName: string
-    toolUseId: string
-    description: string
-  } | null
-  // Pending sandbox permission request on worker side
-  pendingSandboxRequest: {
-    requestId: string
-    host: string
-  } | null
   speculation: SpeculationState
-  skillImprovement: {
-    suggestion: {
-      skillName: string
-      updates: { section: string; change: string; reason: string }[]
-    } | null
-  }
   // Auth version - incremented on login/logout to trigger re-fetching of auth-dependent data
   authVersion: number
   // Initial message to process (from CLI args or plan mode exit)
@@ -301,12 +284,7 @@ export function getDefaultAppState(): AppState {
       queue: [],
       selectedIndex: 0,
     },
-    pendingWorkerRequest: null,
-    pendingSandboxRequest: null,
     speculation: IDLE_SPECULATION_STATE,
-    skillImprovement: {
-      suggestion: null,
-    },
     authVersion: 0,
     initialMessage: null,
     effortValue: undefined,

@@ -23,7 +23,7 @@ export function useSkillImprovementSurvey(setMessages: SetMessages): {
   suggestion: SkillImprovementSuggestion | null
   handleSelect: (selected: FeedbackSurveyResponse) => void
 } {
-  const suggestion = useAppState(s => s.skillImprovement.suggestion)
+  const suggestion = null
   const setAppState = useSetAppState()
   const [isOpen, setIsOpen] = useState(false)
   const lastSuggestionRef = useRef(suggestion)

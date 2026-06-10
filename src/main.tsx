@@ -1360,15 +1360,10 @@ const {
       thinkingEnabled,
       sessionHooks: new Map(),
       speculation: IDLE_SPECULATION_STATE,
-      skillImprovement: {
-        suggestion: null
-      },
       workerSandboxPermissions: {
         queue: [],
         selectedIndex: 0
       },
-      pendingWorkerRequest: null,
-      pendingSandboxRequest: null,
       authVersion: 0,
       initialMessage: inputPrompt ? {
         message: createUserMessage({
