@@ -30,7 +30,6 @@ import type { FileHistoryState } from '../utils/fileHistory.js'
 import type { REPLHookContext } from '../utils/hooks/postSamplingHooks.js'
 import type { SessionHooksState } from '../utils/hooks/sessionHooks.js'
 import type { ModelSetting } from '../utils/model/model.js'
-import type { DenialTrackingState } from '../utils/permissions/denialTracking.js'
 import { getInitialSettings } from '../utils/settings/settings.js'
 import type { SettingsJson } from '../utils/settings/types.js'
 import { shouldEnableThinkingByDefault } from '../utils/thinking.js'
@@ -246,8 +245,6 @@ export type AppState = DeepImmutable<{
     verificationStarted: boolean
     verificationCompleted: boolean
   }
-  // Denial tracking for classifier modes (YOLO, headless, etc.) - falls back to prompting when limits exceeded
-  denialTracking?: DenialTrackingState
   // Active overlays (Select dialogs, etc.) for Escape key coordination
   activeOverlays: ReadonlySet<string>
   // Fast mode
