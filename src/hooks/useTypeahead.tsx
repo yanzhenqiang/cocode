@@ -577,7 +577,7 @@ export function useTypeahead({
       const state = store.getState();
       const members: SuggestionItem[] = [];
       const seen = new Set<string>();
-      for (const [name, agentId] of state.agentNameRegistry) {
+      for (const [name, agentId] of (state.agentNameRegistry || [])) {
         if (seen.has(name)) continue;
         if (!name.toLowerCase().startsWith(partialName)) continue;
         const status = state.tasks[agentId]?.status;
