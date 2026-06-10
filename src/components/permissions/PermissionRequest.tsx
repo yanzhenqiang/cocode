@@ -14,7 +14,6 @@ import { FileReadTool } from '../../tools/FileReadTool/FileReadTool.js';
 import { FileWriteTool } from '../../tools/FileWriteTool/FileWriteTool.js';
 import { GlobTool } from '../../tools/GlobTool/GlobTool.js';
 import { GrepTool } from '../../tools/GrepTool/GrepTool.js';
-const NotebookEditTool = {} as any;
 import { SkillTool } from '../../tools/SkillTool/SkillTool.js';
 import { WebFetchTool } from '../../tools/WebFetchTool/WebFetchTool.js';
 import type { AssistantMessage } from '../../types/message.js';
@@ -27,13 +26,10 @@ import { FallbackPermissionRequest } from './FallbackPermissionRequest.js';
 import { FileEditPermissionRequest } from './FileEditPermissionRequest/FileEditPermissionRequest.js';
 import { FilesystemPermissionRequest } from './FilesystemPermissionRequest/FilesystemPermissionRequest.js';
 import { FileWritePermissionRequest } from './FileWritePermissionRequest/FileWritePermissionRequest.js';
-import { NotebookEditPermissionRequest } from './NotebookEditPermissionRequest/NotebookEditPermissionRequest.js';
 import { SkillPermissionRequest } from './SkillPermissionRequest/SkillPermissionRequest.js';
 import { WebFetchPermissionRequest } from './WebFetchPermissionRequest/WebFetchPermissionRequest.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const WorkflowTool = null;
-const WorkflowPermissionRequest = null;
 const MonitorTool = feature('MONITOR_TOOL') ? (require('../../tools/MonitorTool/MonitorTool.js') as typeof import('../../tools/MonitorTool/MonitorTool.js')).MonitorTool : null;
 const MonitorPermissionRequest = feature('MONITOR_TOOL') ? (require('./MonitorPermissionRequest/MonitorPermissionRequest.js') as typeof import('./MonitorPermissionRequest/MonitorPermissionRequest.js')).MonitorPermissionRequest : null;
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs';
@@ -50,8 +46,6 @@ function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionR
       return BashPermissionRequest;
     case WebFetchTool:
       return WebFetchPermissionRequest;
-    case NotebookEditTool:
-      return NotebookEditPermissionRequest;
     case ExitPlanModeV2Tool:
       return ExitPlanModePermissionRequest;
     case EnterPlanModeTool:
@@ -60,8 +54,6 @@ function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionR
       return SkillPermissionRequest;
     case AskUserQuestionTool:
       return AskUserQuestionPermissionRequest;
-    case WorkflowTool:
-      return WorkflowPermissionRequest ?? FallbackPermissionRequest;
     case MonitorTool:
       return MonitorPermissionRequest ?? FallbackPermissionRequest;
     case GlobTool:
