@@ -196,21 +196,6 @@ export type AppState = DeepImmutable<{
   advisorModel?: string
   // Effort value
   effortValue?: EffortValue
-  // Set synchronously in launchUltraplan before the detached flow starts.
-  // Prevents duplicate launches during the ~5s window before
-  // ultraplanSessionUrl is set. Cleared by launchDetached
-  // once the URL is set or on failure.
-  ultraplanLaunching?: boolean
-  // Active ultraplan CCR session URL. Set while the task runs;
-  // truthy disables the keyword trigger + rainbow. Cleared when the poll
-  // reaches terminal state.
-  ultraplanSessionUrl?: string
-  // Approved ultraplan awaiting user choice (implement here vs fresh session).
-  // Cleared by UltraplanChoiceDialog.
-  ultraplanPendingChoice?: { plan: string; sessionId: string; taskId: string }
-  // Pre-launch permission dialog. Set by /ultraplan (slash or keyword);
-  // cleared by UltraplanLaunchDialog on choice.
-  ultraplanLaunchPending?: { blurb: string }
 }
 
 export type AppStateStore = Store<AppState>
