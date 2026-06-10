@@ -73,10 +73,8 @@ import {
   logEvent,
 } from '../../services/analytics/index.js'
 import { sanitizeToolNameForAnalytics } from '../../services/analytics/index.js'
-import {
-  clearClassifierChecking,
-  setClassifierChecking,
-} from '../classifierApprovals.js'
+const clearClassifierChecking = () => {}
+const setClassifierChecking = (_id: string) => {}
 import { isInProtectedNamespace } from '../envUtils.js'
 import { executePermissionRequestHooks } from '../hooks.js'
 import {

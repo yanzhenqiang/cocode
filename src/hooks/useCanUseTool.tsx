@@ -11,7 +11,8 @@ import type { ToolPermissionContext, Tool as ToolType, ToolUseContext } from '..
 import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js';
 import type { AssistantMessage } from '../types/message.js';
 const recordAutoModeDenial = () => {}
-import { clearClassifierChecking, setYoloClassifierApproval } from '../utils/classifierApprovals.js';
+const clearClassifierChecking = () => {}
+const setYoloClassifierApproval = (_id: string, _reason: string) => {}
 import { logForDebugging } from '../utils/debug.js';
 import { AbortError } from '../utils/errors.js';
 import { logError } from '../utils/log.js';
