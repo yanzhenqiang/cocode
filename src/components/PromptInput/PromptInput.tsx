@@ -264,7 +264,7 @@ function PromptInput({
   const tmuxFooterVisible = false;
   // WebBrowser pill — visible when a browser is open
   const bagelFooterVisible = useAppState(s => false);
-  const teamContext = useAppState(s => s.teamContext);
+  const teamContext = undefined;
   const queuedCommands = useCommandQueue();
   const promptSuggestionState = useAppState(s => s.promptSuggestion);
   const speculation = useAppState(s => s.speculation);

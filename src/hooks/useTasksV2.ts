@@ -215,7 +215,7 @@ const NOOP_SNAPSHOT = (): undefined => undefined
  * Hides the list after 5 seconds if there are no open tasks.
  */
 export function useTasksV2(): Task[] | undefined {
-  const teamContext = useAppState(s => s.teamContext)
+  const teamContext = undefined
 
   const enabled = isTodoV2Enabled()
 

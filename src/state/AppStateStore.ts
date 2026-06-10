@@ -196,29 +196,6 @@ export type AppState = DeepImmutable<{
   // pill stays in the footer (user can reopen) but the panel content doesn't take
   // screen space when idle. Cleared on next Tmux tool use or user toggle. NOT persisted.
   tungstenPanelAutoHidden?: boolean
-  teamContext?: {
-    teamName: string
-    teamFilePath: string
-    leadAgentId: string
-    // Self-identity for swarm members (separate processes in tmux panes)
-    // Note: This is different from toolUseContext.agentId which is for in-process subagents
-    selfAgentId?: string // Swarm member's own ID (same as leadAgentId for leaders)
-    selfAgentName?: string // Swarm member's name ('team-lead' for leaders)
-    isLeader?: boolean // True if this swarm member is the team leader
-    selfAgentColor?: string // Assigned color for UI (used by dynamically joined sessions)
-    teammates: {
-      [teammateId: string]: {
-        name: string
-        agentType?: string
-        color?: string
-        tmuxSessionName: string
-        tmuxPaneId: string
-        cwd: string
-        worktreePath?: string
-        spawnedAt: number
-      }
-    }
-  }
   // Standalone agent context for non-swarm sessions with custom name/color
   standaloneAgentContext?: {
     name: string
