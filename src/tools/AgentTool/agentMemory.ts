@@ -106,28 +106,6 @@ export function isAgentMemoryPath(absolutePath: string): boolean {
 /**
  * Returns the agent memory file path for a given agent type and scope.
  */
-export function getAgentMemoryEntrypoint(
-  agentType: string,
-  scope: AgentMemoryScope,
-): string {
-  return join(getAgentMemoryDir(agentType, scope), 'MEMORY.md')
-}
-
-export function getMemoryScopeDisplay(
-  memory: AgentMemoryScope | undefined,
-): string {
-  switch (memory) {
-    case 'user':
-      return `User (${join(getMemoryBaseDir(), 'agent-memory')}/)`
-    case 'project':
-      return 'Project (.claude/agent-memory/)'
-    case 'local':
-      return `Local (${getLocalAgentMemoryDir('...')})`
-    default:
-      return 'None'
-  }
-}
-
 /**
  * Load persistent memory for an agent with memory enabled.
  * Creates the memory directory if needed and returns a prompt with memory contents.
