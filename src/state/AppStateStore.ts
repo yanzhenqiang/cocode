@@ -195,7 +195,6 @@ export type AppState = DeepImmutable<{
     host: string
   } | null
   speculation: SpeculationState
-  speculationSessionTimeSavedMs: number
   skillImprovement: {
     suggestion: {
       skillName: string
@@ -305,7 +304,6 @@ export function getDefaultAppState(): AppState {
     pendingWorkerRequest: null,
     pendingSandboxRequest: null,
     speculation: IDLE_SPECULATION_STATE,
-    speculationSessionTimeSavedMs: 0,
     skillImprovement: {
       suggestion: null,
     },

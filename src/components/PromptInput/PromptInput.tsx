@@ -268,7 +268,7 @@ function PromptInput({
   const queuedCommands = useCommandQueue();
   const promptSuggestionState = { text: null as string | null, promptId: null as string | null, shownAt: 0, acceptedAt: 0, generationRequestId: null as string | null };
   const speculation = useAppState(s => s.speculation);
-  const speculationSessionTimeSavedMs = useAppState(s => s.speculationSessionTimeSavedMs);
+  const speculationSessionTimeSavedMs = 0;
   const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId);
   const viewSelectionMode = 'none';
   const {

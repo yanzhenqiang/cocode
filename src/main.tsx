@@ -1360,7 +1360,6 @@ const {
       thinkingEnabled,
       sessionHooks: new Map(),
       speculation: IDLE_SPECULATION_STATE,
-      speculationSessionTimeSavedMs: 0,
       skillImprovement: {
         suggestion: null
       },
