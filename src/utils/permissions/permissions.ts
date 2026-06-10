@@ -53,12 +53,8 @@ import {
 } from './permissionsLoader.js'
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const classifierDecisionModule = feature('TRANSCRIPT_CLASSIFIER')
-  ? (require('./classifierDecision.js') as typeof import('./classifierDecision.js'))
-  : null
-const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER')
-  ? (require('./autoModeState.js') as typeof import('./autoModeState.js'))
-  : null
+const classifierDecisionModule = null
+const autoModeStateModule = null
 
 import {
   addToTurnClassifierDuration,
@@ -94,10 +90,8 @@ import {
   recordSuccess,
   shouldFallbackToPrompting,
 } from './denialTracking.js'
-import {
-  classifyYoloAction,
-  formatActionForClassifier,
-} from './yoloClassifier.js'
+const classifyYoloAction = async () => ({ shouldBlock: false, unavailable: false, reason: '', usage: undefined, model: undefined, durationMs: 0, transcriptTooLong: false, promptLengths: {} })
+const formatActionForClassifier = (_name: string, _input: unknown) => ''
 
 const CLASSIFIER_FAIL_CLOSED_REFRESH_MS = 30 * 60 * 1000 // 30 minutes
 
