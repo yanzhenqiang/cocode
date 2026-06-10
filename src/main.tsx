@@ -1320,7 +1320,6 @@ const {
       mainLoopModelForSession: null,
       isBriefOnly: initialIsBriefOnly,
       expandedView: getGlobalConfig().showSpinnerTree ? 'teammates' : getGlobalConfig().showExpandedTodos ? 'tasks' : 'none',
-      footerSelection: null,
       toolPermissionContext: effectiveToolPermissionContext,
       agentDefinitions,
       mcp: {

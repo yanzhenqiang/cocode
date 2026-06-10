@@ -104,7 +104,7 @@ export function BackgroundTasksDialog({
   initialDetailTaskId
 }: Props): React.ReactNode {
   const tasks = useAppState(s => s.tasks);
-  const foregroundedTaskId = useAppState(s_0 => s_0.foregroundedTaskId);
+  const foregroundedTaskId = undefined;
   const setAppState = useSetAppState();
   const killAgentsShortcut = useShortcutDisplay('chat:killAgents', 'Chat', 'ctrl+x ctrl+k');
   const typedTasks = tasks as Record<string, TaskState> | undefined;

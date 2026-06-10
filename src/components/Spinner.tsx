@@ -54,7 +54,7 @@ export function SpinnerWithVerb(props: Props): React.ReactNode {
   // (see isBriefOnly={viewedTeammateTask ? false : isBriefOnly}). That
   // prop isn't threaded here, so replicate the gate from the store —
   // teammate view needs the real spinner (which shows teammate status).
-  const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
+  const viewingAgentTaskId = undefined;
   // Brief mode removed — KAIROS/KAIROS_BRIEF are false in external builds.
   // BriefSpinner branch is dead code; always render the standard spinner.
   void isBriefOnly;
@@ -85,7 +85,7 @@ function SpinnerWithVerbInner({
   // elapsed-time timer) are computed inside the child.
 
   const tasks = useAppState(s => s.tasks);
-  const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
+  const viewingAgentTaskId = undefined;
   const expandedView = useAppState(s_1 => s_1.expandedView);
   const showExpandedTodos = expandedView === 'tasks';
   const viewSelectionMode = 'none';

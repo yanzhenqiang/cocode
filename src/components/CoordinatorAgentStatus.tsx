@@ -32,10 +32,10 @@ export function getVisibleAgentTasks(tasks: AppState['tasks']): LocalAgentTaskSt
 }
 export function CoordinatorTaskPanel(): React.ReactNode {
   const tasks = useAppState(s => s.tasks);
-  const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
+  const viewingAgentTaskId = undefined;
   const agentNameRegistry = useAppState(() => new Map());
   const coordinatorTaskIndex = -1;
-  const tasksSelected = useAppState(s_3 => s_3.footerSelection === 'tasks');
+  const tasksSelected = false;
   const selectedIndex = tasksSelected ? coordinatorTaskIndex : undefined;
   const setAppState = useSetAppState();
   const visibleTasks = getVisibleAgentTasks(tasks);

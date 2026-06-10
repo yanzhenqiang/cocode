@@ -269,7 +269,7 @@ function PromptInput({
   const promptSuggestionState = { text: null as string | null, promptId: null as string | null, shownAt: 0, acceptedAt: 0, generationRequestId: null as string | null };
   const speculation = useAppState(s => s.speculation);
   const speculationSessionTimeSavedMs = 0;
-  const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId);
+  const viewingAgentTaskId = undefined;
   const viewSelectionMode = 'none';
   const {
     companion: _companion,
@@ -382,7 +382,7 @@ function PromptInput({
   // disconnected, task finished). The derivation makes the UI correct
   // immediately; the useEffect below clears the raw state so it doesn't
   // resurrect when the same pill reappears (new task starts → focus stolen).
-  const rawFooterSelection = useAppState(s => s.footerSelection);
+  const rawFooterSelection = null;
   const footerItemSelected = rawFooterSelection && footerItems.includes(rawFooterSelection) ? rawFooterSelection : null;
   useEffect(() => {
     if (rawFooterSelection && !footerItemSelected) {

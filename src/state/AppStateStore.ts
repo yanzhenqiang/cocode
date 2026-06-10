@@ -92,17 +92,9 @@ export type AppState = DeepImmutable<{
   expandedView: 'none' | 'tasks' | 'teammates'
   isBriefOnly: boolean
   // Which footer pill is focused (arrow-key navigation below the prompt).
-  // Lives in AppState so pill components rendered outside PromptInput
-  // (CompanionSprite in REPL.tsx) can read their own focused state.
-  footerSelection: FooterItem | null
   toolPermissionContext: ToolPermissionContext
 }> & {
-  // Unified task state - excluded from DeepImmutable because TaskState contains function types
   tasks: { [taskId: string]: TaskState }
-  // Task ID that has been foregrounded - its messages are shown in main view
-  foregroundedTaskId?: string
-  // Task ID of in-process teammate whose transcript is being viewed (undefined = leader's view)
-  viewingAgentTaskId?: string
   // Timestamp of last /buddy pet — CompanionSprite renders hearts while recent
   // TODO (ashwin): see if we can use utility-types DeepReadonly for this
   mcp: {
@@ -235,7 +227,6 @@ export function getDefaultAppState(): AppState {
     statusLineText: undefined,
     expandedView: 'none',
     isBriefOnly: false,
-    footerSelection: null,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
