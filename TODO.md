@@ -13,6 +13,41 @@
 
 ---
 
+## AppState 字段审计
+
+当前 UI 的数据流: **AppState (~50 字段)** → React 组件 → Ink 渲染器
+
+### 已删除的死字段（零组件读取）
+
+| 字段 | 原因 |
+|---|---|
+| `thinkingBudgetTokens` | 类型定义有，零读取零写入，不在默认值中 |
+| `selectedIPAgentIndex` | 只被 main.tsx 和 store 默认值赋值，零组件读取 |
+| `inbox` | `{ messages: [] }` 只初始化，零组件读取 |
+| `showTeammateMessagePreview` | false/undefined，零组件读取 |
+| `kairosEnabled` | 永远 false，KAIROS 整树已砍 |
+
+### 保留但可疑（待下沉到局部）
+
+| 字段 | 引用数 | 说明 |
+|---|---|---|
+| `denialTracking` | 9 | 只在 `utils/permissions/permissions.ts` 内部使用 |
+| `companionReaction` | 5 | 只有 `screens/REPL.tsx` 读写 |
+| `speculation` | 8 | 只有 `PromptInput.tsx` 读一个字段 |
+
+### 活跃字段（高频读写）
+
+| 字段 | 说明 |
+|---|---|
+| `messages` | 对话消息数组，LLM 输出逐 token 追加 |
+| `settings` | 用户配置 |
+| `toolPermissionContext` | 当前等待审批的权限请求 |
+| `tasks` | 后台任务和子 Agent 状态 |
+| `mcp` | MCP 服务器连接/工具/命令 |
+| `notifications` | 通知队列 |
+
+---
+
 ## React Compiler 产物还原计划
 
 ### 背景
