@@ -92,8 +92,6 @@ type State = {
   inMemoryErrorLog: Array<{ error: string; timestamp: string }>
   // Session-only plugins from --plugin-dir flag
   inlinePlugins: Array<string>
-  // Use cowork_plugins directory instead of plugins (--cowork flag or env var)
-  useCoworkPlugins: boolean
   // Session-only bypass permissions mode flag (not persisted)
   sessionBypassPermissionsMode: boolean
   // Session-only flag gating the .claude/scheduled_tasks.json watcher
@@ -276,8 +274,6 @@ function getInitialState(): State {
     inMemoryErrorLog: [],
     // Session-only plugins from --plugin-dir flag
     inlinePlugins: [],
-    // Use cowork_plugins directory instead of plugins
-    useCoworkPlugins: false,
     // Session-only bypass permissions mode flag (not persisted)
     sessionBypassPermissionsMode: false,
     // Scheduled tasks disabled until flag or dialog enables them
@@ -1086,14 +1082,6 @@ export function getInlinePlugins(): Array<string> {
   return STATE.inlinePlugins
 }
 
-export function setUseCoworkPlugins(value: boolean): void {
-  STATE.useCoworkPlugins = value
-  resetSettingsCache()
-}
-
-export function getUseCoworkPlugins(): boolean {
-  return STATE.useCoworkPlugins
-}
 
 export function setSessionBypassPermissionsMode(enabled: boolean): void {
   STATE.sessionBypassPermissionsMode = enabled

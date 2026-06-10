@@ -6,7 +6,6 @@ import {
   getFlagSettingsInline,
   getFlagSettingsPath,
   getOriginalCwd,
-  getUseCoworkPlugins,
 } from '../../bootstrap/state.js'
 import { uniq } from '../array.js'
 import { logForDebugging } from '../debug.js'
@@ -262,7 +261,6 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
  */
 function getUserSettingsFilePath(): string {
   if (
-    getUseCoworkPlugins() ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_COWORK_PLUGINS)
   ) {
     return 'cowork_settings.json'
