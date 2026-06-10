@@ -3,6 +3,7 @@ import type { PermissionMode } from '../utils/permissions/PermissionMode.js'
 import type { TodoList } from 'src/utils/todo/types.js'
 // Bridge module deleted — inline type stub
 import type { Command } from '../commands.js'
+import type { ChannelPermissionCallbacks } from '../services/mcp/channelPermissions.js'
 import type { ElicitationRequestEvent } from '../services/mcp/elicitationHandler.js'
 import type {
   MCPServerConnection,
@@ -341,6 +342,10 @@ export type AppState = DeepImmutable<{
   // Remote-harness side: set via set_permission_mode control_request,
   // pushed to CCR external_metadata.is_ultraplan_mode by onChangeAppState.
   isUltraplanMode?: boolean
+  // Channel permission callbacks — permission prompts over Telegram/iMessage/etc.
+  // Races against local UI + bridge + hooks + classifier via claim() in
+  // interactiveHandler.ts. Constructed once in useManageMCPConnections.
+  channelPermissionCallbacks?: ChannelPermissionCallbacks
 }
 
 export type AppStateStore = Store<AppState>

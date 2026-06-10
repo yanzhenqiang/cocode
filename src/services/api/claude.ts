@@ -56,6 +56,10 @@ import {
   toolToAPISchema,
 } from '../../utils/api.js'
 import { getOauthAccountInfo } from '../../utils/auth.js'
+import {
+  getMergedBetas,
+  getModelBetas,
+} from '../../utils/betas.js'
 import { getOrCreateUserID } from '../../utils/config.js'
 import {
   CAPPED_DEFAULT_MAX_TOKENS,
@@ -120,6 +124,17 @@ import {
   setPromptCache1hEligible,
   setThinkingClearLatched,
 } from 'src/bootstrap/state.js'
+import {
+  AFK_MODE_BETA_HEADER,
+  CONTEXT_1M_BETA_HEADER,
+  CONTEXT_MANAGEMENT_BETA_HEADER,
+  EFFORT_BETA_HEADER,
+  FAST_MODE_BETA_HEADER,
+  PROMPT_CACHING_SCOPE_BETA_HEADER,
+  REDACT_THINKING_BETA_HEADER,
+  STRUCTURED_OUTPUTS_BETA_HEADER,
+  TASK_BUDGETS_BETA_HEADER,
+} from 'src/constants/betas.js'
 import type { QuerySource } from 'src/constants/querySource.js'
 import type { Notification } from 'src/context/notifications.js'
 import { addToTotalSessionCost } from 'src/cost-tracker.js'
@@ -133,6 +148,12 @@ import {
   modelSupportsAdvisor,
 } from 'src/utils/advisor.js'
 import { getAgentContext } from 'src/utils/agentContext.js'
+import {
+  getToolSearchBetaHeader,
+  modelSupportsStructuredOutputs,
+  shouldIncludeFirstPartyOnlyBetas,
+  shouldUseGlobalCacheScope,
+} from 'src/utils/betas.js'
 import { getMaxThinkingTokensForModel } from 'src/utils/context.js'
 import { logForDebugging } from 'src/utils/debug.js'
 import { logForDiagnosticsNoPII } from 'src/utils/diagLogs.js'
@@ -159,6 +180,7 @@ import {
   isToolSearchEnabled,
 } from 'src/utils/toolSearch.js'
 import { API_MAX_MEDIA_PER_REQUEST } from '../../constants/apiLimits.js'
+import { ADVISOR_BETA_HEADER } from '../../constants/betas.js'
 import {
   formatDeferredToolLine,
   isDeferredTool,
@@ -1126,7 +1148,8 @@ async function* queryModel(
       isModelSupportedForCacheEditing,
       getCachedMCConfig,
     } = await import('../compact/cachedMicrocompact.js')
-    cacheEditingBetaHeader = 'cache-editing-2025-10-14'
+    const betas = await import('src/constants/betas.js')
+    cacheEditingBetaHeader = betas.CACHE_EDITING_BETA_HEADER
     const featureEnabled = isCachedMicrocompactEnabled()
     const modelSupported = isModelSupportedForCacheEditing(options.model)
     cachedMCEnabled = featureEnabled && modelSupported

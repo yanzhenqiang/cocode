@@ -30,6 +30,7 @@ import {
   TOOL_TOKEN_COUNT_OVERHEAD,
 } from './analyzeContext.js'
 import { count } from './array.js'
+import { getMergedBetas } from './betas.js'
 import { getContextWindowForModel } from './context.js'
 import { logForDebugging } from './debug.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from './envUtils.js'

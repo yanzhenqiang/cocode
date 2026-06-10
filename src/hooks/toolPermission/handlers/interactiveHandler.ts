@@ -6,6 +6,7 @@ type BridgePermissionCallbacks = {
   onResponse: (id: string, cb: (response: {status: string; output?: unknown; error?: unknown}) => void) => () => void;
   cancelRequest: (id: string) => void;
 }
+import { clearClassifierChecking } from '../../../utils/classifierApprovals.js'
 import type { PermissionDecision } from '../../../utils/permissions/PermissionResult.js'
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js'
 import { hasPermissionsToUseTool } from '../../../utils/permissions/permissions.js'
