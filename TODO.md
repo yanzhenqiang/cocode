@@ -5,101 +5,65 @@
 - [x] 死依赖清理 (@orama/orama, @orama/plugin-data-persistence)
 - [x] 死 feature flags (EXPERIMENTAL_SKILL_SEARCH, TREE_SITTER_BASH)
 - [x] claude.ai / Subscriber 残余引用 (确认无死代码)
+- [x] KAIROS 整树枯死代码 (删 ~2000 行, 16 个文件)
+- [x] 死 AppState 字段 (thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview)
+- [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings — 711 行)
+- [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool 桩 — 407 行)
+- [x] FilesystemPermissionRequest 编译器→手写验证 (114→73 行, -36%)
 
 ---
 
-## UI 框架精简 — 从状态层入手
+## React Compiler 产物还原计划
 
-当前 UI = **AppState (50 字段)** → **React 组件 (255 文件 / 46k 行)** → **Ink 渲染器**
+### 背景
 
-精简思路：从上游往下游清理。先砍死状态字段 → 砍掉不再渲染的组件 → 砍掉不再调用的 hook → 最后拆大文件。
+`src/components/` 下 255 个 `.tsx` 文件 (46k 行) **全部是 React Compiler 编译输出**，不是人写的 JSX。原始手写源码不在仓库里。
 
----
+编译器输出特征：
+```
+// 编译器产物（当前代码）
+import { c as _c } from "react-compiler-runtime";
+function Component(t0) {
+  const $ = _c(30);
+  let t1;
+  if ($[0] !== dep) { t1 = compute(); $[0] = dep; $[1] = t1; }
+  else { t1 = $[1]; }  // 每个变量 4-5 行
+}
+```
 
-### 第一阶段：砍死状态字段
+每行业务逻辑被展开成 3-4 行 memo 缓存代码。255 个文件中约 **60-70% (~28k 行) 是编译器噪音**。
 
-以下 AppState 字段满足 kairosEnabled 同类模式——永远为 false/null/空，从未被真正翻活：
+### 验证结果
 
-#### 1) 零组件读取（类型里定义了，默认值赋了，但没有任何 useAppState 读它）
+已用 `FilesystemPermissionRequest.tsx` 验证：114 行编译器产物 → 73 行手写 JSX，构建+smoke 均通过。证明：
+1. 可以安全替换，不需要改任何其他文件
+2. 每个文件平均瘦身 35-40%
+3. 全量做预计砍 **15k-18k 行**
 
-| 字段 | 默认值 | 说明 |
-|---|---|---|
-| `thinkingBudgetTokens` | (无默认值) | 只有类型定义，零读取零写入 |
-| `selectedIPAgentIndex` | -1 | main.tsx 初始化 + store 默认值，零组件读取 |
-| `inbox` | `{ messages: [] }` | main.tsx 初始化，零 useAppState 读取 |
-| `showTeammateMessagePreview` | false/undefined | main.tsx + store 初始化，零组件读取 |
+### 执行计划（分 5 批，按风险从低到高）
 
-#### 2) 永远 false，依赖的 KAIROS 已死
+#### 第 1 批：design-system/（16 文件, ~1.9k 行）— 最低风险
+通用 UI 组件(Dialog/Box/Text/Tabs/Pane/Byline 等)，逻辑简单，全项目引用 50+ 次。出问题最容易发现。
+- [ ] ThemedBox.tsx
+- [ ] ThemedText.tsx
+- [ ] Dialog.tsx
+- [ ] Tabs.tsx
+- [ ] Pane.tsx
+- [ ] Byline.tsx
+- [ ] Divider.tsx
+- [ ] 其余 9 个
 
-| 字段 | 默认值 | 说明 |
-|---|---|---|
-| `isBriefOnly` | false | KAIROS brief 模式标志，`Spinner.tsx:60` 有 `void isBriefOnly`（故意的死代码标记） |
+#### 第 2 批：messages/（33 文件, ~4.7k 行）— 低风险
+消息渲染器，每个文件逻辑独立，只被 Message.tsx 路由系统调用。
 
-#### 3) 整树枯死的 KAIROS 系统
+#### 第 3 批：permissions/（35 文件, ~8.6k 行）— 中风险
+权限弹窗，每个对应一种工具。已验证 FilesystemPermissionRequest 可行。
 
-`kairosEnabled` 写死 false，导致下游全部无效：
+#### 第 4 批：PromptInput/ + mcp/ + CustomSelect/（42 文件, ~10.6k 行）— 中高风险
+交互密集，逻辑复杂。需要逐个验证。
 
-| 字段/模块 | 说明 |
-|---|---|
-| `kairosEnabled` (AppState) | 永远 false |
-| `kairosActive` (bootstrap/state.ts) | `getKairosActive()` / `setKairosActive()` 永远返回 false |
-| `utils/cronScheduler.ts` | 全文件 kairos 专用 |
-| `utils/cronJitterConfig.ts` | 全文件 kairos 专用 |
-| `utils/cronTasks.ts` | 全文件 kairos 专用 |
-| `tools/ScheduleCronTool/` | 定时任务工具目录 |
-| `hooks/useScheduledTasks.ts` | kairos 专用 hook |
-| `skills/bundled/loop.ts` | `isKairosCronEnabled` 引用 |
-| 20+ 处注释 | "KAIROS/KAIROS_BRIEF are false in external builds" |
-
-- [ ] 删除 AppState 死字段: `thinkingBudgetTokens`, `selectedIPAgentIndex`, `inbox`, `showTeammateMessagePreview`, `isBriefOnly`
-- [ ] 删除 KAIROS 整树: `kairosEnabled` + `kairosActive` + cronScheduler/cronJitter/cronTasks + ScheduleCronTool + useScheduledTasks
-- [ ] 清理 20+ 处 KAIROS 注释和死分支 (compact.ts, conversationRecovery.ts, attachments.ts, memdir.ts 等)
-
----
-
-### 第二阶段：审计 React 组件
-
-255 个组件 / 46k 行，按职责分：
-
-| 类别 | 文件数 | 行数 | 说明 |
-|---|---|---|---|
-| `permissions/` | 37 | 8,602 | 14 种权限弹窗，每种内容不同 |
-| `messages/` | 34 | 4,673 | 34 种消息渲染器，每种逻辑不同 |
-| `PromptInput/` | 18 | 3,890 | 输入框 + 自动补全 + 历史 + 底部状态 |
-| `mcp/` | 14 | 3,681 | MCP 配置/连接/授权 |
-| `CustomSelect/` | 10 | 3,048 | 自定义下拉选择 |
-| `Spinner/` | 9 | 928 | 加载动画 |
-| `settings/` | 5 | 2,135 | 设置页 |
-
-巨型单体文件（>1000 行）：
-- `PromptInput.tsx` (1,942)
-- `LogSelector.tsx` (1,543)
-- `Config.tsx` (1,349)
-- `ElicitationDialog.tsx` (1,168)
-- `VirtualMessageList.tsx` (1,081)
-- `ScrollKeybindingHandler.tsx` (1,011)
-
-待查项：
-- [ ] 有哪些组件从未被 import？（需逐个检查）
-- [ ] KAIROS 删完后，哪些组件的相关分支可以删？
-- [ ] `Spinner/` 下 GlimmerMessage / FlashingChar / useShimmerAnimation 是否可进一步删
-
----
-
-### 第三阶段：精简 hooks
-
-60 个 hook / 9k 行。待查：
-- [ ] KAIROS 相关 hook 删除后还剩哪些
-- [ ] 哪些 hook 无调用者
-- [ ] 巨型 hook 拆分：`useTypeahead.tsx` (1,330)、`useVirtualScroll.ts` (721)、`useTextInput.ts` (608)
-
----
-
-### 第四阶段：状态类型进一步瘦身
-
-- [ ] `denialTracking` — 只在 permissions.ts 内部使用，是否可下沉？
-- [ ] `companionReaction` — 只有 REPL.tsx 用，是否可本地化？
-- [ ] `speculation` — 只有 PromptInput 读一个字段，是否可内聚？
+#### 第 5 批：根目录独立组件（81 文件, ~16k 行）— 高风险
+包含 REPL.tsx（4151 行）、LogSelector（1543 行）等巨型文件。需要拆分+还原并行做。
 
 ---
 
