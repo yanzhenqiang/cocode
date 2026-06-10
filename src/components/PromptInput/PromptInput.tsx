@@ -270,7 +270,7 @@ function PromptInput({
   const speculation = useAppState(s => s.speculation);
   const speculationSessionTimeSavedMs = useAppState(s => s.speculationSessionTimeSavedMs);
   const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId);
-  const viewSelectionMode = useAppState(s => s.viewSelectionMode);
+  const viewSelectionMode = 'none';
   const {
     companion: _companion,
     companionMuted

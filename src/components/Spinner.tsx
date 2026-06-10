@@ -88,7 +88,7 @@ function SpinnerWithVerbInner({
   const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
   const expandedView = useAppState(s_1 => s_1.expandedView);
   const showExpandedTodos = expandedView === 'tasks';
-  const viewSelectionMode = useAppState(s_2 => s_2.viewSelectionMode);
+  const viewSelectionMode = 'none';
   const {
     columns
   } = useTerminalSize();

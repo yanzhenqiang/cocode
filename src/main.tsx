@@ -1321,7 +1321,6 @@ const {
       isBriefOnly: initialIsBriefOnly,
       expandedView: getGlobalConfig().showSpinnerTree ? 'teammates' : getGlobalConfig().showExpandedTodos ? 'tasks' : 'none',
       coordinatorTaskIndex: -1,
-      viewSelectionMode: 'none',
       footerSelection: null,
       toolPermissionContext: effectiveToolPermissionContext,
       agentDefinitions,

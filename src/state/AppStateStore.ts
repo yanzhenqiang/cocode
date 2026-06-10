@@ -95,7 +95,6 @@ export type AppState = DeepImmutable<{
   // AppState (not local) so the panel can read it directly without prop-drilling
   // through PromptInput → PromptInputFooter.
   coordinatorTaskIndex: number
-  viewSelectionMode: 'none' | 'selecting-agent' | 'viewing-agent'
   // Which footer pill is focused (arrow-key navigation below the prompt).
   // Lives in AppState so pill components rendered outside PromptInput
   // (CompanionSprite in REPL.tsx) can read their own focused state.
@@ -259,7 +258,6 @@ export function getDefaultAppState(): AppState {
     expandedView: 'none',
     isBriefOnly: false,
     coordinatorTaskIndex: -1,
-    viewSelectionMode: 'none',
     footerSelection: null,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
