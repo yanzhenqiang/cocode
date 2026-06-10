@@ -62,7 +62,6 @@ type State = {
   // trajectories fail fast rather than conditioning the model on fake
   // tool_results.
   strictToolResultPairing: boolean
-  sdkAgentProgressSummariesEnabled: boolean
   userMsgOptIn: boolean
   clientType: string
   sessionSource: string | undefined
@@ -243,7 +242,6 @@ function getInitialState(): State {
     modelStrings: null,
     isInteractive: false,
     strictToolResultPairing: false,
-    sdkAgentProgressSummariesEnabled: false,
     userMsgOptIn: false,
     clientType: 'cli',
     sessionSource: undefined,
@@ -921,14 +919,6 @@ export function getClientType(): string {
 
 export function setClientType(type: string): void {
   STATE.clientType = type
-}
-
-export function getSdkAgentProgressSummariesEnabled(): boolean {
-  return STATE.sdkAgentProgressSummariesEnabled
-}
-
-export function setSdkAgentProgressSummariesEnabled(value: boolean): void {
-  STATE.sdkAgentProgressSummariesEnabled = value
 }
 
 export function getStrictToolResultPairing(): boolean {
