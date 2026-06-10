@@ -34,9 +34,6 @@ export function externalMetadataToAppState(
           },
         }
       : {}),
-    ...(typeof metadata.is_ultraplan_mode === 'boolean'
-      ? { isUltraplanMode: metadata.is_ultraplan_mode }
-      : {}),
   })
 }
 
@@ -74,15 +71,7 @@ export function onChangeAppState({
     const prevExternal = toExternalPermissionMode(prevMode)
     const newExternal = toExternalPermissionMode(newMode)
     if (prevExternal !== newExternal) {
-      // Ultraplan = first plan cycle only. The initial control_request
-      // sets mode and isUltraplanMode atomically, so the flag's
-      // transition gates it. null per RFC 7396 (removes the key).
-      const isUltraplan =
-        newExternal === 'plan' &&
-        newState.isUltraplanMode &&
-        !oldState.isUltraplanMode
-          ? true
-          : null
+      const isUltraplan = null
       notifySessionMetadataChanged({
         permission_mode: newExternal,
         is_ultraplan_mode: isUltraplan,
