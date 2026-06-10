@@ -114,7 +114,7 @@ import { setCwd } from 'src/utils/Shell.js';
 import { type ProcessedResume, processResumedConversation } from 'src/utils/sessionRestore.js';
 import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
-import { type ChannelEntry, getInitialMainLoopModel, setAllowedChannels, setAllowedSettingSources, setClientType, setCwdState, setInitialMainLoopModel, setInlinePlugins, setIsInteractive, setOriginalCwd, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
+import { type ChannelEntry, getInitialMainLoopModel, setAllowedChannels, setAllowedSettingSources, setClientType, setCwdState, setInitialMainLoopModel, setIsInteractive, setOriginalCwd, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/permissions/autoModeState.js') as typeof import('./utils/permissions/autoModeState.js') : null;
@@ -519,9 +519,6 @@ async function run(): Promise<CommanderCommand> {
     // builds the type as options are added. Narrow with a runtime guard;
     // the collect accumulator + [] default guarantee string[] in practice.
     const pluginDir = thisCommand.getOptionValue('pluginDir');
-    if (Array.isArray(pluginDir) && pluginDir.length > 0 && pluginDir.every(p => typeof p === 'string')) {
-      setInlinePlugins(pluginDir);
-    }
     runMigrations();
     profileCheckpoint('preAction_after_migrations');
 

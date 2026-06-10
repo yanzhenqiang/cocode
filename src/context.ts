@@ -2,7 +2,6 @@ import { feature } from 'bun:bundle'
 import memoize from 'lodash-es/memoize.js'
 import {
   getAdditionalDirectoriesForClaudeMd,
-  setCachedClaudeMdContent,
 } from './bootstrap/state.js'
 import { getLocalISODate } from './constants/common.js'
 import {
@@ -159,11 +158,6 @@ export const getUserContext = memoize(
     const claudeMd = shouldDisableClaudeMd
       ? null
       : getClaudeMds(filterInjectedMemoryFiles(await getMemoryFiles()))
-    // Cache for the auto-mode classifier (yoloClassifier.ts reads this
-    // instead of importing claudemd.ts directly, which would create a
-    // cycle through permissions/filesystem → permissions → yoloClassifier).
-    setCachedClaudeMdContent(claudeMd || null)
-
     logForDiagnosticsNoPII('info', 'user_context_completed', {
       duration_ms: Date.now() - startTime,
       claudemd_length: claudeMd?.length ?? 0,

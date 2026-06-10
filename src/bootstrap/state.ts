@@ -82,15 +82,8 @@ type State = {
   // Captures the exact post-compaction, CLAUDE.md-injected message set sent
   // to the API so /share's serialized_conversation.json reflects reality.
   lastAPIRequestMessages: BetaMessageStreamParams['messages'] | null
-  // Last auto-mode classifier request(s) for /share transcript
-  lastClassifierRequests: unknown[] | null
-  // CLAUDE.md content cached by context.ts for the auto-mode classifier.
-  // Breaks the yoloClassifier → claudemd → filesystem → permissions cycle.
-  cachedClaudeMdContent: string | null
   // In-memory error log for recent errors
   inMemoryErrorLog: Array<{ error: string; timestamp: string }>
-  // Session-only plugins from --plugin-dir flag
-  inlinePlugins: Array<string>
   // Session-only bypass permissions mode flag (not persisted)
   sessionBypassPermissionsMode: boolean
   // Session-only flag gating the .claude/scheduled_tasks.json watcher
@@ -266,12 +259,9 @@ function getInitialState(): State {
     lastAPIRequest: null,
     lastAPIRequestMessages: null,
     // Last auto-mode classifier request(s) for /share transcript
-    lastClassifierRequests: null,
-    cachedClaudeMdContent: null,
     // In-memory error log for recent errors
     inMemoryErrorLog: [],
     // Session-only plugins from --plugin-dir flag
-    inlinePlugins: [],
     // Session-only bypass permissions mode flag (not persisted)
     sessionBypassPermissionsMode: false,
     // Scheduled tasks disabled until flag or dialog enables them
@@ -1024,21 +1014,9 @@ export function getLastAPIRequestMessages():
   return STATE.lastAPIRequestMessages
 }
 
-export function setLastClassifierRequests(requests: unknown[] | null): void {
-  STATE.lastClassifierRequests = requests
-}
 
-export function getLastClassifierRequests(): unknown[] | null {
-  return STATE.lastClassifierRequests
-}
 
-export function setCachedClaudeMdContent(content: string | null): void {
-  STATE.cachedClaudeMdContent = content
-}
 
-export function getCachedClaudeMdContent(): string | null {
-  return STATE.cachedClaudeMdContent
-}
 
 export function addToInMemoryErrorLog(errorInfo: {
   error: string
@@ -1064,13 +1042,7 @@ export function preferThirdPartyAuthentication(): boolean {
   return getIsNonInteractiveSession() && STATE.clientType !== 'claude-vscode'
 }
 
-export function setInlinePlugins(plugins: Array<string>): void {
-  STATE.inlinePlugins = plugins
-}
 
-export function getInlinePlugins(): Array<string> {
-  return STATE.inlinePlugins
-}
 
 
 export function setSessionBypassPermissionsMode(enabled: boolean): void {
