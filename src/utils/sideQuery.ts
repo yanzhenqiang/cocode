@@ -4,7 +4,6 @@ import {
   getLastApiCompletionTimestamp,
   setLastApiCompletionTimestamp,
 } from '../bootstrap/state.js'
-import { STRUCTURED_OUTPUTS_BETA_HEADER } from '../constants/betas.js'
 import type { QuerySource } from '../constants/querySource.js'
 import {
   getAttributionHeader,
@@ -14,7 +13,6 @@ import { logEvent } from '../services/analytics/index.js'
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../services/analytics/index.js'
 import { getAPIMetadata } from '../services/api/claude.js'
 import { getAnthropicClient } from '../services/api/client.js'
-import { getModelBetas, modelSupportsStructuredOutputs } from './betas.js'
 import { computeFingerprint } from './fingerprint.js'
 import { normalizeModelStringForAPI } from './model/model.js'
 

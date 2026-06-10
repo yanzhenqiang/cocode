@@ -73,10 +73,6 @@ import {
   logEvent,
 } from '../../services/analytics/index.js'
 import { sanitizeToolNameForAnalytics } from '../../services/analytics/index.js'
-import {
-  clearClassifierChecking,
-  setClassifierChecking,
-} from '../classifierApprovals.js'
 import { isInProtectedNamespace } from '../envUtils.js'
 import { executePermissionRequestHooks } from '../hooks.js'
 import {
@@ -96,12 +92,6 @@ import {
   recordSuccess,
   shouldFallbackToPrompting,
 } from './denialTracking.js'
-import {
-  classifyYoloAction,
-  formatActionForClassifier,
-} from './yoloClassifier.js'
-
-const CLASSIFIER_FAIL_CLOSED_REFRESH_MS = 30 * 60 * 1000 // 30 minutes
 
 const PERMISSION_RULE_SOURCES = [
   ...SETTING_SOURCES,

@@ -34,10 +34,6 @@ import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../tools/ExitPlanModeTool/constants.js'
 import { TASK_OUTPUT_TOOL_NAME } from '../tools/TaskOutputTool/constants.js'
 import type { Message } from '../types/message.js'
-import {
-  modelSupportsStructuredOutputs,
-  shouldUseGlobalCacheScope,
-} from './betas.js'
 import { createCombinedAbortSignal } from './combinedAbortSignal.js'
 import { getCwd } from './cwd.js'
 import { logForDebugging } from './debug.js'

@@ -27,7 +27,7 @@ const featureFlags: Record<string, boolean> = {
   MESSAGE_ACTIONS: true,
   DUMP_SYSTEM_PROMPT: true,
   CACHED_MICROCOMPACT: true,
-  TRANSCRIPT_CLASSIFIER: true,
+  TRANSCRIPT_CLASSIFIER: false,
   ULTRATHINK: true,
   TOKEN_BUDGET: true,
   HISTORY_PICKER: true,

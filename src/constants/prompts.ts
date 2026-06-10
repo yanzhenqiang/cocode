@@ -37,7 +37,6 @@ import {
 import { isEnvTruthy } from '../utils/envUtils.js'
 import { feature } from 'bun:bundle'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js'
-import { shouldUseGlobalCacheScope } from '../utils/betas.js'
 import {
   systemPromptSection,
   DANGEROUS_uncachedSystemPromptSection,
