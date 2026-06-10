@@ -200,9 +200,6 @@ export function stripImagesFromMessages(messages: Message[]): Message[] {
  * skill_discovery/skill_listing are re-surfaced by resetSentSkillNames()
  * + the next turn's discovery signal, so feeding them to the summarizer
  * wastes tokens and pollutes the summary with stale skill suggestions.
- *
- * No-op when EXPERIMENTAL_SKILL_SEARCH is off (the attachment types
- * don't exist on external builds).
  */
 export function stripReinjectedAttachments(messages: Message[]): Message[] {
   
@@ -511,7 +508,7 @@ export async function compactConversation(
     // skill_listing (~4K tokens) post-compact is pure cache_creation with
     // marginal benefit. The model still has SkillTool in its schema and
     // invoked_skills attachment (below) preserves used-skill content. Ants
-    // with EXPERIMENTAL_SKILL_SEARCH already skip re-injection via the
+    // skip re-injection via the
     // early-return in getSkillListingAttachments.
 
     // Run async attachment generation in parallel

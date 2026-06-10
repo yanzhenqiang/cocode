@@ -596,22 +596,6 @@ async function run(): Promise<CommanderCommand> {
       });
     }
 
-    // Assistant mode: when .claude/settings.json has assistant: true AND
-    // the tengu_kairos GrowthBook gate is on, force brief on. Permission
-    // mode is left to the user — settings defaultMode or --permission-mode
-    // apply as normal. REPL-typed messages already default to 'next'
-    // priority (messageQueueManager.enqueue) so they drain mid-turn between
-    // tool calls. SendUserMessage (BriefTool) is enabled via the brief env
-    // var. SleepTool stays disabled.
-    // kairosEnabled is computed once here and reused at the
-    // getAssistantSystemPromptAddendum() call site further down.
-    //
-    // Trust gate: .claude/settings.json is attacker-controllable in an
-    // untrusted clone. We run ~1000 lines before showSetupScreens() shows
-    // the trust dialog, and by then we've already appended
-    // .claude/agents/assistant.md to the system prompt. Refuse to activate
-    // until the directory has been explicitly trusted.
-    let kairosEnabled = false;
     const {
       debug = false,
       debugToStderr = false,
@@ -1337,8 +1321,6 @@ const {
       mainLoopModelForSession: null,
       isBriefOnly: initialIsBriefOnly,
       expandedView: getGlobalConfig().showSpinnerTree ? 'teammates' : getGlobalConfig().showExpandedTodos ? 'tasks' : 'none',
-      showTeammateMessagePreview: undefined,
-      selectedIPAgentIndex: -1,
       coordinatorTaskIndex: -1,
       viewSelectionMode: 'none',
       footerSelection: null,
@@ -1363,7 +1345,6 @@ const {
         needsRefresh: false
       },
       statusLineText: undefined,
-      kairosEnabled,
       notifications: {
         current: null,
         queue: initialNotifications
@@ -1381,9 +1362,6 @@ const {
       thinkingEnabled,
       promptSuggestionEnabled: false,
       sessionHooks: new Map(),
-      inbox: {
-        messages: []
-      },
       promptSuggestion: {
         text: null,
         promptId: null,

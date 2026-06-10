@@ -96,8 +96,6 @@ export type AppState = DeepImmutable<{
   statusLineText: string | undefined
   expandedView: 'none' | 'tasks' | 'teammates'
   isBriefOnly: boolean
-  // Optional - only present when ENABLE_AGENT_SWARMS is true (for dead code elimination)
-  selectedIPAgentIndex: number
   // CoordinatorTaskPanel selection: -1 = pill, 0 = main, 1..N = agent rows.
   // AppState (not local) so the panel can read it directly without prop-drilling
   // through PromptInput → PromptInputFooter.
@@ -114,7 +112,6 @@ export type AppState = DeepImmutable<{
   // Assistant mode fully enabled (settings + GrowthBook gate + trust).
   // Single source of truth - computed once in main.tsx before option
   // mutation, consumers read this instead of re-calling isAssistantMode().
-  kairosEnabled: boolean
   // Outbound-only mode: forward events to CCR but reject inbound prompts/control
 }> & {
   // Unified task state - excluded from DeepImmutable because TaskState contains function types
@@ -186,7 +183,6 @@ export type AppState = DeepImmutable<{
     queue: ElicitationRequestEvent[]
   }
   thinkingEnabled: boolean | undefined
-  thinkingBudgetTokens?: number
   promptSuggestionEnabled: boolean
   sessionHooks: SessionHooksState
   tungstenActiveSession?: {
@@ -261,17 +257,6 @@ export type AppState = DeepImmutable<{
   standaloneAgentContext?: {
     name: string
     color?: AgentColorName
-  }
-  inbox: {
-    messages: Array<{
-      id: string
-      from: string
-      text: string
-      timestamp: string
-      status: 'pending' | 'processing' | 'processed'
-      color?: string
-      summary?: string
-    }>
   }
   // Worker sandbox permission requests (leader side) - for network access approval
   workerSandboxPermissions: {
@@ -378,12 +363,9 @@ export function getDefaultAppState(): AppState {
     statusLineText: undefined,
     expandedView: 'none',
     isBriefOnly: false,
-    showTeammateMessagePreview: false,
-    selectedIPAgentIndex: -1,
     coordinatorTaskIndex: -1,
     viewSelectionMode: 'none',
     footerSelection: null,
-    kairosEnabled: false,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
@@ -425,9 +407,6 @@ export function getDefaultAppState(): AppState {
     thinkingEnabled: shouldEnableThinkingByDefault(),
     promptSuggestionEnabled: shouldEnablePromptSuggestion(),
     sessionHooks: new Map(),
-    inbox: {
-      messages: [],
-    },
     workerSandboxPermissions: {
       queue: [],
       selectedIndex: 0,

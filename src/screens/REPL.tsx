@@ -158,7 +158,6 @@ import { updateSessionName, updateSessionActivity } from '../utils/concurrentSes
 // Dead code elimination: conditional import for loop mode
 /* eslint-disable @typescript-eslint/no-require-imports */
 const SUGGEST_BG_PR_NOOP = (_p: string, _n: string): boolean => false;
-const useScheduledTasks = require('../hooks/useScheduledTasks.js').useScheduledTasks;
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { useTaskListWatcher } from '../hooks/useTaskListWatcher.js';
 import type { SandboxAskCallback, NetworkHostPattern } from '../utils/sandbox/sandbox-adapter.js';
@@ -3330,15 +3329,6 @@ export function REPL({
     void onQuery([userMessage], newAbortController, true, [], mainLoopModel);
     return true;
   }, [onQuery, mainLoopModel, store]);
-
-  // Scheduled tasks from .claude/scheduled_tasks.json (CronCreate/Delete/List)
-  // and session-only /loop runs.
-  const assistantMode = store.getState().kairosEnabled;
-  useScheduledTasks({
-    isLoading,
-    assistantMode,
-    setMessages
-  });
 
 
 
