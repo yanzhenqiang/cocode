@@ -87,7 +87,7 @@ export function ResumeConversation({
   const {
     rows
   } = useTerminalSize();
-  const agentDefinitions = useAppState(s => s.agentDefinitions);
+  const agentDefinitions = { activeAgents: [], allAgents: [] };
   const setAppState = useSetAppState();
   const [logs, setLogs] = React.useState<LogOption[]>([]);
   const [loading, setLoading] = React.useState(true);

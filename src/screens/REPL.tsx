@@ -539,7 +539,7 @@ export function REPL({
   const toolPermissionContext = useAppState(s => s.toolPermissionContext);
   const verbose = useAppState(s => s.verbose);
   const mcp = useAppState(s => s.mcp);
-  const agentDefinitions = useAppState(s => s.agentDefinitions);
+  const agentDefinitions = { activeAgents: [], allAgents: [] };
   const fileHistory = useAppState(s => s.fileHistory);
   const initialMessage = useAppState(s => s.initialMessage);
   const queuedCommands = useCommandQueue();
@@ -1977,10 +1977,7 @@ export function REPL({
             isNonInteractiveSession: false,
         dynamicMcpConfig,
         theme,
-        agentDefinitions: allowedAgentTypes ? {
-          ...s.agentDefinitions,
-          allowedAgentTypes
-        } : s.agentDefinitions,
+        agentDefinitions: { activeAgents: [], allAgents: [] },
         customSystemPrompt,
         appendSystemPrompt,
         refreshTools: computeTools

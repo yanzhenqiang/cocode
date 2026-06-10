@@ -89,7 +89,6 @@ export type AppState = DeepImmutable<{
   mainLoopModelForSession: ModelSetting
   statusLineText: string | undefined
   expandedView: 'none' | 'tasks' | 'teammates'
-  isBriefOnly: boolean
   // Which footer pill is focused (arrow-key navigation below the prompt).
   toolPermissionContext: ToolPermissionContext
 }> & {
@@ -108,39 +107,6 @@ export type AppState = DeepImmutable<{
      */
     pluginReconnectKey: number
   }
-  plugins: {
-    enabled: LoadedPlugin[]
-    disabled: LoadedPlugin[]
-    commands: Command[]
-    /**
-     * Plugin system errors collected during loading and initialization.
-     * See {@link PluginError} type documentation for complete details on error
-     * structure, context fields, and display format.
-     */
-    errors: PluginError[]
-    // Installation status for background plugin/marketplace installation
-    installationStatus: {
-      marketplaces: Array<{
-        name: string
-        status: 'pending' | 'installing' | 'installed' | 'failed'
-        error?: string
-      }>
-      plugins: Array<{
-        id: string
-        name: string
-        status: 'pending' | 'installing' | 'installed' | 'failed'
-        error?: string
-      }>
-    }
-    /**
-     * Set to true when plugin state on disk has changed (background reconcile,
-     * /plugin menu install, external settings edit) and active components are
-     * stale. In interactive mode, user runs /reload-plugins to consume. In
-     * headless mode, refreshPluginState() auto-consumes via refreshActivePlugins().
-     */
-    needsRefresh: boolean
-  }
-  agentDefinitions: AgentDefinitionsResult
   fileHistory: FileHistoryState
   attribution: AttributionState
   todos: { [agentId: string]: TodoList }
@@ -203,12 +169,10 @@ export function getDefaultAppState(): AppState {
     mainLoopModelForSession: null,
     statusLineText: undefined,
     expandedView: 'none',
-    isBriefOnly: false,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
     },
-    agentDefinitions: { activeAgents: [], allAgents: [] },
     fileHistory: {
       snapshots: [],
       trackedFiles: new Set(),
@@ -221,17 +185,6 @@ export function getDefaultAppState(): AppState {
       commands: [],
       resources: {},
       pluginReconnectKey: 0,
-    },
-    plugins: {
-      enabled: [],
-      disabled: [],
-      commands: [],
-      errors: [],
-      installationStatus: {
-        marketplaces: [],
-        plugins: [],
-      },
-      needsRefresh: false,
     },
     todos: {},
     notifications: {
