@@ -34,7 +34,7 @@ export function CoordinatorTaskPanel(): React.ReactNode {
   const tasks = useAppState(s => s.tasks);
   const viewingAgentTaskId = useAppState(s_0 => s_0.viewingAgentTaskId);
   const agentNameRegistry = useAppState(() => new Map());
-  const coordinatorTaskIndex = useAppState(s_2 => s_2.coordinatorTaskIndex);
+  const coordinatorTaskIndex = -1;
   const tasksSelected = useAppState(s_3 => s_3.footerSelection === 'tasks');
   const selectedIndex = tasksSelected ? coordinatorTaskIndex : undefined;
   const setAppState = useSetAppState();

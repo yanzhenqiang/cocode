@@ -311,7 +311,7 @@ function PromptInput({
   // -1 sentinel: tasks pill is selected but no specific agent row is selected yet.
   // First ↓ selects the pill, second ↓ moves to row 0. Prevents double-select
   // of pill + row when both bg tasks (pill) and forked agents (rows) are visible.
-  const coordinatorTaskIndex = useAppState(s => s.coordinatorTaskIndex);
+  const coordinatorTaskIndex = -1;
   const setCoordinatorTaskIndex = useCallback((v: number | ((prev: number) => number)) => setAppState(prev => {
     const next = typeof v === 'function' ? v(prev.coordinatorTaskIndex) : v;
     if (next === prev.coordinatorTaskIndex) return prev;

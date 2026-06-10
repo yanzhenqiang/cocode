@@ -91,10 +91,6 @@ export type AppState = DeepImmutable<{
   statusLineText: string | undefined
   expandedView: 'none' | 'tasks' | 'teammates'
   isBriefOnly: boolean
-  // CoordinatorTaskPanel selection: -1 = pill, 0 = main, 1..N = agent rows.
-  // AppState (not local) so the panel can read it directly without prop-drilling
-  // through PromptInput → PromptInputFooter.
-  coordinatorTaskIndex: number
   // Which footer pill is focused (arrow-key navigation below the prompt).
   // Lives in AppState so pill components rendered outside PromptInput
   // (CompanionSprite in REPL.tsx) can read their own focused state.
@@ -239,7 +235,6 @@ export function getDefaultAppState(): AppState {
     statusLineText: undefined,
     expandedView: 'none',
     isBriefOnly: false,
-    coordinatorTaskIndex: -1,
     footerSelection: null,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
