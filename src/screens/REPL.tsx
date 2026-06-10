@@ -546,7 +546,7 @@ export function REPL({
   // feature() is a build-time constant — dead code elimination removes the hook
   // call entirely in external builds, so this is safe despite looking conditional.
   // These fields contain excluded strings that must not appear in external builds.
-  const spinnerTip = useAppState(s => s.spinnerTip);
+  const spinnerTip = undefined;
   const showExpandedTodos = useAppState(s => s.expandedView) === 'tasks';
   const pendingWorkerRequest = useAppState(s => s.pendingWorkerRequest);
   const pendingSandboxRequest = useAppState(s => s.pendingSandboxRequest);
