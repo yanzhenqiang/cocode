@@ -544,12 +544,6 @@ export type GlobalConfig = {
   // Permission explainer configuration
   permissionExplainerEnabled?: boolean // Enable Haiku-generated explanations for permission requests (default: true)
 
-  // Teammate spawn mode: 'auto' | 'tmux' | 'in-process'
-  teammateMode?: 'auto' | 'tmux' | 'in-process' // How to spawn teammates (default: 'auto')
-  // Model for new teammates when the tool call doesn't pass one.
-  // undefined = hardcoded Opus (backward-compat); null = leader's model; string = model alias/ID.
-  teammateDefaultModel?: string | null
-
   // PR status footer configuration (feature-flagged via GrowthBook)
   prStatusFooterEnabled?: boolean // Show PR review status in footer (default: true)
 
@@ -605,8 +599,6 @@ export type GlobalConfig = {
   // (avoiding 11× saveGlobalConfig lock+re-read on every startup).
   migrationVersion?: number
 
-  // Knowledge Graph configuration
-  knowledgeGraphEnabled: boolean
 
   // Startup splash logo color scheme — set via /logo. See
   // src/components/StartupScreen.palettes.ts for valid values. Stored as a
@@ -661,7 +653,6 @@ function createDefaultGlobalConfig(): GlobalConfig {
     copyFullResponse: false,
     providerProfiles: [],
     openaiAdditionalModelOptionsCacheByProfile: {},
-    knowledgeGraphEnabled: true,
   }
   return config
 }
@@ -707,7 +698,6 @@ export const GLOBAL_CONFIG_KEYS = [
   'permissionExplainerEnabled',
   'prStatusFooterEnabled',
   'remoteDialogSeen',
-  'knowledgeGraphEnabled',
   'logoColor',
 ] as const
 
@@ -806,7 +796,6 @@ export function isPathTrusted(dir: string): boolean {
 const TEST_GLOBAL_CONFIG_FOR_TESTING: GlobalConfig = {
   ...DEFAULT_GLOBAL_CONFIG,
   autoUpdates: false,
-  knowledgeGraphEnabled: true,
 }
 const TEST_PROJECT_CONFIG_FOR_TESTING: ProjectConfig = {
   ...DEFAULT_PROJECT_CONFIG,
