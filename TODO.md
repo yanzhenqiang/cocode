@@ -1,15 +1,49 @@
 # TODO
 
 ## 已完成
-- [x] spinner 扫光动画 + 随机动词列表 (删 260 行)
+- [x] spinner 扫光动画 + 随机动词列表
 - [x] 死依赖清理 (@orama/orama, @orama/plugin-data-persistence)
-- [x] 死 feature flags (EXPERIMENTAL_SKILL_SEARCH, TREE_SITTER_BASH)
-- [x] claude.ai / Subscriber 残余引用 (确认无死代码)
-- [x] KAIROS 整树枯死代码 (删 ~2000 行, 16 个文件)
-- [x] 死 AppState 字段 (thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview)
-- [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings — 711 行)
-- [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool 桩 — 407 行)
-- [x] FilesystemPermissionRequest 编译器→手写验证 (114→73 行, -36%)
+- [x] TRANSCRIPT_CLASSIFIER 全树删除 (auto mode, ~16 文件)
+- [x] KAIROS 整树枯死代码
+- [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings)
+- [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool)
+- [x] AppState 死字段 × 11: thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview, kairosEnabled, channelPermissionCallbacks, bagel*, replContext, teamContext
+
+---
+
+## AppState 待清理字段
+
+### 1. `promptSuggestionEnabled` — 枯死功能
+- `shouldEnablePromptSuggestion()` stub 永远返回 `false`（AppStateStore L41）
+- main.tsx 初始化 `false`，永远不翻
+- Config.tsx 有 UI 开关，但开关了也没用（底层 stub 返回 false）
+- 附带可删：`promptSuggestion` 字段（纯读但永远空）、`usePromptInputPlaceholder.ts`
+
+### 2. `denialTracking` — classifier 残留
+- 跟踪工具拒绝次数，防止无限拒绝循环
+- 之前 classifier (auto mode) 重度使用，现已删
+- 现在只在 headless agent 的 `shouldAvoidPermissionPrompts` 路径上用
+- AppState 层存储 + 读写都在 permissions.ts 内部，可下沉到 permissions.ts 局部状态
+
+### 3. `tungsten*` (5 字段) — 内部 tmux 面板
+- `tungstenActiveSession`, `tungstenLastCapturedTime`, `tungstenLastCommand`, `tungstenPanelVisible`, `tungstenPanelAutoHidden`
+- 内部功能，REPL.tsx + onChangeAppState 使用
+- 如果不做 tmux 集成，可以全删
+
+### 4. `companionReaction` — 可下沉到 REPL 局部
+- 只有 REPL.tsx 读写（4 处引用），纯 UI 状态
+- 不需要在全局 AppState
+
+### 5. `promptSuggestion` — 跟着 promptSuggestionEnabled 死
+- `text/promptId/shownAt/acceptedAt/generationRequestId` — 永远 null/0
+- promptSuggestionEnabled=false 时这些字段没意义
+
+### 6. `speculation` + `speculationSessionTimeSavedMs` — 可内聚
+- PromptInput + REPL 使用，后台推测状态
+- 8 处引用，可下沉到 REPL/PromptInput 局部
+
+### 7. `spinnerTip` — 可下沉
+- 17 处引用，只在 Spinner 组件使用
 
 ---
 

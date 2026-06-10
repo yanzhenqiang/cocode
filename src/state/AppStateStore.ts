@@ -36,9 +36,6 @@ import type { SettingsJson } from '../utils/settings/types.js'
 import { shouldEnableThinkingByDefault } from '../utils/thinking.js'
 import type { Store } from './store.js'
 
-// Prompt suggestion stub (deleted module)
-const shouldEnablePromptSuggestion = () => false;
-
 export type CompletionBoundary =
   | { type: 'complete'; completedAt: number; outputTokens: number }
   | { type: 'bash'; command: string; completedAt: number }
@@ -178,7 +175,6 @@ export type AppState = DeepImmutable<{
     queue: ElicitationRequestEvent[]
   }
   thinkingEnabled: boolean | undefined
-  promptSuggestionEnabled: boolean
   sessionHooks: SessionHooksState
   tungstenActiveSession?: {
     sessionName: string
@@ -224,13 +220,6 @@ export type AppState = DeepImmutable<{
     requestId: string
     host: string
   } | null
-  promptSuggestion: {
-    text: string | null
-    promptId: 'user_intent' | 'stated_intent' | null
-    shownAt: number
-    acceptedAt: number
-    generationRequestId: string | null
-  }
   speculation: SpeculationState
   speculationSessionTimeSavedMs: number
   skillImprovement: {
@@ -344,7 +333,6 @@ export function getDefaultAppState(): AppState {
       queue: [],
     },
     thinkingEnabled: shouldEnableThinkingByDefault(),
-    promptSuggestionEnabled: shouldEnablePromptSuggestion(),
     sessionHooks: new Map(),
     workerSandboxPermissions: {
       queue: [],
@@ -352,13 +340,6 @@ export function getDefaultAppState(): AppState {
     },
     pendingWorkerRequest: null,
     pendingSandboxRequest: null,
-    promptSuggestion: {
-      text: null,
-      promptId: null,
-      shownAt: 0,
-      acceptedAt: 0,
-      generationRequestId: null,
-    },
     speculation: IDLE_SPECULATION_STATE,
     speculationSessionTimeSavedMs: 0,
     skillImprovement: {

@@ -266,7 +266,7 @@ function PromptInput({
   const bagelFooterVisible = useAppState(s => false);
   const teamContext = undefined;
   const queuedCommands = useCommandQueue();
-  const promptSuggestionState = useAppState(s => s.promptSuggestion);
+  const promptSuggestionState = { text: null as string | null, promptId: null as string | null, shownAt: 0, acceptedAt: 0, generationRequestId: null as string | null };
   const speculation = useAppState(s => s.speculation);
   const speculationSessionTimeSavedMs = useAppState(s => s.speculationSessionTimeSavedMs);
   const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId);

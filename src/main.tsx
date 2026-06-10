@@ -1360,15 +1360,7 @@ const {
       },
       attribution: createEmptyAttributionState(),
       thinkingEnabled,
-      promptSuggestionEnabled: false,
       sessionHooks: new Map(),
-      promptSuggestion: {
-        text: null,
-        promptId: null,
-        shownAt: 0,
-        acceptedAt: 0,
-        generationRequestId: null
-      },
       speculation: IDLE_SPECULATION_STATE,
       speculationSessionTimeSavedMs: 0,
       skillImprovement: {

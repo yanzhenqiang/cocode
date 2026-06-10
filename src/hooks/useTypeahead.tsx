@@ -382,7 +382,7 @@ export function useTypeahead({
   const [maxColumnWidth, setMaxColumnWidth] = useState<number | undefined>(undefined);
   const mcpResources = useAppState(s => s.mcp.resources);
   const store = useAppStateStore();
-  const promptSuggestion = useAppState(s => s.promptSuggestion);
+  const promptSuggestion = { text: null as string | null, shownAt: 0 };
   // PromptInput hides suggestion ghost text in teammate view — mirror that
   // gate here so Tab/rightArrow can't accept what isn't displayed.
   const isViewingTeammate = useAppState(s => !!s.viewingAgentTaskId);

@@ -3010,14 +3010,6 @@ export function REPL({
         ...prev.toolPermissionContext,
         mode: message.permissionMode
       } : prev.toolPermissionContext,
-      // Clear stale prompt suggestion from previous conversation state
-      promptSuggestion: {
-        text: null,
-        promptId: null,
-        shownAt: 0,
-        acceptedAt: 0,
-        generationRequestId: null
-      }
     }));
   }, [setMessages, setAppState]);
 

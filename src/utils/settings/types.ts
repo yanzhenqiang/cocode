@@ -752,13 +752,6 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'When true, fast mode does not persist across sessions. Each session starts with fast mode off.',
         ),
-      promptSuggestionEnabled: z
-        .boolean()
-        .optional()
-        .describe(
-          'When false, prompt suggestions are disabled. When absent or true, ' +
-            'prompt suggestions are enabled.',
-        ),
       showClearContextOnPlanAccept: z
         .boolean()
         .optional()
