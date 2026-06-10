@@ -47,7 +47,7 @@ function ModelPickerWrapper({
   const mainLoopModelForSession = useAppState(
     (s: AppState) => s.mainLoopModelForSession,
   )
-  const isFastMode = useAppState((s: AppState) => s.fastMode)
+  const isFastMode = false
   const setAppState = useSetAppState()
 
   const handleCancel = () => {
@@ -136,7 +136,7 @@ function SetModelAndClose({
   args: string
   onDone: (result?: string, options?: { display?: CommandResultDisplay }) => void
 }) {
-  const isFastMode = useAppState((s: AppState) => s.fastMode)
+  const isFastMode = false
   const setAppState = useSetAppState()
   const model = args === 'default' ? null : args
 

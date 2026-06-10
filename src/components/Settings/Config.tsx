@@ -106,7 +106,7 @@ export function Config({
   const verbose = useAppState(s_0 => s_0.verbose);
   const thinkingEnabled = useAppState(s_1 => s_1.thinkingEnabled);
   const isFastMode = useAppState(s_2 => isFastModeEnabled() ? s_2.fastMode : false);
-  const promptSuggestionEnabled = useAppState(s_3 => s_3.promptSuggestionEnabled);
+  const promptSuggestionEnabled = false;
   // Show auto in the default-mode dropdown when the user has opted in OR the
   // config is fully 'enabled' — even if currently circuit-broken ('disabled'),
   // an opted-in user should still see it in settings (it's a temporary state).

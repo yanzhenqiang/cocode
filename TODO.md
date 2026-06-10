@@ -8,6 +8,26 @@
 - [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings)
 - [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool)
 - [x] AppState 死字段 × 22: thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview, kairosEnabled, channelPermissionCallbacks, bagel*×3, replContext, teamContext, promptSuggestionEnabled, promptSuggestion×5, denialTracking, companionReaction, tungsten*×5, spinnerTip
+- [x] AppState agent + agentNameRegistry 字段
+
+---
+
+## 清理已删字段的残留消费者代码
+
+**原则：删 AppState 字段必须连带清理所有消费者，不留死引用。**
+
+### 当前残留
+
+| 字段 | 残留文件 | 状态 |
+|---|---|---|
+| `agentNameRegistry` | useTypeahead.tsx (已加 `\|\| []` guard) | ✓ 已处理 |
+| `promptSuggestionEnabled` | usePromptInputPlaceholder.ts, Config.tsx | 待清理 |
+| `promptSuggestion` | PromptInput.tsx, useTypeahead.tsx (已替换常量) | 待清理 |
+| `denialTracking` | permissions.ts (3 处读取) | 待清理 |
+| `companionReaction` | REPL.tsx (setAppState 已删) | ✓ 已处理 |
+| `spinnerTip` | REPL.tsx (已改 undefined 常量) | ✓ 已处理 |
+| `teamContext` | PromptInput, REPL, getNextPermissionMode, useTasksV2 | 待清理 |
+| `inbox` | 类型残留 | 待清理 |
 
 ---
 
