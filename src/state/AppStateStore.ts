@@ -14,7 +14,6 @@ import {
   type ToolPermissionContext,
 } from '../Tool.js'
 import type { TaskState } from '../tasks/types.js'
-import type { AgentColorName } from '../tools/AgentTool/agentColorManager.js'
 import type { AgentDefinitionsResult } from '../tools/AgentTool/loadAgentsDir.js'
 import type { AllowedPrompt } from '../tools/ExitPlanModeTool/ExitPlanModeV2Tool.js'
 import type { AgentId } from '../types/ids.js'
@@ -154,11 +153,6 @@ export type AppState = DeepImmutable<{
   }
   thinkingEnabled: boolean | undefined
   sessionHooks: SessionHooksState
-  // Standalone agent context for non-swarm sessions with custom name/color
-  standaloneAgentContext?: {
-    name: string
-    color?: AgentColorName
-  }
   // Worker sandbox permission requests (leader side) - for network access approval
   workerSandboxPermissions: {
     queue: Array<{
@@ -192,8 +186,6 @@ export type AppState = DeepImmutable<{
   }
   // Active overlays (Select dialogs, etc.) for Escape key coordination
   activeOverlays: ReadonlySet<string>
-  // Advisor model for server-side advisor tool (undefined = disabled).
-  advisorModel?: string
   // Effort value
   effortValue?: EffortValue
 }

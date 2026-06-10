@@ -24,7 +24,6 @@ import { type DownloadResult, downloadSessionFiles, type FilesApiConfig, parseFi
 import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
 import { getTools } from './tools.js';
-import { canUserConfigureAdvisor, getInitialAdvisorSetting, isAdvisorEnabled, isValidAdvisorModel, modelSupportsAdvisor } from './utils/advisor.js';
 import { count, uniq } from './utils/array.js';
 import { installAsciicastRecorder } from './utils/asciicast.js';
 import { getSubscriptionType, prefetchGcpCredentialsIfSafe, validateForceLoginOrg } from './utils/auth.js';
@@ -981,8 +980,6 @@ async function run(): Promise<CommanderCommand> {
     setInitialMainLoopModel(getUserSpecifiedModelSetting() || null);
     const initialMainLoopModel = getInitialMainLoopModel();
     const resolvedInitialModel = parseUserSpecifiedModel(initialMainLoopModel ?? getDefaultMainLoopModel());
-    // TODO: advisor feature removed with --advisor flag; revisit if needed
-    const advisorModel: string | undefined = undefined;
     // defaultView: 'chat' is a persisted opt-in — check entitlement and set
     // userMsgOptIn so the tool + prompt section activate. Interactive-only:
     // defaultView is a display preference; SDK sessions have no display, and
@@ -1371,9 +1368,6 @@ const {
       effortValue: parseEffortValue(options.effort) ?? getInitialEffortSetting(),
       activeOverlays: new Set<string>(),
       fastMode: getInitialFastModeSetting(resolvedInitialModel),
-      ...(isAdvisorEnabled() && advisorModel && {
-        advisorModel
-      }),
       // teamContext removed with swarm subsystem (v0.12.9).
     };
 
