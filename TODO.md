@@ -71,6 +71,47 @@
 
 ---
 
+## Ultraplan 远程任务（待删除）
+
+用户不使用 Ultraplan/CCR 远程任务功能。整组字段永远 null/undefined/false：
+
+| 字段 | 说明 |
+|---|---|
+| `ultraplanLaunching` | 防止重复启动的锁 |
+| `ultraplanSessionUrl` | 远程任务 URL |
+| `ultraplanPendingChoice` | 待用户选择 |
+| `ultraplanLaunchPending` | 启动前弹窗 |
+| `isUltraplanMode` | ✓ 已删 |
+
+连带可删：`onChangeAppState.ts` 中 ultraplan 相关逻辑、Ultraplan 相关 dialog 组件。
+
+## 多 Agent 协作字段（待删除）
+
+用户使用独立 Skill 代替多 Agent 协作。以下字段只服务于 Agent swarm：
+
+| 字段 | 引用 | 说明 |
+|---|---|---|
+| `coordinatorTaskIndex` | 17 | 协调器任务面板选中索引（-1=pill, 0=main, 1..N=agent） |
+| `foregroundedTaskId` | 26 | 前台显示的任务 ID |
+| `viewingAgentTaskId` | 28 | 正在查看的子 Agent 任务 ID |
+| `footerSelection` | 12 | FooterItem 含 'tasks','teams','companion' 等 |
+
+连带可删：`FooterItem` 类型中的 'teams'/'companion'/'bridge' 选项、CoordinatorAgentStatus 组件相关逻辑。
+
+## 待分析（后续）
+
+| 字段 | 引用 | 说明 |
+|---|---|---|
+| `isBriefOnly` | 33 | Settings 开关，默认关闭 |
+| `fastMode` | 191 | 字段已删，消费者待清 |
+| `statusLineText` | 7 | StatusLine 独占 |
+| `workerSandboxPermissions` | 10 | Worker 沙箱 |
+| `activeOverlays` | 9 | Esc 键协调 |
+| `advisorModel` | 48 | 服务端 advisor |
+| `standaloneAgentContext` | 16 | 独立 Agent 上下文 |
+
+---
+
 ## AppState 字段审计
 
 当前 UI 的数据流: **AppState (~50 字段)** → React 组件 → Ink 渲染器
