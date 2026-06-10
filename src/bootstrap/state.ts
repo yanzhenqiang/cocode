@@ -3,7 +3,6 @@ import { realpathSync } from 'fs'
 import sumBy from 'lodash-es/sumBy.js'
 import { cwd } from 'process'
 import type { HookEvent, ModelUsage } from 'src/entrypoints/agentSdkTypes.js'
-import type { AgentColorName } from 'src/tools/AgentTool/agentColorManager.js'
 import type { HookCallbackMatcher } from 'src/types/hooks.js'
 // Indirection for browser-sdk build (package.json "browser" field swaps
 // crypto.ts for crypto.browser.ts). Pure leaf re-export of node:crypto —
@@ -45,10 +44,8 @@ type State = {
   totalToolDuration: number
   turnHookDurationMs: number
   turnToolDurationMs: number
-  turnClassifierDurationMs: number
   turnToolCount: number
   turnHookCount: number
-  turnClassifierCount: number
   startTime: number
   lastInteractionTime: number
   totalLinesAdded: number
@@ -80,9 +77,6 @@ type State = {
   sessionId: SessionId
   // Parent session ID for tracking session lineage (e.g., plan mode -> implementation)
   parentSessionId: SessionId | undefined
-  // Agent color state
-  agentColorMap: Map<string, AgentColorName>
-  agentColorIndex: number
   // Last API request for bug reports
   lastAPIRequest: Omit<BetaMessageStreamParams, 'messages'> | null
   // Messages from the last API request (internal-only; reference, not clone).
@@ -113,11 +107,6 @@ type State = {
   // bootstrap a leaf of the import DAG).
   sessionCronTasks: SessionCronTask[]
   // Teams created this session via TeamCreate. cleanupSessionTeams()
-  // removes these on gracefulShutdown so subagent-created teams don't
-  // persist on disk forever (gh-32730). TeamDelete removes entries to
-  // avoid double-cleanup. Lives here (not teamHelpers.ts) so
-  // resetStateForTests() clears it between tests.
-  sessionCreatedTeams: Set<string>
   // Session-only trust flag for home directory (not persisted to disk)
   // When running from home dir, trust dialog is shown but not saved to disk.
   // This flag allows features requiring trust to work during the session.
@@ -242,10 +231,8 @@ function getInitialState(): State {
     totalToolDuration: 0,
     turnHookDurationMs: 0,
     turnToolDurationMs: 0,
-    turnClassifierDurationMs: 0,
     turnToolCount: 0,
     turnHookCount: 0,
-    turnClassifierCount: 0,
     startTime: Date.now(),
     lastInteractionTime: Date.now(),
     totalLinesAdded: 0,
@@ -279,8 +266,6 @@ function getInitialState(): State {
     sessionId: randomUUID() as SessionId,
     parentSessionId: undefined,
     // Agent color state
-    agentColorMap: new Map(),
-    agentColorIndex: 0,
     // Last API request for bug reports
     lastAPIRequest: null,
     lastAPIRequestMessages: null,
@@ -298,7 +283,6 @@ function getInitialState(): State {
     // Scheduled tasks disabled until flag or dialog enables them
     scheduledTasksEnabled: false,
     sessionCronTasks: [],
-    sessionCreatedTeams: new Set(),
     // Session-only trust flag (not persisted to disk)
     sessionTrustAccepted: false,
     // Session-only flag to disable session persistence to disk
@@ -613,23 +597,8 @@ export function getTurnToolCount(): number {
   return STATE.turnToolCount
 }
 
-export function getTurnClassifierDurationMs(): number {
-  return STATE.turnClassifierDurationMs
-}
 
-export function addToTurnClassifierDuration(duration: number): void {
-  STATE.turnClassifierDurationMs += duration
-  STATE.turnClassifierCount++
-}
 
-export function resetTurnClassifierDuration(): void {
-  STATE.turnClassifierDurationMs = 0
-  STATE.turnClassifierCount = 0
-}
-
-export function getTurnClassifierCount(): number {
-  return STATE.turnClassifierCount
-}
 
 export function getStatsStore(): {
   observe(name: string, value: number): void
@@ -1001,9 +970,6 @@ export function setQuestionPreviewFormat(format: 'markdown' | 'html'): void {
   STATE.questionPreviewFormat = format
 }
 
-export function getAgentColorMap(): Map<string, AgentColorName> {
-  return STATE.agentColorMap
-}
 
 export function getFlagSettingsPath(): string | undefined {
   return STATE.flagSettingsPath
@@ -1328,9 +1294,6 @@ export function getPlanSlugCache(): Map<string, string> {
   return STATE.planSlugCache
 }
 
-export function getSessionCreatedTeams(): Set<string> {
-  return STATE.sessionCreatedTeams
-}
 
 // Invoked skills tracking for preservation across compaction
 export type InvokedSkillInfo = {
