@@ -88,7 +88,6 @@ export type AppState = DeepImmutable<{
   mainLoopModel: ModelSetting
   mainLoopModelForSession: ModelSetting
   statusLineText: string | undefined
-  expandedView: 'none' | 'tasks' | 'teammates'
   // Which footer pill is focused (arrow-key navigation below the prompt).
   toolPermissionContext: ToolPermissionContext
 }> & {
@@ -131,7 +130,6 @@ export type AppState = DeepImmutable<{
     }>
     selectedIndex: number
   }
-  speculation: SpeculationState
   // Auth version - incremented on login/logout to trigger re-fetching of auth-dependent data
   authVersion: number
   // Initial message to process (from CLI args or plan mode exit)
@@ -143,13 +141,6 @@ export type AppState = DeepImmutable<{
     // Session-scoped permission rules from plan mode (e.g., "run tests", "install dependencies")
     allowedPrompts?: AllowedPrompt[]
   } | null
-  // Pending plan verification state (set when exiting plan mode)
-  // Used by VerifyPlanExecution tool to trigger background verification
-  pendingPlanVerification?: {
-    plan: string
-    verificationStarted: boolean
-    verificationCompleted: boolean
-  }
   // Active overlays (Select dialogs, etc.) for Escape key coordination
   activeOverlays: ReadonlySet<string>
   // Effort value
@@ -168,7 +159,6 @@ export function getDefaultAppState(): AppState {
     mainLoopModel: null, // alias, full name (as with --model or env var), or null (default)
     mainLoopModelForSession: null,
     statusLineText: undefined,
-    expandedView: 'none',
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,
@@ -200,7 +190,6 @@ export function getDefaultAppState(): AppState {
       queue: [],
       selectedIndex: 0,
     },
-    speculation: IDLE_SPECULATION_STATE,
     authVersion: 0,
     initialMessage: null,
     effortValue: undefined,

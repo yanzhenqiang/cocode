@@ -547,7 +547,7 @@ export function REPL({
   // call entirely in external builds, so this is safe despite looking conditional.
   // These fields contain excluded strings that must not appear in external builds.
   const spinnerTip = undefined;
-  const showExpandedTodos = useAppState(s => s.expandedView) === 'tasks';
+  const showExpandedTodos = 'none' === 'tasks';
   const pendingWorkerRequest = null;
   const pendingSandboxRequest = null;
   const teamContext = undefined;

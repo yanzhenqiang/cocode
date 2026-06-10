@@ -1354,7 +1354,6 @@ const {
       attribution: createEmptyAttributionState(),
       thinkingEnabled,
       sessionHooks: new Map(),
-      speculation: IDLE_SPECULATION_STATE,
       workerSandboxPermissions: {
         queue: [],
         selectedIndex: 0
