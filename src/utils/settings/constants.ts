@@ -1,4 +1,3 @@
-import { getAllowedSettingSources } from '../../bootstrap/state.js'
 
 /**
  * All possible sources where settings can come from
@@ -157,13 +156,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
  * @returns Array of enabled SettingSource values
  */
 export function getEnabledSettingSources(): SettingSource[] {
-  const allowed = getAllowedSettingSources()
-
-  // Always include policy and flag settings
-  const result = new Set<SettingSource>(allowed)
-  result.add('policySettings')
-  result.add('flagSettings')
-  return Array.from(result)
+  return ['userSettings', 'projectSettings', 'localSettings', 'flagSettings', 'policySettings']
 }
 
 /**

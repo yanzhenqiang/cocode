@@ -114,7 +114,7 @@ import { setCwd } from 'src/utils/Shell.js';
 import { type ProcessedResume, processResumedConversation } from 'src/utils/sessionRestore.js';
 import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
-import { type ChannelEntry, getInitialMainLoopModel, setAllowedChannels, setAllowedSettingSources, setCwdState, setInitialMainLoopModel, setOriginalCwd, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
+import { type ChannelEntry, getInitialMainLoopModel, setAllowedChannels, setCwdState, setInitialMainLoopModel, setOriginalCwd, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/permissions/autoModeState.js') as typeof import('./utils/permissions/autoModeState.js') : null;
@@ -319,7 +319,6 @@ function loadSettingsFromFlag(settingsFile: string): void {
 function loadSettingSourcesFromFlag(settingSourcesArg: string): void {
   try {
     const sources = parseSettingSourcesFlag(settingSourcesArg);
-    setAllowedSettingSources(sources);
     resetSettingsCache();
   } catch (error) {
     if (error instanceof Error) {

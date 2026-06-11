@@ -64,7 +64,6 @@ type State = {
   userMsgOptIn: boolean
   questionPreviewFormat: 'markdown' | 'html' | undefined
   flagSettingsPath: string | undefined
-  allowedSettingSources: SettingSource[]
   sessionIngressToken: string | null | undefined
   oauthTokenFromFd: string | null | undefined
   apiKeyFromFd: string | null | undefined
@@ -236,13 +235,6 @@ function getInitialState(): State {
     oauthTokenFromFd: undefined,
     apiKeyFromFd: undefined,
     flagSettingsPath: undefined,
-    allowedSettingSources: [
-      'userSettings',
-      'projectSettings',
-      'localSettings',
-      'flagSettings',
-      'policySettings',
-    ],
     statsStore: null,
     sessionId: randomUUID() as SessionId,
     parentSessionId: undefined,
@@ -995,13 +987,7 @@ export function addToInMemoryErrorLog(errorInfo: {
   STATE.inMemoryErrorLog.push(errorInfo)
 }
 
-export function getAllowedSettingSources(): SettingSource[] {
-  return STATE.allowedSettingSources
-}
 
-export function setAllowedSettingSources(sources: SettingSource[]): void {
-  STATE.allowedSettingSources = sources
-}
 
 export function preferThirdPartyAuthentication(): boolean {
   // IDE extension should behave as 1P for authentication reasons.
