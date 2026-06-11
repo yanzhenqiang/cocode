@@ -1,5 +1,4 @@
 import { stat } from 'fs/promises'
-import { getClientType } from '../bootstrap/state.js'
 import { TERMINAL_OUTPUT_TAGS } from '../constants/xml.js'
 import type { AppState } from '../state/AppState.js'
 import { FILE_EDIT_TOOL_NAME } from '../tools/FileEditTool/constants.js'

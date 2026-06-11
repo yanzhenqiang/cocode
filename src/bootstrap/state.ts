@@ -63,7 +63,6 @@ type State = {
   // tool_results.
   strictToolResultPairing: boolean
   userMsgOptIn: boolean
-  clientType: string
   questionPreviewFormat: 'markdown' | 'html' | undefined
   flagSettingsPath: string | undefined
   allowedSettingSources: SettingSource[]
@@ -234,7 +233,6 @@ function getInitialState(): State {
     isInteractive: false,
     strictToolResultPairing: false,
     userMsgOptIn: false,
-    clientType: 'cli',
     questionPreviewFormat: undefined,
     sessionIngressToken: undefined,
     oauthTokenFromFd: undefined,
@@ -899,13 +897,7 @@ export function setIsInteractive(value: boolean): void {
   STATE.isInteractive = value
 }
 
-export function getClientType(): string {
-  return STATE.clientType
-}
 
-export function setClientType(type: string): void {
-  STATE.clientType = type
-}
 
 export function getStrictToolResultPairing(): boolean {
   return STATE.strictToolResultPairing
@@ -1021,7 +1013,7 @@ export function setAllowedSettingSources(sources: SettingSource[]): void {
 
 export function preferThirdPartyAuthentication(): boolean {
   // IDE extension should behave as 1P for authentication reasons.
-  return getIsNonInteractiveSession() && STATE.clientType !== 'claude-vscode'
+  return getIsNonInteractiveSession()
 }
 
 
