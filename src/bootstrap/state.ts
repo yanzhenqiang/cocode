@@ -66,7 +66,6 @@ type State = {
   clientType: string
   questionPreviewFormat: 'markdown' | 'html' | undefined
   flagSettingsPath: string | undefined
-  flagSettingsInline: Record<string, unknown> | null
   allowedSettingSources: SettingSource[]
   sessionIngressToken: string | null | undefined
   oauthTokenFromFd: string | null | undefined
@@ -241,7 +240,6 @@ function getInitialState(): State {
     oauthTokenFromFd: undefined,
     apiKeyFromFd: undefined,
     flagSettingsPath: undefined,
-    flagSettingsInline: null,
     allowedSettingSources: [
       'userSettings',
       'projectSettings',
@@ -947,15 +945,7 @@ export function setFlagSettingsPath(path: string | undefined): void {
   STATE.flagSettingsPath = path
 }
 
-export function getFlagSettingsInline(): Record<string, unknown> | null {
-  return STATE.flagSettingsInline
-}
 
-export function setFlagSettingsInline(
-  settings: Record<string, unknown> | null,
-): void {
-  STATE.flagSettingsInline = settings
-}
 
 export function getSessionIngressToken(): string | null | undefined {
   return STATE.sessionIngressToken

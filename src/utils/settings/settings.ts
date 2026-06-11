@@ -3,7 +3,6 @@ import mergeWith from 'lodash-es/mergeWith.js'
 import { dirname, join, resolve } from 'path'
 import { z } from 'zod/v4'
 import {
-  getFlagSettingsInline,
   getFlagSettingsPath,
   getOriginalCwd,
 } from '../../bootstrap/state.js'
@@ -340,21 +339,6 @@ function getSettingsForSourceUncached(
   const { settings: fileSettings } = settingsFilePath
     ? parseSettingsFile(settingsFilePath)
     : { settings: null }
-
-  // For flagSettings, merge in any inline settings set via the SDK
-  if (source === 'flagSettings') {
-    const inlineSettings = getFlagSettingsInline()
-    if (inlineSettings) {
-      const parsed = SettingsSchema().safeParse(inlineSettings)
-      if (parsed.success) {
-        return mergeWith(
-          fileSettings || {},
-          parsed.data,
-          settingsMergeCustomizer,
-        ) as SettingsJson
-      }
-    }
-  }
 
   return fileSettings
 }
@@ -750,20 +734,6 @@ function loadSettingsFromDisk(): SettingsWithErrors {
         }
       }
 
-      // For flagSettings, also merge any inline settings set via the SDK
-      if (source === 'flagSettings') {
-        const inlineSettings = getFlagSettingsInline()
-        if (inlineSettings) {
-          const parsed = SettingsSchema().safeParse(inlineSettings)
-          if (parsed.success) {
-            mergedSettings = mergeWith(
-              mergedSettings,
-              parsed.data,
-              settingsMergeCustomizer,
-            )
-          }
-        }
-      }
     }
 
     logForDiagnosticsNoPII('info', 'settings_load_completed', {
