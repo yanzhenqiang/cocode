@@ -112,6 +112,7 @@ type State = {
       invokedAt: number
       agentId: string | null
     }
+	  >
   // SDK-provided betas (e.g., context-1m-2025-08-07)
   // Main thread agent type (from --agent flag or settings)
   mainThreadAgentType: string | undefined
@@ -1077,18 +1078,6 @@ export function clearInvokedSkillsForAgent(agentId: string): void {
       STATE.invokedSkills.delete(key)
     }
   }
-}
-
-// Slow operations tracking removed (was internal-only).
-// Functions kept as no-ops to avoid breaking callers.
-
-const EMPTY_SLOW_OPERATIONS: ReadonlyArray<{
-  operation: string
-  durationMs: number
-  timestamp: number
-}> = []
-
-  return EMPTY_SLOW_OPERATIONS
 }
 
 export function getMainThreadAgentType(): string | undefined {
