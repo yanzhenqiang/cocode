@@ -64,7 +64,6 @@ type State = {
   strictToolResultPairing: boolean
   userMsgOptIn: boolean
   clientType: string
-  sessionSource: string | undefined
   questionPreviewFormat: 'markdown' | 'html' | undefined
   flagSettingsPath: string | undefined
   flagSettingsInline: Record<string, unknown> | null
@@ -237,7 +236,6 @@ function getInitialState(): State {
     strictToolResultPairing: false,
     userMsgOptIn: false,
     clientType: 'cli',
-    sessionSource: undefined,
     questionPreviewFormat: undefined,
     sessionIngressToken: undefined,
     oauthTokenFromFd: undefined,
@@ -930,13 +928,7 @@ export function setUserMsgOptIn(value: boolean): void {
   STATE.userMsgOptIn = value
 }
 
-export function getSessionSource(): string | undefined {
-  return STATE.sessionSource
-}
 
-export function setSessionSource(source: string): void {
-  STATE.sessionSource = source
-}
 
 export function getQuestionPreviewFormat(): 'markdown' | 'html' | undefined {
   return STATE.questionPreviewFormat
