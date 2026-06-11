@@ -415,16 +415,6 @@ export async function main() {
 
     return 'cli';
   })();
-  const previewFormat = process.env.CLAUDE_CODE_QUESTION_PREVIEW_FORMAT;
-  if (previewFormat === 'markdown' || previewFormat === 'html') {
-    setQuestionPreviewFormat(previewFormat);
-  } else if (!clientType.startsWith('sdk-') &&
-  // Desktop and CCR pass previewFormat via toolConfig; when the feature is
-  // gated off they pass undefined — don't override that with markdown.
-  clientType !== 'claude-desktop' && clientType !== 'local-agent') {
-    setQuestionPreviewFormat('markdown');
-  }
-
   profileCheckpoint('main_client_type_determined');
 
   // Parse and load settings flags early, before init()
