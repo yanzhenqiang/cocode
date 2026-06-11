@@ -4,7 +4,6 @@ import {
   checkStatsigFeatureGate_CACHED_MAY_BE_STALE,
   getFeatureValue_CACHED_MAY_BE_STALE,
 } from 'src/services/analytics/growthbook.js'
-import { getSdkBetas } from '../bootstrap/state.js'
 import {
   CLAUDE_CODE_20250219_BETA_HEADER,
   CONTEXT_1M_BETA_HEADER,
@@ -328,7 +327,7 @@ export function getMergedBetas(
     }
   }
 
-  const sdkBetas = getSdkBetas()
+  const sdkBetas = undefined
 
   if (!sdkBetas || sdkBetas.length === 0) {
     return baseBetas

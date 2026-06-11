@@ -759,7 +759,7 @@ function getContextUsedPercent(usage: {
     mainLoopModel: getMainLoopModel(),
     exceeds200kTokens: false
   });
-  const contextWindowSize = getContextWindowForModel(runtimeModel, getSdkBetas());
+  const contextWindowSize = getContextWindowForModel(runtimeModel, undefined);
   const {
     used
   } = calculateContextPercentages({

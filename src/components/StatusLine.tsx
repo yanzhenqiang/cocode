@@ -3,7 +3,6 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { logEvent } from 'src/services/analytics/index.js';
 import { useAppState, useSetAppState } from 'src/state/AppState.js';
 import type { PermissionMode } from 'src/utils/permissions/PermissionMode.js';
-import { getMainThreadAgentType, getOriginalCwd, getSdkBetas, getSessionId } from '../bootstrap/state.js';
 import { DEFAULT_OUTPUT_STYLE_NAME } from '../constants/outputStyles.js';
 import { useNotifications } from '../context/notifications.js';
 import { useMainLoopModel } from '../hooks/useMainLoopModel.js';
@@ -36,7 +35,7 @@ function buildStatusLineCommandInput(permissionMode: PermissionMode, exceeds200k
   });
   const outputStyleName = settings?.outputStyle || DEFAULT_OUTPUT_STYLE_NAME;
   const currentUsage = getCurrentUsage(messages);
-  const contextWindowSize = getContextWindowForModel(runtimeModel, getSdkBetas());
+  const contextWindowSize = getContextWindowForModel(runtimeModel, undefined);
   const contextPercentages = calculateContextPercentages(currentUsage, contextWindowSize);
   const sessionId = getSessionId();
   const sessionName = getCurrentSessionTitle(sessionId);

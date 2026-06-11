@@ -1,6 +1,5 @@
 import { z } from 'zod/v4'
 import {
-  getAllowedChannels,
   handlePlanModeTransition,
 } from '../../bootstrap/state.js'
 import type { Tool } from '../../Tool.js'

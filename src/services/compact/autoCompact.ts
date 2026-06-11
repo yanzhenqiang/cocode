@@ -1,6 +1,5 @@
 import { feature } from 'bun:bundle'
 import { markPostCompaction } from 'src/bootstrap/state.js'
-import { getSdkBetas } from '../../bootstrap/state.js'
 import type { QuerySource } from '../../constants/querySource.js'
 import type { ToolUseContext } from '../../Tool.js'
 import type { Message } from '../../types/message.js'
@@ -37,7 +36,7 @@ export function getEffectiveContextWindowSize(model: string): number {
     getMaxOutputTokensForModel(model),
     MAX_OUTPUT_TOKENS_FOR_SUMMARY,
   )
-  let contextWindow = getContextWindowForModel(model, getSdkBetas())
+  let contextWindow = getContextWindowForModel(model, undefined)
 
   const autoCompactWindow = process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW
   if (autoCompactWindow) {
@@ -116,7 +115,7 @@ export function calculateTokenWarningState(
   // display, so users see remaining context relative to the model's full capacity.
   // The threshold (which subtracts buffer) should only affect when we warn/compact,
   // not what percentage we display.
-  const rawContextWindow = getContextWindowForModel(model, getSdkBetas())
+  const rawContextWindow = getContextWindowForModel(model, undefined)
   const percentLeft = Math.max(
     0,
     Math.round(((rawContextWindow - tokenUsage) / rawContextWindow) * 100),
@@ -247,7 +246,7 @@ export async function autoCompactIfNeeded(
     return { wasCompacted: false }
   }
 
-  const contextWindow = getContextWindowForModel(model, getSdkBetas())
+  const contextWindow = getContextWindowForModel(model, undefined)
 
   const partitioned = partitionContext(messages, {
     contextWindow,

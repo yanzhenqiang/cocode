@@ -1,7 +1,6 @@
 import { writeFile } from 'fs/promises'
 import { z } from 'zod/v4'
 import {
-  getAllowedChannels,
   hasExitedPlanModeInSession,
   setHasExitedPlanMode,
   setNeedsAutoModeExitAttachment,

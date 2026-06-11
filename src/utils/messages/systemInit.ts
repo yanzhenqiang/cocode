@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto'
-import { getSdkBetas, getSessionId } from 'src/bootstrap/state.js'
 import { DEFAULT_OUTPUT_STYLE_NAME } from 'src/constants/outputStyles.js'
 import type {
   ApiKeySource,
@@ -69,7 +68,7 @@ export function buildSystemInitMessage(inputs: SystemInitInputs): SDKMessage {
       .filter(c => c.userInvocable !== false)
       .map(c => c.name),
     apiKeySource: getAnthropicApiKeyWithSource().source as ApiKeySource,
-    betas: getSdkBetas(),
+    betas: undefined,
     claude_code_version: MACRO.VERSION,
     output_style: outputStyle,
     agents: inputs.agents.map(agent => agent.agentType),

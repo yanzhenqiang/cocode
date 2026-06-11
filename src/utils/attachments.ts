@@ -133,7 +133,6 @@ import type { TaskType, TaskStatus } from '../Task.js'
 import {
   getOriginalCwd,
   getSessionId,
-  getSdkBetas,
   getTotalOutputTokens,
   getCurrentTurnTokenBudget,
   getTurnOutputTokens,
@@ -143,8 +142,6 @@ import {
   setNeedsPlanModeExitAttachment,
   needsAutoModeExitAttachment,
   setNeedsAutoModeExitAttachment,
-  getLastEmittedDate,
-  setLastEmittedDate,
 } from '../bootstrap/state.js'
 import type { QuerySource } from '../constants/querySource.js'
 import {
@@ -1280,11 +1277,10 @@ export function getDateChangeAttachments(
   messages: Message[] | undefined,
 ): Attachment[] {
   const currentDate = getLocalISODate()
-  const lastDate = getLastEmittedDate()
+  const lastDate = null
 
   if (lastDate === null) {
     // First turn — just record, no attachment needed
-    setLastEmittedDate(currentDate)
     return []
   }
 
@@ -1292,7 +1288,6 @@ export function getDateChangeAttachments(
     return []
   }
 
-  setLastEmittedDate(currentDate)
 
   // Assistant mode: flush yesterday's transcript to the per-day file so
   // the /dream skill (1–5am local) finds it even if no compaction fires
@@ -2508,7 +2503,7 @@ async function getSkillListingAttachments(
   // Format within budget using existing logic
   const contextWindowTokens = getContextWindowForModel(
     toolUseContext.options.mainLoopModel,
-    getSdkBetas(),
+    undefined,
   )
   const content = formatCommandsWithinBudget(newSkills, contextWindowTokens)
 
@@ -3347,7 +3342,7 @@ export function getCompactionReminderAttachment(
     return []
   }
 
-  const contextWindow = getContextWindowForModel(model, getSdkBetas())
+  const contextWindow = getContextWindowForModel(model, undefined)
   if (contextWindow < 1_000_000) {
     return []
   }

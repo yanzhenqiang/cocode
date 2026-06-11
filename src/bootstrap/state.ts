@@ -122,13 +122,11 @@ type State = {
     timestamp: number
   }>
   // SDK-provided betas (e.g., context-1m-2025-08-07)
-  sdkBetas: string[] | undefined
   // Main thread agent type (from --agent flag or settings)
   mainThreadAgentType: string | undefined
   // System prompt section cache state
   systemPromptSectionCache: Map<string, string | null>
   // Last date emitted to the model (for detecting midnight date changes)
-  lastEmittedDate: string | null
   // Additional directories from --add-dir flag (for CLAUDE.md loading)
   additionalDirectoriesForClaudeMd: string[]
   // Channel server allowlist from --channels flag (servers whose channel
@@ -136,11 +134,9 @@ type State = {
   // the tag decides trust model: 'plugin' → marketplace verification +
   // allowlist, 'server' → allowlist always fails (schema is plugin-only).
   // Either kind needs entry.dev to bypass allowlist.
-  allowedChannels: ChannelEntry[]
   // True if any entry in allowedChannels came from
   // --dangerously-load-development-channels (so ChannelsNotice can name the
   // right flag in policy-blocked messages)
-  hasDevChannels: boolean
   // Dir containing the session's `.jsonl`; null = derive from originalCwd.
   sessionProjectDir: string | null
   // Cached prompt cache 1h TTL allowlist from GrowthBook (session-stable)
@@ -259,18 +255,14 @@ function getInitialState(): State {
     // Track slow operations for dev bar display
     slowOperations: [],
     // SDK-provided betas
-    sdkBetas: undefined,
     // Main thread agent type
     mainThreadAgentType: undefined,
     // System prompt section cache state
     systemPromptSectionCache: new Map(),
     // Last date emitted to the model
-    lastEmittedDate: null,
     // Additional directories from --add-dir flag (for CLAUDE.md loading)
     additionalDirectoriesForClaudeMd: [],
     // Channel server allowlist from --channels flag
-    allowedChannels: [],
-    hasDevChannels: false,
     // Session project dir (null = derive from originalCwd)
     sessionProjectDir: null,
     // Prompt cache 1h allowlist (null = not yet fetched from GrowthBook)
@@ -760,13 +752,7 @@ export function setInitialMainLoopModel(model: ModelSetting): void {
   STATE.initialMainLoopModel = model
 }
 
-export function getSdkBetas(): string[] | undefined {
-  return STATE.sdkBetas
-}
 
-export function setSdkBetas(betas: string[] | undefined): void {
-  STATE.sdkBetas = betas
-}
 
 
 // Only used in tests
@@ -1193,13 +1179,7 @@ export function clearSystemPromptSectionState(): void {
 
 // Last emitted date accessors (for detecting midnight date changes)
 
-export function getLastEmittedDate(): string | null {
-  return STATE.lastEmittedDate
-}
 
-export function setLastEmittedDate(date: string | null): void {
-  STATE.lastEmittedDate = date
-}
 
 export function getAdditionalDirectoriesForClaudeMd(): string[] {
   return STATE.additionalDirectoriesForClaudeMd
@@ -1211,13 +1191,7 @@ export function setAdditionalDirectoriesForClaudeMd(
   STATE.additionalDirectoriesForClaudeMd = directories
 }
 
-export function getAllowedChannels(): ChannelEntry[] {
-  return STATE.allowedChannels
-}
 
-export function setAllowedChannels(entries: ChannelEntry[]): void {
-  STATE.allowedChannels = entries
-}
 
 export function getHasDevChannels(): boolean {
   return STATE.hasDevChannels
