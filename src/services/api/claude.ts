@@ -108,15 +108,11 @@ import {
   APIUserAbortError,
 } from '@anthropic-ai/sdk/error'
 import {
-  getAfkModeHeaderLatched,
   getCacheEditingHeaderLatched,
-  getFastModeHeaderLatched,
   getLastApiCompletionTimestamp,
   getSessionId,
   getThinkingClearLatched,
-  setAfkModeHeaderLatched,
   setCacheEditingHeaderLatched,
-  setFastModeHeaderLatched,
   setLastMainRequestId,
   setThinkingClearLatched,
 } from 'src/bootstrap/state.js'
@@ -1321,7 +1317,7 @@ async function* queryModel(
   // Per-call gates (isAgenticQuery, querySource===repl_main_thread) stay
   // per-call so non-agentic queries keep their own stable header set.
 
-  let afkHeaderLatched = getAfkModeHeaderLatched() === true
+  let afkHeaderLatched = false
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     if (
       !afkHeaderLatched &&
@@ -1330,14 +1326,12 @@ async function* queryModel(
       (autoModeStateModule?.isAutoModeActive() ?? false)
     ) {
       afkHeaderLatched = true
-      setAfkModeHeaderLatched(true)
     }
   }
 
-  let fastModeHeaderLatched = getFastModeHeaderLatched() === true
+  let fastModeHeaderLatched = false
   if (!fastModeHeaderLatched && isFastMode) {
     fastModeHeaderLatched = true
-    setFastModeHeaderLatched(true)
   }
 
   let cacheEditingHeaderLatched = getCacheEditingHeaderLatched() === true
