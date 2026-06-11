@@ -94,8 +94,6 @@ type State = {
   // When running from home dir, trust dialog is shown but not saved to disk.
   // This flag allows features requiring trust to work during the session.
   sessionTrustAccepted: boolean
-  // Session-only flag to disable session persistence to disk
-  sessionPersistenceDisabled: boolean
   // Track if user has exited plan mode in this session (for re-entry guidance)
   hasExitedPlanMode: boolean
   // Track if we need to show the plan mode exit attachment (one-time notification)
@@ -247,7 +245,6 @@ function getInitialState(): State {
     // Session-only trust flag (not persisted to disk)
     sessionTrustAccepted: false,
     // Session-only flag to disable session persistence to disk
-    sessionPersistenceDisabled: false,
     // Track if user has exited plan mode in this session
     hasExitedPlanMode: false,
     // Track if we need to show the plan mode exit attachment
@@ -985,13 +982,7 @@ export function getSessionTrustAccepted(): boolean {
   return STATE.sessionTrustAccepted
 }
 
-export function setSessionPersistenceDisabled(disabled: boolean): void {
-  STATE.sessionPersistenceDisabled = disabled
-}
 
-export function isSessionPersistenceDisabled(): boolean {
-  return STATE.sessionPersistenceDisabled
-}
 
 export function hasExitedPlanModeInSession(): boolean {
   return STATE.hasExitedPlanMode

@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { useNotifications } from 'src/context/notifications.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
 import { useAppState, useAppStateStore, useSetAppState } from 'src/state/AppState.js';
-import { getSdkBetas, getSessionId, isSessionPersistenceDisabled, setHasExitedPlanMode, setNeedsAutoModeExitAttachment, setNeedsPlanModeExitAttachment } from '../../../bootstrap/state.js';
 import { generateSessionName } from '../../../commands/rename/generateSessionName.js';
 const launchUltraplan = async () => {};
 import { PRODUCT_DISPLAY_NAME } from '../../../constants/product.js';
@@ -80,7 +79,7 @@ export function buildPermissionUpdates(mode: PermissionMode, allowedPrompts?: Al
  * Mirrors /rename: kebab-case name, updates the prompt-border badge.
  */
 export function autoNameSessionFromPlan(plan: string, setAppState: (updater: (prev: AppState) => AppState) => void, isClearContext: boolean): void {
-  if (isSessionPersistenceDisabled() || getSettings_DEPRECATED()?.cleanupPeriodDays === 0) {
+  if (false || getSettings_DEPRECATED()?.cleanupPeriodDays === 0) {
     return;
   }
   // On clear-context, the current session is about to be abandoned — its

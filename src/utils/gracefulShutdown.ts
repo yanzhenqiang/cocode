@@ -7,7 +7,6 @@ import {
   getIsScrollDraining,
   getLastMainRequestId,
   getSessionId,
-  isSessionPersistenceDisabled,
 } from '../bootstrap/state.js'
 import instances from '../ink/instances.js'
 import {
@@ -154,7 +153,7 @@ function printResumeHint(): void {
   if (
     process.stdout.isTTY &&
     true &&
-    !isSessionPersistenceDisabled()
+    !false
   ) {
     try {
       const sessionId = getSessionId()

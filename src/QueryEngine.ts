@@ -3,7 +3,6 @@ import { randomUUID } from 'crypto'
 import last from 'lodash-es/last.js'
 import {
   getSessionId,
-  isSessionPersistenceDisabled,
 } from 'src/bootstrap/state.js'
 import type {
   PermissionMode,
@@ -197,7 +196,7 @@ export class QueryEngine {
 
     this.discoveredSkillNames.clear()
     setCwd(cwd)
-    const persistSession = !isSessionPersistenceDisabled()
+    const persistSession = !false
     const startTime = Date.now()
 
     // Wrap canUseTool to track permission denials

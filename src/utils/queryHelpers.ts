@@ -2,7 +2,6 @@ import type { ToolUseBlock } from '@anthropic-ai/sdk/resources/index.mjs'
 import last from 'lodash-es/last.js'
 import {
   getSessionId,
-  isSessionPersistenceDisabled,
 } from 'src/bootstrap/state.js'
 import type { SDKMessage } from 'src/entrypoints/agentSdkTypes.js'
 import type { CanUseToolFn } from '../hooks/useCanUseTool.js'
@@ -226,7 +225,7 @@ export async function* handleOrphanedPermission(
   mutableMessages: Message[],
   processUserInputContext: ProcessUserInputContext,
 ): AsyncGenerator<SDKMessage, void, unknown> {
-  const persistSession = !isSessionPersistenceDisabled()
+  const persistSession = !false
   const { permissionResult, assistantMessage } = orphanedPermission
   const { toolUseID } = permissionResult
 
