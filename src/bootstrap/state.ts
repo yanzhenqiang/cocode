@@ -101,8 +101,6 @@ type State = {
   // Track if we need to show the plan mode exit attachment (one-time notification)
   needsPlanModeExitAttachment: boolean
   // Track if we need to show the auto mode exit attachment (one-time notification)
-  // SDK init event state - jsonSchema for structured output
-  initJsonSchema: Record<string, unknown> | null
   // Registered hooks - SDK callbacks and plugin native hooks
   registeredHooks: Partial<Record<HookEvent, RegisteredHookMatcher[]>> | null
   // Cache for plan slugs: sessionId -> wordSlug
@@ -256,7 +254,6 @@ function getInitialState(): State {
     needsPlanModeExitAttachment: false,
     // Track if we need to show the auto mode exit attachment
     // SDK init event state
-    initJsonSchema: null,
     registeredHooks: null,
     // Cache for plan slugs
     planSlugCache: new Map(),
@@ -1037,13 +1034,7 @@ export function setNeedsAutoModeExitAttachment(_value: boolean): void {}
 export function handleAutoModeTransition(_fromMode: string, _toMode: string): void {}
 
 // SDK init event state
-export function setInitJsonSchema(schema: Record<string, unknown>): void {
-  STATE.initJsonSchema = schema
-}
 
-export function getInitJsonSchema(): Record<string, unknown> | null {
-  return STATE.initJsonSchema
-}
 
 export function registerHookCallbacks(
   hooks: Partial<Record<HookEvent, RegisteredHookMatcher[]>>,
@@ -1090,7 +1081,6 @@ export function clearRegisteredPluginHooks(): void {
 }
 
 export function resetSdkInitState(): void {
-  STATE.initJsonSchema = null
   STATE.registeredHooks = null
 }
 
