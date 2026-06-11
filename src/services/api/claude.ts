@@ -112,16 +112,12 @@ import {
   getCacheEditingHeaderLatched,
   getFastModeHeaderLatched,
   getLastApiCompletionTimestamp,
-  getPromptCache1hAllowlist,
-  getPromptCache1hEligible,
   getSessionId,
   getThinkingClearLatched,
   setAfkModeHeaderLatched,
   setCacheEditingHeaderLatched,
   setFastModeHeaderLatched,
   setLastMainRequestId,
-  setPromptCache1hAllowlist,
-  setPromptCache1hEligible,
   setThinkingClearLatched,
 } from 'src/bootstrap/state.js'
 import {
@@ -371,37 +367,8 @@ export function getCacheControl({
  * The allowlist is cached in STATE for session stability — prevents mixed
  * TTLs when GrowthBook's disk cache updates mid-request.
  */
-function should1hCacheTTL(querySource?: QuerySource): boolean {
-  // Latch eligibility in bootstrap state for session stability — prevents
-  // mid-session overage flips from changing the cache_control TTL, which
-  // would bust the server-side prompt cache (~20K tokens per flip).
-  let userEligible = getPromptCache1hEligible()
-  if (userEligible === null) {
-    userEligible =
-      false
-    setPromptCache1hEligible(userEligible)
-  }
-  if (!userEligible) return false
-
-  // Cache allowlist in bootstrap state for session stability — prevents mixed
-  // TTLs when GrowthBook's disk cache updates mid-request
-  let allowlist = getPromptCache1hAllowlist()
-  if (allowlist === null) {
-    const config = getFeatureValue_CACHED_MAY_BE_STALE<{
-      allowlist?: string[]
-    }>('tengu_prompt_cache_1h_config', {})
-    allowlist = config.allowlist ?? []
-    setPromptCache1hAllowlist(allowlist)
-  }
-
-  return (
-    querySource !== undefined &&
-    allowlist.some(pattern =>
-      pattern.endsWith('*')
-        ? querySource.startsWith(pattern.slice(0, -1))
-        : querySource === pattern,
-    )
-  )
+function should1hCacheTTL(_querySource?: QuerySource): boolean {
+  return false
 }
 
 /**
