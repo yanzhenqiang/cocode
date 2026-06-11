@@ -2082,11 +2082,7 @@ async function* queryModel(
 
             // Update cost
             const costUSDForPart = calculateUSDCost(resolvedModel, usage)
-            costUSD += addToTotalSessionCost(
-              costUSDForPart,
-              usage,
-              options.model,
-            )
+            // Cost tracking removed — addToTotalSessionCost deleted from bootstrap/state
 
             const refusalMessage = getErrorMessageIfRefusal(
               part.delta.stop_reason,
@@ -2637,11 +2633,7 @@ async function* queryModel(
       usage = updateUsage(EMPTY_USAGE, fallbackUsage)
       stopReason = fallbackMessage.message.stop_reason
       const fallbackCost = calculateUSDCost(resolvedModel, fallbackUsage)
-      costUSD += addToTotalSessionCost(
-        fallbackCost,
-        fallbackUsage,
-        options.model,
-      )
+      // Cost tracking removed — addToTotalSessionCost deleted from bootstrap/state
     }
   }
 
