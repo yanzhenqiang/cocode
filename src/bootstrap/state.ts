@@ -103,7 +103,6 @@ type State = {
   // Track if we need to show the plan mode exit attachment (one-time notification)
   needsPlanModeExitAttachment: boolean
   // Track if we need to show the auto mode exit attachment (one-time notification)
-  needsAutoModeExitAttachment: boolean
   // SDK init event state - jsonSchema for structured output
   initJsonSchema: Record<string, unknown> | null
   // Registered hooks - SDK callbacks and plugin native hooks
@@ -260,7 +259,6 @@ function getInitialState(): State {
     // Track if we need to show the plan mode exit attachment
     needsPlanModeExitAttachment: false,
     // Track if we need to show the auto mode exit attachment
-    needsAutoModeExitAttachment: false,
     // SDK init event state
     initJsonSchema: null,
     registeredHooks: null,
@@ -1099,40 +1097,12 @@ export function handlePlanModeTransition(
 }
 
 export function needsAutoModeExitAttachment(): boolean {
-  return STATE.needsAutoModeExitAttachment
+  return false
 }
 
-export function setNeedsAutoModeExitAttachment(value: boolean): void {
-  STATE.needsAutoModeExitAttachment = value
-}
+export function setNeedsAutoModeExitAttachment(_value: boolean): void {}
 
-export function handleAutoModeTransition(
-  fromMode: string,
-  toMode: string,
-): void {
-  // Auto↔plan transitions are handled by prepareContextForPlanMode (auto may
-  // stay active through plan if opted in) and ExitPlanMode (restores mode).
-  // Skip both directions so this function only handles direct auto transitions.
-  if (
-    (fromMode === 'auto' && toMode === 'plan') ||
-    (fromMode === 'plan' && toMode === 'auto')
-  ) {
-    return
-  }
-  const fromIsAuto = fromMode === 'auto'
-  const toIsAuto = toMode === 'auto'
-
-  // If switching TO auto mode, clear any pending exit attachment
-  // This prevents sending both auto_mode and auto_mode_exit when user toggles quickly
-  if (toIsAuto && !fromIsAuto) {
-    STATE.needsAutoModeExitAttachment = false
-  }
-
-  // If switching out of auto mode, trigger the auto_mode_exit attachment
-  if (fromIsAuto && !toIsAuto) {
-    STATE.needsAutoModeExitAttachment = true
-  }
-}
+export function handleAutoModeTransition(_fromMode: string, _toMode: string): void {}
 
 // SDK init event state
 export function setInitJsonSchema(schema: Record<string, unknown>): void {
