@@ -196,7 +196,7 @@ export class QueryEngine {
 
     this.discoveredSkillNames.clear()
     setCwd(cwd)
-    const persistSession = !false
+    const persistSession = true
     const startTime = Date.now()
 
     // Wrap canUseTool to track permission denials
@@ -400,7 +400,7 @@ export class QueryEngine {
     // kill-mid-request. The await is ~4ms on SSD, ~30ms under disk contention
     // — the single largest controllable critical-path cost after module eval.
     // Transcript is still written (for post-hoc debugging); just not blocking.
-    if (persistSession && messagesFromUserInput.length > 0) {
+    if (messagesFromUserInput.length > 0) {
       const transcriptPromise = recordTranscript(messages)
       await transcriptPromise
       if (
@@ -586,7 +586,7 @@ export class QueryEngine {
       return
     }
 
-    if (fileHistoryEnabled() && persistSession) {
+    if (fileHistoryEnabled() ) {
       messagesFromUserInput
         .filter(selectableUserMessagesFilter)
         .forEach(message => {

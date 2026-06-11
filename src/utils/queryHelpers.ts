@@ -225,7 +225,7 @@ export async function* handleOrphanedPermission(
   mutableMessages: Message[],
   processUserInputContext: ProcessUserInputContext,
 ): AsyncGenerator<SDKMessage, void, unknown> {
-  const persistSession = !false
+  const persistSession = true
   const { permissionResult, assistantMessage } = orphanedPermission
   const { toolUseID } = permissionResult
 

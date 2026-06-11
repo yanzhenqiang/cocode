@@ -149,12 +149,8 @@ function printResumeHint(): void {
   if (resumeHintPrinted) {
     return
   }
-  // Only show with TTY, interactive sessions, and persistence
-  if (
-    process.stdout.isTTY &&
-    true &&
-    !false
-  ) {
+  // Only show with TTY
+  if (process.stdout.isTTY) {
     try {
       const sessionId = getSessionId()
       // Don't show resume hint if no session file exists (e.g., subcommands like `claude update`)
