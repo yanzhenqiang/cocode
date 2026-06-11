@@ -70,11 +70,9 @@ type State = {
   // Parent session ID for tracking session lineage (e.g., plan mode -> implementation)
   parentSessionId: SessionId | undefined
   // Last API request for bug reports
-  lastAPIRequest: Omit<BetaMessageStreamParams, 'messages'> | null
   // Messages from the last API request (internal-only; reference, not clone).
   // Captures the exact post-compaction, CLAUDE.md-injected message set sent
   // to the API so /share's serialized_conversation.json reflects reality.
-  lastAPIRequestMessages: BetaMessageStreamParams['messages'] | null
   // In-memory error log for recent errors
   inMemoryErrorLog: Array<{ error: string; timestamp: string }>
   // Session-only bypass permissions mode flag (not persisted)
@@ -114,13 +112,6 @@ type State = {
       invokedAt: number
       agentId: string | null
     }
-  >
-  // Track slow operations for dev bar display (internal-only)
-  slowOperations: Array<{
-    operation: string
-    durationMs: number
-    timestamp: number
-  }>
   // SDK-provided betas (e.g., context-1m-2025-08-07)
   // Main thread agent type (from --agent flag or settings)
   mainThreadAgentType: string | undefined
@@ -227,8 +218,6 @@ function getInitialState(): State {
     parentSessionId: undefined,
     // Agent color state
     // Last API request for bug reports
-    lastAPIRequest: null,
-    lastAPIRequestMessages: null,
     // Last auto-mode classifier request(s) for /share transcript
     // In-memory error log for recent errors
     inMemoryErrorLog: [],
@@ -253,7 +242,6 @@ function getInitialState(): State {
     // Track invoked skills for preservation across compaction
     invokedSkills: new Map(),
     // Track slow operations for dev bar display
-    slowOperations: [],
     // SDK-provided betas
     // Main thread agent type
     mainThreadAgentType: undefined,
@@ -857,30 +845,9 @@ export function setApiKeyFromFd(key: string | null): void {
   STATE.apiKeyFromFd = key
 }
 
-export function setLastAPIRequest(
-  params: Omit<BetaMessageStreamParams, 'messages'> | null,
-): void {
-  STATE.lastAPIRequest = params
-}
 
-export function getLastAPIRequest(): Omit<
-  BetaMessageStreamParams,
-  'messages'
-> | null {
-  return STATE.lastAPIRequest
-}
 
-export function setLastAPIRequestMessages(
-  messages: BetaMessageStreamParams['messages'] | null,
-): void {
-  STATE.lastAPIRequestMessages = messages
-}
 
-export function getLastAPIRequestMessages():
-  | BetaMessageStreamParams['messages']
-  | null {
-  return STATE.lastAPIRequestMessages
-}
 
 
 
@@ -1139,16 +1106,6 @@ const EMPTY_SLOW_OPERATIONS: ReadonlyArray<{
   timestamp: number
 }> = []
 
-export function addSlowOperation(
-  _operation: string,
-  _durationMs: number,
-): void {}
-
-export function getSlowOperations(): ReadonlyArray<{
-  operation: string
-  durationMs: number
-  timestamp: number
-}> {
   return EMPTY_SLOW_OPERATIONS
 }
 

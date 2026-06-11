@@ -1,7 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
 import { useState } from 'react';
-import { getSlowOperations } from '../bootstrap/state.js';
 import { Text, useInterval } from '../ink.js';
 
 // Show DevBar for dev builds or all ants
@@ -10,11 +9,9 @@ function shouldShowDevBar(): boolean {
 }
 export function DevBar() {
   const $ = _c(5);
-  const [slowOps, setSlowOps] = useState(getSlowOperations);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
-      setSlowOps(getSlowOperations());
     };
     $[0] = t0;
   } else {
