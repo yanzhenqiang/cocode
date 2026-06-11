@@ -7,7 +7,6 @@ import {
   setMainThreadAgentType,
   switchSession,
 } from '../bootstrap/state.js'
-import { restoreCostStateForSession } from '../cost-tracker.js'
 import type { AppState } from '../state/AppState.js'
 import type { AgentColorName } from '../tools/AgentTool/agentColorManager.js'
 import {
@@ -294,7 +293,6 @@ export async function processResumedConversation(
       // getSessionRecordingPaths() can discover it during /share
       await renameRecordingForSession()
       await resetSessionFilePointer()
-      restoreCostStateForSession(sid)
     }
   } else if (result.contentReplacements?.length) {
     // --fork-session keeps the fresh startup session ID. useLogMessages will

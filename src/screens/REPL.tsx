@@ -27,7 +27,7 @@ import { startPreventSleep, stopPreventSleep } from '../services/preventSleep.js
 import { useTerminalNotification } from '../ink/useTerminalNotification.js';
 import { hasCursorUpViewportYankBug } from '../ink/terminal.js';
 import { createFileStateCacheWithSizeLimit, mergeFileStateCaches, READ_FILE_STATE_CACHE_SIZE } from '../utils/fileStateCache.js';
-import { updateLastInteractionTime, getLastInteractionTime, getOriginalCwd, getProjectRoot, getSessionId, switchSession, setCostStateForRestore, getTurnHookDurationMs, getTurnHookCount, resetTurnHookDuration, getTurnToolDurationMs, getTurnToolCount, resetTurnToolDuration } from '../bootstrap/state.js';
+import { updateLastInteractionTime, getLastInteractionTime, getOriginalCwd, getProjectRoot, getSessionId, switchSession, getTurnHookDurationMs, getTurnHookCount, resetTurnHookDuration, getTurnToolDurationMs, getTurnToolCount, resetTurnToolDuration } from '../bootstrap/state.js';
 import { asSessionId, asAgentId } from '../types/ids.js';
 import { logForDebugging } from '../utils/debug.js';
 import { QueryGuard } from '../utils/QueryGuard.js';
@@ -68,8 +68,6 @@ import { buildEffectiveSystemPrompt } from '../utils/systemPrompt.js';
 import { getSystemContext, getUserContext } from '../context.js';
 import { getMemoryFiles } from '../utils/claudemd.js';
 import { startBackgroundHousekeeping } from '../utils/backgroundHousekeeping.js';
-import { getTotalCost, saveCurrentSessionCosts, resetCostState, getStoredSessionCosts } from '../cost-tracker.js';
-import { useCostSummary } from '../costHook.js';
 import { useFpsMetrics } from '../context/fpsMetrics.js';
 import { useAfterFirstRender } from '../hooks/useAfterFirstRender.js';
 import { useDeferredHookMessages } from '../hooks/useDeferredHookMessages.js';
@@ -1505,16 +1503,6 @@ export function REPL({
       setAbortController(null);
       setConversationId(sessionId);
 
-      // Get target session's costs BEFORE saving current session
-      // (saveCurrentSessionCosts overwrites the config, so we need to read first)
-      const targetSessionCosts = getStoredSessionCosts(sessionId);
-
-      // Save current session's costs before switching to avoid losing accumulated costs
-      saveCurrentSessionCosts();
-
-      // Reset cost state for clean slate before restoring target session
-      resetCostState();
-
       // Switch session (id + project dir atomically). fullPath may point to
       // a different project (cross-worktree, /branch); null derives from
       // current originalCwd.
@@ -1559,11 +1547,6 @@ export function REPL({
         // and the process is still in the same worktree.
         const ws = getCurrentWorktreeSession();
         if (ws) saveWorktreeState(ws);
-      }
-
-      // Restore target session's costs from the data we read earlier
-      if (targetSessionCosts) {
-        setCostStateForRestore(targetSessionCosts);
       }
 
       // Reconstruct replacement state for the resumed session. Runs after
@@ -1825,7 +1808,7 @@ export function REPL({
     streamMode
   };
   useEffect(() => {
-    const totalCost = getTotalCost();
+    const totalCost = "---";
     if (totalCost >= 5 /* $5 */ && !showCostDialog && !haveShownCostDialog) {
       logEvent('tengu_cost_threshold_reached', {});
       // Mark as shown even if the dialog won't render (no console billing
@@ -3110,8 +3093,6 @@ export function REPL({
     // Initial message handling is done via the initialMessage effect
   }
 
-  // Register cost summary tracker
-  useCostSummary(useFpsMetrics());
 
   // Record transcripts locally, for debugging and conversation recovery
   // Don't record conversation if we only have initial messages; optimizes

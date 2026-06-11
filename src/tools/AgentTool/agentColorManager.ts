@@ -37,9 +37,3 @@ export function getAgentColor(_agentType: string): keyof Theme | undefined {
 }
 
 export function setAgentColor(_agentType: string, _color: AgentColorName | undefined): void {}
-  }
-
-  if (AGENT_COLORS.includes(color)) {
-    agentColorMap.set(agentType, color)
-  }
-}

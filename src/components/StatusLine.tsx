@@ -6,7 +6,6 @@ import type { PermissionMode } from 'src/utils/permissions/PermissionMode.js';
 import { getMainThreadAgentType, getOriginalCwd, getSdkBetas, getSessionId } from '../bootstrap/state.js';
 import { DEFAULT_OUTPUT_STYLE_NAME } from '../constants/outputStyles.js';
 import { useNotifications } from '../context/notifications.js';
-import { getTotalAPIDuration, getTotalCost, getTotalDuration, getTotalInputTokens, getTotalLinesAdded, getTotalLinesRemoved, getTotalOutputTokens } from '../cost-tracker.js';
 import { useMainLoopModel } from '../hooks/useMainLoopModel.js';
 import { type ReadonlySettings, useSettings } from '../hooks/useSettings.js';
 import { Ansi, Box, Text } from '../ink.js';
@@ -61,8 +60,6 @@ function buildStatusLineCommandInput(permissionMode: PermissionMode, exceeds200k
       name: outputStyleName
     },
     cost: {
-      total_cost_usd: getTotalCost(),
-      total_duration_ms: getTotalDuration(),
       total_api_duration_ms: getTotalAPIDuration(),
       total_lines_added: getTotalLinesAdded(),
       total_lines_removed: getTotalLinesRemoved()

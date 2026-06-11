@@ -5,7 +5,6 @@ import copy from './commands/copy/index.js'
 import compact from './commands/compact/index.js'
 import config from './commands/config/index.js'
 import { context, contextNonInteractive } from './commands/context/index.js'
-import cost from './commands/cost/index.js'
 import memory from './commands/memory/index.js'
 import init from './commands/init.js'
 import keybindings from './commands/keybindings/index.js'
@@ -88,7 +87,6 @@ const COMMANDS = memoize((): Command[] => [
   copy,
   context,
   contextNonInteractive,
-  cost,
   effort,
   exit,
   fast,
@@ -342,7 +340,6 @@ export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
   [
     compact, // Shrink context — useful mid-session from a phone
     clear, // Wipe transcript
-    cost, // Show session cost
     files, // List tracked files
   ].filter((c): c is Command => c !== null),
 )

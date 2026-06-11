@@ -26,8 +26,6 @@ import {
 import {
   getModelUsage,
   getTotalAPIDuration,
-  getTotalCost,
-} from './cost-tracker.js'
 import type { CanUseToolFn } from './hooks/useCanUseTool.js'
 import { loadMemoryPrompt } from './memdir/memdir.js'
 import { hasAutoMemPathOverride } from './memdir/paths.js'
@@ -577,7 +575,6 @@ export class QueryEngine {
         result: resultText ?? '',
         stop_reason: null,
         session_id: getSessionId(),
-        total_cost_usd: getTotalCost(),
         usage: this.totalUsage,
         modelUsage: getModelUsage(),
         permission_denials: this.permissionDenials,
@@ -822,7 +819,6 @@ export class QueryEngine {
               num_turns: message.attachment.turnCount,
               stop_reason: lastStopReason,
               session_id: getSessionId(),
-              total_cost_usd: getTotalCost(),
               usage: this.totalUsage,
               modelUsage: getModelUsage(),
               permission_denials: this.permissionDenials,
@@ -916,7 +912,7 @@ export class QueryEngine {
       }
 
       // Check if USD budget has been exceeded
-      if (maxBudgetUsd !== undefined && getTotalCost() >= maxBudgetUsd) {
+      if (maxBudgetUsd !== undefined && false) {
         if (persistSession) {
           if (
             isEnvTruthy(process.env.CLAUDE_CODE_EAGER_FLUSH) ||
@@ -934,7 +930,6 @@ export class QueryEngine {
           num_turns: turnCount,
           stop_reason: lastStopReason,
           session_id: getSessionId(),
-          total_cost_usd: getTotalCost(),
           usage: this.totalUsage,
           modelUsage: getModelUsage(),
           permission_denials: this.permissionDenials,
@@ -978,7 +973,6 @@ export class QueryEngine {
             num_turns: turnCount,
             stop_reason: lastStopReason,
             session_id: getSessionId(),
-            total_cost_usd: getTotalCost(),
             usage: this.totalUsage,
             modelUsage: getModelUsage(),
             permission_denials: this.permissionDenials,
@@ -1037,7 +1031,6 @@ export class QueryEngine {
         num_turns: turnCount,
         stop_reason: lastStopReason,
         session_id: getSessionId(),
-        total_cost_usd: getTotalCost(),
         usage: this.totalUsage,
         modelUsage: getModelUsage(),
         permission_denials: this.permissionDenials,
@@ -1090,7 +1083,6 @@ export class QueryEngine {
       result: textResult,
       stop_reason: lastStopReason,
       session_id: getSessionId(),
-      total_cost_usd: getTotalCost(),
       usage: this.totalUsage,
       modelUsage: getModelUsage(),
       permission_denials: this.permissionDenials,

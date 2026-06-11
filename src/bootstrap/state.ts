@@ -38,7 +38,6 @@ type State = {
   // never updated by mid-session EnterWorktreeTool.
   // Use for project identity (history, skills, sessions) not file operations.
   projectRoot: string
-  totalCostUSD: number
   totalAPIDuration: number
   totalAPIDurationWithoutRetries: number
   totalToolDuration: number
@@ -50,7 +49,6 @@ type State = {
   lastInteractionTime: number
   totalLinesAdded: number
   totalLinesRemoved: number
-  hasUnknownModelCost: boolean
   cwd: string
   modelUsage: { [modelName: string]: ModelUsage }
   mainLoopModelOverride: ModelSetting | undefined
@@ -209,7 +207,6 @@ function getInitialState(): State {
   const state: State = {
     originalCwd: resolvedCwd,
     projectRoot: resolvedCwd,
-    totalCostUSD: 0,
     totalAPIDuration: 0,
     totalAPIDurationWithoutRetries: 0,
     totalToolDuration: 0,
@@ -221,7 +218,6 @@ function getInitialState(): State {
     lastInteractionTime: Date.now(),
     totalLinesAdded: 0,
     totalLinesRemoved: 0,
-    hasUnknownModelCost: false,
     cwd: resolvedCwd,
     modelUsage: {},
     mainLoopModelOverride: undefined,
@@ -494,7 +490,6 @@ export function addToTotalDurationState(
 export function resetTotalDurationStateAndCost_FOR_TESTS_ONLY(): void {
   STATE.totalAPIDuration = 0
   STATE.totalAPIDurationWithoutRetries = 0
-  STATE.totalCostUSD = 0
 }
 
 export function addToTotalCostState(
@@ -503,12 +498,8 @@ export function addToTotalCostState(
   model: string,
 ): void {
   STATE.modelUsage[model] = modelUsage
-  STATE.totalCostUSD += cost
 }
 
-export function getTotalCostUSD(): number {
-  return STATE.totalCostUSD
-}
 
 export function getTotalAPIDuration(): number {
   return STATE.totalAPIDuration
@@ -670,13 +661,7 @@ export function incrementBudgetContinuationCount(): void {
   budgetContinuationCount++
 }
 
-export function setHasUnknownModelCost(): void {
-  STATE.hasUnknownModelCost = true
-}
 
-export function hasUnknownModelCost(): boolean {
-  return STATE.hasUnknownModelCost
-}
 
 export function getLastMainRequestId(): string | undefined {
   return STATE.lastMainRequestId
@@ -789,59 +774,6 @@ export function setSdkBetas(betas: string[] | undefined): void {
   STATE.sdkBetas = betas
 }
 
-export function resetCostState(): void {
-  STATE.totalCostUSD = 0
-  STATE.totalAPIDuration = 0
-  STATE.totalAPIDurationWithoutRetries = 0
-  STATE.totalToolDuration = 0
-  STATE.startTime = Date.now()
-  STATE.totalLinesAdded = 0
-  STATE.totalLinesRemoved = 0
-  STATE.hasUnknownModelCost = false
-  STATE.modelUsage = {}
-  STATE.promptId = null
-}
-
-/**
- * Sets cost state values for session restore.
- * Called by restoreCostStateForSession in cost-tracker.ts.
- */
-export function setCostStateForRestore({
-  totalCostUSD,
-  totalAPIDuration,
-  totalAPIDurationWithoutRetries,
-  totalToolDuration,
-  totalLinesAdded,
-  totalLinesRemoved,
-  lastDuration,
-  modelUsage,
-}: {
-  totalCostUSD: number
-  totalAPIDuration: number
-  totalAPIDurationWithoutRetries: number
-  totalToolDuration: number
-  totalLinesAdded: number
-  totalLinesRemoved: number
-  lastDuration: number | undefined
-  modelUsage: { [modelName: string]: ModelUsage } | undefined
-}): void {
-  STATE.totalCostUSD = totalCostUSD
-  STATE.totalAPIDuration = totalAPIDuration
-  STATE.totalAPIDurationWithoutRetries = totalAPIDurationWithoutRetries
-  STATE.totalToolDuration = totalToolDuration
-  STATE.totalLinesAdded = totalLinesAdded
-  STATE.totalLinesRemoved = totalLinesRemoved
-
-  // Restore per-model usage breakdown
-  if (modelUsage) {
-    STATE.modelUsage = modelUsage
-  }
-
-  // Adjust startTime to make wall duration accumulate
-  if (lastDuration) {
-    STATE.startTime = Date.now() - lastDuration
-  }
-}
 
 // Only used in tests
 export function resetStateForTests(): void {
