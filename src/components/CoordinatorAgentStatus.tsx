@@ -1,4 +1,5 @@
 import { c as _c } from "react-compiler-runtime";
+const EMPTY_AGENT_NAME_MAP = new Map();
 /**
  * CoordinatorTaskPanel — Steerable list of background agents.
  *
@@ -33,7 +34,7 @@ export function getVisibleAgentTasks(tasks: AppState['tasks']): LocalAgentTaskSt
 export function CoordinatorTaskPanel(): React.ReactNode {
   const tasks = useAppState(s => s.tasks);
   const viewingAgentTaskId = undefined;
-  const agentNameRegistry = useAppState(() => new Map());
+  const agentNameRegistry = useAppState(() => EMPTY_AGENT_NAME_MAP);
   const coordinatorTaskIndex = -1;
   const tasksSelected = false;
   const selectedIndex = tasksSelected ? coordinatorTaskIndex : undefined;

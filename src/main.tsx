@@ -48,7 +48,7 @@ import { isAnalyticsDisabled } from 'src/services/analytics/config.js';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
 import { initializeAnalyticsGates } from 'src/services/analytics/sink.js';
-import { getOriginalCwd, setAdditionalDirectoriesForClaudeMd, setMainLoopModelOverride, setMainThreadAgentType } from './bootstrap/state.js';
+import { getInitialMainLoopModel, getOriginalCwd, setAdditionalDirectoriesForClaudeMd, setInitialMainLoopModel, setMainLoopModelOverride, setMainThreadAgentType, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
 import { getCommands } from './commands.js';
 import type { StatsStore } from './context/stats.js';
 import { launchAssistantInstallWizard, launchInvalidSettingsDialog, launchResumeChooser } from './dialogLaunchers.js';

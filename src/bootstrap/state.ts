@@ -1121,13 +1121,7 @@ export function setAdditionalDirectoriesForClaudeMd(
 
 
 
-export function getHasDevChannels(): boolean {
-  return STATE.hasDevChannels
-}
-
-export function setHasDevChannels(value: boolean): void {
-  STATE.hasDevChannels = value
-}
+// hasDevChannels accessors removed — STATE field no longer exists
 
 
 
@@ -1158,8 +1152,6 @@ export function setThinkingClearLatched(v: boolean): void {
  * fresh conversation gets fresh header evaluation.
  */
 export function clearBetaHeaderLatches(): void {
-  STATE.afkModeHeaderLatched = null
-  STATE.fastModeHeaderLatched = null
   STATE.cacheEditingHeaderLatched = null
   STATE.thinkingClearLatched = null
 }

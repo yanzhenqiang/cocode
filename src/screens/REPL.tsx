@@ -216,6 +216,7 @@ import { useIssueFlagBanner } from '../hooks/useIssueFlagBanner.js';
 const MIN_COLS_FOR_FULL_SPRITE = 80;
 const isBuddyEnabled = () => false;
 const fireCompanionObserver = () => {};
+const EMPTY_AGENT_DEFS = { activeAgents: [], allAgents: [] };
 const CompanionSprite = () => null;
 const CompanionFloatingBubble = () => null;
 import { DevBar } from '../components/DevBar.js';
@@ -537,7 +538,7 @@ export function REPL({
   const toolPermissionContext = useAppState(s => s.toolPermissionContext);
   const verbose = useAppState(s => s.verbose);
   const mcp = useAppState(s => s.mcp);
-  const agentDefinitions = useAppState(() => ({ activeAgents: [], allAgents: [] }));
+  const agentDefinitions = useAppState(() => EMPTY_AGENT_DEFS);
   const fileHistory = useAppState(s => s.fileHistory);
   const initialMessage = useAppState(s => s.initialMessage);
   const queuedCommands = useCommandQueue();

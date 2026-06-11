@@ -1,5 +1,6 @@
 import { c as _c } from "react-compiler-runtime";
 import * as React from 'react';
+import { getQuestionPreviewFormat } from '../../bootstrap/state.js';
 import { MessageResponse } from 'src/components/MessageResponse.js';
 import { BLACK_CIRCLE } from 'src/constants/figures.js';
 import { PRODUCT_DISPLAY_NAME } from 'src/constants/product.js';

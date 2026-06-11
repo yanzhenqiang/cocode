@@ -60,7 +60,6 @@ export function clearSessionCaches(
   setSystemPromptInjection(null)
 
   // Clear last emitted date so it's re-detected on next turn
-  setLastEmittedDate(null)
 
   // Run post-compaction cleanup (clears system prompt sections, microcompact tracking,
   // classifier approvals, speculative checks, and — for main-thread compacts — memory
