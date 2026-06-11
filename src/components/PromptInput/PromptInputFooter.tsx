@@ -93,7 +93,7 @@ function PromptInputFooter({
   // coordinatorTaskCount === 0 covers the bash-only case (no agent rows
   // exist, pill is the only selectable item).
   const coordinatorTaskCount = useCoordinatorTaskCount();
-  const coordinatorTaskIndex = -1;
+  const coordinatorTaskIndex = useAppState(() => -1);
   const pillSelected = tasksSelected && (coordinatorTaskCount === 0 || coordinatorTaskIndex < 0);
 
   // Hide `? for shortcuts` if the user has a custom status line, or during ctrl-r

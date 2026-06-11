@@ -264,13 +264,13 @@ function PromptInput({
   const tmuxFooterVisible = false;
   // WebBrowser pill — visible when a browser is open
   const bagelFooterVisible = useAppState(s => false);
-  const teamContext = undefined;
+  const teamContext = useAppState(() => undefined);
   const queuedCommands = useCommandQueue();
-  const promptSuggestionState = { text: null as string | null, promptId: null as string | null, shownAt: 0, acceptedAt: 0, generationRequestId: null as string | null };
-  const speculation = { status: 'idle' as const };
-  const speculationSessionTimeSavedMs = 0;
-  const viewingAgentTaskId = undefined;
-  const viewSelectionMode = 'none';
+  const promptSuggestionState = useAppState(() => ({ text: null as string | null, promptId: null as string | null, shownAt: 0, acceptedAt: 0, generationRequestId: null as string | null }));
+  const speculation = useAppState(() => ({ status: 'idle' as const }));
+  const speculationSessionTimeSavedMs = useAppState(() => 0);
+  const viewingAgentTaskId = useAppState(() => undefined);
+  const viewSelectionMode = useAppState(() => 'none');
   const {
     companion: _companion,
     companionMuted
@@ -311,7 +311,7 @@ function PromptInput({
   // -1 sentinel: tasks pill is selected but no specific agent row is selected yet.
   // First ↓ selects the pill, second ↓ moves to row 0. Prevents double-select
   // of pill + row when both bg tasks (pill) and forked agents (rows) are visible.
-  const coordinatorTaskIndex = -1;
+  const coordinatorTaskIndex = useAppState(() => -1);
   const setCoordinatorTaskIndex = useCallback((v: number | ((prev: number) => number)) => setAppState(prev => {
     const next = typeof v === 'function' ? v(prev.coordinatorTaskIndex) : v;
     if (next === prev.coordinatorTaskIndex) return prev;
@@ -382,7 +382,7 @@ function PromptInput({
   // disconnected, task finished). The derivation makes the UI correct
   // immediately; the useEffect below clears the raw state so it doesn't
   // resurrect when the same pill reappears (new task starts → focus stolen).
-  const rawFooterSelection = null;
+  const rawFooterSelection = useAppState(() => null);
   const footerItemSelected = rawFooterSelection && footerItems.includes(rawFooterSelection) ? rawFooterSelection : null;
   useEffect(() => {
     if (rawFooterSelection && !footerItemSelected) {
@@ -435,8 +435,8 @@ function PromptInput({
   });
   const displayedValue = useMemo(() => isSearchingHistory && historyMatch ? getValueFromInput(typeof historyMatch === 'string' ? historyMatch : historyMatch.display) : input, [isSearchingHistory, historyMatch, input]);
   const thinkTriggers = useMemo(() => findThinkingTriggerPositions(displayedValue), [displayedValue]);
-  const ultraplanSessionUrl = undefined;
-  const ultraplanLaunching = undefined;
+  const ultraplanSessionUrl = useAppState(() => undefined);
+  const ultraplanLaunching = useAppState(() => undefined);
   const ultraplanTriggers = useMemo(() => [], [displayedValue, ultraplanSessionUrl, ultraplanLaunching]);
   const ultrareviewTriggers = useMemo(() => [], [displayedValue]);
   const btwTriggers = useMemo(() => findBtwTriggerPositions(displayedValue), [displayedValue]);

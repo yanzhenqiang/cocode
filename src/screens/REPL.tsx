@@ -537,23 +537,23 @@ export function REPL({
   const toolPermissionContext = useAppState(s => s.toolPermissionContext);
   const verbose = useAppState(s => s.verbose);
   const mcp = useAppState(s => s.mcp);
-  const agentDefinitions = { activeAgents: [], allAgents: [] };
+  const agentDefinitions = useAppState(() => ({ activeAgents: [], allAgents: [] }));
   const fileHistory = useAppState(s => s.fileHistory);
   const initialMessage = useAppState(s => s.initialMessage);
   const queuedCommands = useCommandQueue();
   // feature() is a build-time constant — dead code elimination removes the hook
   // call entirely in external builds, so this is safe despite looking conditional.
   // These fields contain excluded strings that must not appear in external builds.
-  const spinnerTip = undefined;
-  const showExpandedTodos = 'none' === 'tasks';
-  const pendingWorkerRequest = null;
-  const pendingSandboxRequest = null;
-  const teamContext = undefined;
+  const spinnerTip = useAppState(() => undefined);
+  const showExpandedTodos = useAppState(() => false);
+  const pendingWorkerRequest = useAppState(() => null);
+  const pendingSandboxRequest = useAppState(() => null);
+  const teamContext = useAppState(() => undefined);
   const tasks = useAppState(s => s.tasks);
   const workerSandboxPermissions = useAppState(s => s.workerSandboxPermissions);
   const elicitation = useAppState(s => s.elicitation);
-  const ultraplanPendingChoice = undefined;
-  const ultraplanLaunchPending = undefined;
+  const ultraplanPendingChoice = useAppState(() => undefined);
+  const ultraplanLaunchPending = useAppState(() => undefined);
   const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId);
   const setAppState = useSetAppState();
 

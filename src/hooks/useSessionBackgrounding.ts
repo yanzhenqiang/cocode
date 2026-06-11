@@ -31,7 +31,7 @@ export function useSessionBackgrounding({
   setAbortController,
   onBackgroundQuery,
 }: UseSessionBackgroundingProps): UseSessionBackgroundingResult {
-  const foregroundedTaskId = undefined
+  const foregroundedTaskId = useAppState(() => undefined)
   const foregroundedTask = useAppState(s =>
     s.foregroundedTaskId ? s.tasks[s.foregroundedTaskId] : undefined,
   )
