@@ -7,7 +7,7 @@ const extractMemoriesModule = feature('EXTRACT_MEMORIES')
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-import { getIsInteractive, getLastInteractionTime } from '../bootstrap/state.js'
+import {getLastInteractionTime } from '../bootstrap/state.js'
 import {
   cleanupNpmCacheForAnthropicPackages,
   cleanupOldMessageFilesInBackground,
@@ -29,7 +29,7 @@ export function startBackgroundHousekeeping(): void {
   async function runVerySlowOps(): Promise<void> {
     // If the user did something in the last minute, don't make them wait for these slow operations to run.
     if (
-      getIsInteractive() &&
+      true &&
       getLastInteractionTime() > Date.now() - 1000 * 60
     ) {
       setTimeout(

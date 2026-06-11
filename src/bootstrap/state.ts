@@ -56,7 +56,6 @@ type State = {
   mainLoopModelOverride: ModelSetting | undefined
   initialMainLoopModel: ModelSetting
   modelStrings: ModelStrings | null
-  isInteractive: boolean
   // When true, ensureToolResultPairing throws on mismatch instead of
   // repairing with synthetic placeholders. HFI opts in at startup so
   // trajectories fail fast rather than conditioning the model on fake
@@ -230,7 +229,6 @@ function getInitialState(): State {
     mainLoopModelOverride: undefined,
     initialMainLoopModel: null,
     modelStrings: null,
-    isInteractive: false,
     strictToolResultPairing: false,
     userMsgOptIn: false,
     questionPreviewFormat: undefined,
@@ -889,13 +887,7 @@ export function getIsNonInteractiveSession(): boolean {
   return false
 }
 
-export function getIsInteractive(): boolean {
-  return true
-}
 
-export function setIsInteractive(value: boolean): void {
-  STATE.isInteractive = value
-}
 
 
 

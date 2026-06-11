@@ -1,5 +1,4 @@
 import { spawnSync } from 'child_process'
-import { getIsInteractive } from '../bootstrap/state.js'
 import { getGlobalConfig } from './config.js'
 import { logForDebugging } from './debug.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from './envUtils.js'
@@ -172,7 +171,7 @@ export function isMouseClicksDisabled(): boolean {
  * should gate on this.
  */
 export function isFullscreenActive(): boolean {
-  return getIsInteractive() && isFullscreenEnvEnabled()
+  return true && isFullscreenEnvEnabled()
 }
 
 /**

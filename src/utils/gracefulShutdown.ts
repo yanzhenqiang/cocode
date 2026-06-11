@@ -4,7 +4,6 @@ import memoize from 'lodash-es/memoize.js'
 import { onExit } from 'signal-exit'
 import type { ExitReason } from 'src/entrypoints/agentSdkTypes.js'
 import {
-  getIsInteractive,
   getIsScrollDraining,
   getLastMainRequestId,
   getSessionId,
@@ -154,7 +153,7 @@ function printResumeHint(): void {
   // Only show with TTY, interactive sessions, and persistence
   if (
     process.stdout.isTTY &&
-    getIsInteractive() &&
+    true &&
     !isSessionPersistenceDisabled()
   ) {
     try {
