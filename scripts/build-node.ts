@@ -26,15 +26,15 @@ const featureFlags: Record<string, boolean> = {
   MONITOR_TOOL: false,
   MESSAGE_ACTIONS: true,
   DUMP_SYSTEM_PROMPT: false,
-  CACHED_MICROCOMPACT: true,
+  CACHED_MICROCOMPACT: false,
   TRANSCRIPT_CLASSIFIER: false,
   ULTRATHINK: true,
-  TOKEN_BUDGET: true,
+  TOKEN_BUDGET: false,
   HISTORY_PICKER: true,
   QUICK_SEARCH: false,
   SHOT_STATS: false,
   FORK_SUBAGENT: false,
-  PROMPT_CACHE_BREAK_DETECTION: true,
+  PROMPT_CACHE_BREAK_DETECTION: false,
   HOOK_PROMPTS: true,
 }
 
