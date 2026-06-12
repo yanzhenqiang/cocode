@@ -1288,9 +1288,6 @@ const {
       ...toolPermissionContext,
       mode: toolPermissionContext.mode
     };
-    // All startup opt-in paths (--tools, --brief, defaultView) have fired
-    // above; initialIsBriefOnly just reads the resulting state.
-    const initialIsBriefOnly = false;
     let ccrMirrorEnabled = false;
     const initialState: AppState = {
       settings: getInitialSettings(),
@@ -1298,27 +1295,13 @@ const {
       verbose: verbose ?? getGlobalConfig().verbose ?? false,
       mainLoopModel: initialMainLoopModel,
       mainLoopModelForSession: null,
-      isBriefOnly: initialIsBriefOnly,
-      expandedView: getGlobalConfig().showSpinnerTree ? 'teammates' : getGlobalConfig().showExpandedTodos ? 'tasks' : 'none',
       toolPermissionContext: effectiveToolPermissionContext,
-      agentDefinitions,
       mcp: {
         clients: [],
         tools: [],
         commands: [],
         resources: {},
         pluginReconnectKey: 0
-      },
-      plugins: {
-        enabled: [],
-        disabled: [],
-        commands: [],
-        errors: [],
-        installationStatus: {
-          marketplaces: [],
-          plugins: []
-        },
-        needsRefresh: false
       },
       statusLineText: undefined,
       notifications: {
@@ -1349,7 +1332,6 @@ const {
       } : null,
       effortValue: parseEffortValue(options.effort) ?? getInitialEffortSetting(),
       activeOverlays: new Set<string>(),
-      fastMode: getInitialFastModeSetting(resolvedInitialModel),
       // teamContext removed with swarm subsystem (v0.12.9).
     };
 

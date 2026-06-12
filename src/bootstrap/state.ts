@@ -287,9 +287,6 @@ const sdkContextStorage = new AsyncLocalStorage<SdkContext>()
  * This function will throw if called in a non-Node environment where
  * async_hooks is not available.
  */
-export function runWithSdkContext<T>(context: SdkContext, fn: () => T): T {
-  return sdkContextStorage.run(context, fn)
-}
 
 function getSdkContext(): SdkContext | undefined {
   return sdkContextStorage.getStore()
@@ -329,13 +326,6 @@ export function regenerateSessionId(
   return newId
 }
 
-export function getParentSessionId(): SessionId | undefined {
-  const ctx = getSdkContext()
-  if (ctx) {
-    return ctx.parentSessionId
-  }
-  return STATE.parentSessionId
-}
 
 /**
  * Atomically switch the active session. `sessionId` and `sessionProjectDir`
@@ -444,35 +434,15 @@ export function addToTotalDurationState(
   STATE.totalAPIDurationWithoutRetries += durationWithoutRetries
 }
 
-export function resetTotalDurationStateAndCost_FOR_TESTS_ONLY(): void {
-  STATE.totalAPIDuration = 0
-  STATE.totalAPIDurationWithoutRetries = 0
-}
 
-export function addToTotalCostState(
-  cost: number,
-  modelUsage: ModelUsage,
-  model: string,
-): void {
-  STATE.modelUsage[model] = modelUsage
-}
 
 
 export function getTotalAPIDuration(): number {
   return STATE.totalAPIDuration
 }
 
-export function getTotalDuration(): number {
-  return Date.now() - STATE.startTime
-}
 
-export function getTotalAPIDurationWithoutRetries(): number {
-  return STATE.totalAPIDurationWithoutRetries
-}
 
-export function getTotalToolDuration(): number {
-  return STATE.totalToolDuration
-}
 
 export function addToToolDuration(duration: number): void {
   STATE.totalToolDuration += duration
@@ -593,9 +563,6 @@ export function getTotalCacheCreationInputTokens(): number {
   return sumBy(Object.values(STATE.modelUsage), 'cacheCreationInputTokens')
 }
 
-export function getTotalWebSearchRequests(): number {
-  return sumBy(Object.values(STATE.modelUsage), 'webSearchRequests')
-}
 
 let outputTokensAtTurnStart = 0
 let currentTurnTokenBudget: number | null = null
@@ -697,9 +664,6 @@ export function getModelUsage(): { [modelName: string]: ModelUsage } {
   return STATE.modelUsage
 }
 
-export function getUsageForModel(model: string): ModelUsage | undefined {
-  return STATE.modelUsage[model]
-}
 
 /**
  * Gets the model override set from the --model CLI flag or after the user
@@ -727,18 +691,6 @@ export function setInitialMainLoopModel(model: ModelSetting): void {
 
 
 // Only used in tests
-export function resetStateForTests(): void {
-  if (process.env.NODE_ENV !== 'test') {
-    throw new Error('resetStateForTests can only be called in tests')
-  }
-  Object.entries(getInitialState()).forEach(([key, value]) => {
-    STATE[key as keyof State] = value as never
-  })
-  outputTokensAtTurnStart = 0
-  currentTurnTokenBudget = null
-  budgetContinuationCount = 0
-  sessionSwitched.clear()
-}
 
 // You shouldn't use this directly. See src/utils/model/modelStrings.ts::getModelStrings()
 export function getModelStrings(): ModelStrings | null {
@@ -752,9 +704,6 @@ export function setModelStrings(modelStrings: ModelStrings): void {
 
 // Test utility function to reset model strings for re-initialization.
 // Separate from setModelStrings because we only want to accept 'null' in tests.
-export function resetModelStringsForTestingOnly() {
-  STATE.modelStrings = null
-}
 
 export function getIsNonInteractiveSession(): boolean {
   return false
@@ -768,9 +717,6 @@ export function getStrictToolResultPairing(): boolean {
   return STATE.strictToolResultPairing
 }
 
-export function setStrictToolResultPairing(value: boolean): void {
-  STATE.strictToolResultPairing = value
-}
 
 // Field name 'userMsgOptIn' avoids excluded-string substrings ('BriefTool',
 // 'SendUserMessage' — case-insensitive). All callers are inside feature()
@@ -804,13 +750,7 @@ export function setFlagSettingsPath(path: string | undefined): void {
 
 
 
-export function getSessionIngressToken(): string | null | undefined {
-  return STATE.sessionIngressToken
-}
 
-export function setSessionIngressToken(token: string | null): void {
-  STATE.sessionIngressToken = token
-}
 
 export function getOauthTokenFromFd(): string | null | undefined {
   return STATE.oauthTokenFromFd
@@ -865,13 +805,7 @@ export function getSessionBypassPermissionsMode(): boolean {
   return STATE.sessionBypassPermissionsMode
 }
 
-export function setScheduledTasksEnabled(enabled: boolean): void {
-  STATE.scheduledTasksEnabled = enabled
-}
 
-export function getScheduledTasksEnabled(): boolean {
-  return STATE.scheduledTasksEnabled
-}
 
 export type SessionCronTask = {
   id: string
@@ -887,28 +821,13 @@ export type SessionCronTask = {
   agentId?: string
 }
 
-export function getSessionCronTasks(): SessionCronTask[] {
-  return STATE.sessionCronTasks
-}
 
-export function addSessionCronTask(task: SessionCronTask): void {
-  STATE.sessionCronTasks.push(task)
-}
 
 /**
  * Returns the number of tasks actually removed. Callers use this to skip
  * downstream work (e.g. the disk read in removeCronTasks) when all ids
  * were accounted for here.
  */
-export function removeSessionCronTasks(ids: readonly string[]): number {
-  if (ids.length === 0) return 0
-  const idSet = new Set(ids)
-  const remaining = STATE.sessionCronTasks.filter(t => !idSet.has(t.id))
-  const removed = STATE.sessionCronTasks.length - remaining.length
-  if (removed === 0) return 0
-  STATE.sessionCronTasks = remaining
-  return removed
-}
 
 export function setSessionTrustAccepted(accepted: boolean): void {
   STATE.sessionTrustAccepted = accepted
@@ -986,26 +905,7 @@ export function getRegisteredHooks(): Partial<
   return STATE.registeredHooks
 }
 
-export function clearRegisteredHooks(): void {
-  STATE.registeredHooks = null
-}
 
-export function clearRegisteredPluginHooks(): void {
-  if (!STATE.registeredHooks) {
-    return
-  }
-
-  const filtered: Partial<Record<HookEvent, RegisteredHookMatcher[]>> = {}
-  for (const [event, matchers] of Object.entries(STATE.registeredHooks)) {
-    // Keep only callback hooks (those without pluginRoot)
-    const callbackHooks = matchers.filter(m => !('pluginRoot' in m))
-    if (callbackHooks.length > 0) {
-      filtered[event as HookEvent] = callbackHooks
-    }
-  }
-
-  STATE.registeredHooks = Object.keys(filtered).length > 0 ? filtered : null
-}
 
 export function resetSdkInitState(): void {
   STATE.registeredHooks = null
@@ -1072,13 +972,6 @@ export function clearInvokedSkills(
   }
 }
 
-export function clearInvokedSkillsForAgent(agentId: string): void {
-  for (const [key, skill] of STATE.invokedSkills) {
-    if (skill.agentId === agentId) {
-      STATE.invokedSkills.delete(key)
-    }
-  }
-}
 
 export function getMainThreadAgentType(): string | undefined {
   return STATE.mainThreadAgentType
@@ -1165,11 +1058,5 @@ export function setPromptId(id: string | null): void {
 }
 
 // Stub for feature-gated REPL bridge (not available in open build)
-export function isReplBridgeActive(): boolean {
-  return false
-}
 
-export function getReplBridgeHandle(): null {
-  return null
-}
 
