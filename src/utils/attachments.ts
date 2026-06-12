@@ -2625,7 +2625,6 @@ export async function* getAttachmentMessages(
   const attachments = await getAttachments(
     input,
     toolUseContext,
-    _ideSelection,
     queuedCommands,
     messages,
     querySource,
