@@ -53,7 +53,6 @@ import { PromptInputQueuedCommands } from '../components/PromptInput/PromptInput
 import { SkillImprovementSurvey } from '../components/SkillImprovementSurvey.js';
 import { useSkillImprovementSurvey } from '../hooks/useSkillImprovementSurvey.js';
 import { useMoreRight } from '../moreright/useMoreRight.js';
-import { SpinnerWithVerb, BriefIdleStatus, type SpinnerMode } from '../components/Spinner.js';
 import { getSystemPrompt } from '../constants/prompts.js';
 import { buildEffectiveSystemPrompt } from '../utils/systemPrompt.js';
 import { getSystemContext, getUserContext } from '../context.js';
@@ -183,8 +182,6 @@ const useKickOffCheckAndDisableAutoModeIfNeeded = () => {}
 import { SandboxManager } from 'src/utils/sandbox/sandbox-adapter.js';
 import { SANDBOX_NETWORK_ACCESS_TOOL_NAME } from 'src/cli/structuredIO.js';
 import { useFileHistorySnapshotInit } from 'src/hooks/useFileHistorySnapshotInit.js';
-import { SandboxPermissionRequest } from 'src/components/permissions/SandboxPermissionRequest.js';
-import { SandboxViolationExpandedView } from 'src/components/SandboxViolationExpandedView.js';
 import { useSettingsErrors } from 'src/hooks/notifs/useSettingsErrors.js';
 import { useMcpConnectivityStatus } from 'src/hooks/notifs/useMcpConnectivityStatus.js';
 const useAutoModeUnavailableNotification = () => {}
@@ -3507,7 +3504,6 @@ export function REPL({
       {transcriptScrollRef ? <FullscreenLayout scrollRef={scrollRef} scrollable={<>
         {transcriptMessagesElement}
         {transcriptToolJSX}
-        <SandboxViolationExpandedView />
       </>} bottom={searchOpen ? <TranscriptSearchBar jumpRef={jumpRef}
         // Seed was tried (c01578c8) — broke /hello muscle
         // memory (cursor lands after 'foo', /hello → foohello).
@@ -3547,7 +3543,6 @@ export function REPL({
         } : undefined} />} /> : <>
         {transcriptMessagesElement}
         {transcriptToolJSX}
-        <SandboxViolationExpandedView />
         <TranscriptModeFooter showAllInTranscript={showAllInTranscript} virtualScroll={false} suppressShowAll={dumpMode} status={editorStatus || undefined} />
       </>}
     </KeybindingSetup>;
@@ -3644,7 +3639,6 @@ export function REPL({
         </Box>}
         <Box flexGrow={1} />
         {showSpinner && <SpinnerWithVerb mode={streamMode} spinnerTip={spinnerTip} responseLengthRef={responseLengthRef} apiMetricsRef={apiMetricsRef} overrideMessage={spinnerMessage} spinnerSuffix={stopHookSpinnerSuffix} verbose={verbose} loadingStartTimeRef={loadingStartTimeRef} totalPausedMsRef={totalPausedMsRef} pauseStartTimeRef={pauseStartTimeRef} overrideColor={spinnerColor} overrideShimmerColor={spinnerShimmerColor} hasActiveTools={inProgressToolUseIDs.size > 0} leaderIsIdle={!isLoading} />}
-        {!showSpinner && !isLoading && !userInputOnProcessing && isBriefOnly && !viewedAgentTask && <BriefIdleStatus />}
         {isFullscreenEnvEnabled() && <PromptInputQueuedCommands />}
       </>} bottom={<Box flexDirection={'row'} width="100%" alignItems={'flex-end'}>
         <Box flexDirection="column" flexGrow={1}>
