@@ -180,19 +180,6 @@ export function appendMessageToLocalAgent(taskId: string, message: Message, setA
     messages: [...(task.messages ?? []), message]
   }));
 }
-export function drainPendingMessages(taskId: string, getAppState: () => AppState, setAppState: (f: (prev: AppState) => AppState) => void): string[] {
-  const task = getAppState().tasks[taskId];
-  if (!isLocalAgentTask(task) || task.pendingMessages.length === 0) {
-    return [];
-  }
-  const drained = task.pendingMessages;
-  updateTaskState<LocalAgentTaskState>(taskId, setAppState, t => ({
-    ...t,
-    pendingMessages: []
-  }));
-  return drained;
-}
-
 /**
  * Enqueue an agent notification to the message queue.
  */
