@@ -22,18 +22,18 @@ const version = pkg.version
 // Feature flags for the open build.
 // Any flag not listed here defaults to false.
 const featureFlags: Record<string, boolean> = {
-  BUILTIN_EXPLORE_PLAN_AGENTS: true,
-  MONITOR_TOOL: true,
+  BUILTIN_EXPLORE_PLAN_AGENTS: false,
+  MONITOR_TOOL: false,
   MESSAGE_ACTIONS: true,
-  DUMP_SYSTEM_PROMPT: true,
+  DUMP_SYSTEM_PROMPT: false,
   CACHED_MICROCOMPACT: true,
   TRANSCRIPT_CLASSIFIER: false,
   ULTRATHINK: true,
   TOKEN_BUDGET: true,
   HISTORY_PICKER: true,
-  QUICK_SEARCH: true,
-  SHOT_STATS: true,
-  FORK_SUBAGENT: true,
+  QUICK_SEARCH: false,
+  SHOT_STATS: false,
+  FORK_SUBAGENT: false,
   PROMPT_CACHE_BREAK_DETECTION: true,
   HOOK_PROMPTS: true,
 }
