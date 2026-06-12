@@ -181,6 +181,7 @@ import { useSettingsErrors } from 'src/hooks/notifs/useSettingsErrors.js';
 import { useMcpConnectivityStatus } from 'src/hooks/notifs/useMcpConnectivityStatus.js';
 const useAutoModeUnavailableNotification = () => {}
 import { AUTO_MODE_DESCRIPTION } from 'src/components/AutoModeOptInDialog.js';
+import { SpinnerWithVerb, type SpinnerMode } from '../components/Spinner.js';
 import { UserTextMessage } from 'src/components/messages/UserTextMessage.js';
 
 import { useDeprecationWarningNotification } from 'src/hooks/notifs/useDeprecationWarningNotification.js';
