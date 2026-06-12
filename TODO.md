@@ -1,210 +1,156 @@
 # TODO
 
-## 已完成
-- [x] spinner 扫光动画 + 随机动词列表
-- [x] 死依赖清理 (@orama/orama, @orama/plugin-data-persistence)
-- [x] TRANSCRIPT_CLASSIFIER 全树删除 (auto mode, ~16 文件)
-- [x] KAIROS 整树枯死代码
-- [x] 死 React 组件 (UserChannelMessage, DiffDetailView, SandboxSettings)
-- [x] 死权限弹窗 (NotebookEditPermissionRequest, WorkflowTool)
-- [x] AppState 死字段 × 22: thinkingBudgetTokens, selectedIPAgentIndex, inbox, showTeammateMessagePreview, kairosEnabled, channelPermissionCallbacks, bagel*×3, replContext, teamContext, promptSuggestionEnabled, promptSuggestion×5, denialTracking, companionReaction, tungsten*×5, spinnerTip
-- [x] AppState agent + agentNameRegistry 字段
+## 当前已完成的清理
+
+- [x] 死代码清理：SDK schemas、MCP serve/管理命令、EXTRACT_MEMORIES、VERIFICATION_AGENT、companion/buddy、ultraplan useEffect
+- [x] bootstrap/state.ts 死函数 ×24、initialState 死字段 ×5
+- [x] 死文件删除：install.tsx、Doctor.tsx、coreTypes.generated.ts、coreSchemas.ts、controlTypes.ts
+- [x] feature flags 关闭 ×9
+- [x] REPL 渲染修复（useAppState 对象 selector 无限重渲染）
+- [x] test_subagent.sh 10/10
 
 ---
 
-## 清理已删字段的残留消费者代码
+## 核心问题
 
-**原则：删 AppState 字段必须连带清理所有消费者，不留死引用。**
+当前代码复杂度主要来自三个维度：
 
-### 当前残留
-
-| 字段 | 残留文件 | 状态 |
-|---|---|---|
-| `agentNameRegistry` | useTypeahead.tsx (已加 `\|\| []` guard) | ✓ 已处理 |
-| `promptSuggestionEnabled` | usePromptInputPlaceholder.ts, Config.tsx | 待清理 |
-| `promptSuggestion` | PromptInput.tsx, useTypeahead.tsx (已替换常量) | 待清理 |
-| `denialTracking` | permissions.ts (3 处读取) | 待清理 |
-| `companionReaction` | REPL.tsx (setAppState 已删) | ✓ 已处理 |
-| `spinnerTip` | REPL.tsx (已改 undefined 常量) | ✓ 已处理 |
-| `teamContext` | PromptInput, REPL, getNextPermissionMode, useTasksV2 | 待清理 |
-| `inbox` | 类型残留 | 待清理 |
+1. **PromptInput 目录 ↔ REPL.tsx 耦合太深** — 两个巨型组件通过 AppState 全局变量隐式通信，props 传递链超过 20 层
+2. **AppState 是全局垃圾桶** — 所有状态都往里塞，组件间通过全局 store 隐式依赖，无法独立测试
+3. **持久化逻辑散落各处** — session/config/permission 的读写跟业务逻辑混在一起，没有统一的数据层
 
 ---
 
-## AppState 下一批待清理字段
+## 阶段 1：理清状态边界
 
-### 1. `agent` (987 refs) — Agent 名称可能用不到
-- --agent CLI 参数 + settings 里的 agent 名
-- 如果只用单 agent，这个字段只是字符串传递
+### 1.1 盘点当前 AppState 字段
 
-### 2. `agentNameRegistry` (5 refs) — Agent 名→ID 映射
-- CoordinatorAgentStatus + useTypeahead 在用
-- 不用多 Agent 协作的话可能死
+**当前活跃字段（真正被多组件用的）：**
 
-### 3. `fastMode` (191 refs) — 检查是否默认开启
-- 快速模式（低延迟模型），191 处引用说明到处在用
-- 需确认默认值
+| 分组 | 字段 | 说明 |
+|------|------|------|
+| 会话 | `sessionId` (state.ts) | 当前会话 ID |
+| 会话 | `sessionProjectDir` (state.ts) | transcript 存放目录 |
+| 模型 | `mainLoopModel` | 当前模型 |
+| 模型 | `thinkingEnabled` | 思考模式 |
+| 模型 | `effortValue` | 努力级别 |
+| 权限 | `toolPermissionContext` | 权限模式 + 工具白名单 |
+| 权限 | `sessionBypassPermissionsMode` (state.ts) | 跳过权限 |
+| 文件 | `fileHistory` | 文件编辑快照（回退用） |
+| 任务 | `tasks` | 后台 bash/agent 任务 |
+| MCP | `mcp` | MCP 连接/工具/命令 |
+| UI | `notifications` | 通知队列 |
+| UI | `settings` | 用户配置 |
+| UI | `verbose` | 详细模式 |
+| 沙箱 | `workerSandboxPermissions` | worker 网络权限请求 |
 
-### 4. `isUltraplanMode` (4 refs) — Ultraplan 模式
-- 只在 onChangeAppState 里设置和检查
-- 不用 ultraplan 远程任务的话死
+**已被桩化（可以进一步清理的）：**
 
-### 5. `viewSelectionMode` (6 refs) — Agent 视图选择
-- Spinner + PromptInput 用
-- 不用多 Agent 协作的话永远 'none'
+| 字段 | 当前状态 | 后续 |
+|------|----------|------|
+| `ultraplanPendingChoice` | `useAppState(() => undefined)` | 从 AppState 类型和所有消费者中移除 |
+| `ultraplanLaunchPending` | 同上 | 同上 |
+| `spinnerTip` | 同上 | 同上 |
+| `pendingWorkerRequest` | 同上 | 同上 |
+| `pendingSandboxRequest` | 同上 | 同上 |
+| `teamContext` | 同上 | 同上 |
+| `agentDefinitions` | 模块级常量空对象 | 同上 |
 
-### 6. `speculationSessionTimeSavedMs` (7 refs) — 推测节省时间
-- 纯统计数字，PromptInput + REPL 传递
-- 删了不影响功能
+### 1.2 理清状态 → 持久化的对应关系
 
-### 7. `pendingWorkerRequest` + `pendingSandboxRequest` (12 refs) — Worker 系统
-- 子进程等待 Leader 批准的请求
-- 不用 worker-leader 模式的话永远 null
+当前写入 session JSONL 的是 `recordTranscript(messages)` —— 每次 LLM 响应后调用。但 config 和 permission 的持久化走的是完全不同的路径：
 
-### 8. `skillImprovement` (10 refs) — 技能改进建议
-- useSkillImprovementSurvey hook 在用
-- 需确认是否实际触发过
+| 数据类型 | 当前持久化方式 | 写入时机 | 问题 |
+|----------|---------------|----------|------|
+| 对话消息 | `insertMessageChain()` → JSONL | 每轮 LLM 响应后 | ✓ 正常 |
+| 用户配置 | `saveGlobalConfig()` → `~/.cocode.json` | 分散在 20+ 个调用点 | 无统一入口 |
+| 权限规则 | `saveSettings()` → `settings.json` | 每次权限变更 | 与 config 混在一起 |
+| 会话元数据 | `cacheSessionTitle()` / `saveTag()` → `.jsonl` 尾部 lite 条目 | 用户重命名/打 tag | write-only，读时解析 |
 
-### 9. `standaloneAgentContext` (16 refs) — 独立 Agent 上下文
-- rename/clear/REPL/ResumeConversation 都在写
-- 活代码，暂留
-
----
-
-## Ultraplan 远程任务（待删除）
-
-用户不使用 Ultraplan/CCR 远程任务功能。整组字段永远 null/undefined/false：
-
-| 字段 | 说明 |
-|---|---|
-| `ultraplanLaunching` | 防止重复启动的锁 |
-| `ultraplanSessionUrl` | 远程任务 URL |
-| `ultraplanPendingChoice` | 待用户选择 |
-| `ultraplanLaunchPending` | 启动前弹窗 |
-| `isUltraplanMode` | ✓ 已删 |
-
-连带可删：`onChangeAppState.ts` 中 ultraplan 相关逻辑、Ultraplan 相关 dialog 组件。
-
-## 多 Agent 协作字段（待删除）
-
-用户使用独立 Skill 代替多 Agent 协作。以下字段只服务于 Agent swarm：
-
-| 字段 | 引用 | 说明 |
-|---|---|---|
-| `coordinatorTaskIndex` | 17 | 协调器任务面板选中索引（-1=pill, 0=main, 1..N=agent） |
-| `foregroundedTaskId` | 26 | 前台显示的任务 ID |
-| `viewingAgentTaskId` | 28 | 正在查看的子 Agent 任务 ID |
-| `footerSelection` | 12 | FooterItem 含 'tasks','teams','companion' 等 |
-
-连带可删：`FooterItem` 类型中的 'teams'/'companion'/'bridge' 选项、CoordinatorAgentStatus 组件相关逻辑。
-
-## 待分析（后续）
-
-| 字段 | 引用 | 说明 |
-|---|---|---|
-| `isBriefOnly` | 33 | Settings 开关，默认关闭 |
-| `fastMode` | 191 | 字段已删，消费者待清 |
-| `statusLineText` | 7 | StatusLine 独占 |
-| `workerSandboxPermissions` | 10 | Worker 沙箱 |
-| `activeOverlays` | 9 | Esc 键协调 |
-| `advisorModel` | 48 | 服务端 advisor |
-| `standaloneAgentContext` | 16 | 独立 Agent 上下文 |
+**目标**：所有状态变更走统一的数据层，`state → persist` 是一条清晰的单向流。
 
 ---
 
-## AppState 字段审计
+## 阶段 2：解开 PromptInput ↔ REPL 耦合
 
-当前 UI 的数据流: **AppState (~50 字段)** → React 组件 → Ink 渲染器
+### 当前耦合点
 
-### 已删除的死字段（零组件读取）
-
-| 字段 | 原因 |
-|---|---|
-| `thinkingBudgetTokens` | 类型定义有，零读取零写入，不在默认值中 |
-| `selectedIPAgentIndex` | 只被 main.tsx 和 store 默认值赋值，零组件读取 |
-| `inbox` | `{ messages: [] }` 只初始化，零组件读取 |
-| `showTeammateMessagePreview` | false/undefined，零组件读取 |
-| `kairosEnabled` | 永远 false，KAIROS 整树已砍 |
-
-### 保留但可疑（待下沉到局部）
-
-| 字段 | 引用数 | 说明 |
-|---|---|---|
-| `denialTracking` | 9 | 只在 `utils/permissions/permissions.ts` 内部使用 |
-| `companionReaction` | 5 | 只有 `screens/REPL.tsx` 读写 |
-| `speculation` | 8 | 只有 `PromptInput.tsx` 读一个字段 |
-
-### 活跃字段（高频读写）
-
-| 字段 | 说明 |
-|---|---|
-| `messages` | 对话消息数组，LLM 输出逐 token 追加 |
-| `settings` | 用户配置 |
-| `toolPermissionContext` | 当前等待审批的权限请求 |
-| `tasks` | 后台任务和子 Agent 状态 |
-| `mcp` | MCP 服务器连接/工具/命令 |
-| `notifications` | 通知队列 |
-
----
-
-## React Compiler 产物还原计划
-
-### 背景
-
-`src/components/` 下 255 个 `.tsx` 文件 (46k 行) **全部是 React Compiler 编译输出**，不是人写的 JSX。原始手写源码不在仓库里。
-
-编译器输出特征：
 ```
-// 编译器产物（当前代码）
-import { c as _c } from "react-compiler-runtime";
-function Component(t0) {
-  const $ = _c(30);
-  let t1;
-  if ($[0] !== dep) { t1 = compute(); $[0] = dep; $[1] = t1; }
-  else { t1 = $[1]; }  // 每个变量 4-5 行
-}
+REPL.tsx
+  ├── 读取 toolPermissionContext、tasks、mcp 等全局状态
+  ├── 传递给 PromptInput 作为 props（20+ 个）
+  │    ├── toolPermissionContext → PromptInput
+  │    ├── commands/agents → PromptInputFooter
+  │    ├── mcpClients → PromptInputFooter
+  │    └── ...
+  └── PromptInput 内部又通过 useAppState 读全局状态
+       └── 绕过 props，直接访问 store
 ```
 
-每行业务逻辑被展开成 3-4 行 memo 缓存代码。255 个文件中约 **60-70% (~28k 行) 是编译器噪音**。
+### 拆分步骤
 
-### 验证结果
+2.1 **抽离 PromptInput 所需的数据接口** → 定义一个明确的 `PromptInputContext` 类型，只包含 PromptInput 真正需要的字段，不暴露整个 AppState
 
-已用 `FilesystemPermissionRequest.tsx` 验证：114 行编译器产物 → 73 行手写 JSX，构建+smoke 均通过。证明：
-1. 可以安全替换，不需要改任何其他文件
-2. 每个文件平均瘦身 35-40%
-3. 全量做预计砍 **15k-18k 行**
+2.2 **消除 PromptInput 内部的 useAppState 调用** → 改为从 props 或独立 context 获取，不再直接读全局 store
 
-### 执行计划（分 5 批，按风险从低到高）
+2.3 **REPL.tsx 拆子组件**：
+- `ReplHeader` — terminal title、mode indicator
+- `MessagesPanel` — message list + scroll
+- `ToolPermissionOverlay` — 权限弹窗
+- `PromptInputArea` — 输入框 + footer
 
-#### 第 1 批：design-system/（16 文件, ~1.9k 行）— 最低风险
-通用 UI 组件(Dialog/Box/Text/Tabs/Pane/Byline 等)，逻辑简单，全项目引用 50+ 次。出问题最容易发现。
-- [ ] ThemedBox.tsx
-- [ ] ThemedText.tsx
-- [ ] Dialog.tsx
-- [ ] Tabs.tsx
-- [ ] Pane.tsx
-- [ ] Byline.tsx
-- [ ] Divider.tsx
-- [ ] 其余 9 个
-
-#### 第 2 批：messages/（33 文件, ~4.7k 行）— 低风险
-消息渲染器，每个文件逻辑独立，只被 Message.tsx 路由系统调用。
-
-#### 第 3 批：permissions/（35 文件, ~8.6k 行）— 中风险
-权限弹窗，每个对应一种工具。已验证 FilesystemPermissionRequest 可行。
-
-#### 第 4 批：PromptInput/ + mcp/ + CustomSelect/（42 文件, ~10.6k 行）— 中高风险
-交互密集，逻辑复杂。需要逐个验证。
-
-#### 第 5 批：根目录独立组件（81 文件, ~16k 行）— 高风险
-包含 REPL.tsx（4151 行）、LogSelector（1543 行）等巨型文件。需要拆分+还原并行做。
+2.4 **每个子组件独立可测试** — 接收明确的 props，不依赖 AppState
 
 ---
 
-## 大型文件拆分（后续）
+## 阶段 3：统一持久化层
 
-- [ ] `utils/messages.ts` (5,296)
-- [ ] `utils/sessionStorage.ts` (5,058)
-- [ ] `utils/hooks.ts` (4,695)
-- [ ] `screens/REPL.tsx` (4,151)
-- [ ] `utils/attachments.ts` (3,387)
+### 3.1 Session 持久化
+
+当前 `sessionStorage.ts` 5000+ 行，包含：
+- `Project` 类（文件锁、写入队列、flush 定时器）
+- `insertMessageChain`（消息链写入）
+- `loadConversationForResume`（恢复会话）
+- lite metadata（title/tag/mode）
+- agent transcript
+- worktree state
+
+**目标**：
+- 分离关注点：`Project` → 文件操作层 / `SessionStore` → 业务逻辑层
+- 写入路径：所有状态变更 → `SessionStore.dispatch(action)` → 入队 → 100ms debounce → 写盘
+- 读取路径：启动时 `SessionStore.load(sessionId)` → 一次读全部状态，不散落各处
+
+### 3.2 Config 持久化
+
+当前 `config.ts` 1700+ 行，`saveGlobalConfig()` 被 20+ 处调用，每次都是读-改-写模式。
+
+**目标**：
+- 单一 `ConfigStore`，提供 `get(key)` / `set(key, value)` / `subscribe(key, callback)`
+- 写操作 debounce 100ms，自动合并同一窗口内的多次修改
+- 跟 session 持久化共用同一套文件锁和写入队列
+
+### 3.3 Permission 持久化
+
+当前 `settings.ts` 管理 settings.json，`permissionSetup.ts` 管理权限规则，两者分离但概念重叠。
+
+**目标**：
+- 权限规则作为 settings 的子集，统一走 ConfigStore
+- 权限变更不直接写盘，通过 ConfigStore dispatch
+
+---
+
+## 阶段 4：入口简化
+
+当前入口 `cli.tsx` → `main.tsx` (1700+ 行) → 包含 CLI 参数解析、MCP 配置、会话恢复、REPL 启动等所有逻辑。
+
+**目标**：
+- `main.tsx` 瘦身：参数解析 → `CliArgs`，MCP 配置 → `McpBootstrap`，会话恢复 → `SessionResume`
+- 入口只做三件事：解析参数 → 初始化服务 → 启动 REPL
+
+---
+
+## 待立即执行
+
+- [ ] 从 AppState 类型中移除 7 个已桩化字段（ultraplanPendingChoice、ultraplanLaunchPending、spinnerTip、pendingWorkerRequest、pendingSandboxRequest、teamContext、agentDefinitions）
+- [ ] 移除对应的 useAppState(() => defaultValue) 占位调用
+- [ ] 更新 React Compiler `_c(N)` 计数
