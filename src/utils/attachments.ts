@@ -664,7 +664,6 @@ export type Attachment =
 export async function getAttachments(
   input: string | null,
   toolUseContext: ToolUseContext,
-  _ideSelection: null,
   queuedCommands: QueuedCommand[],
   messages?: Message[],
   querySource?: QuerySource,
@@ -803,12 +802,6 @@ export async function getAttachments(
   // Attachments which are semantically only for the main conversation or don't have concurrency-safe implementations
   const mainThreadAttachments = isMainThread
     ? [
-        maybe('ide_selection', async () =>
-          getSelectedLinesFromIDE(_ideSelection, toolUseContext),
-        ),
-        maybe('ide_opened_file', async () =>
-          getOpenedFileFromIDE(_ideSelection, toolUseContext),
-        ),
         maybe('output_style', async () =>
           Promise.resolve(getOutputStyleAttachment()),
         ),
@@ -1441,7 +1434,6 @@ function getOutputStyleAttachment(): Attachment[] {
 }
 
 async function getSelectedLinesFromIDE(
-  _ideSelection: null,
   _toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
   // IDE selection feature removed
@@ -1667,7 +1659,6 @@ async function getNestedMemoryAttachmentsForFile(
 }
 
 async function getOpenedFileFromIDE(
-  _ideSelection: null,
   _toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
   return []
@@ -2625,7 +2616,6 @@ async function getDiagnosticAttachments(
 export async function* getAttachmentMessages(
   input: string | null,
   toolUseContext: ToolUseContext,
-  _ideSelection: null,
   queuedCommands: QueuedCommand[],
   messages?: Message[],
   querySource?: QuerySource,
