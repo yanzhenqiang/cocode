@@ -15,7 +15,7 @@ import type { JumpHandle } from '../components/VirtualMessageList.js';
 import { renderMessagesToPlainText } from '../utils/exportRenderer.js';
 import { openFileInExternalEditor } from '../utils/editor.js';
 import { writeFile } from 'fs/promises';
-import { Box, Text, useStdin, useTheme, useTerminalFocus, useTerminalTitle, useTabStatus } from '../ink.js';
+import { Box, Text, useStdin, useTheme, useTerminalFocus } from '../ink.js';
 import type { TabStatusKind } from '../ink/hooks/use-tab-status.js';
 import { CostThresholdDialog } from '../components/CostThresholdDialog.js';
 import { IdleReturnDialog } from '../components/IdleReturnDialog.js';
@@ -392,59 +392,6 @@ function TranscriptSearchBar({
         {'  '}
       </Text> : null}
   </Box>;
-}
-const TITLE_ANIMATION_FRAMES = ['⠂', '⠐'];
-const TITLE_STATIC_PREFIX = '✳';
-const TITLE_ANIMATION_INTERVAL_MS = 960;
-
-/**
- * Sets the terminal tab title, with an animated prefix glyph while a query
- * is running. Isolated from REPL so the 960ms animation tick re-renders only
- * this leaf component (which returns null — pure side-effect) instead of the
- * entire REPL tree. Before extraction, the tick was ~1 REPL render/sec for
- * the duration of every turn, dragging PromptInput and friends along.
- */
-function AnimatedTerminalTitle(t0) {
-  const $ = _c(6);
-  const {
-    isAnimating,
-    title,
-    disabled,
-    noPrefix
-  } = t0;
-  const terminalFocused = useTerminalFocus();
-  const [frame, setFrame] = useState(0);
-  let t1;
-  let t2;
-  if ($[0] !== disabled || $[1] !== isAnimating || $[2] !== noPrefix || $[3] !== terminalFocused) {
-    t1 = () => {
-      if (disabled || noPrefix || !isAnimating || !terminalFocused) {
-        return;
-      }
-      const interval = setInterval(_temp2, TITLE_ANIMATION_INTERVAL_MS, setFrame);
-      return () => clearInterval(interval);
-    };
-    t2 = [disabled, noPrefix, isAnimating, terminalFocused];
-    $[0] = disabled;
-    $[1] = isAnimating;
-    $[2] = noPrefix;
-    $[3] = terminalFocused;
-    $[4] = t1;
-    $[5] = t2;
-  } else {
-    t1 = $[4];
-    t2 = $[5];
-  }
-  useEffect(t1, t2);
-  const prefix = isAnimating ? TITLE_ANIMATION_FRAMES[frame] ?? TITLE_STATIC_PREFIX : TITLE_STATIC_PREFIX;
-  useTerminalTitle(disabled ? null : noPrefix ? title : `${prefix} ${title}`);
-  return null;
-}
-function _temp2(setFrame_0) {
-  return setFrame_0(_temp);
-}
-function _temp(f) {
-  return (f + 1) % TITLE_ANIMATION_FRAMES.length;
 }
 export type Props = {
   commands: Command[];
@@ -989,14 +936,6 @@ export function REPL({
       waitingFor
     });
   }, [sessionStatus, waitingFor]);
-
-  // 3P default: off — OSC 21337 is internal-only while the spec stabilizes.
-  // Gated so we can roll back if the sidebar indicator conflicts with
-  // the title spinner in terminals that render both. When the flag is
-  // on, the user-facing config setting controls whether it's active.
-  const tabStatusGateEnabled = getFeatureValue_CACHED_MAY_BE_STALE('tengu_terminal_sidebar', false);
-  const showStatusInTerminalTab = tabStatusGateEnabled && (getGlobalConfig().showStatusInTerminalTab ?? false);
-  useTabStatus(titleDisabled || !showStatusInTerminalTab ? null : sessionStatus);
 
   const [messages, rawSetMessages] = useState<MessageType[]>(() => {
     if (!initialMessages) return [];
@@ -3547,7 +3486,6 @@ export function REPL({
       {toolJSX.jsx}
     </Box>;
     const transcriptReturn = <KeybindingSetup>
-      <AnimatedTerminalTitle isAnimating={titleIsAnimating} title={terminalTitle} disabled={titleDisabled} noPrefix={showStatusInTerminalTab} />
       <GlobalKeybindingHandlers {...globalKeybindingProps} />
       <CommandKeybindingHandlers onSubmit={onSubmit} isActive={!toolJSX?.isLocalJSXCommand} />
       {transcriptScrollRef ?
@@ -3675,7 +3613,6 @@ export function REPL({
   // early return above wraps its virtual-scroll branch the same way; only
   // the 30-cap dump branch stays unwrapped for native terminal scrollback.
   const mainReturn = <KeybindingSetup>
-    <AnimatedTerminalTitle isAnimating={titleIsAnimating} title={terminalTitle} disabled={titleDisabled} noPrefix={showStatusInTerminalTab} />
     <GlobalKeybindingHandlers {...globalKeybindingProps} />
     <CommandKeybindingHandlers onSubmit={onSubmit} isActive={!toolJSX?.isLocalJSXCommand} />
     {/* ScrollKeybindingHandler must mount before CancelRequestHandler so
