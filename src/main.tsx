@@ -136,23 +136,6 @@ profileCheckpoint('main_tsx_imports_loaded');
  * This is called after init() completes to ensure settings are loaded
  * and environment variables are applied before model resolution.
  */
-function logManagedSettings(): void {
-  try {
-    const policySettings = getSettingsForSource('policySettings');
-    if (policySettings) {
-      const allKeys = getManagedSettingsKeysForLogging(policySettings);
-      logEvent('tengu_managed_settings_loaded', {
-        keyCount: allKeys.length,
-        keys: allKeys.join(',') as unknown as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-      });
-    }
-  } catch {
-    // Silently ignore errors - this is just for analytics
-  }
-}
-
-// (debug check removed - was gated by false &&)
-
 /**
  * Per-session skill/plugin telemetry.
  */
@@ -172,37 +155,6 @@ function getCertEnvVarTelemetry(): Record<string, boolean> {
   }
   return result;
 }
-async function logStartupTelemetry(): Promise<void> {
-  if (isAnalyticsDisabled()) return;
-  const [isGit, worktreeCount, ghAuthStatus] = await Promise.all([getIsGit(), getWorktreeCount(), getGhAuthStatus()]);
-  logEvent('tengu_startup_telemetry', {
-    is_git: isGit,
-    worktree_count: worktreeCount,
-    gh_auth_status: ghAuthStatus as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    sandbox_enabled: SandboxManager.isSandboxingEnabled(),
-    are_unsandboxed_commands_allowed: SandboxManager.areUnsandboxedCommandsAllowed(),
-    is_auto_bash_allowed_if_sandbox_enabled: SandboxManager.isAutoAllowBashIfSandboxedEnabled(),
-    prefers_reduced_motion: getInitialSettings().prefersReducedMotion ?? false,
-    ...getCertEnvVarTelemetry()
-  });
-}
-
-// @[MODEL LAUNCH]: Consider any migrations you may need for model strings. See migrateSonnet1mToSonnet45.ts for an example.
-// Bump this when adding a new sync migration so existing users re-run the set.
-const CURRENT_MIGRATION_VERSION = 11;
-function runMigrations(): void {
-  if (getGlobalConfig().migrationVersion !== CURRENT_MIGRATION_VERSION) {
-    saveGlobalConfig(prev => prev.migrationVersion === CURRENT_MIGRATION_VERSION ? prev : {
-      ...prev,
-      migrationVersion: CURRENT_MIGRATION_VERSION
-    });
-  }
-  // Async migration - fire and forget since it's non-blocking
-  migrateChangelogFromConfig().catch(() => {
-    // Silently ignore migration errors - will retry on next startup
-  });
-}
-
 /**
  * Prefetch system context (including git status) only when it's safe to do so.
  * Git commands can execute arbitrary code via hooks and config (e.g., core.fsmonitor,
@@ -495,7 +447,6 @@ async function run(): Promise<CommanderCommand> {
     // builds the type as options are added. Narrow with a runtime guard;
     // the collect accumulator + [] default guarantee string[] in practice.
     const pluginDir = thisCommand.getOptionValue('pluginDir');
-    runMigrations();
     profileCheckpoint('preAction_after_migrations');
 
     profileCheckpoint('preAction_after_remote_settings');
@@ -1183,7 +1134,6 @@ const {
 
     // Log context metrics once at initialization
     void logContextMetrics(regularMcpConfigs, toolPermissionContext);
-    logManagedSettings();
 
     // Register PID file for concurrent-session detection (~/.claude/sessions/)
     // and fire multi-clauding telemetry. Lives here (not init.ts) so only the
@@ -1338,7 +1288,6 @@ const {
       numStartups: (current.numStartups ?? 0) + 1
     }));
     setImmediate(() => {
-      void logStartupTelemetry();
     });
     // Set up per-turn session environment data uploader (internal-only build).
     // Default-enabled for all ant users when working in an Anthropic-owned
