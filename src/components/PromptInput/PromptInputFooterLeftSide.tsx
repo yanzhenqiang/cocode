@@ -43,7 +43,6 @@ type Props = {
   isLoading: boolean;
   showMemoryTypeSelector?: boolean;
   tasksSelected: boolean;
-  teamsSelected: boolean;
   tmuxSelected: boolean;
   isPasting?: boolean;
   isSearching: boolean;
@@ -61,7 +60,6 @@ export function PromptInputFooterLeftSide(t0) {
     suppressHint,
     isLoading,
     tasksSelected,
-    teamsSelected,
     tmuxSelected,
     isPasting,
     isSearching,
@@ -94,7 +92,6 @@ export function PromptInputFooterLeftSide(t0) {
   const t4 = !suppressHint;
   let t5;
   if ($[3] !== isLoading || $[4] !== mode || $[5] !== onOpenTasksDialog || $[6] !== t4 || $[7] !== tasksSelected || $[8] !== teamsSelected || $[9] !== tmuxSelected || $[10] !== toolPermissionContext) {
-    t5 = <ModeIndicator mode={mode} toolPermissionContext={toolPermissionContext} showHint={t4} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} tmuxSelected={tmuxSelected} onOpenTasksDialog={onOpenTasksDialog} />;
     $[3] = isLoading;
     $[4] = mode;
     $[5] = onOpenTasksDialog;
@@ -115,7 +112,6 @@ type ModeIndicatorProps = {
   showHint: boolean;
   isLoading: boolean;
   tasksSelected: boolean;
-  teamsSelected: boolean;
   tmuxSelected: boolean;
   onOpenTasksDialog?: (taskId?: string) => void;
 };
@@ -125,7 +121,6 @@ function ModeIndicator({
   showHint,
   isLoading,
   tasksSelected,
-  teamsSelected,
   tmuxSelected,
   onOpenTasksDialog
 }: ModeIndicatorProps): React.ReactNode {

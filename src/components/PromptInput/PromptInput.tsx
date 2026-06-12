@@ -71,7 +71,6 @@ import { findThinkingTriggerPositions, getRainbowColor, isUltrathinkEnabled } fr
 import { findTokenBudgetPositions } from '../../utils/tokenBudget.js';
 import { findUltraplanTriggerPositions } from '../../utils/ultraplan/keyword.js';
 import { AutoModeOptInDialog } from '../AutoModeOptInDialog.js';
-const BridgeDialog = () => null;
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { getVisibleAgentTasks, useCoordinatorTaskCount } from '../CoordinatorAgentStatus.js';
 import { getEffortNotificationText } from '../EffortIndicator.js';
@@ -81,7 +80,6 @@ import TextInput from '../TextInput.js';
 import { ThinkingToggle } from '../ThinkingToggle.js';
 import { BackgroundTasksDialog } from '../tasks/BackgroundTasksDialog.js';
 import { shouldHideTasksFooter } from '../tasks/taskStatusUtils.js';
-const TeamsDialog = (_props: any) => null;
 import { detectModeEntry, getModeFromInput, getValueFromInput } from './inputModes.js';
 import { FOOTER_TEMPORARY_STATUS_TIMEOUT, Notifications } from './Notifications.js';
 import PromptInputFooter from './PromptInputFooter.js';
@@ -277,7 +275,6 @@ function PromptInput({
     companion: undefined,
     companionMuted: undefined
   };
-  const companionFooterVisible = !!_companion && !companionMuted;
   // Brief mode removed — KAIROS/KAIROS_BRIEF are false in external builds.
   const briefOwnsGap = false;
   const mainLoopModel_ = useAppState(s => s.mainLoopModel);
@@ -305,8 +302,6 @@ function PromptInput({
   // printable, inputFilter prepends a space before it. Any other input
   // (arrow, escape, backspace, paste, space) disarms without inserting.
   const pendingSpaceAfterPillRef = useRef(false);
-  const [showTeamsDialog, setShowTeamsDialog] = useState(false);
-  const [showBridgeDialog, setShowBridgeDialog] = useState(false);
   // -1 sentinel: tasks pill is selected but no specific agent row is selected yet.
   // First ↓ selects the pill, second ↓ moves to row 0. Prevents double-select
   // of pill + row when both bg tasks (pill) and forked agents (rows) are visible.
@@ -361,9 +356,6 @@ function PromptInput({
 
   // Derive team info from teamContext (no filesystem I/O needed)
   // A session can only lead one team at a time
-  const cachedTeams: TeamSummary[] = useMemo(() => {
-    return [];
-  }, []);
 
   // ─── Footer pill navigation ─────────────────────────────────────────────
   // Which pills render below the input box. Order here IS the nav order
@@ -374,8 +366,7 @@ function PromptInput({
   // pill must stay navigable whenever the panel has rows — not just when
   // something is running.
   const tasksFooterVisible = runningTaskCount > 0;
-  const teamsFooterVisible = cachedTeams.length > 0;
-  const footerItems = useMemo(() => [tasksFooterVisible && 'tasks', tmuxFooterVisible && 'tmux', bagelFooterVisible && 'bagel', teamsFooterVisible && 'teams', companionFooterVisible && 'companion'].filter(Boolean) as FooterItem[], [tasksFooterVisible, tmuxFooterVisible, bagelFooterVisible, teamsFooterVisible, companionFooterVisible]);
+  const footerItems = useMemo(() => [tasksFooterVisible && 'tasks', tmuxFooterVisible && 'tmux', bagelFooterVisible && 'bagel'].filter(Boolean) as FooterItem[], [tasksFooterVisible, tmuxFooterVisible, bagelFooterVisible]);
 
   // Effective selection: null if the selected pill stopped rendering (bridge
   // disconnected, task finished). The derivation makes the UI correct
@@ -394,8 +385,6 @@ function PromptInput({
   const tasksSelected = footerItemSelected === 'tasks';
   const tmuxSelected = footerItemSelected === 'tmux';
   const bagelSelected = footerItemSelected === 'bagel';
-  const teamsSelected = footerItemSelected === 'teams';
-  const bridgeSelected = footerItemSelected === 'bridge';
   function selectFooterItem(item: FooterItem | null): void {
     setAppState(prev => prev.footerSelection === item ? prev : {
       ...prev,
@@ -1484,14 +1473,6 @@ function PromptInput({
           break;
         case 'bagel':
           break;
-        case 'teams':
-          setShowTeamsDialog(true);
-          selectFooterItem(null);
-          break;
-        case 'bridge':
-          setShowBridgeDialog(true);
-          selectFooterItem(null);
-          break;
       }
     },
     'footer:clearSelection': () => {
@@ -1522,13 +1503,6 @@ function PromptInput({
     isActive: !!footerItemSelected && !isModalOverlayActive
   });
   useInput((char, key) => {
-    // Skip all input handling when a full-screen dialog is open. These dialogs
-    // render via early return, but hooks run unconditionally — so without this
-    // guard, Escape inside a dialog leaks to the double-press message-selector.
-    if (showTeamsDialog) {
-      return;
-    }
-
     // Detect failed Alt shortcuts on macOS (Option key produces special characters)
     if (getPlatform() === 'macos' && isMacosOptionChar(char)) {
       const shortcut = MACOS_OPTION_SPECIAL_CHARS[char];
@@ -1795,12 +1769,6 @@ function PromptInput({
   if (thinkingToggleElement) {
     return thinkingToggleElement;
   }
-  if (showBridgeDialog) {
-    return <BridgeDialog onDone={() => {
-      setShowBridgeDialog(false);
-      selectFooterItem(null);
-    }} />;
-  }
   const baseProps: BaseTextInputProps = {
     multiline: true,
     onSubmit,
@@ -1875,7 +1843,7 @@ function PromptInput({
             {textInputElement}
           </Box>
         </Box>
-      <PromptInputFooter apiKeyStatus={apiKeyStatus} debug={debug} exitMessage={exitMessage} mode={mode} verbose={verbose} suggestions={suggestions} selectedSuggestion={selectedSuggestion} maxColumnWidth={maxColumnWidth} toolPermissionContext={effectiveToolPermissionContext} helpOpen={helpOpen} suppressHint={input.length > 0} isLoading={isLoading} tasksSelected={tasksSelected} teamsSelected={teamsSelected} bridgeSelected={bridgeSelected} tmuxSelected={tmuxSelected} mcpClients={mcpClients} isPasting={isPasting} isInputWrapped={isInputWrapped} messages={messages} isSearching={isSearchingHistory} historyQuery={historyQuery} setHistoryQuery={setHistoryQuery} historyFailedMatch={historyFailedMatch} onOpenTasksDialog={isFullscreenEnvEnabled() ? handleOpenTasksDialog : undefined} />
+      <PromptInputFooter apiKeyStatus={apiKeyStatus} debug={debug} exitMessage={exitMessage} mode={mode} verbose={verbose} suggestions={suggestions} selectedSuggestion={selectedSuggestion} maxColumnWidth={maxColumnWidth} toolPermissionContext={effectiveToolPermissionContext} helpOpen={helpOpen} suppressHint={input.length > 0} isLoading={isLoading} tasksSelected={tasksSelected} tmuxSelected={tmuxSelected} mcpClients={mcpClients} isPasting={isPasting} isInputWrapped={isInputWrapped} messages={messages} isSearching={isSearchingHistory} historyQuery={historyQuery} setHistoryQuery={setHistoryQuery} historyFailedMatch={historyFailedMatch} onOpenTasksDialog={isFullscreenEnvEnabled() ? handleOpenTasksDialog : undefined} />
       {isFullscreenEnvEnabled() ? null : autoModeOptInDialog}
       {isFullscreenEnvEnabled() ?
     // position=absolute takes zero layout height so the spinner
