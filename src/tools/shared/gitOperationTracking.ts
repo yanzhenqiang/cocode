@@ -8,10 +8,6 @@
  * external binaries with the same argv syntax).
  */
 
-import {
-  type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-  logEvent,
-} from '../../services/analytics/index.js'
 
 /**
  * Build a regex that matches `git <subcmd>` while tolerating git's global
@@ -75,12 +71,7 @@ function findPrInStdout(stdout: string): ReturnType<typeof parsePrUrl> {
 }
 
 // Exported for testing purposes
-export function parseGitCommitId(stdout: string): string | undefined {
-  // git commit output: [branch abc1234] message
-  // or for root commit: [branch (root-commit) abc1234] message
-  const match = stdout.match(/\[[\w./-]+(?: \(root-commit\))? ([0-9a-f]+)\]/)
-  return match?.[1]
-}
+
 
 /**
  * Parse branch name from git push output. Push writes progress to stderr but
@@ -185,88 +176,4 @@ export function detectGitOperation(
 }
 
 // Exported for testing purposes
-export function trackGitOperations(
-  command: string,
-  exitCode: number,
-  stdout?: string,
-): void {
-  const success = exitCode === 0
-  if (!success) {
-    return
-  }
 
-  if (GIT_COMMIT_RE.test(command)) {
-    logEvent('tengu_git_operation', {
-      operation:
-        'commit' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    })
-    if (command.match(/--amend\b/)) {
-      logEvent('tengu_git_operation', {
-        operation:
-          'commit_amend' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      })
-    }
-  }
-  if (GIT_PUSH_RE.test(command)) {
-    logEvent('tengu_git_operation', {
-      operation:
-        'push' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    })
-  }
-  const prHit = GH_PR_ACTIONS.find(a => a.re.test(command))
-  if (prHit) {
-    logEvent('tengu_git_operation', {
-      operation:
-        prHit.op as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    })
-  }
-  if (prHit?.action === 'created') {
-    // Auto-link session to PR if we can extract PR URL from stdout
-    if (stdout) {
-      const prInfo = findPrInStdout(stdout)
-      if (prInfo) {
-        // Import is done dynamically to avoid circular dependency
-        void import('../../utils/sessionStorage.js').then(
-          ({ linkSessionToPR }) => {
-            void import('../../bootstrap/state.js').then(({ getSessionId }) => {
-              const sessionId = getSessionId()
-              if (sessionId) {
-                void linkSessionToPR(
-                  sessionId as `${string}-${string}-${string}-${string}-${string}`,
-                  prInfo.prNumber,
-                  prInfo.prUrl,
-                  prInfo.prRepository,
-                )
-              }
-            })
-          },
-        )
-      }
-    }
-  }
-  if (command.match(/\bglab\s+mr\s+create\b/)) {
-    logEvent('tengu_git_operation', {
-      operation:
-        'pr_create' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    })
-  }
-  // Detect PR creation via curl to REST APIs (Bitbucket, GitHub API, GitLab API)
-  // Check for POST method and PR endpoint separately to handle any argument order
-  // Also detect implicit POST when -d is used (curl defaults to POST with data)
-  const isCurlPost =
-    command.match(/\bcurl\b/) &&
-    (command.match(/-X\s*POST\b/i) ||
-      command.match(/--request\s*=?\s*POST\b/i) ||
-      command.match(/\s-d\s/))
-  // Match PR endpoints in URLs, but not sub-resources like /pulls/123/comments
-  // Require https?:// prefix to avoid matching text in POST body or other params
-  const isPrEndpoint = command.match(
-    /https?:\/\/[^\s'"]*\/(pulls|pull-requests|merge[-_]requests)(?!\/\d)/i,
-  )
-  if (isCurlPost && isPrEndpoint) {
-    logEvent('tengu_git_operation', {
-      operation:
-        'pr_create' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    })
-  }
-}

@@ -34,7 +34,6 @@ import { getTaskOutputPath } from '../../utils/task/diskOutput.js';
 import { TaskOutput } from '../../utils/task/TaskOutput.js';
 import { isOutputLineTruncated } from '../../utils/terminal.js';
 import { buildLargeToolResultMessage, ensureToolResultsDir, generatePreview, getToolResultPath, PREVIEW_SIZE_BYTES } from '../../utils/toolResultStorage.js';
-import { trackGitOperations } from '../shared/gitOperationTracking.js';
 import { bashToolHasPermission } from './bashPermissions.js';
 import { interpretCommandResult } from './commandSemantics.js';
 import { getDefaultTimeoutMs, getMaxTimeoutMs, getSimplePrompt } from './prompt.js';
@@ -563,7 +562,6 @@ export const BashTool = buildTool({
 
       // Get the final result from the generator's return value
       result = generatorResult.value;
-      trackGitOperations(input.command, result.code, result.stdout);
       const isInterrupt = result.interrupted && abortController.signal.reason === 'interrupt';
 
       // stderr is interleaved in stdout (merged fd) — result.stdout has both

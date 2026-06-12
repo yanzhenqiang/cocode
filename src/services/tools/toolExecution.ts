@@ -41,7 +41,6 @@ import { FILE_EDIT_TOOL_NAME } from '../../tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from '../../tools/FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from '../../tools/FileWriteTool/prompt.js'
 import { SKILL_TOOL_NAME } from '../../tools/SkillTool/constants.js'
-import { parseGitCommitId } from '../../tools/shared/gitOperationTracking.js'
 import {
   isDeferredTool,
   TOOL_SEARCH_TOOL_NAME,
@@ -1259,10 +1258,6 @@ async function checkPermissionsAndCallTool(
       typeof result.data === 'object' &&
       'stdout' in result.data
     ) {
-      const gitCommitId = parseGitCommitId(String(result.data.stdout))
-      if (gitCommitId) {
-        toolParameters.git_commit_id = gitCommitId
-      }
     }
 
     // Log tool result event for OTLP with tool parameters and decision context
