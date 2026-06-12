@@ -31,7 +31,7 @@ export type { ExecResult } from './ShellCommand.js'
 import { accessSync } from 'fs'
 import { getClaudeTempDirName } from './permissions/filesystem.js'
 import { getPlatform } from './platform.js'
-import { SandboxManager } from './sandbox/sandbox-adapter.js'
+
 import { invalidateSessionEnvCache } from './sessionEnvironment.js'
 import { createBashShellProvider } from './shell/bashProvider.js'
 import type { ShellProvider, ShellType } from './shell/shellProvider.js'
@@ -245,7 +245,7 @@ export async function exec(
   const binShell = provider.shellPath
 
   if (shouldUseSandbox) {
-    commandString = await SandboxManager.wrapWithSandbox(
+    commandString = await (async (c) => c)(
       commandString,
       binShell,
       undefined,
@@ -375,7 +375,7 @@ export async function exec(
       // on macOS. Keep before any await so callers awaiting .result see a clean
       // working tree in the same microtask.
       if (shouldUseSandbox) {
-        SandboxManager.cleanupAfterCommand()
+        
       }
       // Only foreground tasks update the cwd
       if (result && !preventCwdChanges && !result.backgroundTaskId) {

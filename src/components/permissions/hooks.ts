@@ -16,7 +16,6 @@ import {
   hasRules,
 } from 'src/utils/permissions/PermissionUpdate.js'
 import { permissionRuleValueToString } from 'src/utils/permissions/permissionRuleParser.js'
-import { SandboxManager } from 'src/utils/sandbox/sandbox-adapter.js'
 import type { ToolUseConfirm } from '../../components/permissions/PermissionRequest.js'
 import { useSetAppState } from '../../state/AppState.js'
 import { env } from '../../utils/env.js'
@@ -136,7 +135,7 @@ export function usePermissionRequestLogging(
       isMcp: toolUseConfirm.tool.isMcp ?? false,
       decisionReasonType: toolUseConfirm.permissionResult.decisionReason
         ?.type as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      sandboxEnabled: SandboxManager.isSandboxingEnabled(),
+      sandboxEnabled: false,
     })
 
 

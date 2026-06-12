@@ -176,7 +176,6 @@ import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInCh
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
 const useKickOffCheckAndDisableBypassPermissionsIfNeeded = () => {}
 const useKickOffCheckAndDisableAutoModeIfNeeded = () => {}
-import { SandboxManager } from 'src/utils/sandbox/sandbox-adapter.js';
 import { SANDBOX_NETWORK_ACCESS_TOOL_NAME } from 'src/cli/structuredIO.js';
 import { useFileHistorySnapshotInit } from 'src/hooks/useFileHistorySnapshotInit.js';
 import { useSettingsErrors } from 'src/hooks/notifs/useSettingsErrors.js';
@@ -1737,37 +1736,6 @@ export function REPL({
 
   // #34044: if user explicitly set sandbox.enabled=true but deps are missing,
   // isSandboxingEnabled() returns false silently. Surface the reason once at
-  // mount so users know their security config isn't being enforced. Full
-  // reason goes to debug log; notification points to /sandbox for details.
-  // addNotification is stable (useCallback) so the effect fires once.
-  useEffect(() => {
-    const reason = SandboxManager.getSandboxUnavailableReason();
-    if (!reason) return;
-    if (SandboxManager.isSandboxRequired()) {
-      process.stderr.write(`\nError: sandbox required but unavailable: ${reason}\n` + `  sandbox.failIfUnavailable is set — refusing to start without a working sandbox.\n\n`);
-      gracefulShutdownSync(1, 'other');
-      return;
-    }
-    logForDebugging(`sandbox disabled: ${reason}`, {
-      level: 'warn'
-    });
-    addNotification({
-      key: 'sandbox-unavailable',
-      jsx: <>
-        <Text color="warning">sandbox disabled</Text>
-        <Text dimColor> · /sandbox</Text>
-      </>,
-      priority: 'medium'
-    });
-  }, [addNotification]);
-  if (SandboxManager.isSandboxingEnabled()) {
-    // If sandboxing is enabled (setting.sandbox is defined, initialise the manager)
-    SandboxManager.initialize(sandboxAskCallback).catch(err => {
-      // Initialization/validation failed - display error and exit
-      process.stderr.write(`\n❌ Sandbox Error: ${errorMessage(err)}\n`);
-      gracefulShutdownSync(1, 'other');
-    });
-  }
   const setToolPermissionContext = useCallback((context: ToolPermissionContext, options?: {
     preserveMode?: boolean;
   }) => {

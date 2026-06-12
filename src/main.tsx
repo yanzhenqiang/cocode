@@ -124,7 +124,6 @@ import { isInBundledMode } from './utils/bundledMode.js';
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js';
 import { filterExistingPaths, getKnownPathsForRepo } from './utils/githubRepoPathMapping.js';
 import { migrateChangelogFromConfig } from './utils/releaseNotes.js';
-import { SandboxManager } from './utils/sandbox/sandbox-adapter.js';
 import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thinking.js';
 import { initUser, resetUserCache } from './utils/user.js';
 

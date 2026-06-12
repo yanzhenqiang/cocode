@@ -22,7 +22,6 @@ import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { MemoryUsageIndicator } from '../MemoryUsageIndicator.js';
 import { SentryErrorBoundary } from '../SentryErrorBoundary.js';
 import { TokenWarning } from '../TokenWarning.js';
-import { SandboxPromptFooterHint } from './SandboxPromptFooterHint.js';
 
 // Voice module deleted — VoiceIndicator stubbed to null
 const VoiceIndicator = () => null;
@@ -238,6 +237,5 @@ function NotificationContent({
         </Box>}
       {!isBriefOnly && <TokenWarning tokenUsage={tokenUsage} model={mainLoopModel} />}
       <MemoryUsageIndicator />
-      <SandboxPromptFooterHint />
     </>;
 }

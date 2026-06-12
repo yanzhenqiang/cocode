@@ -9,7 +9,6 @@ import {
 import { sanitizeToolNameForAnalytics } from 'src/services/analytics/index.js'
 import type { Tool as ToolType, ToolUseContext } from '../../Tool.js'
 import { getLanguageName } from '../../utils/cliHighlight.js'
-import { SandboxManager } from '../../utils/sandbox/sandbox-adapter.js'
 import type {
   PermissionApprovalSource,
   PermissionRejectionSource,
@@ -95,7 +94,7 @@ function baseMetadata(
     messageID:
       messageId as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     toolName: sanitizeToolNameForAnalytics(toolName),
-    sandboxEnabled: SandboxManager.isSandboxingEnabled(),
+    sandboxEnabled: false,
     // Only include wait time when the user was actually prompted (not auto-approved)
     ...(waitMs !== undefined && { waiting_for_user_permission_ms: waitMs }),
   }

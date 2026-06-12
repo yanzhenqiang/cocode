@@ -12,7 +12,6 @@ import { extractRules } from '../../utils/permissions/PermissionUpdate.js';
 import type { PermissionUpdate } from '../../utils/permissions/PermissionUpdateSchema.js';
 import { permissionRuleValueToString } from '../../utils/permissions/permissionRuleParser.js';
 import { detectUnreachableRules } from '../../utils/permissions/shadowedRuleDetection.js';
-import { SandboxManager } from '../../utils/sandbox/sandbox-adapter.js';
 import { getSettingSourceDisplayNameLowercase } from '../../utils/settings/constants.js';
 type PermissionDecisionInfoItemProps = {
   title?: string;
@@ -351,7 +350,7 @@ export function PermissionDecisionDebugInfo(t0) {
   let t1;
   if ($[0] !== suggestions || $[1] !== toolName || $[2] !== toolPermissionContext) {
     bb0: {
-      const sandboxAutoAllowEnabled = SandboxManager.isSandboxingEnabled() && SandboxManager.isAutoAllowBashIfSandboxedEnabled();
+      const sandboxAutoAllowEnabled = false;
       const all = detectUnreachableRules(toolPermissionContext, {
         sandboxAutoAllowEnabled
       });
