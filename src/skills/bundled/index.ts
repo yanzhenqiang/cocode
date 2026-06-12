@@ -8,7 +8,6 @@ import { registerPlanSkill } from './plan.js'
 import { registerSimplifySkill } from './simplify.js'
 import { registerStatuslineSkill } from './statusline.js'
 import { registerUpdateConfigSkill } from './updateConfig.js'
-import { registerVerifySkill } from './verify.js'
 
 /**
  * Initialize all bundled skills.
@@ -18,7 +17,6 @@ export function initBundledSkills(): void {
   registerAgentSkill()
   registerExploreSkill()
   registerPlanSkill()
-  registerVerifySkill()
   registerGuideSkill()
   registerStatuslineSkill()
   registerUpdateConfigSkill()

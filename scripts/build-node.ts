@@ -33,9 +33,7 @@ const featureFlags: Record<string, boolean> = {
   HISTORY_PICKER: true,
   QUICK_SEARCH: true,
   SHOT_STATS: true,
-  EXTRACT_MEMORIES: true,
   FORK_SUBAGENT: true,
-  VERIFICATION_AGENT: true,
   PROMPT_CACHE_BREAK_DETECTION: true,
   HOOK_PROMPTS: true,
 }
