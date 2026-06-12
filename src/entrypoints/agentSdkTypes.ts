@@ -6,15 +6,8 @@
  * - sdk/runtimeTypes.ts - Non-serializable types (callbacks, interfaces)
  *
  * SDK builders who need control protocol types should import from
- * sdk/controlTypes.ts directly.
  */
 
-// Control protocol types for SDK builders (bridge subpath consumers)
-/** @alpha */
-export type {
-  SDKControlRequest,
-  SDKControlResponse,
-} from './sdk/controlTypes.js'
 // Re-export core types (common serializable types)
 export * from './sdk/coreTypes.js'
 // Re-export runtime types (callbacks, interfaces with methods)

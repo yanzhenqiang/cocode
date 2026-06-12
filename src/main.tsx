@@ -354,12 +354,6 @@ function initializeEntrypoint(): void {
   }
   const cliArgs = process.argv.slice(2);
 
-  // Check for MCP serve command (handle flags before mcp serve, e.g., --debug mcp serve)
-  const mcpIndex = cliArgs.indexOf('mcp');
-  if (mcpIndex !== -1 && cliArgs[mcpIndex + 1] === 'serve') {
-    process.env.CLAUDE_CODE_ENTRYPOINT = 'mcp';
-    return;
-  }
   if (isEnvTruthy(process.env.CLAUDE_CODE_ACTION)) {
     process.env.CLAUDE_CODE_ENTRYPOINT = 'claude-code-github-action';
     return;
@@ -1592,21 +1586,6 @@ const {
   // claude mcp
 
   const mcp = program.command('mcp').description('Configure and manage MCP servers').configureHelp(createSortedHelpConfig()).enablePositionalOptions();
-  mcp.command('serve').description(`Start the Cocode MCP server`).option('-d, --debug', 'Enable debug mode', () => true).option('--verbose', 'Override verbose mode setting from config', () => true).action(async ({
-    debug,
-    verbose
-  }: {
-    debug?: boolean;
-    verbose?: boolean;
-  }) => {
-    const {
-      mcpServeHandler
-    } = await import('./cli/handlers/mcp.js');
-    await mcpServeHandler({
-      debug,
-      verbose
-    });
-  });
 
   // Register the mcp add subcommand (extracted for testability)
   registerMcpAddCommand(mcp);
