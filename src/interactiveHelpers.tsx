@@ -237,12 +237,6 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   // Channel dev-dialog removed — KAIROS/KAIROS_CHANNELS are false in external builds.
 
   // Show Chrome onboarding for first-time Claude in Chrome users
-  if (claudeInChrome && !getGlobalConfig().hasCompletedClaudeInChromeOnboarding) {
-    const {
-      ClaudeInChromeOnboarding
-    } = await import('./components/ClaudeInChromeOnboarding.js');
-    await showSetupDialog(root, done => <ClaudeInChromeOnboarding onDone={done} />);
-  }
   return onboardingShown;
 }
 export function getRenderContext(exitOnCtrlC: boolean): {

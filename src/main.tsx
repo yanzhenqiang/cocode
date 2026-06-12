@@ -936,7 +936,6 @@ async function run(): Promise<CommanderCommand> {
       durationMs: Math.round(process.uptime() * 1000)
     });
     const setupScreensStart = Date.now();
-    const enableClaudeInChrome = false;
     let onboardingShown = false;
     try {
     } catch (e) {

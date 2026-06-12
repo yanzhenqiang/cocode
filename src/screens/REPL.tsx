@@ -171,7 +171,6 @@ import { MCPConnectionManager } from 'src/services/mcp/MCPConnectionManager.js';
 import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
 
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
-import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
 
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
 const useKickOffCheckAndDisableBypassPermissionsIfNeeded = () => {}
@@ -601,7 +600,6 @@ export function REPL({
 
   // Allow Claude in Chrome MCP to send prompts through MCP notifications
   // and sync permission mode changes to the Chrome extension
-  usePromptsFromClaudeInChrome(mcpClients, toolPermissionContext.mode);
   const mergedTools = useMergedTools(combinedInitialTools, mcp.tools, toolPermissionContext);
 
   // Apply agent tool restrictions if mainThreadAgentDefinition is set
