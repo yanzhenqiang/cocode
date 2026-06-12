@@ -17,8 +17,6 @@ import { openFileInExternalEditor } from '../utils/editor.js';
 import { writeFile } from 'fs/promises';
 import { Box, Text, useStdin, useTheme, useTerminalFocus } from '../ink.js';
 import type { TabStatusKind } from '../ink/hooks/use-tab-status.js';
-import { CostThresholdDialog } from '../components/CostThresholdDialog.js';
-import { IdleReturnDialog } from '../components/IdleReturnDialog.js';
 import * as React from 'react';
 import { useEffect, useMemo, useRef, useState, useCallback, useDeferredValue, useLayoutEffect, type RefObject } from 'react';
 import { useNotifications } from '../context/notifications.js';
@@ -161,7 +159,6 @@ import { startBackgroundSession } from '../tasks/LocalMainSessionTask.js';
 import { useSessionBackgrounding } from '../hooks/useSessionBackgrounding.js';
 import { diagnosticTracker } from '../services/diagnosticTracking.js';
 
-import { EffortCallout, shouldShowEffortCallout } from '../components/EffortCallout.js';
 import type { EffortValue } from '../utils/effort.js';
 import { getAPIProvider } from '../utils/model/providers.js';
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
@@ -571,7 +568,6 @@ export function REPL({
   const [showModelSwitchCallout, setShowModelSwitchCallout] = useState(() => {
     return false;
   });
-  const [showEffortCallout, setShowEffortCallout] = useState(() => shouldShowEffortCallout(mainLoopModel));
   // notifications
   useModelMigrationNotifications();
   useMcpConnectivityStatus({
@@ -1545,13 +1541,12 @@ export function REPL({
   const [isExiting, setIsExiting] = useState(false);
 
   // Calculate if cost dialog should be shown
-  const showingCostDialog = !isLoading && showCostDialog;
 
   // Determine which dialog should have focus (if any)
   // Permission and interactive dialogs can show even when toolJSX is set,
   // as long as shouldContinueAnimation is true. This prevents deadlocks when
   // agents set background hints while waiting for user interaction.
-  function getFocusedInputDialog(): 'message-selector' | 'tool-permission' | 'prompt' | 'elicitation' | 'cost' | 'idle-return' | 'init-onboarding' | 'ide-onboarding' | 'model-switch' | 'undercover-callout' | 'effort-callout' | 'desktop-upsell' | 'ultraplan-choice' | 'ultraplan-launch' | undefined {
+  function getFocusedInputDialog(): 'message-selector' | 'tool-permission' | 'prompt' | 'elicitation' | 'init-onboarding' | 'ide-onboarding' | 'model-switch' | 'undercover-callout' | 'desktop-upsell' | 'ultraplan-choice' | 'ultraplan-launch' | undefined {
     // Exit states always take precedence
     if (isExiting || exitFlow) return undefined;
 
@@ -1568,21 +1563,18 @@ export function REPL({
     // Worker sandbox permission prompts (network access) from swarm workers
     if (allowDialogsWithAnimation && workerSandboxPermissions.queue[0]) return 'worker-sandbox-permission';
     if (allowDialogsWithAnimation && elicitation.queue[0]) return 'elicitation';
-    if (allowDialogsWithAnimation && showingCostDialog) return 'cost';
-    if (allowDialogsWithAnimation && idleReturnPending) return 'idle-return';
     // Model switch callout (internal-only, eliminated from external builds)
 
     // Undercover auto-enable explainer (internal-only, eliminated from external builds)
 
     // Effort callout (shown once for Opus 4.6 users when effort is enabled)
-    if (allowDialogsWithAnimation && showEffortCallout) return 'effort-callout';
 
     return undefined;
   }
   const focusedInputDialog = getFocusedInputDialog();
 
   // True when permission prompts exist but are hidden because the user is typing
-  const hasSuppressedDialogs = promptTypingSuppressionActive && (toolUseConfirmQueue[0] || promptQueue[0] || workerSandboxPermissions.queue[0] || elicitation.queue[0] || showingCostDialog);
+  const hasSuppressedDialogs = promptTypingSuppressionActive && (toolUseConfirmQueue[0] || promptQueue[0] || workerSandboxPermissions.queue[0] || elicitation.queue[0] );
 
   // Keep ref in sync so timer callbacks can read the current value
   focusedInputDialogRef.current = focusedInputDialog;
@@ -3700,78 +3692,11 @@ export function REPL({
             }));
             currentRequest?.onWaitingDismiss?.(action);
           }} />}
-          {focusedInputDialog === 'cost' && <CostThresholdDialog onDone={() => {
-            setShowCostDialog(false);
-            setHaveShownCostDialog(true);
-            saveGlobalConfig(current => ({
-              ...current,
-              hasAcknowledgedCostThreshold: true
-            }));
-            logEvent('tengu_cost_threshold_acknowledged', {});
-          }} />}
-          {focusedInputDialog === 'idle-return' && idleReturnPending && <IdleReturnDialog idleMinutes={idleReturnPending.idleMinutes} totalInputTokens={getTotalInputTokens()} onDone={async action => {
-            const pending = idleReturnPending;
-            setIdleReturnPending(null);
-            logEvent('tengu_idle_return_action', {
-              action: action as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-              idleMinutes: Math.round(pending.idleMinutes),
-              messageCount: messagesRef.current.length,
-              totalInputTokens: getTotalInputTokens()
-            });
-            if (action === 'dismiss') {
-              setInputValue(pending.input);
-              return;
-            }
-            if (action === 'never') {
-              saveGlobalConfig(current => {
-                if (current.idleReturnDismissed) return current;
-                return {
-                  ...current,
-                  idleReturnDismissed: true
-                };
-              });
-            }
-            if (action === 'clear') {
-              const {
-                clearConversation
-              } = await import('../commands/clear/conversation.js');
-              await clearConversation({
-                setMessages,
-                readFileState: readFileState.current,
-                discoveredSkillNames: discoveredSkillNamesRef.current,
-                loadedNestedMemoryPaths: loadedNestedMemoryPathsRef.current,
-                getAppState: () => store.getState(),
-                setAppState,
-                setConversationId
-              });
-              haikuTitleAttemptedRef.current = false;
-              setHaikuTitle(undefined);
-              bashTools.current.clear();
-              bashToolsProcessedIdx.current = 0;
-            }
-            skipIdleCheckRef.current = true;
-            void onSubmitRef.current(pending.input, {
-              setCursorOffset: () => { },
-              clearBuffer: () => { },
-              resetHistory: () => { }
-            });
-          }} />}
 
-          {focusedInputDialog === 'effort-callout' && <EffortCallout model={mainLoopModel} onDone={selection => {
-            setShowEffortCallout(false);
-            if (selection !== 'dismiss') {
-              setAppState(prev => ({
-                ...prev,
-                effortValue: selection
-              }));
-            }
-          }} />}
 
           {exitFlow}
 
-          {null}
 
-          {null}
 
           {mrRender()}
 
