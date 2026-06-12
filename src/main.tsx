@@ -28,7 +28,6 @@ import { count, uniq } from './utils/array.js';
 import { installAsciicastRecorder } from './utils/asciicast.js';
 import { getSubscriptionType, prefetchGcpCredentialsIfSafe, validateForceLoginOrg } from './utils/auth.js';
 import { checkHasTrustDialogAccepted, getGlobalConfig, getRemoteControlAtStartup, saveGlobalConfig } from './utils/config.js';
-import { seedEarlyInput, stopCapturingEarlyInput } from './utils/earlyInput.js';
 import { getInitialEffortSetting, parseEffortValue } from './utils/effort.js';
 import { getInitialFastModeSetting, isFastModeEnabled, prefetchFastModeStatus, resolveFastModeStatusFromCache } from './utils/fastMode.js';
 import { applyConfigEnvironmentVariables } from './utils/managedEnv.js';
@@ -262,19 +261,6 @@ function loadSettingsFromFlag(settingsFile: string): void {
     process.exit(1);
   }
 }
-function loadSettingSourcesFromFlag(settingSourcesArg: string): void {
-  try {
-    const sources = parseSettingSourcesFlag(settingSourcesArg);
-    resetSettingsCache();
-  } catch (error) {
-    if (error instanceof Error) {
-      logError(error);
-    }
-    process.stderr.write(chalk.red(`Error processing --setting-sources: ${errorMessage(error)}\n`));
-    process.exit(1);
-  }
-}
-
 /**
  * Parse and load settings flags early, before init()
  * This ensures settings are filtered from the start of initialization
@@ -287,11 +273,6 @@ function eagerLoadSettings(): void {
     loadSettingsFromFlag(settingsFile);
   }
 
-  // Parse --setting-sources flag early to control which sources are loaded
-  const settingSourcesArg = eagerParseCliFlag('--setting-sources');
-  if (settingSourcesArg !== undefined) {
-    loadSettingSourcesFromFlag(settingSourcesArg);
-  }
   profileCheckpoint('eagerLoadSettings_end');
 }
 function initializeEntrypoint(): void {
@@ -460,13 +441,7 @@ async function run(): Promise<CommanderCommand> {
   // setting it once here covers mcp, plugin, auth, and all other subcommands.
   .helpOption('-h, --help', 'Display help for command').option('-d, --debug [filter]', 'Enable debug mode with optional category filtering (e.g., "api,hooks" or "!1p,!file")', (_value: string | true) => {
     return true;
-  }).addOption(new Option('-d2e, --debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp()).option('--debug-file <path>', 'Write debug logs to a specific file path (implicitly enables debug mode)', () => true).option('--verbose', 'Override verbose mode setting from config', () => true).addOption(new Option('--init', 'Run Setup hooks with init trigger, then continue').hideHelp()).addOption(new Option('--init-only', 'Run Setup and SessionStart:startup hooks, then exit').hideHelp()).addOption(new Option('--maintenance', 'Run Setup hooks with maintenance trigger, then continue').hideHelp()).addOption(new Option('--thinking <mode>', 'Thinking mode: enabled (equivalent to adaptive), disabled').choices(['enabled', 'adaptive', 'disabled']).hideHelp()).addOption(new Option('--task-budget <tokens>', 'API-side task budget in tokens (output_config.task_budget)').argParser(value => {
-    const tokens = Number(value);
-    if (isNaN(tokens) || tokens <= 0 || !Number.isInteger(tokens)) {
-      throw new Error('--task-budget must be a positive integer');
-    }
-    return tokens;
-  }).hideHelp()).addOption(new Option('--rewind-files <user-message-id>', 'Restore files to state at the specified user message and exit (requires --resume)').hideHelp())
+  }).addOption(new Option('-d2e, --debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp()).option('--debug-file <path>', 'Write debug logs to a specific file path (implicitly enables debug mode)', () => true).option('--verbose', 'Override verbose mode setting from config', () => true).addOption(new Option('--init', 'Run Setup hooks with init trigger, then continue').hideHelp()).addOption(new Option('--init-only', 'Run Setup and SessionStart:startup hooks, then exit').hideHelp()).addOption(new Option('--maintenance', 'Run Setup hooks with maintenance trigger, then continue').hideHelp()).addOption(new Option('--thinking <mode>', 'Thinking mode: enabled (equivalent to adaptive), disabled').choices(['enabled', 'adaptive', 'disabled']).hideHelp())
   // @[MODEL LAUNCH]: Update the example model ID in the --model help text.
   .option('--model <model>', `Model for the current session. Provide an alias for the latest model (e.g. 'sonnet' or 'opus') or a model's full name (e.g. 'claude-sonnet-4-6').`).option('--provider <provider>', `AI provider to use (anthropic, openai, gemini, github, bedrock, vertex, ollama). Reads API keys from environment variables.`).addOption(new Option('--effort <level>', `Effort level for the current session (low, medium, high, max)`).argParser((rawValue: string) => {
     const value = rawValue.toLowerCase();
@@ -475,33 +450,14 @@ async function run(): Promise<CommanderCommand> {
       throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
     }
     return value;
-  })).option('--fallback-model <model>', 'Enable automatic fallback to specified model when default model is overloaded').option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--strict-mcp-config', 'Only use MCP servers from --mcp-config, ignoring all other MCP configurations', () => true).option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)').option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
+  })).option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)')
   // gh-33508: <paths...> (variadic) consumed everything until the next
   // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
   // `mcp` and `add` as paths, then choked on --transport as an unknown
   // top-level option. Single-value + collect accumulator means each
   // --plugin-dir takes exactly one arg; repeat the flag for multiple dirs.
-  .option('--plugin-dir <path>', 'Load plugins from a directory for this session only (repeatable: --plugin-dir A --plugin-dir B)', (val: string, prev: string[]) => [...prev, val], [] as string[]).option('--disable-slash-commands', 'Disable all skills', () => true).option('--file <specs...>', 'File resources to download at startup. Format: file_id:relative_path (e.g., --file file_abc:doc.txt file_def:img.png)').action(async (prompt, options) => {
+  .action(async (prompt, options) => {
     profileCheckpoint('action_handler_start');
-
-    // Handle --fork-from-session: map to resume + fork-session for transcript inheritance
-    const forkFromSession = (options as { forkFromSession?: string }).forkFromSession;
-    if (forkFromSession) {
-      if (options.resume || options.continue) {
-        process.stderr.write(chalk.red('Error: --fork-from-session cannot be used with --resume or --continue.\n'));
-        process.exit(1);
-      }
-      (options as { resume: string | boolean }).resume = forkFromSession;
-      (options as { forkSession?: boolean }).forkSession = true;
-    }
-    const forkFromMessage = (options as { forkFromMessage?: string }).forkFromMessage;
-    if (forkFromMessage) {
-      if (!forkFromSession) {
-        process.stderr.write(chalk.red('Error: --fork-from-message requires --fork-from-session.\n'));
-        process.exit(1);
-      }
-      (options as { resumeSessionAt?: string }).resumeSessionAt = forkFromMessage;
-    }
 
     // Ignore "code" as a prompt - treat it the same as no prompt
     if (prompt === 'code') {
@@ -527,14 +483,11 @@ async function run(): Promise<CommanderCommand> {
       mcpConfig = [],
       permissionMode: permissionModeCli,
       addDir = [],
-      fallbackModel,
+
       betas = [],
       ide = false,
       sessionId,
     } = options;
-    if (options.prefill) {
-      seedEarlyInput(options.prefill);
-    }
 
     // Promise for file downloads - started early, awaited before REPL renders
     let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
@@ -545,7 +498,7 @@ async function run(): Promise<CommanderCommand> {
     const maintenance = options.maintenance ?? false;
 
     // Extract disable slash commands flag
-    const disableSlashCommands = options.disableSlashCommands || false;
+    const disableSlashCommands = false;
 
     // Validate session ID if provided
     if (sessionId) {
@@ -569,55 +522,6 @@ async function run(): Promise<CommanderCommand> {
         process.exit(1);
       }
     }
-
-    // Validate that fallback model is different from main model
-    if (fallbackModel && options.model && fallbackModel === options.model) {
-      process.stderr.write(chalk.red('Error: Fallback model cannot be the same as the main model. Please specify a different model for --fallback-model.\n'));
-      process.exit(1);
-    }
-
-    // Handle system prompt options
-    let systemPrompt = options.systemPrompt;
-    if (options.systemPromptFile) {
-      if (options.systemPrompt) {
-        process.stderr.write(chalk.red('Error: Cannot use both --system-prompt and --system-prompt-file. Please use only one.\n'));
-        process.exit(1);
-      }
-      try {
-        const filePath = resolve(options.systemPromptFile);
-        systemPrompt = readFileSync(filePath, 'utf8');
-      } catch (error) {
-        const code = getErrnoCode(error);
-        if (code === 'ENOENT') {
-          process.stderr.write(chalk.red(`Error: System prompt file not found: ${resolve(options.systemPromptFile)}\n`));
-          process.exit(1);
-        }
-        process.stderr.write(chalk.red(`Error reading system prompt file: ${errorMessage(error)}\n`));
-        process.exit(1);
-      }
-    }
-
-    // Handle append system prompt options
-    let appendSystemPrompt = options.appendSystemPrompt;
-    if (options.appendSystemPromptFile) {
-      if (options.appendSystemPrompt) {
-        process.stderr.write(chalk.red('Error: Cannot use both --append-system-prompt and --append-system-prompt-file. Please use only one.\n'));
-        process.exit(1);
-      }
-      try {
-        const filePath = resolve(options.appendSystemPromptFile);
-        appendSystemPrompt = readFileSync(filePath, 'utf8');
-      } catch (error) {
-        const code = getErrnoCode(error);
-        if (code === 'ENOENT') {
-          process.stderr.write(chalk.red(`Error: Append system prompt file not found: ${resolve(options.appendSystemPromptFile)}\n`));
-          process.exit(1);
-        }
-        process.stderr.write(chalk.red(`Error reading append system prompt file: ${errorMessage(error)}\n`));
-        process.exit(1);
-      }
-    }
-
     // Teammate prompt addendum removed with swarm subsystem (v0.12.9).
     const {
       mode: permissionMode,
@@ -736,7 +640,7 @@ async function run(): Promise<CommanderCommand> {
     }
 
     // Extract strict MCP config flag
-    const strictMcpConfig = options.strictMcpConfig || false;
+    const strictMcpConfig = false;
 
     // Check if enterprise MCP configuration exists. When it does, only allow dynamic MCP
     // configs that contain special server types (sdk)
@@ -882,7 +786,7 @@ async function run(): Promise<CommanderCommand> {
     // Special case the default model with the null keyword
     // NOTE: Model resolution happens after setup() to ensure trust is established before AWS auth
     const userSpecifiedModel = options.model === 'default' ? getDefaultMainLoopModel() : options.model;
-    const userSpecifiedFallbackModel = fallbackModel === 'default' ? getDefaultMainLoopModel() : fallbackModel;
+    const userSpecifiedFallbackModel = undefined;
 
     // Reuse preSetupCwd. Saves a getCwd() syscall in the common path.
     const currentCwd = preSetupCwd;
@@ -1124,8 +1028,8 @@ const {
       githubActionInputs: process.env.GITHUB_ACTION_INPUTS,
       permissionMode,
       modeIsBypass: permissionMode === 'bypassPermissions',
-      systemPromptFlag: systemPrompt ? options.systemPromptFile ? 'file' : 'flag' : undefined,
-      appendSystemPromptFlag: appendSystemPrompt ? options.appendSystemPromptFile ? 'file' : 'flag' : undefined,
+      systemPromptFlag: undefined,
+      appendSystemPromptFlag: undefined,
       thinkingConfig,
       assistantActivationPath: undefined
     });
@@ -1311,8 +1215,8 @@ const {
       disableSlashCommands,
       dynamicMcpConfig,
       strictMcpConfig,
-      systemPrompt,
-      appendSystemPrompt,
+      systemPrompt: undefined,
+      appendSystemPrompt: undefined,
       thinkingConfig,
       ...(uploaderReady && {
         onTurnComplete: (messages: MessageType[]) => {
