@@ -178,8 +178,6 @@ import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketp
 import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
 
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
-const checkAndDisableBypassPermissionsIfNeeded = async () => {}
-const checkAndDisableAutoModeIfNeeded = async () => {}
 const useKickOffCheckAndDisableBypassPermissionsIfNeeded = () => {}
 const useKickOffCheckAndDisableAutoModeIfNeeded = () => {}
 import { SandboxManager } from 'src/utils/sandbox/sandbox-adapter.js';
@@ -2223,11 +2221,7 @@ export function REPL({
       });
     }
     queryCheckpoint('query_context_loading_start');
-    const [, , defaultSystemPrompt, baseUserContext, systemContext] = await Promise.all([
-      // IMPORTANT: do this after setMessages() above, to avoid UI jank
-      checkAndDisableBypassPermissionsIfNeeded(toolPermissionContext, setAppState),
-      // Gated on TRANSCRIPT_CLASSIFIER so GrowthBook kill switch runs wherever auto mode is built in
-      feature('TRANSCRIPT_CLASSIFIER') ? checkAndDisableAutoModeIfNeeded(toolPermissionContext, setAppState, store.getState().fastMode) : undefined, getSystemPrompt(freshTools, mainLoopModelParam, Array.from(toolPermissionContext.additionalWorkingDirectories.keys()), freshMcpClients), getUserContext(), getSystemContext()]);
+    const [defaultSystemPrompt, baseUserContext, systemContext] = await Promise.all([getSystemPrompt(freshTools, mainLoopModelParam, Array.from(toolPermissionContext.additionalWorkingDirectories.keys()), freshMcpClients), getUserContext(), getSystemContext()]);
     const userContext = {
       ...baseUserContext,
       ...({})
