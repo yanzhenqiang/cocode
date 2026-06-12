@@ -35,16 +35,7 @@ import { createCombinedAbortSignal } from '../utils/combinedAbortSignal.js';
 import { isEnvTruthy } from '../utils/envUtils.js';
 import { formatTokens, truncateToWidth } from '../utils/format.js';
 import { consumeEarlyInput } from '../utils/earlyInput.js';
-const setMemberActive = () => {};
-const isSwarmWorker = () => false;
-const generateSandboxRequestId = () => '';
-const sendSandboxPermissionRequestViaMailbox = async () => {};
-const sendSandboxPermissionResponseViaMailbox = async () => {};
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
-const registerLeaderToolUseConfirmQueue = () => {};
-const unregisterLeaderToolUseConfirmQueue = () => {};
-const registerLeaderSetToolPermissionContext = () => {};
-const unregisterLeaderSetToolPermissionContext = () => {};
 import { useLogMessages } from '../hooks/useLogMessages.js';
 // useReplBridge deleted with bridge module — stub sendBridgeResult
 const useReplBridge = () => ({ sendBridgeResult: () => {} });
@@ -176,7 +167,6 @@ import type { EffortValue } from '../utils/effort.js';
 import { getAPIProvider } from '../utils/model/providers.js';
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const AntModelSwitchCallout = null;
-const shouldShowAntModelSwitch = (): boolean => false;
 const UndercoverAutoCallout = null;
 /* eslint-enable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 import { activityManager } from '../utils/activityManager.js';
@@ -1010,11 +1000,6 @@ export function REPL({
   const showStatusInTerminalTab = tabStatusGateEnabled && (getGlobalConfig().showStatusInTerminalTab ?? false);
   useTabStatus(titleDisabled || !showStatusInTerminalTab ? null : sessionStatus);
 
-  // Register the leader's setToolUseConfirmQueue for in-process teammates
-  useEffect(() => {
-    registerLeaderToolUseConfirmQueue(setToolUseConfirmQueue);
-    return () => unregisterLeaderToolUseConfirmQueue();
-  }, [setToolUseConfirmQueue]);
   const [messages, rawSetMessages] = useState<MessageType[]>(() => {
     if (!initialMessages) return [];
     const initialReplacementState = provisionContentReplacementState(initialMessages, initialContentReplacements);
@@ -1892,11 +1877,6 @@ export function REPL({
     }, setToolUseConfirmQueue);
   }, [setAppState, setToolUseConfirmQueue]);
 
-  // Register the leader's setToolPermissionContext for in-process teammates
-  useEffect(() => {
-    registerLeaderSetToolPermissionContext(setToolPermissionContext);
-    return () => unregisterLeaderSetToolPermissionContext();
-  }, [setToolPermissionContext]);
   const canUseTool = useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext);
   const requestPrompt = useCallback((title: string, toolInputSummary?: string | null) => (request: PromptRequest): Promise<PromptResponse> => new Promise<PromptResponse>((resolve, reject) => {
     setPromptQueue(prev => [...prev, {
@@ -3833,10 +3813,6 @@ export function REPL({
             } = response;
             const currentRequest = workerSandboxPermissions.queue[0];
             if (!currentRequest) return;
-            const approvedHost = currentRequest.host;
-
-            // Send response via mailbox to the worker
-            void sendSandboxPermissionResponseViaMailbox(currentRequest.workerName, currentRequest.requestId, approvedHost, allow, teamContext?.teamName);
             if (persistToSettings && allow) {
               const update = {
                 type: 'addRules' as const,
