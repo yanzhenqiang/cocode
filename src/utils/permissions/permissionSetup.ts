@@ -543,10 +543,8 @@ function isSymlinkTo({
  */
 export function initialPermissionModeFromCLI({
   permissionModeCli,
-  dangerouslySkipPermissions,
 }: {
   permissionModeCli: string | undefined
-  dangerouslySkipPermissions: boolean | undefined
 }): { mode: PermissionMode; notification?: string } {
   const settings = getSettings_DEPRECATED() || {}
 
@@ -577,9 +575,6 @@ export function initialPermissionModeFromCLI({
   const orderedModes: PermissionMode[] = []
   let notification: string | undefined
 
-  if (dangerouslySkipPermissions) {
-    orderedModes.push('bypassPermissions')
-  }
   if (permissionModeCli) {
     const parsedMode = permissionModeFromString(permissionModeCli)
     if (feature('TRANSCRIPT_CLASSIFIER') && parsedMode === 'auto') {

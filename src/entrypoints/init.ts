@@ -9,7 +9,6 @@ import { enableConfigs, recordFirstStartTime } from '../utils/config.js'
 import { logForDebugging } from '../utils/debug.js'
 import { detectCurrentRepository } from '../utils/detectRepository.js'
 import { logForDiagnosticsNoPII } from '../utils/diagLogs.js'
-import { initJetBrainsDetection } from '../utils/envDynamic.js'
 import { isEnvTruthy } from '../utils/envUtils.js'
 import { ConfigParseError, errorMessage } from '../utils/errors.js'
 // showInvalidConfigDialog is dynamically imported in the error path to avoid loading React at init
@@ -70,7 +69,6 @@ export const init = memoize(async (): Promise<void> => {
     profileCheckpoint('init_after_oauth_populate')
 
     // Initialize JetBrains IDE detection asynchronously (populates cache for later sync access)
-    void initJetBrainsDetection()
     profileCheckpoint('init_after_jetbrains_detection')
 
     // Detect GitHub repository asynchronously (populates cache for gitDiff PR linking)

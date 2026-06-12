@@ -51,7 +51,7 @@ export function isJetBrainsIde(_ide: IdeType | null): boolean {
 
 export const isSupportedVSCodeTerminal = () => false
 
-export const isSupportedJetBrainsTerminal = () => false
+// JetBrains IDE detection removed
 
 export const isSupportedTerminal = () => false
 
