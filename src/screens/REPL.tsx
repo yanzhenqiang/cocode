@@ -1551,7 +1551,7 @@ export function REPL({
   // Permission and interactive dialogs can show even when toolJSX is set,
   // as long as shouldContinueAnimation is true. This prevents deadlocks when
   // agents set background hints while waiting for user interaction.
-  function getFocusedInputDialog(): 'message-selector' | 'sandbox-permission' | 'tool-permission' | 'prompt' | 'worker-sandbox-permission' | 'elicitation' | 'cost' | 'idle-return' | 'init-onboarding' | 'ide-onboarding' | 'model-switch' | 'undercover-callout' | 'effort-callout' | 'desktop-upsell' | 'ultraplan-choice' | 'ultraplan-launch' | undefined {
+  function getFocusedInputDialog(): 'message-selector' | 'tool-permission' | 'prompt' | 'elicitation' | 'cost' | 'idle-return' | 'init-onboarding' | 'ide-onboarding' | 'model-switch' | 'undercover-callout' | 'effort-callout' | 'desktop-upsell' | 'ultraplan-choice' | 'ultraplan-launch' | undefined {
     // Exit states always take precedence
     if (isExiting || exitFlow) return undefined;
 
@@ -1560,7 +1560,6 @@ export function REPL({
 
     // Suppress interrupt dialogs while user is actively typing
     if (promptTypingSuppressionActive) return undefined;
-    if (sandboxPermissionRequestQueue[0]) return 'sandbox-permission';
 
     // Permission/interactive dialogs (show unless blocked by toolJSX)
     const allowDialogsWithAnimation = !toolJSX || toolJSX.shouldContinueAnimation;
@@ -1583,7 +1582,7 @@ export function REPL({
   const focusedInputDialog = getFocusedInputDialog();
 
   // True when permission prompts exist but are hidden because the user is typing
-  const hasSuppressedDialogs = promptTypingSuppressionActive && (sandboxPermissionRequestQueue[0] || toolUseConfirmQueue[0] || promptQueue[0] || workerSandboxPermissions.queue[0] || elicitation.queue[0] || showingCostDialog);
+  const hasSuppressedDialogs = promptTypingSuppressionActive && (toolUseConfirmQueue[0] || promptQueue[0] || workerSandboxPermissions.queue[0] || elicitation.queue[0] || showingCostDialog);
 
   // Keep ref in sync so timer callbacks can read the current value
   focusedInputDialogRef.current = focusedInputDialog;
@@ -3658,55 +3657,6 @@ export function REPL({
           {!showSpinner && !toolJSX?.isLocalJSXCommand && showExpandedTodos && tasksV2 && tasksV2.length > 0 && <Box width="100%" flexDirection="column">
             <TaskListV2 tasks={tasksV2} isStandalone={true} />
           </Box>}
-          {focusedInputDialog === 'sandbox-permission' && <SandboxPermissionRequest key={sandboxPermissionRequestQueue[0]!.hostPattern.host} hostPattern={sandboxPermissionRequestQueue[0]!.hostPattern} onUserResponse={(response: {
-            allow: boolean;
-            persistToSettings: boolean;
-          }) => {
-            const {
-              allow,
-              persistToSettings
-            } = response;
-            const currentRequest = sandboxPermissionRequestQueue[0];
-            if (!currentRequest) return;
-            const approvedHost = currentRequest.hostPattern.host;
-            if (persistToSettings) {
-              const update = {
-                type: 'addRules' as const,
-                rules: [{
-                  toolName: WEB_FETCH_TOOL_NAME,
-                  ruleContent: `domain:${approvedHost}`
-                }],
-                behavior: (allow ? 'allow' : 'deny') as 'allow' | 'deny',
-                destination: 'localSettings' as const
-              };
-              setAppState(prev => ({
-                ...prev,
-                toolPermissionContext: applyPermissionUpdate(prev.toolPermissionContext, update)
-              }));
-              persistPermissionUpdate(update);
-
-              // Immediately update sandbox in-memory config to prevent race conditions
-              // where pending requests slip through before settings change is detected
-              SandboxManager.refreshConfig();
-            }
-
-            // Resolve ALL pending requests for the same host (not just the first one)
-            // This handles the case where multiple parallel requests came in for the same domain
-            setSandboxPermissionRequestQueue(queue => {
-              queue.filter(item => item.hostPattern.host === approvedHost).forEach(item => item.resolvePromise(allow));
-              return queue.filter(item => item.hostPattern.host !== approvedHost);
-            });
-
-            // Clean up bridge subscriptions and cancel remote prompts
-            // for this host since the local user already responded.
-            const cleanups = sandboxBridgeCleanupRef.current.get(approvedHost);
-            if (cleanups) {
-              for (const fn of cleanups) {
-                fn();
-              }
-              sandboxBridgeCleanupRef.current.delete(approvedHost);
-            }
-          }} />}
           {focusedInputDialog === 'prompt' && <PromptDialog key={promptQueue[0]!.request.prompt} title={promptQueue[0]!.title} toolInputSummary={promptQueue[0]!.toolInputSummary} request={promptQueue[0]!.request} onRespond={selectedKey => {
             const item = promptQueue[0];
             if (!item) return;
@@ -3720,47 +3670,6 @@ export function REPL({
             if (!item) return;
             item.reject(new Error('Prompt cancelled by user'));
             setPromptQueue(([, ...tail]) => tail);
-          }} />}
-          {/* Worker sandbox permission requests from swarm workers */}
-          {focusedInputDialog === 'worker-sandbox-permission' && <SandboxPermissionRequest key={workerSandboxPermissions.queue[0]!.requestId} hostPattern={{
-            host: workerSandboxPermissions.queue[0]!.host,
-            port: undefined
-          } as NetworkHostPattern} onUserResponse={(response: {
-            allow: boolean;
-            persistToSettings: boolean;
-          }) => {
-            const {
-              allow,
-              persistToSettings
-            } = response;
-            const currentRequest = workerSandboxPermissions.queue[0];
-            if (!currentRequest) return;
-            if (persistToSettings && allow) {
-              const update = {
-                type: 'addRules' as const,
-                rules: [{
-                  toolName: WEB_FETCH_TOOL_NAME,
-                  ruleContent: `domain:${approvedHost}`
-                }],
-                behavior: 'allow' as const,
-                destination: 'localSettings' as const
-              };
-              setAppState(prev => ({
-                ...prev,
-                toolPermissionContext: applyPermissionUpdate(prev.toolPermissionContext, update)
-              }));
-              persistPermissionUpdate(update);
-              SandboxManager.refreshConfig();
-            }
-
-            // Remove from queue
-            setAppState(prev => ({
-              ...prev,
-              workerSandboxPermissions: {
-                ...prev.workerSandboxPermissions,
-                queue: prev.workerSandboxPermissions.queue.slice(1)
-              }
-            }));
           }} />}
           {focusedInputDialog === 'elicitation' && <ElicitationDialog key={elicitation.queue[0]!.serverName + ':' + String(elicitation.queue[0]!.requestId)} event={elicitation.queue[0]!} onResponse={(action, content) => {
             const currentRequest = elicitation.queue[0];
