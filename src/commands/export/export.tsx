@@ -39,13 +39,6 @@ export function extractFirstPrompt(messages: Message[]): string {
   }
   return result;
 }
-export function sanitizeFilename(text: string): string {
-  // Replace special characters with hyphens
-  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-  .replace(/\s+/g, '-') // Replace spaces with hyphens
-  .replace(/-+/g, '-') // Replace multiple hyphens with single
-  .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-}
 async function exportWithReactRenderer(context: ToolUseContext): Promise<string> {
   const tools = context.options.tools || [];
   return renderMessagesToPlainText(context.messages, tools);

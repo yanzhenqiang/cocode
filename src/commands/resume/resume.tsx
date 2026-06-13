@@ -188,9 +188,6 @@ function ResumeCommand({
   }
   return <LogSelector logs={logs} maxHeight={insideModal ? Math.floor(rows / 2) : rows - 2} onCancel={handleCancel} onSelect={handleSelect} onLogsChanged={() => loadLogs(showAllProjects, worktreePaths)} showAllProjects={showAllProjects} onToggleAllProjects={handleToggleAllProjects} onAgenticSearch={agenticSessionSearch} />;
 }
-export function filterResumableSessions(logs: LogOption[], currentSessionId: string): LogOption[] {
-  return logs.filter(l => !l.isSidechain && getSessionIdFromLog(l) !== currentSessionId);
-}
 export const call: LocalJSXCommandCall = async (onDone, context, args) => {
   const onResume = async (sessionId: UUID, log: LogOption, entrypoint: ResumeEntrypoint) => {
     try {

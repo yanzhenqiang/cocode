@@ -60,20 +60,6 @@ function setEffortValue(effortValue: EffortValue): EffortCommandResult {
     }
   };
 }
-export function showCurrentEffort(appStateEffort: EffortValue | undefined, model: string): EffortCommandResult {
-  const envOverride = getEffortEnvOverride();
-  const effectiveValue = envOverride === null ? undefined : envOverride ?? appStateEffort;
-  if (effectiveValue === undefined) {
-    const level = getDisplayedEffortLevel(model, appStateEffort);
-    return {
-      message: `Effort level: auto (currently ${level})`
-    };
-  }
-  const description = getEffortValueDescription(effectiveValue);
-  return {
-    message: `Current effort level: ${effectiveValue} (${description})`
-  };
-}
 function unsetEffortLevel(): EffortCommandResult {
   const result = updateSettingsForSource('userSettings', {
     effortLevel: undefined
@@ -103,22 +89,6 @@ function unsetEffortLevel(): EffortCommandResult {
     effortUpdate: {
       value: undefined
     }
-  };
-}
-export function executeEffort(args: string): EffortCommandResult {
-  const normalized = args.toLowerCase();
-  if (normalized === 'auto' || normalized === 'unset') {
-    return unsetEffortLevel();
-  }
-  if (isEffortLevel(normalized)) {
-    return setEffortValue(normalized);
-  }
-  if (isOpenAIEffortLevel(normalized)) {
-    // Normalize OpenAI-shaped 'xhigh' → standard 'max' so it persists.
-    return setEffortValue(openAIEffortToStandard(normalized));
-  }
-  return {
-    message: `Invalid argument: ${args}. Valid options are: low, medium, high, max, xhigh, auto`
   };
 }
 function ShowCurrentEffort(t0) {

@@ -15,7 +15,6 @@ import {
 } from '../../utils/status.js'
 
 // Stub: OAuth login removed
-export async function installOAuthTokens(_tokens: any): Promise<void> {}
 
 export async function authStatus(opts: {
   json?: boolean

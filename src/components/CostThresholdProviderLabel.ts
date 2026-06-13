@@ -9,8 +9,3 @@ const COST_THRESHOLD_PROVIDER_LABELS: Partial<Record<APIProvider, string>> = {
   gemini: 'Gemini API',
 }
 
-export function getCostThresholdProviderLabelForProvider(
-  provider: APIProvider,
-): string {
-  return COST_THRESHOLD_PROVIDER_LABELS[provider] ?? 'API'
-}

@@ -92,8 +92,3 @@ export const LOGO_PALETTE_LABELS: Record<LogoPaletteName, string> = {
 
 
 
-export function resolveLogoPalette(name: string | undefined): LogoPalette {
-  return isLogoPaletteName(name)
-    ? LOGO_PALETTES[name]
-    : LOGO_PALETTES[DEFAULT_LOGO_PALETTE]
-}

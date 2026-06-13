@@ -31,43 +31,6 @@ type CollectContextDataInput = {
   }
 }
 
-export async function collectContextData(
-  context: CollectContextDataInput,
-): Promise<ContextData> {
-  const {
-    messages,
-    getAppState,
-    options: {
-      mainLoopModel,
-      tools,
-      agentDefinitions,
-      customSystemPrompt,
-      appendSystemPrompt,
-    },
-  } = context
-
-  const apiView = getMessagesAfterCompactBoundary(messages)
-
-  const { messages: compactedMessages } = await microcompactMessages(apiView)
-  const appState = getAppState()
-
-  return analyzeContextUsage(
-    compactedMessages,
-    mainLoopModel,
-    async () => appState.toolPermissionContext,
-    tools,
-    agentDefinitions,
-    undefined, // terminalWidth
-    // analyzeContextUsage only reads options.{customSystemPrompt,appendSystemPrompt}
-    // but its signature declares the full Pick<ToolUseContext, 'options'>.
-    { options: { customSystemPrompt, appendSystemPrompt } } as Pick<
-      ToolUseContext,
-      'options'
-    >,
-    undefined, // mainThreadAgentDefinition
-    apiView, // original messages for API usage extraction
-  )
-}
 
 export async function call(
   _args: string,

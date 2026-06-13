@@ -936,9 +936,6 @@ export function addInvokedSkill(
   })
 }
 
-export function getInvokedSkills(): Map<string, InvokedSkillInfo> {
-  return STATE.invokedSkills
-}
 
 export function getInvokedSkillsForAgent(
   agentId: string | undefined | null,

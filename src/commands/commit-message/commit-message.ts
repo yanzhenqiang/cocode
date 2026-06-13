@@ -31,56 +31,8 @@ function sanitizeSingleLine(value: string): string {
     .trim()
 }
 
-export function stripMatchingQuotes(value: string): string {
-  const trimmed = value.trim()
-  if (trimmed.length < 2) return trimmed
-  const first = trimmed[0]
-  const last = trimmed[trimmed.length - 1]
-  if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
-    return trimmed.slice(1, -1)
-  }
-  return trimmed
-}
 
-export function formatCoAuthorTrailer(name: string, email: string): string {
-  const cleanName = sanitizeSingleLine(name).replace(/[<>]/g, '')
-  const cleanEmail = sanitizeSingleLine(email).replace(/[<>]/g, '')
-  return `Co-Authored-By: ${cleanName} <${cleanEmail}>`
-}
 
-export function parseCoAuthor(value: string): ParsedCoAuthor | null {
-  const trimmed = value.trim()
-  const angleMatch = trimmed.match(
-    /^(?:"([^"]+)"|'([^']+)'|(.+?))\s*<([^<>\s]+@[^<>\s]+)>$/,
-  )
-  if (angleMatch) {
-    const name = sanitizeSingleLine(
-      angleMatch[1] ?? angleMatch[2] ?? angleMatch[3] ?? '',
-    )
-    const email = sanitizeSingleLine(angleMatch[4] ?? '')
-    if (!name || !email) return null
-    return {
-      name,
-      email,
-    }
-  }
-
-  const plainMatch = trimmed.match(
-    /^(?:"([^"]+)"|'([^']+)'|(.+?))\s+([^<>\s]+@[^<>\s]+)$/,
-  )
-  if (!plainMatch) return null
-
-  const name = sanitizeSingleLine(
-    plainMatch[1] ?? plainMatch[2] ?? plainMatch[3] ?? '',
-  )
-  const email = sanitizeSingleLine(plainMatch[4] ?? '')
-  if (!name || !email) return null
-
-  return {
-    name,
-    email,
-  }
-}
 
 function saveCommitAttribution(commit: string | undefined): string | null {
   const result = updateSettingsForSource('userSettings', {

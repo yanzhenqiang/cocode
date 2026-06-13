@@ -197,23 +197,6 @@ export function useUnseenDivider(messageCount: number): {
  * carry text — tool-use-only entries are skipped (like progress messages)
  * so "⏺ Searched for 13 patterns, read 6 files" doesn't tick the pill.
  */
-export function countUnseenAssistantTurns(messages: readonly Message[], dividerIndex: number): number {
-  let count = 0;
-  let prevWasAssistant = false;
-  for (let i = dividerIndex; i < messages.length; i++) {
-    const m = messages[i]!;
-    if (m.type === 'progress') continue;
-    // Tool-use-only assistant entries aren't "new messages" to the user —
-    // skip them the same way we skip progress. prevWasAssistant is NOT
-    // updated, so a text block immediately following still counts as the
-    // same turn (tool_use + text from one API response = 1).
-    if (m.type === 'assistant' && !assistantHasVisibleText(m)) continue;
-    const isAssistant = m.type === 'assistant';
-    if (isAssistant && !prevWasAssistant) count++;
-    prevWasAssistant = isAssistant;
-  }
-  return count;
-}
 function assistantHasVisibleText(m: Message): boolean {
   if (m.type !== 'assistant') return false;
   for (const b of m.message.content) {
