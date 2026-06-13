@@ -10,9 +10,6 @@
 export const COMMON_EXTERNALS: string[] = [
   // Native image processing
   'sharp',
-  // Cloud provider SDKs
-  '@azure/identity',
-  'google-auth-library',
   // @vscode/ripgrep ships a platform-specific binary alongside its
   // index.js and resolves the path via __dirname at runtime. Bundling
   // would freeze the build host's absolute path into dist/cli.mjs, so we
@@ -31,10 +28,7 @@ export const SDK_ONLY_EXTERNALS: string[] = [
 // Packages kept external but NOT listed in package.json dependencies.
 // These are dynamically imported at runtime — they're optional and resolved
 // from transitive deps or installed by users who need that provider/protocol.
-export const OPTIONAL_RUNTIME_EXTERNALS: string[] = [
-  // Cloud provider SDKs (dynamically imported per-provider)
-  '@azure/identity',
-]
+export const OPTIONAL_RUNTIME_EXTERNALS: string[] = []
 
 // Computed full lists
 export const CLI_EXTERNALS: string[] = COMMON_EXTERNALS
@@ -43,10 +37,6 @@ export const SDK_EXTERNALS: string[] = [...COMMON_EXTERNALS, ...SDK_ONLY_EXTERNA
 // Packages intentionally bundled (not external, not flagged by validation)
 // These are small utilities that are fine to inline into the output bundle.
 export const INTENTIONALLY_BUNDLED: string[] = [
-  // Anthropic provider variants (bundled, not the main SDK)
-  '@anthropic-ai/foundry-sdk',
-  '@anthropic-ai/sandbox-runtime',
-  '@anthropic-ai/vertex-sdk',
   // CLI / TUI utilities
   '@alcalzone/ansi-tokenize',
   '@commander-js/extra-typings',
@@ -73,7 +63,6 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   'ajv',
   'auto-bind',
   'diff',
-  'fflate',
   'fuse.js',
   'ignore',
   'lodash-es',
@@ -81,7 +70,6 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   'p-map',
   'picomatch',
   'proper-lockfile',
-  'qrcode',
   'semver',
   'shell-quote',
   'signal-exit',
@@ -107,11 +95,6 @@ export const INTENTIONALLY_BUNDLED: string[] = [
   '@modelcontextprotocol/sdk',
   // Schema validation
   'zod',
-    // gRPC (bundled into CLI, not external)
-  '@grpc/grpc-js',
-  '@grpc/proto-loader',
-  // Language server protocol
-  'vscode-languageserver-protocol',
-  // File watching
+    // File watching
   'chokidar',
 ]
