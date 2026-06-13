@@ -705,9 +705,7 @@ export function setModelStrings(modelStrings: ModelStrings): void {
 // Test utility function to reset model strings for re-initialization.
 // Separate from setModelStrings because we only want to accept 'null' in tests.
 
-export function getIsNonInteractiveSession(): boolean {
-  return false
-}
+// getIsNonInteractiveSession removed — always false
 
 
 
@@ -791,7 +789,7 @@ export function addToInMemoryErrorLog(errorInfo: {
 
 export function preferThirdPartyAuthentication(): boolean {
   // IDE extension should behave as 1P for authentication reasons.
-  return getIsNonInteractiveSession()
+  return false
 }
 
 
@@ -871,11 +869,8 @@ export function handlePlanModeTransition(
   }
 }
 
-export function needsAutoModeExitAttachment(): boolean {
-  return false
-}
+// needsAutoModeExitAttachment removed — always false
 
-export function setNeedsAutoModeExitAttachment(_value: boolean): void {}
 
 export function handleAutoModeTransition(_fromMode: string, _toMode: string): void {}
 

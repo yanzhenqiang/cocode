@@ -5,7 +5,6 @@ import {
   handleAutoModeTransition,
   handlePlanModeTransition,
   setHasExitedPlanMode,
-  setNeedsAutoModeExitAttachment,
 } from '../../bootstrap/state.js'
 import type {
   ToolPermissionContext,

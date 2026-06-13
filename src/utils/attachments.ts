@@ -140,7 +140,6 @@ import {
   needsPlanModeExitAttachment,
   setNeedsPlanModeExitAttachment,
   needsAutoModeExitAttachment,
-  setNeedsAutoModeExitAttachment,
 } from '../bootstrap/state.js'
 import type { QuerySource } from '../constants/querySource.js'
 import {
@@ -1212,7 +1211,7 @@ async function getAutoModeAttachments(
 async function getAutoModeExitAttachment(
   toolUseContext: ToolUseContext,
 ): Promise<Attachment[]> {
-  if (!needsAutoModeExitAttachment()) {
+  if (true) {
     return []
   }
 
@@ -1223,11 +1222,9 @@ async function getAutoModeExitAttachment(
     appState.toolPermissionContext.mode === 'auto' ||
     (autoModeStateModule?.isAutoModeActive() ?? false)
   ) {
-    setNeedsAutoModeExitAttachment(false)
     return []
   }
 
-  setNeedsAutoModeExitAttachment(false)
   return [{ type: 'auto_mode_exit' }]
 }
 

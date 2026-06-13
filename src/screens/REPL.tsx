@@ -197,7 +197,6 @@ import type { ScrollBoxHandle } from '../ink/components/ScrollBox.js';
 import { createAttachmentMessage, getQueuedCommandAttachments } from '../utils/attachments.js';
 
 // Prompt suggestion stubs (deleted module)
-const handleSpeculationAccept = () => {};
 type ActiveSpeculationState = null;
 
 // Stable empty array for hooks that accept MCPServerConnection[] — avoids
