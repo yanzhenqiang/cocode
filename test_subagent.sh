@@ -5,6 +5,13 @@ echo "========================================"
 echo "TEST_SUB_AGENT — spawn-agent 端到端测试"
 echo "========================================"
 
+# 清理残留 tmux
+tmux kill-server 2>/dev/null || true
+
+# 确保 dist 与源码一致
+echo "Building..."
+npx tsx scripts/build-node.ts
+
 PASS=0
 FAIL=0
 
