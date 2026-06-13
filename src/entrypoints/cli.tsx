@@ -92,9 +92,7 @@ async function main(): Promise<void> {
   const { eagerParseCliFlag } = await import('../utils/cliArgs.js')
   const earlyModelFlag = eagerParseCliFlag('--model')
 
-  // Print the gradient startup screen before the Ink UI loads
-  const { printStartupScreen } = await import('../components/StartupScreen.js')
-  printStartupScreen(earlyModelFlag)
+  // Startup screen removed
 
   // For all other paths, load the startup profiler
   const {
