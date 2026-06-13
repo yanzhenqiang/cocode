@@ -111,7 +111,7 @@ import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/permissions/autoModeState.js') as typeof import('./utils/permissions/autoModeState.js') : null;
+const autoModeStateModule = null;
 
 // migrations directory removed — all migrations already applied
 /* eslint-enable @typescript-eslint/no-require-imports */

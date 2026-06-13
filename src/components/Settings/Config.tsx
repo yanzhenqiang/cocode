@@ -110,7 +110,7 @@ export function Config({
   // Show auto in the default-mode dropdown when the user has opted in OR the
   // config is fully 'enabled' — even if currently circuit-broken ('disabled'),
   // an opted-in user should still see it in settings (it's a temporary state).
-  const showAutoInDefaultModePicker = feature('TRANSCRIPT_CLASSIFIER') ? hasAutoModeOptInAnySource() || getAutoModeEnabledState() === 'enabled' : false;
+  const showAutoInDefaultModePicker = false;
   // Chat/Transcript view picker removed — KAIROS/KAIROS_BRIEF are false in external builds.
   const showDefaultViewPicker = false;
   const setAppState = useSetAppState();
@@ -470,7 +470,7 @@ export function Config({
     value: settingsData?.permissions?.defaultMode || 'default',
     options: (() => {
       const priorityOrder: PermissionMode[] = ['default', 'plan'];
-      const allModes: readonly PermissionMode[] = feature('TRANSCRIPT_CLASSIFIER') ? PERMISSION_MODES : EXTERNAL_PERMISSION_MODES;
+      const allModes: readonly PermissionMode[] = EXTERNAL_PERMISSION_MODES;
       const excluded: PermissionMode[] = ['bypassPermissions'];
       if (feature('TRANSCRIPT_CLASSIFIER') && !showAutoInDefaultModePicker) {
         excluded.push('auto');

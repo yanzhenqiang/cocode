@@ -428,7 +428,7 @@ function PromptInput({
       return hasCommand(commandName, commands);
     });
   }, [displayedValue, commands]);
-  const tokenBudgetTriggers = useMemo(() => feature('TOKEN_BUDGET') ? findTokenBudgetPositions(displayedValue) : [], [displayedValue]);
+  const tokenBudgetTriggers = useMemo(() => [], [displayedValue]);
   const slackChannelTriggers: {start: number; end: number}[] = [];
 
   // Find @name mentions and highlight with team member's color
@@ -1734,17 +1734,12 @@ function PromptInput({
   // slot's overflowY:hidden clip (same pattern as SuggestionsOverlay).
   // Must be called before early returns below to satisfy rules-of-hooks.
   // Memoized so the portal useEffect doesn't churn on every PromptInput render.
-  const autoModeOptInDialog = useMemo(() => feature('TRANSCRIPT_CLASSIFIER') && showAutoModeOptIn ? <AutoModeOptInDialog onAccept={handleAutoModeOptInAccept} onDecline={handleAutoModeOptInDecline} /> : null, [showAutoModeOptIn, handleAutoModeOptInAccept, handleAutoModeOptInDecline]);
+  const autoModeOptInDialog = null;
   useSetPromptOverlayDialog(isFullscreenEnvEnabled() ? autoModeOptInDialog : null);
   if (showBashesDialog) {
     return <BackgroundTasksDialog onDone={() => setShowBashesDialog(false)} toolUseContext={getToolUseContext(messages, [], new AbortController(), mainLoopModel)} initialDetailTaskId={typeof showBashesDialog === 'string' ? showBashesDialog : undefined} />;
   }
-  if (feature('QUICK_SEARCH')) {
-    const insertWithSpacing = (text: string) => {
-      const cursorChar = input[cursorOffset - 1] ?? ' ';
-      insertTextAtCursor(/\s/.test(cursorChar) ? text : ` ${text}`);
-    };
-  }
+  // QUICK_SEARCH feature removed
   // Show loop mode menu when requested (internal-only, eliminated from external builds)
   if (modelPickerElement) {
     return modelPickerElement;
