@@ -102,35 +102,7 @@ async function main(): Promise<void> {
   } = await import('../utils/startupProfiler.js');
   profileCheckpoint('cli_entry');
 
-  // Fast-path for --dump-system-prompt: output the rendered system prompt and exit.
-  // Used by prompt sensitivity evals to extract the system prompt at a specific commit.
-  // Ant-only: eliminated from external builds via feature flag.
-  if (feature('DUMP_SYSTEM_PROMPT') && args[0] === '--dump-system-prompt') {
-    profileCheckpoint('cli_dump_system_prompt_path');
-    const {
-      enableConfigs
-    } = await import('../utils/config.js');
-    enableConfigs();
-    const {
-      getMainLoopModel
-    } = await import('../utils/model/model.js');
-    const modelIdx = args.indexOf('--model');
-    const model = modelIdx !== -1 && args[modelIdx + 1] || getMainLoopModel();
-    const {
-      getSystemPrompt
-    } = await import('../constants/prompts.js');
-    const prompt = await getSystemPrompt([], model);
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
-    console.log(prompt.join('\n'));
-    return;
-  }
-  // Fast-path for `--daemon-worker=<kind>` (internal — supervisor spawns this).
-  // Must come before the daemon subcommand check: spawned per-worker, so
 
-  // Redirect common update flag mistakes to the update subcommand
-  if (args.length === 1 && (args[0] === '--update' || args[0] === '--upgrade')) {
-    process.argv = [process.argv[0]!, process.argv[1]!, 'update'];
-  }
 
   // No special flags detected, load and run the full CLI
   if (process.env.COCODE_DISABLE_EARLY_INPUT !== '1') {
