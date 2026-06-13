@@ -92,7 +92,9 @@ async function main(): Promise<void> {
   const { eagerParseCliFlag } = await import('../utils/cliArgs.js')
   const earlyModelFlag = eagerParseCliFlag('--model')
 
-  // Startup screen removed
+  // Print model info
+  const { printStartupScreen } = await import('../components/StartupScreen.js')
+  printStartupScreen(earlyModelFlag)
 
   // For all other paths, load the startup profiler
   const {
