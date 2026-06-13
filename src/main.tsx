@@ -1430,18 +1430,6 @@ const {
   // TODO: --agent flag kept but usage expected to change
   profileCheckpoint('run_main_options_built');
 
-  // auth status
-
-  const auth = program.command('auth').description('Manage authentication').configureHelp(createSortedHelpConfig());
-  auth.command('status').description('Show authentication status').option('--json', 'Output as JSON (default)').option('--text', 'Output as human-readable text').action(async (opts: {
-    json?: boolean;
-    text?: boolean;
-  }) => {
-    const {
-      authStatus
-    } = await import('./cli/handlers/auth.js');
-    await authStatus(opts);
-  });
 
   /**
    * Helper function to handle marketplace command errors consistently.
