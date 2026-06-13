@@ -19,7 +19,6 @@ import { type BashTaskKind, isLocalShellTask, type LocalShellTaskState } from '.
 import { killTask } from './killShellTasks.js';
 
 // Prompt suggestion stub (deleted module)
-const abortSpeculation = () => {};
 
 /** Prefix that identifies a LocalShellTask summary to the UI collapse transform. */
 export const BACKGROUND_BASH_SUMMARY_PREFIX = 'Background command ';
@@ -126,7 +125,6 @@ function enqueueShellNotification(taskId: string, description: string, status: '
   // Abort any active speculation — background task state changed, so speculated
   // results may reference stale task output. The prompt suggestion text is
   // preserved; only the pre-computed response is discarded.
-  abortSpeculation(setAppState);
   let summary: string;
   if (feature('MONITOR_TOOL') && kind === 'monitor') {
     // Monitor is streaming-only (post-#22764) — the script exiting means
