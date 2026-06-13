@@ -22,7 +22,6 @@ import {
   normalizeApiKeyForConfig,
 } from './authPortable.js'
 
-import { AwsAuthStatusManager } from './awsAuthStatusManager.js'
 import {
   type AccountInfo,
   checkHasTrustDialogAccepted,
@@ -645,9 +644,7 @@ const GCP_AUTH_REFRESH_TIMEOUT_MS = 3 * 60 * 1000
 
 export function refreshGcpAuth(gcpAuthRefresh: string): Promise<boolean> {
   logForDebugging('Running GCP auth refresh command')
-  // Start tracking authentication status. AwsAuthStatusManager is cloud-provider-agnostic
   // despite the name — print.ts emits its updates as generic SDK 'auth_status' messages.
-  const authStatusManager = AwsAuthStatusManager.getInstance()
   authStatusManager.startAuthentication()
 
   return new Promise(resolve => {
