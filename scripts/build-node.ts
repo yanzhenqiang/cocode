@@ -23,7 +23,7 @@ const version = pkg.version
 // Any flag not listed here defaults to false.
 const featureFlags: Record<string, boolean> = {
   BUILTIN_EXPLORE_PLAN_AGENTS: false,
-  MONITOR_TOOL: false,
+  MONITOR_TOOL: true,
   MESSAGE_ACTIONS: true,
   DUMP_SYSTEM_PROMPT: false,
   CACHED_MICROCOMPACT: false,
