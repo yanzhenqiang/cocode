@@ -48,16 +48,6 @@ import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from 
 import { buildRedirectUri, findAvailablePort } from './oauthPort.js'
 import type { McpHTTPServerConfig, McpSSEServerConfig } from './types.js'
 import { getLoggingSafeMcpBaseUrl } from './utils.js'
-import { performCrossAppAccess, XaaTokenExchangeError } from './xaa.js'
-import {
-  acquireIdpIdToken,
-  clearIdpIdToken,
-  discoverOidc,
-  getCachedIdpIdToken,
-  getIdpClientSecret,
-  getXaaIdpSettings,
-  isXaaEnabled,
-} from './xaaIdpLogin.js'
 
 /**
  * Timeout for individual OAuth requests (metadata discovery, token refresh, etc.)
