@@ -1,5 +1,4 @@
 import type { Command } from '../commands.js'
-import { isNewInitEnabled } from './initMode.js'
 
 const OLD_INIT_PROMPT = `Please analyze this codebase and create a CLAUDE.md file, which will be given to future instances of Claude Code to operate in this repository.
 
@@ -227,7 +226,7 @@ const command = {
   type: 'prompt',
   name: 'init',
   get description() {
-    return isNewInitEnabled()
+    return false
       ? 'Initialize new project instruction file(s) and optional skills/hooks with codebase documentation'
       : 'Initialize a new project instruction file with codebase documentation'
   },
@@ -239,7 +238,7 @@ const command = {
     return [
       {
         type: 'text',
-        text: isNewInitEnabled() ? NEW_INIT_PROMPT : OLD_INIT_PROMPT,
+        text: OLD_INIT_PROMPT,
       },
     ]
   },
