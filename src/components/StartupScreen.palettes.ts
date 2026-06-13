@@ -90,12 +90,7 @@ export const LOGO_PALETTE_LABELS: Record<LogoPaletteName, string> = {
   monochrome: 'Monochrome',
 }
 
-export function isLogoPaletteName(value: unknown): value is LogoPaletteName {
-  return (
-    typeof value === 'string' &&
-    Object.prototype.hasOwnProperty.call(LOGO_PALETTES, value)
-  )
-}
+
 
 export function resolveLogoPalette(name: string | undefined): LogoPalette {
   return isLogoPaletteName(name)

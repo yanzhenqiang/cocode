@@ -355,56 +355,7 @@ function _temp5() {
 function _temp4() {
   return 'Thinking';
 }
-export function BriefIdleStatus() {
-  const $ = _c(9);
-  const connStatus = useAppState(_temp7);
-  const runningCount = useAppState(_temp8);
-  const {
-    columns
-  } = useTerminalSize();
-  const showConnWarning = connStatus === "reconnecting" || connStatus === "disconnected";
-  const connText = connStatus === "reconnecting" ? "Reconnecting\u2026" : "Disconnected";
-  const leftText = showConnWarning ? connText : "";
-  const rightText = runningCount > 0 ? `${runningCount} in background` : "";
-  if (!leftText && !rightText) {
-    let t0;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = <Box height={2} />;
-      $[0] = t0;
-    } else {
-      t0 = $[0];
-    }
-    return t0;
-  }
-  const pad = Math.max(1, columns - 2 - stringWidth(leftText) - stringWidth(rightText));
-  let t0;
-  if ($[1] !== leftText) {
-    t0 = leftText ? <Text color="error">{leftText}</Text> : null;
-    $[1] = leftText;
-    $[2] = t0;
-  } else {
-    t0 = $[2];
-  }
-  let t1;
-  if ($[3] !== pad || $[4] !== rightText) {
-    t1 = rightText ? <><Text>{" ".repeat(pad)}</Text><Text color="subtle">{rightText}</Text></> : null;
-    $[3] = pad;
-    $[4] = rightText;
-    $[5] = t1;
-  } else {
-    t1 = $[5];
-  }
-  let t2;
-  if ($[6] !== t0 || $[7] !== t1) {
-    t2 = <Box marginTop={1} paddingLeft={2}><Text>{t0}{t1}</Text></Box>;
-    $[6] = t0;
-    $[7] = t1;
-    $[8] = t2;
-  } else {
-    t2 = $[8];
-  }
-  return t2;
-}
+
 function _temp8(s_0) {
   return count(Object.values(s_0.tasks), isBackgroundTask);
 }
