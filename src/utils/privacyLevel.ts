@@ -17,16 +17,6 @@
 
 type PrivacyLevel = 'default' | 'no-telemetry' | 'essential-traffic'
 
-export function getPrivacyLevel(): PrivacyLevel {
-  if (process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC) {
-    return 'essential-traffic'
-  }
-  if (process.env.DISABLE_TELEMETRY) {
-    return 'no-telemetry'
-  }
-  return 'default'
-}
-
 /**
  * True when all nonessential network traffic should be suppressed.
  * Equivalent to the old `process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` check.

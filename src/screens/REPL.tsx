@@ -890,16 +890,10 @@ export function REPL({
   // doesn't re-render REPL. titleDisabled/terminalTitle are still computed
   // here because onQueryImpl reads them (background session description,
   // haiku title extraction gate).
-
-  // Prevent macOS from sleeping while Claude is working
-  useEffect(() => {
-    if (isLoading && !isWaitingForApproval && !isShowingLocalJSXCommand) {
-      startPreventSleep();
-      return () => stopPreventSleep();
-    }
-  }, [isLoading, isWaitingForApproval, isShowingLocalJSXCommand]);
+  // startPreventSleep removed (dead code)
   const sessionStatus: TabStatusKind = isWaitingForApproval || isShowingLocalJSXCommand ? 'waiting' : isLoading ? 'busy' : 'idle';
   const waitingFor = sessionStatus !== 'waiting' ? undefined : toolUseConfirmQueue.length > 0 ? `approve ${toolUseConfirmQueue[0]!.tool.name}` : pendingWorkerRequest ? 'worker request' : pendingSandboxRequest ? 'sandbox request' : isShowingLocalJSXCommand ? 'dialog open' : 'input needed';
+
 
   // Push status to the PID file for `claude ps`. Fire-and-forget; ps falls
   // back to transcript-tail derivation when this is missing/stale.

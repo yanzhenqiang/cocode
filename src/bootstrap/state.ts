@@ -774,17 +774,6 @@ export function setApiKeyFromFd(key: string | null): void {
 
 
 
-export function addToInMemoryErrorLog(errorInfo: {
-  error: string
-  timestamp: string
-}): void {
-  const MAX_IN_MEMORY_ERRORS = 100
-  if (STATE.inMemoryErrorLog.length >= MAX_IN_MEMORY_ERRORS) {
-    STATE.inMemoryErrorLog.shift() // Remove oldest error
-  }
-  STATE.inMemoryErrorLog.push(errorInfo)
-}
-
 
 
 export function preferThirdPartyAuthentication(): boolean {
