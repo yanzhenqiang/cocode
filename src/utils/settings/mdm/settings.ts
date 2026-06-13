@@ -1,11 +1,11 @@
-export function getMdmSettings(): { settings: Record<string, unknown>; errors: never[] } { 
+export function getMdmSettings(): { settings: Record<string, unknown>; errors: string[] } { 
   return { settings: {}, errors: [] } 
 }
-export function getHkcuSettings(): { settings: Record<string, unknown>; errors: never[] } { 
+export function getHkcuSettings(): { settings: Record<string, unknown>; errors: string[] } { 
   return { settings: {}, errors: [] } 
 }
 export function ensureMdmSettingsLoaded(): Promise<void> { return Promise.resolve() }
-export function refreshMdmSettings(): Promise<{ mdm: { settings: Record<string, unknown>; errors: never[] } }> { 
+export function refreshMdmSettings(): Promise<{ mdm: { settings: Record<string, unknown>; errors: string[] } }> { 
   return Promise.resolve({ mdm: { settings: {}, errors: [] } }) 
 }
 export function setMdmSettingsCache(): void {}
