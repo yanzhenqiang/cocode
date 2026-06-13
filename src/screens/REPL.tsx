@@ -35,8 +35,6 @@ import { formatTokens, truncateToWidth } from '../utils/format.js';
 import { consumeEarlyInput } from '../utils/earlyInput.js';
 import { isLocalAgentTask, queuePendingMessage, appendMessageToLocalAgent, type LocalAgentTaskState } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 import { useLogMessages } from '../hooks/useLogMessages.js';
-// useReplBridge deleted with bridge module — stub sendBridgeResult
-const useReplBridge = () => ({ sendBridgeResult: () => {} });
 import { type Command, type CommandResultDisplay, type ResumeEntrypoint, getCommandName, isCommandEnabled } from '../commands.js';
 import type { PromptInputMode, QueuedCommand } from '../types/textInputTypes.js';
 import { MessageSelector } from '../components/MessageSelector.js';
@@ -170,13 +168,10 @@ import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
 
 import { isPromptTypingSuppressionActive } from './replInputSuppression.js';
-const useKickOffCheckAndDisableBypassPermissionsIfNeeded = () => {}
-const useKickOffCheckAndDisableAutoModeIfNeeded = () => {}
 import { SANDBOX_NETWORK_ACCESS_TOOL_NAME } from 'src/cli/structuredIO.js';
 import { useFileHistorySnapshotInit } from 'src/hooks/useFileHistorySnapshotInit.js';
 import { useSettingsErrors } from 'src/hooks/notifs/useSettingsErrors.js';
 import { useMcpConnectivityStatus } from 'src/hooks/notifs/useMcpConnectivityStatus.js';
-const useAutoModeUnavailableNotification = () => {}
 import { AUTO_MODE_DESCRIPTION } from 'src/components/AutoModeOptInDialog.js';
 import { SpinnerWithVerb, type SpinnerMode } from '../components/Spinner.js';
 import { UserTextMessage } from 'src/components/messages/UserTextMessage.js';
@@ -526,8 +521,6 @@ export function REPL({
   // the model emits plain text the brief filter hides.
   const isBriefOnly = useAppState(s => s.isBriefOnly);
   const localTools = useMemo(() => getTools(toolPermissionContext), [toolPermissionContext, isBriefOnly]);
-  useKickOffCheckAndDisableBypassPermissionsIfNeeded();
-  useKickOffCheckAndDisableAutoModeIfNeeded();
   const [dynamicMcpConfig, setDynamicMcpConfig] = useState<Record<string, ScopedMcpServerConfig> | undefined>(initialDynamicMcpConfig);
   const onChangeDynamicMcpConfig = useCallback((config: Record<string, ScopedMcpServerConfig>) => {
     setDynamicMcpConfig(config);
@@ -568,7 +561,6 @@ export function REPL({
   useMcpConnectivityStatus({
     mcpClients
   });
-  useAutoModeUnavailableNotification();
   useSettingsErrors();
 
   useDeprecationWarningNotification(mainLoopModel);
@@ -2935,10 +2927,7 @@ export function REPL({
   useLogMessages(messages, messages.length === initialMessages?.length);
 
   // REPL Bridge: replicate user/assistant messages to the bridge session
-  // for remote access via claude.ai. No-op in external builds or when not enabled.
-  const {
-    sendBridgeResult
-  } = useReplBridge(messages, setMessages, abortControllerRef, commands, mainLoopModel);
+  const sendBridgeResult = () => {};
   sendBridgeResultRef.current = sendBridgeResult;
   useAfterFirstRender();
 
