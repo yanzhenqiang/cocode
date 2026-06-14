@@ -38,15 +38,6 @@ export function edges(a: number, b?: number, c?: number, d?: number): Edges {
 }
 
 /** Add two edge values */
-export function addEdges(a: Edges, b: Edges): Edges {
-  return {
-    top: a.top + b.top,
-    right: a.right + b.right,
-    bottom: a.bottom + b.bottom,
-    left: a.left + b.left,
-  }
-}
-
 /** Zero edges constant */
 export const ZERO_EDGES: Edges = { top: 0, right: 0, bottom: 0, left: 0 }
 

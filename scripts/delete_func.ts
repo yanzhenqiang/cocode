@@ -258,44 +258,33 @@ function deleteSymbols(tree: TreeNode) {
     }
   }
 
-  // 叶子优先：检查每个依赖是否有外部消费者
-  const order = getLeafOrder(tree)
-  const toDelete = new Set<string>()
-  for (const name of order) {
-    const syms = allSymbols.get(name) || []
-    const extImports = syms.filter(s => s.kind === 'import' && !treeDefFiles.has(s.file))
-    const extCalls = syms.filter(s => s.kind === 'reference' && !treeDefFiles.has(s.file))
-    if (extImports.length === 0 && extCalls.length === 0) {
-      toDelete.add(name)
-    } else if (name === tree.name) {
-      toDelete.add(name) // 根节点强制删
-      console.log(`  ⚠️  ${name}: ${extImports.length} 外部导入 + ${extCalls.length} 外部调用，强制删除`)
-    } else {
-      console.log(`  ⏭️  跳过 ${name}: ${extImports.length} 外部导入, ${extCalls.length} 外部调用`)
-    }
-  }
+  // 只删根节点，不递归删依赖
+  const toDelete = new Set<string>([tree.name])
 
   // 按文件分组删除区间
   const fileSpans = new Map<string, { start: number; end: number }[]>()
 
-  for (const name of order) {
-    if (!toDelete.has(name)) continue
+  for (const name of toDelete) {
     const syms = allSymbols.get(name) || []
     for (const s of syms) {
       if (!s.span) continue
       const spans = fileSpans.get(s.file) || []
 
       if (s.kind === 'declaration') {
-        // AST span 包含完整函数体。扩展包含前导换行和尾部换行
         const text = readFileSync(s.file, 'utf-8')
-        let start = s.span.start
-        let end = s.span.end
-        // 去掉前面空格和换行
+        let start = s.span.start, end = s.span.end
         while (start > 0 && text[start - 1] === ' ') start--
         if (start > 0 && text[start - 1] === '\n') start--
-        // 去掉尾部换行
         if (end < text.length && text[end] === '\n') end++
         spans.push({ start, end })
+        // 同文件引用也删掉
+        const refs = allSymbols.get(name)?.filter(r => r.kind === 'reference' && r.file === s.file) || []
+        for (const ref of refs) {
+          const ls = text.split('\n')
+          let p = 0
+          for (let i = 0; i < ref.line - 1; i++) p += (ls[i]?.length || 0) + 1
+          spans.push({ start: p, end: p + (ls[ref.line - 1]?.length || 0) })
+        }
       } else if (s.kind === 'import') {
         // Import specifier — 去掉名字及周围逗号/空格
         const text = readFileSync(s.file, 'utf-8')
@@ -370,10 +359,11 @@ async function main() {
     for (const [name, syms] of symbols) {
       const imports = syms.filter(s => s.kind === 'import')
       const calls = syms.filter(s => s.kind === 'reference')
-      // Dead = 0 imports AND 0 external calls (calls outside definition file)
+      // Dead = 0 imports AND 0 external calls AND 0 same-file calls
       const defFile = syms.find(s => s.kind === 'declaration')?.file
       const externalCalls = calls.filter(s => s.file !== defFile)
-      if (imports.length === 0 && externalCalls.length === 0) {
+      const sameFileCalls = calls.filter(s => s.file === defFile)
+      if (imports.length === 0 && externalCalls.length === 0 && sameFileCalls.length === 0) {
         const def = syms.find(s => s.kind === 'declaration')
         if (def) dead.push({ name, file: def.file, line: def.line })
       }
