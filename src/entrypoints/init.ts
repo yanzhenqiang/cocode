@@ -143,6 +143,3 @@ export const init = memoize(async (): Promise<void> => {
  * No-op — telemetry initialization has been removed.
  * Kept as an empty function for API compatibility with callers.
  */
-export function initializeTelemetryAfterTrust(): void {
-  // Telemetry is no longer initialized; this is a no-op.
-}

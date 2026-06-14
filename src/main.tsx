@@ -12,7 +12,7 @@ import mapValues from 'lodash-es/mapValues.js';
 import uniqBy from 'lodash-es/uniqBy.js';
 import React from 'react';
 import { getSystemContext, getUserContext } from './context.js';
-import { init, initializeTelemetryAfterTrust } from './entrypoints/init.js';
+import { init} from './entrypoints/init.js';
 import { addToHistory } from './history.js';
 import type { Root } from './ink.js';
 import { launchRepl } from './replLauncher.js';
