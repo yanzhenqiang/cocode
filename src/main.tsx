@@ -76,7 +76,7 @@ import { checkAndDisableBypassPermissions, getAutoModeEnabledStateIfCached, init
 import { countFilesRoundedRg } from './utils/ripgrep.js';
 import { processSessionStartHooks, processSetupHooks } from './utils/sessionStart.js';
 import { cacheSessionTitle, getSessionIdFromLog, loadTranscriptFromFile, saveAgentSetting, searchSessionsByCustomTitle, sessionIdExists } from './utils/sessionStorage.js';
-import { getInitialSettingsgetSettingsForSource, getSettingsWithErrors } from './utils/settings/settings.js';
+import { getInitialSettings, getSettingsForSource, getSettingsWithErrors } from './utils/settings/settings.js';
 import { resetSettingsCache } from './utils/settings/settingsCache.js';
 import type { ValidationError } from './utils/settings/validation.js';
 import { TASK_STATUSES } from './utils/tasks.js';
