@@ -265,10 +265,6 @@ function getOrCreateOutput(taskId: string): DiskTaskOutput {
  * Append output to a task's disk file asynchronously.
  * Creates the file if it doesn't exist.
  */
-export function appendTaskOutput(taskId: string, content: string): void {
-  getOrCreateOutput(taskId).append(content)
-}
-
 /**
  * Wait for all pending writes for a task to complete.
  * Useful before reading output to ensure all data is flushed.

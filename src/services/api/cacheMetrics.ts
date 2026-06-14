@@ -101,24 +101,6 @@ export type NormalizedShimUsage = {
  * Convert raw provider usage (any known shape) into the Anthropic-shape
  * `NormalizedShimUsage` used throughout the codebase.
  */
-export function buildAnthropicUsageFromRawUsage(
-  raw: RawUsage,
-): NormalizedShimUsage {
-  const cacheRead = extractCacheReadFromRawUsage(raw)
-  const u = (raw ?? {}) as Record<string, unknown>
-  const rawInput =
-    asNumber(u.input_tokens) || asNumber(u.prompt_tokens)
-  const fresh = rawInput >= cacheRead ? rawInput - cacheRead : rawInput
-  const output =
-    asNumber(u.output_tokens) || asNumber(u.completion_tokens)
-  return {
-    input_tokens: fresh,
-    output_tokens: output,
-    cache_creation_input_tokens: 0,
-    cache_read_input_tokens: cacheRead,
-  }
-}
-
 /**
  * Extract a unified CacheMetrics from POST-SHIM (Anthropic-shape) usage.
  */

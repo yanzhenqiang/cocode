@@ -234,10 +234,6 @@ export function getClientSurface(): string {
  * Build a surface key that includes the model name.
  * Format: "surface/model" (e.g., "cli/claude-sonnet")
  */
-export function buildSurfaceKey(surface: string, model: ModelName): string {
-  return `${surface}/${getCanonicalName(model)}`
-}
-
 /**
  * Compute SHA-256 hash of content.
  */
@@ -931,14 +927,6 @@ export function restoreAttributionStateFromSnapshots(
 /**
  * Restore attribution state from log snapshots on session resume.
  */
-export function attributionRestoreStateFromLog(
-  attributionSnapshots: AttributionSnapshotMessage[],
-  onUpdateState: (newState: AttributionState) => void,
-): void {
-  const state = restoreAttributionStateFromSnapshots(attributionSnapshots)
-  onUpdateState(state)
-}
-
 /**
  * Increment promptCount and save an attribution snapshot.
  * Used to persist the prompt count across compaction.

@@ -43,57 +43,9 @@ export function getLayoutMode(columns: number): LayoutMode {
 /**
  * Calculates layout dimensions for the LogoV2 component
  */
-export function calculateLayoutDimensions(
-  columns: number,
-  layoutMode: LayoutMode,
-  optimalLeftWidth: number,
-): LayoutDimensions {
-  if (layoutMode === 'horizontal') {
-    const leftWidth = optimalLeftWidth
-    const usedSpace =
-      BORDER_PADDING + CONTENT_PADDING + DIVIDER_WIDTH + leftWidth
-    const availableForRight = columns - usedSpace
-
-    let rightWidth = Math.max(30, availableForRight)
-    const totalWidth = Math.min(
-      leftWidth + rightWidth + DIVIDER_WIDTH + CONTENT_PADDING,
-      columns - BORDER_PADDING,
-    )
-
-    // Recalculate right width if we had to cap the total
-    if (totalWidth < leftWidth + rightWidth + DIVIDER_WIDTH + CONTENT_PADDING) {
-      rightWidth = totalWidth - leftWidth - DIVIDER_WIDTH - CONTENT_PADDING
-    }
-
-    return { leftWidth, rightWidth, totalWidth }
-  }
-
-  // Vertical mode
-  const totalWidth = Math.min(columns - BORDER_PADDING, MAX_LEFT_WIDTH + 20)
-  return {
-    leftWidth: totalWidth,
-    rightWidth: totalWidth,
-    totalWidth,
-  }
-}
-
 /**
  * Calculates optimal left panel width based on content
  */
-export function calculateOptimalLeftWidth(
-  welcomeMessage: string,
-  truncatedCwd: string,
-  modelLine: string,
-): number {
-  const contentWidth = Math.max(
-    stringWidth(welcomeMessage),
-    stringWidth(truncatedCwd),
-    stringWidth(modelLine),
-    20, // Minimum for clawd art
-  )
-  return Math.min(contentWidth + 4, MAX_LEFT_WIDTH) // +4 for padding
-}
-
 /**
  * Formats the welcome message based on username
  */

@@ -84,10 +84,6 @@ export function recordYank(start: number, length: number): void {
   killRingIndex = 0
 }
 
-export function canYankPop(): boolean {
-  return lastActionWasYank && killRing.length > 1
-}
-
 export function yankPop(): {
   text: string
   start: number

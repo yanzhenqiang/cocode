@@ -72,19 +72,6 @@ export function worktreeBranchName(_slug: string): string {
   return ''
 }
 
-export function buildRevParseFailureMessage(
-  baseBranch: string,
-  stderr: string,
-  exitCode: number,
-): string {
-  const detail = stderr.trim() || `exit code ${exitCode}`
-  const hint =
-    baseBranch === 'HEAD'
-      ? ' (HEAD has no resolvable commit — make at least one commit, or check whether git is installed and on PATH)'
-      : ''
-  return `Failed to resolve base branch "${baseBranch}": ${detail}${hint}`
-}
-
 export async function copyWorktreeIncludeFiles(
   _repoRoot: string,
   _worktreePath: string,

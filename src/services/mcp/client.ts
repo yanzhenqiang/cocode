@@ -1535,20 +1535,6 @@ export async function ensureConnectedClient(
  * Compares two MCP server configurations to determine if they are equivalent.
  * Used to detect when a server needs to be reconnected due to config changes.
  */
-export function areMcpConfigsEqual(
-  a: ScopedMcpServerConfig,
-  b: ScopedMcpServerConfig,
-): boolean {
-  // Quick type check first
-  if (a.type !== b.type) return false
-
-  // Compare by serializing - this handles all config variations
-  // We exclude 'scope' from comparison since it's metadata, not connection config
-  const { scope: _scopeA, ...configA } = a
-  const { scope: _scopeB, ...configB } = b
-  return jsonStringify(configA) === jsonStringify(configB)
-}
-
 // Max cache size for fetch* caches. Keyed by server name (stable across
 // reconnects), bounded to prevent unbounded growth with many MCP servers.
 const MCP_FETCH_CACHE_SIZE = 20

@@ -50,8 +50,6 @@ export type AnalyticsSink = {
 }
 
 /** No-op — there is no sink to attach. */
-export function attachAnalyticsSink(_sink: AnalyticsSink): void {}
-
 /**
  * Log an event — silently discarded.
  */
