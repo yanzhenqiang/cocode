@@ -146,10 +146,6 @@ export function applySafeConfigEnvironmentVariables(): void {
     )
   }
 
-  Object.assign(
-    process.env,
-  )
-
   // Apply only safe env vars from the fully-merged settings (which includes
   // project-scoped sources). For safe vars that also exist in trusted sources,
   // the merged value (which may come from a higher-priority project source)

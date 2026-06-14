@@ -248,7 +248,6 @@ function settingSourceToConfigChangeSource(
       return 'user_settings'
     case 'projectSettings':
       return 'project_settings'
-    case 'policySettings':
       return 'policy_settings'
   }
 }
@@ -354,7 +353,6 @@ function getSourceForPath(path: string): SettingSource | undefined {
   // Check if the path is inside the managed-settings.d/ drop-in directory
   const dropInDir = getManagedSettingsDropInDir()
   if (normalizedPath.startsWith(dropInDir + platformPath.sep)) {
-    return 'policySettings'
   }
 
   return SETTING_SOURCES.find(
@@ -393,7 +391,6 @@ function startMdmPoll(): void {
           // Update the cache so sync readers pick up new values
           setMdmSettingsCache(current, currentHkcu)
           logForDebugging('Detected MDM settings change via poll')
-          fanOut('policySettings')
         }
       } catch (error) {
         logForDebugging(`MDM poll error: ${errorMessage(error)}`)

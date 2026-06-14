@@ -1270,20 +1270,8 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
     return { valid: true }
   }
 
-  const requiredOrgUuid =
-    getSettingsForSource('policySettings')?.forceLoginOrgUUID
-  if (!requiredOrgUuid) {
-    return { valid: true }
-  }
-
-  // Profile fetch is not available without Console OAuth — fail closed
-  return {
-    valid: false,
-    message:
-      `Unable to verify organization for the current authentication token.\n` +
-      `This machine requires organization ${requiredOrgUuid} but the profile could not be fetched.\n` +
-      `Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to authenticate with the required organization.`,
-  }
+  // policySettings removed — no org validation enforced
+  return { valid: true }
 }
 
 class GcpCredentialsTimeoutError extends Error {}

@@ -292,9 +292,6 @@ function urlMatchesPattern(url: string, pattern: string): boolean {
  * control which servers are allowed. Otherwise, returns merged settings.
  */
 function getMcpAllowlistSettings(): SettingsJson {
-  if (shouldAllowManagedMcpServersOnly()) {
-    return getSettingsForSource('policySettings') ?? {}
-  }
   return getInitialSettings()
 }
 
@@ -1262,9 +1259,7 @@ export const doesEnterpriseMcpConfigExist = memoize((): boolean => {
  * Users can still add their own MCP servers and deny servers via deniedMcpServers.
  */
 export function shouldAllowManagedMcpServersOnly(): boolean {
-  return (
-    getSettingsForSource('policySettings')?.allowManagedMcpServersOnly === true
-  )
+  return false
 }
 
 /**
