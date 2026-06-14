@@ -371,7 +371,12 @@ async function main() {
     console.log(`0外部引用的死函数: ${dead.length} 个\n`)
     dead.sort((a, b) => a.name.localeCompare(b.name))
     for (const d of dead) {
-      console.log(`  ${d.name}  (${shortPath(d.file)}:${d.line})`)
+      const s = symbols.get(d.name)
+      const decl = s?.find(x => x.kind === 'declaration')
+      const kind = decl?.code?.startsWith('export function') ? 'fn' :
+                   decl?.code?.startsWith('export const') ? 'const' :
+                   decl?.code?.startsWith('export class') ? 'cls' : '?'
+      console.log(`  [${kind}] ${d.name}  (${shortPath(d.file)}:${d.line})`)
     }
     return
   }
