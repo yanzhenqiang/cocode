@@ -336,8 +336,3 @@ export function getMergedBetas(
   // Merge SDK betas without duplicates (already filtered by filterAllowedSdkBetas)
   return [...baseBetas, ...sdkBetas.filter(b => !baseBetas.includes(b))]
 }
-
-export function clearBetasCaches(): void {
-  getAllModelBetas.cache?.clear?.()
-  getModelBetas.cache?.clear?.()
-}

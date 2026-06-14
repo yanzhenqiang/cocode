@@ -88,8 +88,6 @@ export function setGrowthBookConfigOverride(
 ): void {}
 
 /** No-op — nothing to clear. */
-export function clearGrowthBookConfigOverrides(): void {}
-
 /** Returns `undefined` — no API base URL override. */
 export function getApiBaseUrlHost(): string | undefined {
 	return undefined

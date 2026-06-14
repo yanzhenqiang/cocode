@@ -108,10 +108,6 @@ export function getStoredImagePath(imageId: number): string | null {
 /**
  * Clear the in-memory cache of stored image paths.
  */
-export function clearStoredImagePaths(): void {
-  storedImagePaths.clear()
-}
-
 function evictOldestIfAtCap(): void {
   while (storedImagePaths.size >= MAX_STORED_IMAGE_PATHS) {
     const oldest = storedImagePaths.keys().next().value

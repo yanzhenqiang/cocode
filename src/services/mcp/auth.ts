@@ -2442,20 +2442,6 @@ export function saveMcpClientSecret(
   })
 }
 
-export function clearMcpClientConfig(
-  serverName: string,
-  serverConfig: McpSSEServerConfig | McpHTTPServerConfig,
-): void {
-  const storage = getSecureStorage()
-  const existingData = storage.read()
-  if (!existingData?.mcpOAuthClientConfig) return
-  const serverKey = getServerKey(serverName, serverConfig)
-  if (existingData.mcpOAuthClientConfig[serverKey]) {
-    delete existingData.mcpOAuthClientConfig[serverKey]
-    storage.update(existingData)
-  }
-}
-
 export function getMcpClientConfig(
   serverName: string,
   serverConfig: McpSSEServerConfig | McpHTTPServerConfig,

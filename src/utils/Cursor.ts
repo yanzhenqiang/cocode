@@ -63,15 +63,6 @@ export function getKillRingSize(): number {
   return killRing.length
 }
 
-export function clearKillRing(): void {
-  killRing = []
-  killRingIndex = 0
-  lastActionWasKill = false
-  lastActionWasYank = false
-  lastYankStart = 0
-  lastYankLength = 0
-}
-
 export function resetKillAccumulation(): void {
   lastActionWasKill = false
 }
