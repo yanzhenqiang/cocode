@@ -13,3 +13,6 @@
  * system-prompt section clearing, dangerously-skip-permissions bypass, etc.)
  * by setting USER_TYPE in their shell environment.
  */
+export function isAntEmployee(): boolean {
+  return false
+}

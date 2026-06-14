@@ -161,10 +161,13 @@ function formatContextAsMarkdownTable(data: ContextData): string {
         case 'userSettings':
           sourceDisplay = 'User'
           break
+        case 'localSettings':
           sourceDisplay = 'Local'
           break
+        case 'flagSettings':
           sourceDisplay = 'Flag'
           break
+        case 'policySettings':
           sourceDisplay = 'Policy'
           break
         case 'plugin':

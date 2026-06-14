@@ -9,6 +9,15 @@ export const SETTING_SOURCES = [
 
   // Project settings (shared per-directory)
   'projectSettings',
+
+  // Local settings (gitignored)
+  'localSettings',
+
+  // Flag settings (from --settings flag)
+  'flagSettings',
+
+  // Policy settings (managed-settings.json or remote settings from API)
+  'policySettings',
 ] as const
 
 export type SettingSource = (typeof SETTING_SOURCES)[number]
@@ -19,6 +28,12 @@ export function getSettingSourceName(source: SettingSource): string {
       return 'user'
     case 'projectSettings':
       return 'project'
+    case 'localSettings':
+      return 'project, gitignored'
+    case 'flagSettings':
+      return 'cli flag'
+    case 'policySettings':
+      return 'managed'
   }
 }
 
@@ -35,6 +50,12 @@ export function getSourceDisplayName(
       return 'User'
     case 'projectSettings':
       return 'Project'
+    case 'localSettings':
+      return 'Local'
+    case 'flagSettings':
+      return 'Flag'
+    case 'policySettings':
+      return 'Managed'
     case 'plugin':
       return 'Plugin'
     case 'built-in':
@@ -55,6 +76,12 @@ export function getSettingSourceDisplayNameLowercase(
       return 'user settings'
     case 'projectSettings':
       return 'shared project settings'
+    case 'localSettings':
+      return 'project local settings'
+    case 'flagSettings':
+      return 'command line arguments'
+    case 'policySettings':
+      return 'enterprise managed settings'
     case 'cliArg':
       return 'CLI argument'
     case 'command':
@@ -77,6 +104,12 @@ export function getSettingSourceDisplayNameCapitalized(
       return 'User settings'
     case 'projectSettings':
       return 'Shared project settings'
+    case 'localSettings':
+      return 'Project local settings'
+    case 'flagSettings':
+      return 'Command line arguments'
+    case 'policySettings':
+      return 'Enterprise managed settings'
     case 'cliArg':
       return 'CLI argument'
     case 'command':
@@ -105,9 +138,12 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
       case 'project':
         result.push('projectSettings')
         break
+      case 'local':
+        result.push('localSettings')
+        break
       default:
         throw new Error(
-          `Invalid setting source: ${name}. Valid options are: user, project`,
+          `Invalid setting source: ${name}. Valid options are: user, project, local`,
         )
     }
   }
@@ -120,7 +156,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
  * @returns Array of enabled SettingSource values
  */
 export function getEnabledSettingSources(): SettingSource[] {
-  return ['userSettings', 'projectSettings']
+  return ['userSettings', 'projectSettings', 'localSettings', 'flagSettings', 'policySettings']
 }
 
 /**
@@ -136,13 +172,17 @@ export function isSettingSourceEnabled(source: SettingSource): boolean {
 /**
  * Editable setting sources (excludes policySettings and flagSettings which are read-only)
  */
-export type EditableSettingSource = SettingSource
+export type EditableSettingSource = Exclude<
+  SettingSource,
+  'policySettings' | 'flagSettings'
+>
 
 /**
  * List of sources where permission rules can be saved, in display order.
  * Used by permission-rule and hook-save UIs to present source options.
  */
 export const SOURCES = [
+  'localSettings',
   'projectSettings',
   'userSettings',
 ] as const satisfies readonly EditableSettingSource[]

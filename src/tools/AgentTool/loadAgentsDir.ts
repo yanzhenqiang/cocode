@@ -191,6 +191,8 @@ export function getActiveAgentsFromList(
   const pluginAgents = allAgents.filter(a => a.source === 'plugin')
   const userAgents = allAgents.filter(a => a.source === 'userSettings')
   const projectAgents = allAgents.filter(a => a.source === 'projectSettings')
+  const managedAgents = allAgents.filter(a => a.source === 'policySettings')
+  const flagAgents = allAgents.filter(a => a.source === 'flagSettings')
 
   const agentGroups = [
     builtInAgents,
@@ -408,6 +410,7 @@ function parseHooksFromFrontmatter(
 export function parseAgentFromJson(
   name: string,
   definition: unknown,
+  source: SettingSource = 'flagSettings',
 ): CustomAgentDefinition | null {
   try {
     const parsed = AgentJsonSchema().parse(definition)
@@ -482,6 +485,7 @@ export function parseAgentFromJson(
  */
 export function parseAgentsFromJson(
   agentsJson: unknown,
+  source: SettingSource = 'flagSettings',
 ): AgentDefinition[] {
   try {
     const parsed = AgentsJsonSchema().parse(agentsJson)

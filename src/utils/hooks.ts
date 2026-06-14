@@ -4377,6 +4377,7 @@ export async function executeStatusLineCommand(
   // (non-managed settings cannot disable managed commands, but non-managed commands are disabled)
   let statusLine
   if (shouldAllowManagedHooksOnly()) {
+    statusLine = getSettingsForSource('policySettings')?.statusLine
   } else {
     statusLine = getSettings_DEPRECATED()?.statusLine
   }
@@ -4470,6 +4471,7 @@ export async function executeFileSuggestionCommand(
   // (non-managed settings cannot disable managed commands, but non-managed commands are disabled)
   let fileSuggestion
   if (shouldAllowManagedHooksOnly()) {
+    fileSuggestion = getSettingsForSource('policySettings')?.fileSuggestion
   } else {
     fileSuggestion = getSettings_DEPRECATED()?.fileSuggestion
   }

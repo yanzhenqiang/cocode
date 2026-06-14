@@ -305,6 +305,7 @@ export function findOverlyBroadBashPermissions(
 
 /**
  * Type guard to check if a PermissionRuleSource is a valid PermissionUpdateDestination.
+ * Sources like 'flagSettings', 'policySettings', and 'command' are not valid destinations.
  */
 function isPermissionUpdateDestination(
   source: PermissionRuleSource,
@@ -312,6 +313,7 @@ function isPermissionUpdateDestination(
   return [
     'userSettings',
     'projectSettings',
+    'localSettings',
     'session',
     'cliArg',
   ].includes(source)

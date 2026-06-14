@@ -303,6 +303,7 @@ function BashPermissionRequestInner({
             ruleContent: trimmedPrefix
           }],
           behavior: 'allow',
+          destination: 'localSettings'
         }];
         toolUseConfirm.onAllow(toolUseConfirm.input, prefixUpdates);
       }

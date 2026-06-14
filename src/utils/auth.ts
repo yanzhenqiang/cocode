@@ -313,8 +313,10 @@ function isApiKeyHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
+  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.apiKeyHelper === apiKeyHelper
+    projectSettings?.apiKeyHelper === apiKeyHelper ||
+    localSettings?.apiKeyHelper === apiKeyHelper
   )
 }
 
@@ -336,8 +338,10 @@ export function isAwsAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
+  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsAuthRefresh === awsAuthRefresh
+    projectSettings?.awsAuthRefresh === awsAuthRefresh ||
+    localSettings?.awsAuthRefresh === awsAuthRefresh
   )
 }
 
@@ -359,8 +363,10 @@ export function isAwsCredentialExportFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
+  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsCredentialExport === awsCredentialExport
+    projectSettings?.awsCredentialExport === awsCredentialExport ||
+    localSettings?.awsCredentialExport === awsCredentialExport
   )
 }
 
@@ -550,8 +556,10 @@ export function isGcpAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
+  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.gcpAuthRefresh === gcpAuthRefresh
+    projectSettings?.gcpAuthRefresh === gcpAuthRefresh ||
+    localSettings?.gcpAuthRefresh === gcpAuthRefresh
   )
 }
 
@@ -1110,8 +1118,10 @@ export function isOtelHeadersHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
+  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.otelHeadersHelper === otelHeadersHelper
+    projectSettings?.otelHeadersHelper === otelHeadersHelper ||
+    localSettings?.otelHeadersHelper === otelHeadersHelper
   )
 }
 
@@ -1270,8 +1280,20 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
     return { valid: true }
   }
 
-  // policySettings removed — no org validation enforced
-  return { valid: true }
+  const requiredOrgUuid =
+    getSettingsForSource('policySettings')?.forceLoginOrgUUID
+  if (!requiredOrgUuid) {
+    return { valid: true }
+  }
+
+  // Profile fetch is not available without Console OAuth — fail closed
+  return {
+    valid: false,
+    message:
+      `Unable to verify organization for the current authentication token.\n` +
+      `This machine requires organization ${requiredOrgUuid} but the profile could not be fetched.\n` +
+      `Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to authenticate with the required organization.`,
+  }
 }
 
 class GcpCredentialsTimeoutError extends Error {}

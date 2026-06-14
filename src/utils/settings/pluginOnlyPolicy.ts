@@ -17,8 +17,12 @@ export type CustomizationSurface = (typeof CUSTOMIZATION_SURFACES)[number]
  * Absent/undefined → nothing locked (the default).
  */
 export function isRestrictedToPluginOnly(
-  _surface: CustomizationSurface,
+  surface: CustomizationSurface,
 ): boolean {
+  const policy =
+    getSettingsForSource('policySettings')?.strictPluginOnlyCustomization
+  if (policy === true) return true
+  if (Array.isArray(policy)) return policy.includes(surface)
   return false
 }
 
@@ -35,6 +39,7 @@ export function isRestrictedToPluginOnly(
  */
 const ADMIN_TRUSTED_SOURCES: ReadonlySet<string> = new Set([
   'plugin',
+  'policySettings',
   'built-in',
   'builtin',
   'bundled',

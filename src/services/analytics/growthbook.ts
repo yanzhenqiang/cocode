@@ -71,14 +71,39 @@ export function hasGrowthBookEnvOverride(_feature: string): boolean {
 }
 
 /** Returns the flags object from local file, or `{}` if absent. */
+export function getAllGrowthBookFeatures(): Record<string, unknown> {
+	_loadFlags()
+	return _flags || {}
+}
+
 /** Returns `{}` — no config overrides. */
+export function getGrowthBookConfigOverrides(): Record<string, unknown> {
+	return {}
+}
+
 /** No-op — nothing to override. */
+export function setGrowthBookConfigOverride(
+	_key: string,
+	_value: unknown,
+): void {}
+
 /** No-op — nothing to clear. */
 /** Returns `undefined` — no API base URL override. */
+export function getApiBaseUrlHost(): string | undefined {
+	return undefined
+}
+
 /** No-op initialization — GrowthBook client is never created. */
 export function initializeGrowthBook(): void {}
 
 /** Returns the default value — feature flags resolve from local file or default. */
+export function getFeatureValue_DEPRECATED<T>(
+	_featureName: string,
+	defaultValue: T,
+): T {
+	return _getFlagValue(_featureName, defaultValue)
+}
+
 /** Returns the default value — feature flags resolve from local file or default. */
 export function getFeatureValue_CACHED_MAY_BE_STALE<T>(
 	_featureName: string,
@@ -133,7 +158,11 @@ export async function refreshGrowthBookFeatures(): Promise<void> {
 }
 
 /** No-op — no periodic refresh to set up. */
+export function setupPeriodicGrowthBookRefresh(): void {}
+
 /** No-op — no periodic refresh to stop. */
+export function stopPeriodicGrowthBookRefresh(): void {}
+
 /** Returns the default value — dynamic configs resolve from local file or default. */
 export async function getDynamicConfig_BLOCKS_ON_INIT<T>(
 	_configName: string,

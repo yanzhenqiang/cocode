@@ -14,6 +14,7 @@ import { getSessionHooks } from './sessionHooks.js'
 
 export type HookSource =
   | EditableSettingSource
+  | 'policySettings'
   | 'pluginHook'
   | 'sessionHook'
   | 'builtinHook'
@@ -92,6 +93,7 @@ export function getAllHooks(appState: AppState): IndividualHookConfig[] {
   const hooks: IndividualHookConfig[] = []
 
   // Check if restricted to managed hooks only
+  const policySettings = getSettingsForSource('policySettings')
   const restrictedToManagedOnly = policySettings?.allowManagedHooksOnly === true
 
   // If allowManagedHooksOnly is set, don't show any hooks in the UI
@@ -101,6 +103,7 @@ export function getAllHooks(appState: AppState): IndividualHookConfig[] {
     const sources = [
       'userSettings',
       'projectSettings',
+      'localSettings',
     ] as EditableSettingSource[]
 
     // Track which settings files we've already processed to avoid duplicates
@@ -170,6 +173,7 @@ export function hookSourceDescriptionDisplayString(source: HookSource): string {
       return 'User settings (~/.claude/settings.json)'
     case 'projectSettings':
       return 'Project settings (.claude/settings.json)'
+    case 'localSettings':
       return 'Local settings (.claude/settings.local.json)'
     case 'pluginHook':
       // TODO: Get the actual plugin hook file paths instead of using glob pattern
@@ -191,6 +195,7 @@ export function hookSourceHeaderDisplayString(source: HookSource): string {
       return 'User Settings'
     case 'projectSettings':
       return 'Project Settings'
+    case 'localSettings':
       return 'Local Settings'
     case 'pluginHook':
       return 'Plugin Hooks'
@@ -209,6 +214,7 @@ export function hookSourceInlineDisplayString(source: HookSource): string {
       return 'User'
     case 'projectSettings':
       return 'Project'
+    case 'localSettings':
       return 'Local'
     case 'pluginHook':
       return 'Plugin'
