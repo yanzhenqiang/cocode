@@ -1,7 +1,6 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
 import clear from './commands/clear/index.js'
 import commitMessage from './commands/commit-message/index.js'
-import copy from './commands/copy/index.js'
 import compact from './commands/compact/index.js'
 import config from './commands/config/index.js'
 import { context, contextNonInteractive } from './commands/context/index.js'
