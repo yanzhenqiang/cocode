@@ -16,39 +16,8 @@ let initialHooksConfig: HooksSettings | null = null
  * Otherwise, returns merged hooks from all sources (backwards compatible).
  */
 function getHooksFromAllowedSources(): HooksSettings {
-  const policySettings = settingsModule.getSettingsForSource('policySettings')
-
-  // If managed settings disables all hooks, return empty
-  if (policySettings?.disableAllHooks === true) {
-    return {}
-  }
-
-  // If allowManagedHooksOnly is set in managed settings, only use managed hooks
-  if (policySettings?.allowManagedHooksOnly === true) {
-    return policySettings.hooks ?? {}
-  }
-
-  // strictPluginOnlyCustomization: block user/project/local settings hooks.
-  // Plugin hooks (registered channel, hooks.ts:1391) are NOT affected —
-  // they're assembled separately and the managedOnly skip there is keyed
-  // on shouldAllowManagedHooksOnly(), not on this policy. Agent frontmatter
-  // hooks are gated at REGISTRATION (agent task setup) by agent source —
-  // plugin/built-in/policySettings agents register normally, user-sourced
-  // agents skip registration under ["hooks"]. A blanket execution-time
-  // block here would over-kill plugin agents' hooks.
-  if (isRestrictedToPluginOnly('hooks')) {
-    return policySettings?.hooks ?? {}
-  }
-
+  // policySettings removed — use all hooks from merged settings
   const mergedSettings = settingsModule.getSettings_DEPRECATED()
-
-  // If disableAllHooks is set in non-managed settings, only managed hooks still run
-  // (non-managed settings cannot override managed hooks)
-  if (mergedSettings.disableAllHooks === true) {
-    return policySettings?.hooks ?? {}
-  }
-
-  // Otherwise, use all hooks (merged from all sources) - backwards compatible
   return mergedSettings.hooks ?? {}
 }
 
@@ -60,18 +29,6 @@ function getHooksFromAllowedSources(): HooksSettings {
  *   cannot disable managed hooks, so they effectively become managed-only)
  */
 export function shouldAllowManagedHooksOnly(): boolean {
-  const policySettings = settingsModule.getSettingsForSource('policySettings')
-  if (policySettings?.allowManagedHooksOnly === true) {
-    return true
-  }
-  // If disableAllHooks is set but NOT from managed settings,
-  // treat as managed-only (non-managed hooks disabled, managed hooks still run)
-  if (
-    settingsModule.getSettings_DEPRECATED().disableAllHooks === true &&
-    policySettings?.disableAllHooks !== true
-  ) {
-    return true
-  }
   return false
 }
 
@@ -81,10 +38,7 @@ export function shouldAllowManagedHooksOnly(): boolean {
  * When disableAllHooks is set in non-managed settings, managed hooks still run.
  */
 export function shouldDisableAllHooksIncludingManaged(): boolean {
-  return (
-    settingsModule.getSettingsForSource('policySettings')?.disableAllHooks ===
-    true
-  )
+  return false
 }
 
 /**
