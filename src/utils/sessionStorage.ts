@@ -232,10 +232,6 @@ export function setAgentTranscriptSubdir(
   agentTranscriptSubdirs.set(agentId, subdir)
 }
 
-export function clearAgentTranscriptSubdir(agentId: string): void {
-  agentTranscriptSubdirs.delete(agentId)
-}
-
 export function getAgentTranscriptPath(agentId: AgentId): string {
   // Same sessionProjectDir consistency as getTranscriptPathForSession —
   // subagent transcripts live under the session dir, so if the session

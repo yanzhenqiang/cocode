@@ -301,9 +301,3 @@ export async function finalizePendingAsyncHooks(): Promise<void> {
 }
 
 // Test utility function to clear all hooks
-export function clearAllAsyncHooks(): void {
-  for (const hook of pendingHooks.values()) {
-    hook.stopProgressInterval()
-  }
-  pendingHooks.clear()
-}

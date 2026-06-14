@@ -288,29 +288,3 @@ export function sdkErrorFromType(
  * Checks the `.isAxiosError` marker property directly (same as
  * axios.isAxiosError()) to keep this module dependency-free.
  */
-export function classifyAxiosError(e: unknown): {
-  kind: AxiosErrorKind
-  status?: number
-  message: string
-} {
-  const message = errorMessage(e)
-  if (
-    !e ||
-    typeof e !== 'object' ||
-    !('isAxiosError' in e) ||
-    !e.isAxiosError
-  ) {
-    return { kind: 'other', message }
-  }
-  const err = e as {
-    response?: { status?: number }
-    code?: string
-  }
-  const status = err.response?.status
-  if (status === 401 || status === 403) return { kind: 'auth', status, message }
-  if (err.code === 'ECONNABORTED') return { kind: 'timeout', status, message }
-  if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
-    return { kind: 'network', status, message }
-  }
-  return { kind: 'http', status, message }
-}

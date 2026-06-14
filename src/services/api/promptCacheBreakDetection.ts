@@ -697,10 +697,6 @@ export function notifyCompaction(
   }
 }
 
-export function cleanupAgentTracking(agentId: AgentId): void {
-  previousStateBySource.delete(agentId)
-}
-
 export function resetPromptCacheBreakDetection(): void {
   previousStateBySource.clear()
 }

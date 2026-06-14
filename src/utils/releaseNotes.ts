@@ -548,15 +548,3 @@ export async function checkForReleaseNotes(
  * setup.ts awaits checkForReleaseNotes() before first render, so this
  * returns accurate results in component render bodies.
  */
-export function checkForReleaseNotesSync(
-  lastSeenVersion: string | null | undefined,
-  currentVersion: string = publicBuildVersion,
-): { hasReleaseNotes: boolean; releaseNotes: string[] } {
-  // For Ant builds, use VERSION_CHANGELOG bundled at build time
-
-  const releaseNotes = getRecentReleaseNotes(currentVersion, lastSeenVersion)
-  return {
-    hasReleaseNotes: releaseNotes.length > 0,
-    releaseNotes,
-  }
-}

@@ -172,10 +172,6 @@ export const getAllOutputStyles = memoize(async function getAllOutputStyles(
   return allStyles
 })
 
-export function clearAllOutputStylesCache(): void {
-  getAllOutputStyles.cache?.clear?.()
-}
-
 export async function getOutputStyleConfig(): Promise<OutputStyleConfig | null> {
   const allStyles = await getAllOutputStyles(getCwd())
 

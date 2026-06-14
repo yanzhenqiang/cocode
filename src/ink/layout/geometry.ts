@@ -59,19 +59,6 @@ export function unionRect(a: Rectangle, b: Rectangle): Rectangle {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
 }
 
-export function clampRect(rect: Rectangle, size: Size): Rectangle {
-  const minX = Math.max(0, rect.x)
-  const minY = Math.max(0, rect.y)
-  const maxX = Math.min(size.width - 1, rect.x + rect.width - 1)
-  const maxY = Math.min(size.height - 1, rect.y + rect.height - 1)
-  return {
-    x: minX,
-    y: minY,
-    width: Math.max(0, maxX - minX + 1),
-    height: Math.max(0, maxY - minY + 1),
-  }
-}
-
 export function withinBounds(size: Size, point: Point): boolean {
   return (
     point.x >= 0 &&
