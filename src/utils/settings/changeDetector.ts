@@ -224,7 +224,7 @@ async function getWatchTargets(): Promise<{
   // Also watch the managed-settings.d/ drop-in directory for policy fragments.
   // We add it as a separate watched directory so chokidar's depth:0 watches
   // its immediate children (the .json files). Any .json file inside it maps
-  // to the 'policySettings' source.
+  // policySettings removed
   let dropInDir: string | null = null
   const managedDropIn = getManagedSettingsDropInDir()
   try {

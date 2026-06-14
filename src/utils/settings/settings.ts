@@ -600,57 +600,6 @@ function loadSettingsFromDisk(): SettingsWithErrors {
 
     // Merge settings from each source in priority order with deep merging
     for (const source of getEnabledSettingSources()) {
-      // policySettings: "first source wins" — use the highest-priority source
-      // that has content. Priority: remote > HKLM/plist > managed-settings.json > HKCU
-      if (source === 'policySettings') {
-        let policySettings: SettingsJson | null = null
-        const policyErrors: ValidationError[] = []
-
-        // 1. Admin-only MDM (HKLM / macOS plist)
-        if (!policySettings) {
-          const mdmResult = getMdmSettings()
-          if (Object.keys(mdmResult.settings).length > 0) {
-            policySettings = mdmResult.settings
-          }
-          policyErrors.push(...mdmResult.errors)
-        }
-
-        // 3. managed-settings.json + managed-settings.d/ (file-based, requires admin)
-        if (!policySettings) {
-          const { settings, errors } = loadManagedFileSettings()
-          if (settings) {
-            policySettings = settings
-          }
-          policyErrors.push(...errors)
-        }
-
-        // 4. HKCU (lowest — user-writable, only if nothing above exists)
-        if (!policySettings) {
-          const hkcu = getHkcuSettings()
-          if (Object.keys(hkcu.settings).length > 0) {
-            policySettings = hkcu.settings
-          }
-          policyErrors.push(...hkcu.errors)
-        }
-
-        // Merge the winning policy source into the settings chain
-        if (policySettings) {
-          mergedSettings = mergeWith(
-            mergedSettings,
-            policySettings,
-            settingsMergeCustomizer,
-          )
-        }
-        for (const error of policyErrors) {
-          const errorKey = `${error.file}:${error.path}:${error.message}`
-          if (!seenErrors.has(errorKey)) {
-            seenErrors.add(errorKey)
-            allErrors.push(error)
-          }
-        }
-
-        continue
-      }
 
       const filePath = getSettingsFilePathForSource(source)
       if (filePath) {
@@ -781,8 +730,7 @@ export function getSettingsWithErrors(): SettingsWithErrors {
  */
 export function hasSkipDangerousModePermissionPrompt(): boolean {
   return !!(
-    getSettingsForSource('userSettings')?.skipDangerousModePermissionPrompt ||
-    getSettingsForSource('policySettings')?.skipDangerousModePermissionPrompt
+    getSettingsForSource('userSettings')?.skipDangerousModePermissionPrompt
   )
 }
 
@@ -794,8 +742,6 @@ export function hasSkipDangerousModePermissionPrompt(): boolean {
 export function hasAllowBypassPermissionsMode(): boolean {
   return !!(
     getSettingsForSource('userSettings')?.permissions
-      ?.allowBypassPermissionsMode ||
-    getSettingsForSource('policySettings')?.permissions
       ?.allowBypassPermissionsMode
   )
 }
@@ -808,11 +754,9 @@ export function hasAllowBypassPermissionsMode(): boolean {
 export function hasAutoModeOptIn(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     const user = getSettingsForSource('userSettings')?.skipAutoPermissionPrompt
-    const policy =
-      getSettingsForSource('policySettings')?.skipAutoPermissionPrompt
-    const result = !!(user || flag || policy)
+    const result = !!user
     logForDebugging(
-      `[auto-mode] hasAutoModeOptIn=${result} skipAutoPermissionPrompt: user=${user} flag=${flag} policy=${policy}`,
+      `[auto-mode] hasAutoModeOptIn=${result} skipAutoPermissionPrompt: user=${user}`,
     )
     return result
   }
