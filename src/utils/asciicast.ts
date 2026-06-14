@@ -14,5 +14,3 @@ export function getSessionRecordingPaths(): string[] {
 export async function renameRecordingForSession(): Promise<void> {}
 
 export async function flushAsciicastRecorder(): Promise<void> {}
-
-export function installAsciicastRecorder(): void {}
