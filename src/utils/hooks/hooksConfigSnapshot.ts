@@ -28,17 +28,6 @@ function getHooksFromAllowedSources(): HooksSettings {
  *   cannot disable managed hooks, so they effectively become managed-only)
  */
 export function shouldAllowManagedHooksOnly(): boolean {
-  if (policySettings?.allowManagedHooksOnly === true) {
-    return true
-  }
-  // If disableAllHooks is set but NOT from managed settings,
-  // treat as managed-only (non-managed hooks disabled, managed hooks still run)
-  if (
-    settingsModule.getSettings_DEPRECATED().disableAllHooks === true &&
-    policySettings?.disableAllHooks !== true
-  ) {
-    return true
-  }
   return false
 }
 
