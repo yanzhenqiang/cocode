@@ -33,7 +33,6 @@ import {
   updateHooksConfigSnapshot,
 } from './utils/hooks/hooksConfigSnapshot.js'
 import { logError } from './utils/log.js'
-import { getRecentActivity } from './utils/logoV2Utils.js'
 import type { PermissionMode } from './utils/permissions/PermissionMode.js'
 import { getPlanSlug } from './utils/plans.js'
 import { saveWorktreeState } from './utils/sessionStorage.js'
