@@ -359,83 +359,6 @@ export function parseChangelog(content: string): Record<string, string[]> {
  * @param readChangelog - Function to read the changelog (defaults to readChangelogFile)
  * @returns Array of release notes to display
  */
-export function getRecentReleaseNotes(
-  currentVersion: string,
-  previousVersion: string | null | undefined,
-  changelogContent: string = getStoredChangelogFromMemory(),
-): string[] {
-  try {
-    const releaseNotes = parseChangelog(changelogContent)
-
-    // Strip SHA from both versions to compare only the base versions
-    const baseCurrentVersion = coerce(currentVersion)
-    let basePreviousVersion = previousVersion ? coerce(previousVersion) : null
-
-    // Older Cocode builds stored the internal compatibility version
-    // (e.g. 99.0.0) as the "seen" marker. Treat that as unseen so users
-    // can start receiving release notes keyed to the public version.
-    if (
-      baseCurrentVersion &&
-      basePreviousVersion &&
-      gt(basePreviousVersion.version, baseCurrentVersion.version)
-    ) {
-      basePreviousVersion = null
-    }
-
-    if (
-      !basePreviousVersion ||
-      (baseCurrentVersion &&
-        gt(baseCurrentVersion.version, basePreviousVersion.version))
-    ) {
-      // Get all versions that are newer than the last seen version
-      return Object.entries(releaseNotes)
-        .filter(
-          ([version]) =>
-            !basePreviousVersion || gt(version, basePreviousVersion.version),
-        )
-        .sort(([versionA], [versionB]) => (gt(versionA, versionB) ? -1 : 1)) // Sort newest first
-        .flatMap(([_, notes]) => notes)
-        .filter(Boolean)
-        .slice(0, MAX_RELEASE_NOTES_SHOWN)
-    }
-  } catch (error) {
-    logError(toError(error))
-    return []
-  }
-  return []
-}
-
-export function getReleaseNotesForVersion(
-  version: string,
-  changelogContent: string = getStoredChangelogFromMemory(),
-): string[] {
-  try {
-    const releaseNotes = parseChangelog(changelogContent)
-    return releaseNotes[normalizePublicVersion(version)] ?? []
-  } catch (error) {
-    logError(toError(error))
-    return []
-  }
-}
-
-export function formatReleaseNotesForDisplay(notes: string[]): string {
-  const lines: string[] = []
-
-  for (const note of notes) {
-    if (isReleaseSectionHeader(note)) {
-      if (lines.length > 0) {
-        lines.push('')
-      }
-      lines.push(`${getReleaseSectionHeaderTitle(note)}:`)
-      continue
-    }
-
-    lines.push(`- ${note}`)
-  }
-
-  return lines.join('\n')
-}
-
 export function sliceReleaseNotesForDisplay(
   notes: string[],
   maxItems: number,
@@ -476,35 +399,6 @@ export function sliceReleaseNotesForDisplay(
  * @param readChangelog - Function to read the changelog (defaults to readChangelogFile)
  * @returns Array of [version, notes[]] arrays
  */
-export function getAllReleaseNotes(
-  changelogContent: string = getStoredChangelogFromMemory(),
-): Array<[string, string[]]> {
-  try {
-    const releaseNotes = parseChangelog(changelogContent)
-
-    // Sort versions with oldest first
-    const sortedVersions = Object.keys(releaseNotes).sort((a, b) =>
-      gt(a, b) ? 1 : -1,
-    )
-
-    // Return array of [version, notes] arrays
-    return sortedVersions
-      .map(version => {
-        const versionNotes = releaseNotes[version]
-        if (!versionNotes || versionNotes.length === 0) return null
-
-        const notes = versionNotes.filter(Boolean)
-        if (notes.length === 0) return null
-
-        return [version, notes] as [string, string[]]
-      })
-      .filter((item): item is [string, string[]] => item !== null)
-  } catch (error) {
-    logError(toError(error))
-    return []
-  }
-}
-
 /**
  * Checks if there are release notes to show based on the last seen version.
  * Can be used by multiple components to determine whether to display release notes.
