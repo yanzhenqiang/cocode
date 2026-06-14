@@ -17,7 +17,6 @@ import { SETTING_SOURCES } from '../settings/constants.js'
 import {
   getSettings_DEPRECATED,
   getSettingsFilePathForSource,
-  getUseAutoModeDuringPlan,
   hasAutoModeOptIn,
 } from '../settings/settings.js'
 import {
@@ -1254,7 +1253,7 @@ export function shouldPlanUseAutoMode(): boolean {
     return (
       false &&
       isAutoModeGateEnabled() &&
-      getUseAutoModeDuringPlan()
+      true
     )
   }
   return false

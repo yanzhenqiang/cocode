@@ -547,15 +547,6 @@ export function getSettingsWithErrors(): SettingsWithErrors {
  * (opt-out). Returns false if any trusted source explicitly sets false.
  * projectSettings is excluded so a malicious project can't control this.
  */
-export function getUseAutoModeDuringPlan(): boolean {
-  if (feature('TRANSCRIPT_CLASSIFIER')) {
-    return (
-      getSettingsForSource('userSettings')?.useAutoModeDuringPlan !== false
-    )
-  }
-  return true
-}
-
 /**
  * Returns the merged autoMode config from trusted settings sources.
  * Only available when TRANSCRIPT_CLASSIFIER is active; returns undefined otherwise.
