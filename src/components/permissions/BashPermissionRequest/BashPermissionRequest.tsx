@@ -17,7 +17,6 @@ import { Select } from '../../CustomSelect/select.js';
 import { ShimmerChar } from '../../Spinner/ShimmerChar.js';
 import { useShimmerAnimation } from '../../Spinner/useShimmerAnimation.js';
 import { type UnaryEvent, usePermissionRequestLogging } from '../hooks.js';
-import { PermissionDecisionDebugInfo } from '../PermissionDecisionDebugInfo.js';
 import { PermissionDialog } from '../PermissionDialog.js';
 import { PermissionExplainerContent, usePermissionExplainerUI } from '../PermissionExplanation.js';
 import type { PermissionRequestProps } from '../PermissionRequest.js';
@@ -371,7 +370,7 @@ function BashPermissionRequestInner({
         <PermissionExplainerContent visible={explainerState.visible} promise={explainerState.promise} />
       </Box>
       {showPermissionDebug ? <>
-          <PermissionDecisionDebugInfo permissionResult={toolUseConfirm.permissionResult} toolName="Bash" />
+
           {toolUseContext.options.debug && <Box justifyContent="flex-end" marginTop={1}>
               <Text dimColor>Ctrl-D to hide debug info</Text>
             </Box>}
