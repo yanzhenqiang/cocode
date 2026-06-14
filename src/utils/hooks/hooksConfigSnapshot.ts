@@ -16,7 +16,7 @@ let initialHooksConfig: HooksSettings | null = null
  * Otherwise, returns merged hooks from all sources (backwards compatible).
  */
 function getHooksFromAllowedSources(): HooksSettings {
-  const mergedSettings = settingsModule.getSettings_DEPRECATED()
+  const mergedSettings = settingsModule.getInitialSettings()
   return mergedSettings.hooks ?? {}
 }
 
@@ -34,7 +34,7 @@ export function shouldAllowManagedHooksOnly(): boolean {
   // If disableAllHooks is set but NOT from managed settings,
   // treat as managed-only (non-managed hooks disabled, managed hooks still run)
   if (
-    settingsModule.getSettings_DEPRECATED().disableAllHooks === true &&
+    settingsModule.getInitialSettings().disableAllHooks === true &&
     policySettings?.disableAllHooks !== true
   ) {
     return true

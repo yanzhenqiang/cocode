@@ -13,7 +13,7 @@ import {
   isBinaryContentType,
   persistBinaryContent,
 } from '../../utils/mcpOutputStorage.js'
-import { getSettings_DEPRECATED } from '../../utils/settings/settings.js'
+import { getInitialSettings } from '../../utils/settings/settings.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
 import { ssrfGuardedLookup } from '../../utils/hooks/ssrfGuard.js'
 import { isPreapprovedHost } from './preapproved.js'
@@ -447,7 +447,7 @@ export async function getURLMarkdownContent(
     // Check if the user has opted to skip the blocklist check
     // This is for enterprise customers with restrictive security policies
     // that prevent outbound connections to claude.ai
-    const settings = getSettings_DEPRECATED()
+    const settings = getInitialSettings()
     if (!settings.skipWebFetchPreflight) {
       const checkResult = await checkDomainBlocklist(hostname)
       switch (checkResult.status) {

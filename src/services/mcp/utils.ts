@@ -8,7 +8,7 @@ import { getCwd } from '../../utils/cwd.js'
 import { getGlobalClaudeFile } from '../../utils/env.js'
 import { isSettingSourceEnabled } from '../../utils/settings/constants.js'
 import {
-  getSettings_DEPRECATED,
+  getInitialSettings,
 } from '../../utils/settings/settings.js'
 import { jsonStringify } from '../../utils/slowOperations.js'
 import { getEnterpriseMcpFilePath, getMcpConfigByName } from './config.js'
@@ -337,7 +337,7 @@ export function parseHeaders(headerArray: string[]): Record<string, string> {
 export function getProjectMcpServerStatus(
   serverName: string,
 ): 'approved' | 'rejected' | 'pending' {
-  const settings = getSettings_DEPRECATED()
+  const settings = getInitialSettings()
   const normalizedName = normalizeNameForMCP(serverName)
 
   // TODO: This fails an e2e test if the ?. is not present. This is likely a bug in the e2e test.
