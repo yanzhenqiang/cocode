@@ -107,14 +107,7 @@ export function getProgressUpdate(tracker: ProgressTracker): AgentProgress {
 /**
  * Creates an ActivityDescriptionResolver from a tools list.
  * Looks up the tool by name and calls getActivityDescription if available.
- */
-export function createActivityDescriptionResolver(tools: Tools): ActivityDescriptionResolver {
-  return (toolName, input) => {
-    const tool = findToolByName(tools, toolName);
-    return tool?.getActivityDescription?.(input) ?? undefined;
-  };
-}
-export type LocalAgentTaskState = TaskStateBase & {
+ */export type LocalAgentTaskState = TaskStateBase & {
   type: 'local_agent';
   agentId: string;
   prompt: string;
@@ -343,28 +336,6 @@ export function updateAgentProgress(taskId: string, progress: AgentProgress, set
  * Complete an agent task with result.
  * Complete an agent task with result.
  */
-export function completeAgentTask(result: AgentToolResult, setAppState: SetAppState): void {
-  const taskId = result.agentId;
-  updateTaskState<LocalAgentTaskState>(taskId, setAppState, task => {
-    if (task.status !== 'running') {
-      return task;
-    }
-    task.unregisterCleanup?.();
-    return {
-      ...task,
-      status: 'completed',
-      result,
-      endTime: Date.now(),
-      evictAfter: task.retain ? undefined : Date.now() + PANEL_GRACE_MS,
-      abortController: undefined,
-      unregisterCleanup: undefined,
-      selectedAgent: undefined
-    };
-  });
-  void evictTaskOutput(taskId);
-  // Note: Notification is sent by AgentTool via enqueueAgentNotification
-}
-
 /**
  * Fail an agent task with error.
  */

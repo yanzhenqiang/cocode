@@ -21,10 +21,6 @@ export function getToolSchemaCache(): Map<string, CachedSchema> {
   return TOOL_SCHEMA_CACHE
 }
 
-export function clearToolSchemaCache(): void {
-  TOOL_SCHEMA_CACHE.clear()
-}
-
 /**
  * Selectively invalidate cache entries for tools not in the provided set.
  * Used by QueryEngine.updateTools() to avoid clearing schemas for tools that

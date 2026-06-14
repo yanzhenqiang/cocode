@@ -569,8 +569,3 @@ export function isNormalizedCdCommand(command: string): boolean {
  * Checks if a compound command contains any cd command,
  * using normalized detection that handles env var prefixes and shell quotes.
  */
-export function commandHasAnyCd(command: string): boolean {
-  return command.split(/&&|;|\|/g).some(subcmd =>
-    isNormalizedCdCommand(subcmd.trim()),
-  )
-}

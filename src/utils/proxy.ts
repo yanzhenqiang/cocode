@@ -165,32 +165,6 @@ function createHttpsProxyAgent(
  * resolution as the global interceptor, but agent options stay
  * scoped to this instance.
  */
-export function createAxiosInstance(
-  extra: HttpsProxyAgentOptions<string> = {},
-): AxiosInstance {
-  const proxyUrl = getProxyUrl()
-  const mtlsAgent = getMTLSAgent()
-  const instance = axios.create({ proxy: false })
-
-  if (!proxyUrl) {
-    if (mtlsAgent) instance.defaults.httpsAgent = mtlsAgent
-    return instance
-  }
-
-  const proxyAgent = createHttpsProxyAgent(proxyUrl, extra)
-  instance.interceptors.request.use(config => {
-    if (config.url && shouldBypassProxy(config.url)) {
-      config.httpsAgent = mtlsAgent
-      config.httpAgent = mtlsAgent
-    } else {
-      config.httpsAgent = proxyAgent
-      config.httpAgent = proxyAgent
-    }
-    return config
-  })
-  return instance
-}
-
 /**
  * Get or create a memoized proxy agent for the given URI
  * Now respects NO_PROXY environment variable
