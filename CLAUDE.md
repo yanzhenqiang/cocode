@@ -102,3 +102,53 @@ npx eslint --fix src/
 | Delete | -M (dead code) | Git history | `git revert` |
 
 Stubs accumulate. Deletions compound. Choose deletion.
+
+## delete_func.ts — AST-Based Function Deletion
+
+Located at `scripts/delete_func.ts`. Takes a function name, traces all its call sites via TypeScript AST, and deletes everything cleanly.
+
+### Usage
+
+```bash
+npx tsx scripts/delete_func.ts <函数名>        # show reference tree
+npx tsx scripts/delete_func.ts <函数名> --delete  # execute deletion
+npx tsx scripts/delete_func.ts --list-dead     # list all dead functions
+```
+
+### What it deletes (per function)
+
+1. **Definition body** — exact AST span, including leading/trailing whitespace
+2. **Import specifiers** — removes `import { X }` from all importing files. If multi-member import, removes only X. If import line becomes empty, deletes whole line.
+3. **Call sites** — deletes every call line, cross-file and same-file.
+4. **Dependencies** — recursively deletes callees that have no remaining callers after X is removed (leaf-first).
+
+### Simple vs Complex Calls
+
+| Pattern | Auto-delete? | Reason |
+|---------|-------------|--------|
+| `X()` | ✅ Yes | No downstream effects |
+| `void X()` | ✅ Yes | Same as above |
+| `const r = X()` → `if(!r) return` | ✅ Yes | r becomes undefined, guard handles it |
+| `const r = X()` → r used elsewhere | ❌ Manual | Must trace r's full usage chain |
+
+### Key design decisions
+
+- **Root-only mode**: By default only deletes the root function, not dependencies. Dependency cascade must be enabled explicitly.
+- **String literals are safe**: `logForDebugging('[init] X starting')` — the tool understands `'[init] X starting'` is a string, not a reference to function X.
+- **Multi-member imports handled**: `import { X, Y } from './foo'` → deletes only X, keeps Y.
+- **Round-trip safety**: File is parsed, modified spans applied in reverse order (preserving positions), written back.
+
+### Verification workflow
+
+```
+# Delete → Build → Test → Commit
+npx tsx scripts/delete_func.ts "funcName" --delete
+npx tsx scripts/build-node.ts
+bash test_subagent.sh          # must pass 10/10
+git add -A && git commit -m "删除 funcName (简单调用)"
+git push origin main
+```
+
+### Test script
+
+`test_subagent.sh` auto-rebuilds before testing and cleans up tmux sessions. Always runs `npx tsx scripts/build-node.ts` first.
