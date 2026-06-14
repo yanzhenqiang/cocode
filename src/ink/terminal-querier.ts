@@ -46,31 +46,10 @@ type XtversionResponse = Extract<TerminalResponse, { type: 'xtversion' }>
 
 /** DECRQM: request DEC private mode status (CSI ? mode $ p).
  *  Terminal replies with DECRPM (CSI ? mode ; status $ y) or ignores. */
-export function decrqm(mode: number): TerminalQuery<DecrpmResponse> {
-  return {
-    request: csi(`?${mode}$p`),
-    match: (r): r is DecrpmResponse => r.type === 'decrpm' && r.mode === mode,
-  }
-}
-
 /** Primary Device Attributes query (CSI c). Every terminal answers this —
  *  used internally by flush() as a universal sentinel. Call directly if
  *  you want the DA1 params. */
-export function da1(): TerminalQuery<Da1Response> {
-  return {
-    request: csi('c'),
-    match: (r): r is Da1Response => r.type === 'da1',
-  }
-}
-
 /** Secondary Device Attributes query (CSI > c). Returns terminal version. */
-export function da2(): TerminalQuery<Da2Response> {
-  return {
-    request: csi('>c'),
-    match: (r): r is Da2Response => r.type === 'da2',
-  }
-}
-
 /** Query current Kitty keyboard protocol flags (CSI ? u).
  *  Terminal replies with CSI ? flags u or ignores. */
 export function kittyKeyboard(): TerminalQuery<KittyResponse> {
