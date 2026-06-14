@@ -253,7 +253,3 @@ export async function getPathCompletions(
 /**
  * Clears both directory and path caches
  */
-export function clearPathCache(): void {
-  directoryCache.clear()
-  pathCache.clear()
-}

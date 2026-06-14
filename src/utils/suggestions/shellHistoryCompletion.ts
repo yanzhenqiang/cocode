@@ -59,11 +59,6 @@ async function getShellHistoryCommands(): Promise<string[]> {
 /**
  * Clear the shell history cache (useful when history is updated)
  */
-export function clearShellHistoryCache(): void {
-  shellHistoryCache = null
-  shellHistoryCacheTimestamp = 0
-}
-
 /**
  * Add a command to the front of the shell history cache without
  * flushing the entire cache.  If the command already exists in the

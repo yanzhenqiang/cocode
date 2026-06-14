@@ -159,13 +159,6 @@ export function setPendingHint(hint: ClaudeCodeHint): void {
 }
 
 /** Clear the slot without flipping the session flag — for rejected hints. */
-export function clearPendingHint(): void {
-  if (pendingHint !== null) {
-    pendingHint = null
-    notify()
-  }
-}
-
 /** Flip the once-per-session flag. Call only when a dialog is actually shown. */
 export function markShownThisSession(): void {
   shownThisSession = true

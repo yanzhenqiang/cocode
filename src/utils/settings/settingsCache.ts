@@ -74,7 +74,3 @@ export function setPluginSettingsBase(
 ): void {
   pluginSettingsBase = settings
 }
-
-export function clearPluginSettingsBase(): void {
-  pluginSettingsBase = undefined
-}
