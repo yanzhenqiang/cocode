@@ -1253,7 +1253,6 @@ export async function deletePermissionRule({
 }: EditPermissionRuleArgs & { rule: PermissionRule }): Promise<void> {
   if (
     rule.source === 'policySettings' ||
-    rule.source === 'flagSettings' ||
     rule.source === 'command'
   ) {
     throw new Error('Cannot delete permission rules from read-only settings')
@@ -1269,7 +1268,6 @@ export async function deletePermissionRule({
   // Per-destination logic to delete the rule from settings
   const destination = rule.source
   switch (destination) {
-    case 'localSettings':
     case 'userSettings':
     case 'projectSettings': {
       // Note: Typescript doesn't know that rule conforms to `PermissionRuleFromEditableSettings` even when we switch on `rule.source`
@@ -1347,7 +1345,6 @@ export function syncPermissionRulesFromDisk(
     const sourcesToClear: PermissionUpdateDestination[] = [
       'userSettings',
       'projectSettings',
-      'localSettings',
       'cliArg',
       'session',
     ]
@@ -1373,7 +1370,6 @@ export function syncPermissionRulesFromDisk(
   const diskSources: PermissionUpdateDestination[] = [
     'userSettings',
     'projectSettings',
-    'localSettings',
   ]
   for (const diskSource of diskSources) {
     for (const behavior of ['allow', 'deny', 'ask'] as PermissionBehavior[]) {

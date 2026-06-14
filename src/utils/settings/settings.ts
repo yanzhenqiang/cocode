@@ -240,10 +240,6 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
     case 'projectSettings': {
       return resolve(getOriginalCwd())
     }
-    case 'flagSettings': {
-      const path = getFlagSettingsPath()
-      return path ? dirname(resolve(path)) : resolve(getOriginalCwd())
-    }
   }
 }
 
@@ -282,11 +278,8 @@ export function getSettingsFilePathForSource(
     }
     case 'policySettings':
       return getManagedSettingsFilePath()
-    case 'flagSettings': {
-      return getFlagSettingsPath()
     }
   }
-}
 
 export function getRelativeSettingsFilePathForSource(
   source: 'projectSettings',
@@ -379,10 +372,7 @@ export function updateSettingsForSource(
   source: EditableSettingSource,
   settings: SettingsJson,
 ): { error: Error | null } {
-  if (
-    (source as unknown) === 'policySettings' ||
-    (source as unknown) === 'flagSettings'
-  ) {
+  if ((source as unknown) === 'policySettings') {
     return { error: null }
   }
 
@@ -819,7 +809,6 @@ export function getSettingsWithErrors(): SettingsWithErrors {
 export function hasSkipDangerousModePermissionPrompt(): boolean {
   return !!(
     getSettingsForSource('userSettings')?.skipDangerousModePermissionPrompt ||
-    getSettingsForSource('flagSettings')?.skipDangerousModePermissionPrompt ||
     getSettingsForSource('policySettings')?.skipDangerousModePermissionPrompt
   )
 }
@@ -832,8 +821,6 @@ export function hasSkipDangerousModePermissionPrompt(): boolean {
 export function hasAllowBypassPermissionsMode(): boolean {
   return !!(
     getSettingsForSource('userSettings')?.permissions
-      ?.allowBypassPermissionsMode ||
-    getSettingsForSource('flagSettings')?.permissions
       ?.allowBypassPermissionsMode ||
     getSettingsForSource('policySettings')?.permissions
       ?.allowBypassPermissionsMode
@@ -848,7 +835,6 @@ export function hasAllowBypassPermissionsMode(): boolean {
 export function hasAutoModeOptIn(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     const user = getSettingsForSource('userSettings')?.skipAutoPermissionPrompt
-    const flag = getSettingsForSource('flagSettings')?.skipAutoPermissionPrompt
     const policy =
       getSettingsForSource('policySettings')?.skipAutoPermissionPrompt
     const result = !!(user || flag || policy)
@@ -869,7 +855,6 @@ export function getUseAutoModeDuringPlan(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     return (
       getSettingsForSource('policySettings')?.useAutoModeDuringPlan !== false &&
-      getSettingsForSource('flagSettings')?.useAutoModeDuringPlan !== false &&
       getSettingsForSource('userSettings')?.useAutoModeDuringPlan !== false
     )
   }
@@ -899,7 +884,6 @@ export function getAutoModeConfig():
 
     for (const source of [
       'userSettings',
-      'flagSettings',
       'policySettings',
     ] as const) {
       const settings = getSettingsForSource(source)

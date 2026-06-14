@@ -185,13 +185,6 @@ async function getWatchTargets(): Promise<{
   const dirsWithExistingFiles = new Set<string>()
 
   for (const source of SETTING_SOURCES) {
-    // Skip flagSettings - they're provided via CLI and won't change during the session.
-    // Additionally, they may be temp files in $TMPDIR which can contain special files
-    // (FIFOs, sockets) that cause the file watcher to hang or error.
-    // See: https://github.com/anthropics/claude-code/issues/16469
-    if (source === 'flagSettings') {
-      continue
-    }
     const path = getSettingsFilePathForSource(source)
     if (!path) {
       continue
@@ -255,9 +248,6 @@ function settingSourceToConfigChangeSource(
       return 'user_settings'
     case 'projectSettings':
       return 'project_settings'
-    case 'localSettings':
-      return 'local_settings'
-    case 'flagSettings':
     case 'policySettings':
       return 'policy_settings'
   }

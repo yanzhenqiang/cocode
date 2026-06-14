@@ -86,7 +86,6 @@ ${args || 'The user did not describe a specific issue. Read the debug log and su
 Remember that settings are in:
 * user - ${getSettingsFilePathForSource('userSettings')}
 * project - ${getSettingsFilePathForSource('projectSettings')}
-* local - ${getSettingsFilePathForSource('localSettings')}
 
 ## Instructions
 

@@ -770,8 +770,6 @@ function rootPathForSource(source: PermissionRuleSource): string {
     case 'userSettings':
     case 'policySettings':
     case 'projectSettings':
-    case 'localSettings':
-    case 'flagSettings':
       return getSettingsRootPathForSource(source)
   }
 }

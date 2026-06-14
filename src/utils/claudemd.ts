@@ -932,18 +932,7 @@ export const getMemoryFiles = memoize(
         )
       }
 
-      // Try reading CLAUDE.local.md (Local) - only if localSettings is enabled
-      if (isSettingSourceEnabled('localSettings')) {
-        const localPath = join(dir, 'CLAUDE.local.md')
-        result.push(
-          ...(await processMemoryFile(
-            localPath,
-            'Local',
-            processedPaths,
-            includeExternal,
-          )),
-        )
-      }
+      // CLAUDE.local.md support removed (localSettings no longer supported)
     }
 
     // Process root project instruction files from additional directories (--add-dir) if env var is enabled
@@ -1268,13 +1257,7 @@ export async function getMemoryFilesForNestedDirectory(
     )
   }
 
-  // Process local memory file (CLAUDE.local.md)
-  if (isSettingSourceEnabled('localSettings')) {
-    const localPath = join(dir, 'CLAUDE.local.md')
-    result.push(
-      ...(await processMemoryFile(localPath, 'Local', processedPaths, false)),
-    )
-  }
+  // CLAUDE.local.md support removed
 
   const rulesDir = join(dir, '.claude', 'rules')
 

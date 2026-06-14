@@ -704,13 +704,9 @@ export function getMcpConfigsByScope(
   errors: ValidationError[]
 } {
   // Check if this source is enabled
-  const sourceMap: Record<
-    string,
-    'projectSettings' | 'userSettings' | 'localSettings'
-  > = {
+  const sourceMap: Record<string, string> = {
     project: 'projectSettings',
     user: 'userSettings',
-    local: 'localSettings',
   }
 
   if (scope in sourceMap && !isSettingSourceEnabled(sourceMap[scope]!)) {

@@ -105,7 +105,6 @@ function filterSettingsEnv(
  */
 const TRUSTED_SETTING_SOURCES = [
   'userSettings',
-  'flagSettings',
   'policySettings',
 ] as const
 

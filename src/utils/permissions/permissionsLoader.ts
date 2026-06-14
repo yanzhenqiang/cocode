@@ -152,7 +152,6 @@ export type PermissionRuleFromEditableSettings = PermissionRule & {
 const EDITABLE_SOURCES: EditableSettingSource[] = [
   'userSettings',
   'projectSettings',
-  'localSettings',
 ]
 
 /**

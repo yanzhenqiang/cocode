@@ -362,11 +362,6 @@ export function generateCommandSuggestions(
 
       if (cmd.type === 'local' || cmd.type === 'local-jsx') {
         builtinCommands.push(cmd)
-      } else if (
-        cmd.type === 'prompt' &&
-        (cmd.source === 'userSettings' || cmd.source === 'localSettings')
-      ) {
-        userCommands.push(cmd)
       } else if (cmd.type === 'prompt' && cmd.source === 'projectSettings') {
         projectCommands.push(cmd)
       } else if (cmd.type === 'prompt' && cmd.source === 'policySettings') {
