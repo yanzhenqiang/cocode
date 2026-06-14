@@ -11,10 +11,6 @@ import type {
   VendorDescriptor,
 } from './descriptors.js'
 
-export function defineVendor(d: VendorDescriptor): VendorDescriptor {
-  return d
-}
-
 export function defineGateway(d: GatewayDescriptor): GatewayDescriptor {
   return d
 }

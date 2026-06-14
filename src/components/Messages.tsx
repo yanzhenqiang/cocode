@@ -160,46 +160,7 @@ export function filterForBriefTool<T extends {
  *
  * Per-turn: only drops text in turns that actually called Brief. If the
  * model forgets, text still shows — otherwise the user would see nothing.
- */
-export function dropTextInBriefTurns<T extends {
-  type: string;
-  isMeta?: boolean;
-  message?: {
-    content: Array<{
-      type: string;
-      name?: string;
-    }>;
-  };
-}>(messages: T[], briefToolNames: string[]): T[] {
-  const nameSet = new Set(briefToolNames);
-  // First pass: find which turns (bounded by non-meta user messages) contain
-  // a Brief tool_use. Tag each assistant text block with its turn index.
-  const turnsWithBrief = new Set<number>();
-  const textIndexToTurn: number[] = [];
-  let turn = 0;
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i]!;
-    const block = msg.message?.content[0];
-    if (msg.type === 'user' && block?.type !== 'tool_result' && !msg.isMeta) {
-      turn++;
-      continue;
-    }
-    if (msg.type === 'assistant') {
-      if (block?.type === 'text') {
-        textIndexToTurn[i] = turn;
-      } else if (block?.type === 'tool_use' && block.name && nameSet.has(block.name)) {
-        turnsWithBrief.add(turn);
-      }
-    }
-  }
-  if (turnsWithBrief.size === 0) return messages;
-  // Second pass: drop text blocks whose turn called Brief.
-  return messages.filter((_, i) => {
-    const t = textIndexToTurn[i];
-    return t === undefined || !turnsWithBrief.has(t);
-  });
-}
-type Props = {
+ */type Props = {
   messages: MessageType[];
   tools: Tools;
   commands: Command[];

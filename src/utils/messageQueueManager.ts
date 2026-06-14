@@ -195,22 +195,6 @@ export function dequeue(
  * Remove and return all commands from the queue.
  * Logs a dequeue operation for each command.
  */
-export function dequeueAll(): QueuedCommand[] {
-  if (commandQueue.length === 0) {
-    return []
-  }
-
-  const commands = [...commandQueue]
-  commandQueue.length = 0
-  notifySubscribers()
-
-  for (const _cmd of commands) {
-    logOperation('dequeue')
-  }
-
-  return commands
-}
-
 /**
  * Return the highest-priority command without removing it, or undefined if empty.
  * Accepts an optional `filter` — only commands passing the predicate are considered.
@@ -499,10 +483,6 @@ export const getPendingNotificationsCount = getCommandQueueLength
 export const recheckPendingNotifications = recheckCommandQueue
 
 /** @deprecated Use dequeue */
-export function dequeuePendingNotification(): QueuedCommand | undefined {
-  return dequeue()
-}
-
 /** @deprecated Use resetCommandQueue */
 export const resetPendingNotifications = resetCommandQueue
 

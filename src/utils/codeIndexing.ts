@@ -156,33 +156,6 @@ export function detectCodeIndexingFromCommand(
  * detectCodeIndexingFromMcpTool('mcp__cody__chat') // returns 'cody'
  * detectCodeIndexingFromMcpTool('mcp__filesystem__read') // returns undefined
  */
-export function detectCodeIndexingFromMcpTool(
-  toolName: string,
-): CodeIndexingTool | undefined {
-  // MCP tool names follow the format: mcp__serverName__toolName
-  if (!toolName.startsWith('mcp__')) {
-    return undefined
-  }
-
-  const parts = toolName.split('__')
-  if (parts.length < 3) {
-    return undefined
-  }
-
-  const serverName = parts[1]
-  if (!serverName) {
-    return undefined
-  }
-
-  for (const { pattern, tool } of MCP_SERVER_PATTERNS) {
-    if (pattern.test(serverName)) {
-      return tool
-    }
-  }
-
-  return undefined
-}
-
 /**
  * Detects if an MCP server name corresponds to a code indexing tool.
  *
