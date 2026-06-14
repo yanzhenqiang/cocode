@@ -14,7 +14,7 @@ import { getMTLSConfig } from './mtls.js';
 import { getProxyUrl } from './proxy.js';
 import { getSettingsWithAllErrors } from './settings/allErrors.js';
 import { getEnabledSettingSources, getSettingSourceDisplayNameCapitalized } from './settings/constants.js';
-import { getManagedFileSettingsPresence, getPolicySettingsOrigin, getSettingsForSource } from './settings/settings.js';
+import { getSettingsForSource } from './settings/settings.js';
 import type { ThemeName } from './theme.js';
 
 export type Property = {

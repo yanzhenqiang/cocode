@@ -33,13 +33,13 @@ export function MCPServerMultiselectDialog(t0) {
       });
       if (approvedServers.length > 0) {
         const newEnabledServers = [...new Set([...enabledServers, ...approvedServers])];
-        updateSettingsForSource("localSettings", {
+        updateSettingsForSource("userSettings", {
           enabledMcpjsonServers: newEnabledServers
         });
       }
       if (rejectedServers.length > 0) {
         const newDisabledServers = [...new Set([...disabledServers, ...rejectedServers])];
-        updateSettingsForSource("localSettings", {
+        updateSettingsForSource("userSettings", {
           disabledMcpjsonServers: newDisabledServers
         });
       }
@@ -58,7 +58,7 @@ export function MCPServerMultiselectDialog(t0) {
       const currentSettings_0 = getSettings_DEPRECATED() || {};
       const disabledServers_0 = currentSettings_0.disabledMcpjsonServers || [];
       const newDisabledServers_0 = [...new Set([...disabledServers_0, ...serverNames])];
-      updateSettingsForSource("localSettings", {
+      updateSettingsForSource("userSettings", {
         disabledMcpjsonServers: newDisabledServers_0
       });
       onDone();

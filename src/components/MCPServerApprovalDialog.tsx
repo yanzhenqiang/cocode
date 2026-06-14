@@ -28,12 +28,12 @@ export function MCPServerApprovalDialog(t0) {
             const currentSettings_0 = getSettings_DEPRECATED() || {};
             const enabledServers = currentSettings_0.enabledMcpjsonServers || [];
             if (!enabledServers.includes(serverName)) {
-              updateSettingsForSource("localSettings", {
+              updateSettingsForSource("userSettings", {
                 enabledMcpjsonServers: [...enabledServers, serverName]
               });
             }
             if (value === "yes_all") {
-              updateSettingsForSource("localSettings", {
+              updateSettingsForSource("userSettings", {
                 enableAllProjectMcpServers: true
               });
             }
@@ -45,7 +45,7 @@ export function MCPServerApprovalDialog(t0) {
             const currentSettings = getSettings_DEPRECATED() || {};
             const disabledServers = currentSettings.disabledMcpjsonServers || [];
             if (!disabledServers.includes(serverName)) {
-              updateSettingsForSource("localSettings", {
+              updateSettingsForSource("userSettings", {
                 disabledMcpjsonServers: [...disabledServers, serverName]
               });
             }

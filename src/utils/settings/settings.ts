@@ -67,84 +67,10 @@ function getManagedSettingsFilePath(): string {
  *
  * Exported for testing.
  */
-export function loadManagedFileSettings(): {
-  settings: SettingsJson | null
-  errors: ValidationError[]
-} {
-  const errors: ValidationError[] = []
-  let merged: SettingsJson = {}
-  let found = false
-
-  const { settings, errors: baseErrors } = parseSettingsFile(
-    getManagedSettingsFilePath(),
-  )
-  errors.push(...baseErrors)
-  if (settings && Object.keys(settings).length > 0) {
-    merged = mergeWith(merged, settings, settingsMergeCustomizer)
-    found = true
-  }
-
-  const dropInDir = getManagedSettingsDropInDir()
-  try {
-    const entries = getFsImplementation()
-      .readdirSync(dropInDir)
-      .filter(
-        d =>
-          (d.isFile() || d.isSymbolicLink()) &&
-          d.name.endsWith('.json') &&
-          !d.name.startsWith('.'),
-      )
-      .map(d => d.name)
-      .sort()
-    for (const name of entries) {
-      const { settings, errors: fileErrors } = parseSettingsFile(
-        join(dropInDir, name),
-      )
-      errors.push(...fileErrors)
-      if (settings && Object.keys(settings).length > 0) {
-        merged = mergeWith(merged, settings, settingsMergeCustomizer)
-        found = true
-      }
-    }
-  } catch (e) {
-    const code = getErrnoCode(e)
-    if (code !== 'ENOENT' && code !== 'ENOTDIR') {
-      logError(e)
-    }
-  }
-
-  return { settings: found ? merged : null, errors }
-}
-
 /**
  * Check which file-based managed settings sources are present.
  * Used by /status to show "(file)", "(drop-ins)", or "(file + drop-ins)".
  */
-export function getManagedFileSettingsPresence(): {
-  hasBase: boolean
-  hasDropIns: boolean
-} {
-  const { settings: base } = parseSettingsFile(getManagedSettingsFilePath())
-  const hasBase = !!base && Object.keys(base).length > 0
-
-  let hasDropIns = false
-  const dropInDir = getManagedSettingsDropInDir()
-  try {
-    hasDropIns = getFsImplementation()
-      .readdirSync(dropInDir)
-      .some(
-        d =>
-          (d.isFile() || d.isSymbolicLink()) &&
-          d.name.endsWith('.json') &&
-          !d.name.startsWith('.'),
-      )
-  } catch {
-    // dir doesn't exist
-  }
-
-  return { hasBase, hasDropIns }
-}
-
 /**
  * Handles file system errors appropriately
  * @param error The error to handle
@@ -310,34 +236,6 @@ function getSettingsForSourceUncached(
  * Uses "first source wins" — returns the first source that has content.
  * Priority: remote > plist/hklm > file (managed-settings.json) > hkcu
  */
-export function getPolicySettingsOrigin():
-  | 'remote'
-  | 'plist'
-  | 'hklm'
-  | 'file'
-  | 'hkcu'
-  | null {
-  // 1. Admin-only MDM (HKLM / macOS plist)
-  const mdmResult = getMdmSettings()
-  if (Object.keys(mdmResult.settings).length > 0) {
-    return getPlatform() === 'macos' ? 'plist' : 'hklm'
-  }
-
-  // 3. managed-settings.json + managed-settings.d/ (file-based, requires admin)
-  const { settings: fileSettings } = loadManagedFileSettings()
-  if (fileSettings) {
-    return 'file'
-  }
-
-  // 4. HKCU (lowest — user-writable)
-  const hkcu = getHkcuSettings()
-  if (Object.keys(hkcu.settings).length > 0) {
-    return 'hkcu'
-  }
-
-  return null
-}
-
 /**
  * Merges `settings` into the existing settings for `source` using lodash mergeWith.
  *
@@ -472,86 +370,6 @@ export function settingsMergeCustomizer(
  * @param settings The settings object to extract keys from
  * @returns Sorted array of key paths
  */
-export function getManagedSettingsKeysForLogging(
-  settings: SettingsJson,
-): string[] {
-  // Use .strip() to get only valid schema keys
-  const validSettings = SettingsSchema().strip().parse(settings) as Record<
-    string,
-    unknown
-  >
-  const keysToExpand = ['permissions', 'sandbox', 'hooks']
-  const allKeys: string[] = []
-
-  // Define valid nested keys for each nested setting we expand
-  const validNestedKeys: Record<string, Set<string>> = {
-    permissions: new Set([
-      'allow',
-      'deny',
-      'ask',
-      'defaultMode',
-      'disableBypassPermissionsMode',
-      'allowBypassPermissionsMode',
-      ...(feature('TRANSCRIPT_CLASSIFIER') ? ['disableAutoMode'] : []),
-      'additionalDirectories',
-    ]),
-    sandbox: new Set([
-      'enabled',
-      'failIfUnavailable',
-      'allowUnsandboxedCommands',
-      'network',
-      'filesystem',
-      'ignoreViolations',
-      'excludedCommands',
-      'autoAllowBashIfSandboxed',
-      'enableWeakerNestedSandbox',
-      'enableWeakerNetworkIsolation',
-      'ripgrep',
-    ]),
-    // For hooks, we use z.record with enum keys, so we validate separately
-    hooks: new Set([
-      'PreToolUse',
-      'PostToolUse',
-      'Notification',
-      'UserPromptSubmit',
-      'SessionStart',
-      'SessionEnd',
-      'Stop',
-      'SubagentStop',
-      'PreCompact',
-      'PostCompact',
-      'TaskCreated',
-      'TaskCompleted',
-    ]),
-  }
-
-  for (const key of Object.keys(validSettings)) {
-    if (
-      keysToExpand.includes(key) &&
-      validSettings[key] &&
-      typeof validSettings[key] === 'object'
-    ) {
-      // Expand nested keys for these special settings (one level deep only)
-      const nestedObj = validSettings[key] as Record<string, unknown>
-      const validKeys = validNestedKeys[key]
-
-      if (validKeys) {
-        for (const nestedKey of Object.keys(nestedObj)) {
-          // Only include known valid nested keys
-          if (validKeys.has(nestedKey)) {
-            allKeys.push(`${key}.${nestedKey}`)
-          }
-        }
-      }
-    } else {
-      // For other settings, just use the top-level key
-      allKeys.push(key)
-    }
-  }
-
-  return allKeys.sort()
-}
-
 function isSettingsLoadInProgress(): boolean {
   return (
     (globalThis as Record<string, unknown>)[
