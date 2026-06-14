@@ -163,17 +163,3 @@ export function clearMTLSCache(): void {
 /**
  * Configure global Node.js TLS settings
  */
-export function configureGlobalMTLS(): void {
-  const mtlsConfig = getMTLSConfig()
-
-  if (!mtlsConfig) {
-    return
-  }
-
-  // NODE_EXTRA_CA_CERTS is automatically handled by Node.js at runtime
-  if (process.env.NODE_EXTRA_CA_CERTS) {
-    logForDebugging(
-      'NODE_EXTRA_CA_CERTS detected - Node.js will automatically append to built-in CAs',
-    )
-  }
-}

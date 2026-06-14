@@ -17,7 +17,6 @@ import {
   applyConfigEnvironmentVariables,
   applySafeConfigEnvironmentVariables,
 } from '../utils/managedEnv.js'
-import { configureGlobalMTLS } from '../utils/mtls.js'
 import {
   ensureScratchpadDir,
   isScratchpadEnabled,
@@ -78,7 +77,7 @@ export const init = memoize(async (): Promise<void> => {
     // Configure global mTLS settings
     const mtlsStart = Date.now()
     logForDebugging('[init] configureGlobalMTLS starting')
-    configureGlobalMTLS()
+
     logForDiagnosticsNoPII('info', 'init_mtls_configured', {
       duration_ms: Date.now() - mtlsStart,
     })
