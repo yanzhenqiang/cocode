@@ -25,7 +25,6 @@ import {
   isScratchpadEnabled,
 } from '../utils/permissions/filesystem.js'
 import { configureGlobalAgents } from '../utils/proxy.js'
-import { setShellIfWindows } from '../utils/windowsPaths.js'
 
 
 export const init = memoize(async (): Promise<void> => {
@@ -112,7 +111,7 @@ export const init = memoize(async (): Promise<void> => {
     // inject proxy vars without a static import of the upstreamproxy module.
 
     // Set up git-bash if relevant
-    setShellIfWindows()
+
 
     // Initialize scratchpad directory if enabled
     if (isScratchpadEnabled()) {

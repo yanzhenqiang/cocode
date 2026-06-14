@@ -84,14 +84,6 @@ function findExecutable(executable: string): string | null {
  * This is used by BashTool and Shell.ts for user shell commands.
  * COMSPEC is left unchanged for system process execution.
  */
-export function setShellIfWindows(): void {
-  if (getPlatform() === 'windows') {
-    const gitBashPath = findGitBashPath()
-    process.env.SHELL = gitBashPath
-    logForDebugging(`Using bash path: "${gitBashPath}"`)
-  }
-}
-
 /**
  * Find the path where `bash.exe` included with git-bash exists, exiting the process if not found.
  */

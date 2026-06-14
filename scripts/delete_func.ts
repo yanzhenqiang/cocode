@@ -242,7 +242,6 @@ function collectFiles(node: TreeNode): Set<string> {
 // ─── 删除实现 (纯 AST 位置) ────────────────
 
 function deleteSymbols(tree: TreeNode) {
-  // 收集所有符号
   const allSymbols = new Map<string, FoundSymbol[]>()
   function collect(node: TreeNode) {
     allSymbols.set(node.name, node.symbols)
@@ -250,18 +249,15 @@ function deleteSymbols(tree: TreeNode) {
   }
   collect(tree)
 
-  // 树定义文件 = 树中符号有 declaration 的文件
-  const treeDefFiles = new Set<string>()
-  for (const [, syms] of allSymbols) {
-    for (const s of syms) {
-      if (s.kind === 'declaration') treeDefFiles.add(s.file)
-    }
-  }
+  // 树中所有被引用过的符号名（定义+调用者）
+  const treeNames = new Set(allSymbols.keys())
+  // 树中定义文件（declaration 所在文件）
+  const defFiles = new Set<string>()
+  for (const [, ss] of allSymbols) for (const s of ss) if (s.kind === 'declaration') defFiles.add(s.file)
 
-  // 只删根节点，不递归删依赖
+  // 只删根节点。依赖递归删除后续再实现。
   const toDelete = new Set<string>([tree.name])
 
-  // 按文件分组删除区间
   const fileSpans = new Map<string, { start: number; end: number }[]>()
 
   for (const name of toDelete) {
@@ -278,12 +274,22 @@ function deleteSymbols(tree: TreeNode) {
         if (end < text.length && text[end] === '\n') end++
         spans.push({ start, end })
         // 同文件引用也删掉
-        const refs = allSymbols.get(name)?.filter(r => r.kind === 'reference' && r.file === s.file) || []
-        for (const ref of refs) {
+        const sameRefs = allSymbols.get(name)?.filter(r => r.kind === 'reference' && r.file === s.file) || []
+        for (const ref of sameRefs) {
           const ls = text.split('\n')
           let p = 0
           for (let i = 0; i < ref.line - 1; i++) p += (ls[i]?.length || 0) + 1
           spans.push({ start: p, end: p + (ls[ref.line - 1]?.length || 0) })
+        }
+        // 外部文件的调用也清理
+        for (const ref of allSymbols.get(name)?.filter(r => r.kind === 'reference' && r.file !== s.file) || []) {
+          const t = readFileSync(ref.file, 'utf-8')
+          const ls = t.split('\n')
+          let p = 0
+          for (let i = 0; i < ref.line - 1; i++) p += (ls[i]?.length || 0) + 1
+          const extSpans = fileSpans.get(ref.file) || []
+          extSpans.push({ start: p, end: p + (ls[ref.line - 1]?.length || 0) })
+          fileSpans.set(ref.file, extSpans)
         }
       } else if (s.kind === 'import') {
         // Import specifier — 去掉名字及周围逗号/空格
