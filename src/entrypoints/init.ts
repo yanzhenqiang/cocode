@@ -3,7 +3,7 @@ import '../bootstrap/state.js'
 import '../utils/config.js'
 import memoize from 'lodash-es/memoize.js'
 import { registerCleanup } from '../utils/cleanupRegistry.js'
-import { enableConfigs, recordFirstStartTime } from '../utils/config.js'
+import { enableConfigs} from '../utils/config.js'
 import { logForDebugging } from '../utils/debug.js'
 import { detectCurrentRepository } from '../utils/detectRepository.js'
 import { logForDiagnosticsNoPII } from '../utils/diagLogs.js'
@@ -74,7 +74,7 @@ export const init = memoize(async (): Promise<void> => {
     profileCheckpoint('init_after_policy_limits_check')
 
     // Record the first start time
-    recordFirstStartTime()
+
 
     // Configure global mTLS settings
     const mtlsStart = Date.now()

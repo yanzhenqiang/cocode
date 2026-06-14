@@ -1677,17 +1677,6 @@ export function getOrCreateUserID(): string {
   return userID
 }
 
-export function recordFirstStartTime(): void {
-  const config = getGlobalConfig()
-  if (!config.firstStartTime) {
-    const firstStartTime = new Date().toISOString()
-    saveGlobalConfig(current => ({
-      ...current,
-      firstStartTime: current.firstStartTime ?? firstStartTime,
-    }))
-  }
-}
-
 export function getMemoryPath(memoryType: MemoryType): string {
   const cwd = getOriginalCwd()
 
