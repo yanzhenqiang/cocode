@@ -1,7 +1,7 @@
-import { profileCheckpoint, profileReport } from './utils/startupProfiler.js';
+import {profileReport } from './utils/startupProfiler.js';
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
-profileCheckpoint('main_tsx_entry');
+
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 import { feature } from 'bun:bundle';
@@ -124,7 +124,7 @@ import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thin
 import { initUser, resetUserCache } from './utils/user.js';
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
-profileCheckpoint('main_tsx_imports_loaded');
+
 
 /**
  * Log managed settings keys to Statsig for analytics.
@@ -263,14 +263,14 @@ function loadSettingsFromFlag(settingsFile: string): void {
  * This ensures settings are filtered from the start of initialization
  */
 function eagerLoadSettings(): void {
-  profileCheckpoint('eagerLoadSettings_start');
+
   // Parse --settings flag early to ensure settings are loaded before init()
   const settingsFile = eagerParseCliFlag('--settings');
   if (settingsFile) {
     loadSettingsFromFlag(settingsFile);
   }
 
-  profileCheckpoint('eagerLoadSettings_end');
+
 }
 function initializeEntrypoint(): void {
   // Skip if already set (e.g., by SDK or other entrypoints)
@@ -300,7 +300,7 @@ type PendingAssistantChat = {
 const _pendingAssistantChat: PendingAssistantChat | undefined = undefined;
 
 export async function main() {
-  profileCheckpoint('main_function_start');
+
 
   // SECURITY: Prevent Windows from executing commands from current directory
   // This must be set before ANY command execution to prevent PATH hijacking attacks
@@ -315,7 +315,7 @@ export async function main() {
   process.on('SIGINT', () => {
     process.exit(0);
   });
-  profileCheckpoint('main_warning_handler_initialized');
+
 
   // Cocode only runs in interactive REPL mode
 
@@ -334,13 +334,13 @@ export async function main() {
 
     return 'cli';
   })();
-  profileCheckpoint('main_client_type_determined');
+
 
   // Parse and load settings flags early, before init()
   eagerLoadSettings();
-  profileCheckpoint('main_before_run');
+
   await run();
-  profileCheckpoint('main_after_run');
+
 }
 async function getInputPrompt(prompt: string, inputFormat: 'text' | 'stream-json'): Promise<string | AsyncIterable<string>> {
   if (!process.stdin.isTTY &&
@@ -370,7 +370,7 @@ async function getInputPrompt(prompt: string, inputFormat: 'text' | 'stream-json
   return prompt;
 }
 async function run(): Promise<CommanderCommand> {
-  profileCheckpoint('run_function_start');
+
 
   // Create help config that sorts options by long option name.
   // Commander supports compareOptions at runtime but @commander-js/extra-typings
@@ -388,13 +388,13 @@ async function run(): Promise<CommanderCommand> {
     });
   }
   const program = new CommanderCommand().configureHelp(createSortedHelpConfig()).enablePositionalOptions();
-  profileCheckpoint('run_commander_initialized');
+
 
   // Use preAction hook to run initialization only when executing a command,
   // not when displaying help. This avoids the need for env variable signaling.
   program.hook('preAction', async thisCommand => {
     await init();
-    profileCheckpoint('preAction_after_init');
+
 
     // process.title on Windows sets the console title directly; on POSIX,
     // terminal shell integration may mirror the process name to the tab.
@@ -412,7 +412,7 @@ async function run(): Promise<CommanderCommand> {
       initSinks
     } = await import('./utils/sinks.js');
     initSinks();
-    profileCheckpoint('preAction_after_sinks');
+
 
     // gh-33508: --plugin-dir is a top-level program option. The default
     // action reads it from its own options destructure, but subcommands
@@ -423,14 +423,14 @@ async function run(): Promise<CommanderCommand> {
     // builds the type as options are added. Narrow with a runtime guard;
     // the collect accumulator + [] default guarantee string[] in practice.
     const pluginDir = thisCommand.getOptionValue('pluginDir');
-    profileCheckpoint('preAction_after_migrations');
 
-    profileCheckpoint('preAction_after_remote_settings');
+
+
 
     // Load settings sync (non-blocking, fail-open)
     // CLI: uploads local settings to remote (CCR download is handled by print.ts)
     
-    profileCheckpoint('preAction_after_settings_sync');
+
   });
   program.name('cocode').description('CoCode - starts an interactive REPL session').argument('[prompt]', 'Your prompt', String)
   // Subcommands inherit helpOption via commander's copyInheritedSettings —
@@ -453,7 +453,7 @@ async function run(): Promise<CommanderCommand> {
   // top-level option. Single-value + collect accumulator means each
   // --plugin-dir takes exactly one arg; repeat the flag for multiple dirs.
   .action(async (prompt, options) => {
-    profileCheckpoint('action_handler_start');
+
 
     // Ignore "code" as a prompt - treat it the same as no prompt
     if (prompt === 'code') {
@@ -721,14 +721,14 @@ async function run(): Promise<CommanderCommand> {
 
     let effectivePrompt = prompt || '';
     let inputPrompt = await getInputPrompt(effectivePrompt, 'text');
-    profileCheckpoint('action_after_input_prompt');
+
 
     let tools = getTools(toolPermissionContext);
 
-    profileCheckpoint('action_tools_loaded');
+
 
     // IMPORTANT: setup() must be called before any other code that depends on the cwd
-    profileCheckpoint('action_before_setup');
+
     logForDebugging('[STARTUP] Running setup()...');
     const setupStart = Date.now();
     const {
@@ -755,7 +755,7 @@ async function run(): Promise<CommanderCommand> {
     agentDefsPromise.catch(() => {});
     await setupPromise;
     logForDebugging(`[STARTUP] setup() completed in ${Date.now() - setupStart}ms`);
-    profileCheckpoint('action_after_setup');
+
 
     // Apply --name: cache-only so no orphan file is created before the
     // session ID is finalized by --continue/--resume. materializeSessionFile
@@ -791,7 +791,7 @@ async function run(): Promise<CommanderCommand> {
     // Join the promises kicked before setup(). Both memoized by cwd.
     const [commands, agentDefinitionsResult] = await Promise.all([commandsPromise, agentDefsPromise]);
     logForDebugging(`[STARTUP] Commands and agents loaded in ${Date.now() - commandsStart}ms`);
-    profileCheckpoint('action_commands_loaded');
+
 
     const agentDefinitions = agentDefinitionsResult;
 
@@ -943,7 +943,7 @@ const {
         regularMcpConfigs[name] = typedConfig as ScopedMcpServerConfig;
       }
     }
-    profileCheckpoint('action_mcp_configs_loaded');
+
 
     // Prefetch MCP resources after trust dialog.
     const localMcpPromise = prefetchAllMcpResources(regularMcpConfigs);
@@ -1062,7 +1062,7 @@ const {
     // are install/upgrade bookkeeping that scripted calls don't need —
     // the next interactive session will reconcile. The await here was
     // blocking -p on a marketplace round-trip.
-    profileCheckpoint('action_after_plugins_init');
+
     const setupTrigger = initOnly || init ? 'init' : maintenance ? 'maintenance' : null;
     if (initOnly) {
       applyConfigEnvironmentVariables();
@@ -1403,7 +1403,7 @@ const {
       }
     } else {
       const pendingHookMessages = hooksPromise && hookMessages.length === 0 ? hooksPromise : undefined;
-      profileCheckpoint('action_after_hooks');
+
         // If launched via a deep link, show a provenance banner so the user
       // knows the session originated externally. Linux xdg-open and
       // browsers with "always allow" set dispatch the link with no OS-level
@@ -1424,7 +1424,7 @@ const {
   }).version(`${MACRO.DISPLAY_VERSION ?? MACRO.VERSION} (CoCode)`, '-v, --version', 'Output the version number');
 
   // TODO: --agent flag kept but usage expected to change
-  profileCheckpoint('run_main_options_built');
+
 
 
   /**
@@ -1455,12 +1455,12 @@ const {
   // Rolls back to previous releases
 
   // internal-only commands
-  profileCheckpoint('run_before_parse');
+
   await program.parseAsync(process.argv);
-  profileCheckpoint('run_after_parse');
+
 
   // Record final checkpoint for total_time calculation
-  profileCheckpoint('main_after_run');
+
 
   // Log startup perf to Statsig (sampled) and output detailed report if enabled
   profileReport();

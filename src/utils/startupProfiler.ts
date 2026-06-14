@@ -56,24 +56,12 @@ const PHASE_DEFINITIONS = {
 // Record initial checkpoint if profiling is enabled
 if (SHOULD_PROFILE) {
   // eslint-disable-next-line custom-rules/no-top-level-side-effects
-  profileCheckpoint('profiler_initialized')
+
 }
 
 /**
  * Record a checkpoint with the given name
  */
-export function profileCheckpoint(name: string): void {
-  if (!SHOULD_PROFILE) return
-
-  const perf = getPerformance()
-  perf.mark(name)
-
-  // Only capture memory when detailed profiling enabled (env var)
-  if (DETAILED_PROFILING) {
-    memorySnapshots.push(process.memoryUsage())
-  }
-}
-
 /**
  * Get a formatted report of all checkpoints
  * Only available when DETAILED_PROFILING is enabled

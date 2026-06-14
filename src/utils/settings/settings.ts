@@ -19,7 +19,6 @@ import { safeParseJSON } from '../json.js'
 import { logError } from '../log.js'
 import { getPlatform } from '../platform.js'
 import { clone, jsonStringify } from '../slowOperations.js'
-import { profileCheckpoint } from '../startupProfiler.js'
 import {
   type EditableSettingSource,
   getEnabledSettingSources,
@@ -630,7 +629,7 @@ function loadSettingsFromDisk(): SettingsWithErrors {
   }
 
   const startTime = Date.now()
-  profileCheckpoint('loadSettingsFromDisk_start')
+
   logForDiagnosticsNoPII('info', 'settings_load_started')
 
   setSettingsLoadInProgress(true)
@@ -815,7 +814,7 @@ export function getSettingsWithErrors(): SettingsWithErrors {
 
   // Load from disk and cache the result
   const result = loadSettingsFromDisk()
-  profileCheckpoint('loadSettingsFromDisk_end')
+
   setSessionSettingsCache(result)
   return result
 }

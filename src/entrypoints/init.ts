@@ -1,4 +1,3 @@
-import { profileCheckpoint } from '../utils/startupProfiler.js'
 import '../bootstrap/state.js'
 import '../utils/config.js'
 import memoize from 'lodash-es/memoize.js'
@@ -27,7 +26,7 @@ import { configureGlobalAgents } from '../utils/proxy.js'
 export const init = memoize(async (): Promise<void> => {
   const initStartTime = Date.now()
   logForDiagnosticsNoPII('info', 'init_started')
-  profileCheckpoint('init_function_start')
+
 
   // Validate configs are valid and enable configuration system
   try {
@@ -36,7 +35,7 @@ export const init = memoize(async (): Promise<void> => {
     logForDiagnosticsNoPII('info', 'init_configs_enabled', {
       duration_ms: Date.now() - configsStart,
     })
-    profileCheckpoint('init_configs_enabled')
+
 
     // Apply only safe environment variables before trust dialog
     // Full environment variables are applied after trust is established
@@ -51,25 +50,25 @@ export const init = memoize(async (): Promise<void> => {
     logForDiagnosticsNoPII('info', 'init_safe_env_vars_applied', {
       duration_ms: Date.now() - envVarsStart,
     })
-    profileCheckpoint('init_safe_env_vars_applied')
+
 
     // Make sure things get flushed on exit
     setupGracefulShutdown()
-    profileCheckpoint('init_after_graceful_shutdown')
+
 
     // 1P event logging and GrowthBook initialization removed (no-op stubs)
-    profileCheckpoint('init_after_1p_event_logging')
 
 
-    profileCheckpoint('init_after_oauth_populate')
+
+
 
     // Initialize JetBrains IDE detection asynchronously (populates cache for later sync access)
-    profileCheckpoint('init_after_jetbrains_detection')
+
 
     // Detect GitHub repository asynchronously (populates cache for gitDiff PR linking)
 
 
-    profileCheckpoint('init_after_policy_limits_check')
+
 
     // Record the first start time
 
@@ -91,7 +90,7 @@ export const init = memoize(async (): Promise<void> => {
       duration_ms: Date.now() - proxyStart,
     })
     logForDebugging('[init] configureGlobalAgents complete')
-    profileCheckpoint('init_network_configured')
+
 
     // Preconnect to the Anthropic API — overlap TCP+TLS handshake
     // (~100-200ms) with the ~100ms of action-handler work before the API
@@ -122,7 +121,7 @@ export const init = memoize(async (): Promise<void> => {
     logForDiagnosticsNoPII('info', 'init_completed', {
       duration_ms: Date.now() - initStartTime,
     })
-    profileCheckpoint('init_function_end')
+
   } catch (error) {
     if (error instanceof ConfigParseError) {
       // Show the invalid config dialog with the error object and wait for it to complete

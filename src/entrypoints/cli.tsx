@@ -98,9 +98,9 @@ async function main(): Promise<void> {
 
   // For all other paths, load the startup profiler
   const {
-    profileCheckpoint
+
   } = await import('../utils/startupProfiler.js');
-  profileCheckpoint('cli_entry');
+
 
 
 
@@ -111,13 +111,13 @@ async function main(): Promise<void> {
     } = await import('../utils/earlyInput.js');
     startCapturingEarlyInput();
   }
-  profileCheckpoint('cli_before_main_import');
+
   const {
     main: cliMain
   } = await import('../main.js');
-  profileCheckpoint('cli_after_main_import');
+
   await cliMain();
-  profileCheckpoint('cli_after_main_complete');
+
 }
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects

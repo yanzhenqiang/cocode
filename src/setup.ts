@@ -38,7 +38,6 @@ import { getRecentActivity } from './utils/logoV2Utils.js'
 import type { PermissionMode } from './utils/permissions/PermissionMode.js'
 import { getPlanSlug } from './utils/plans.js'
 import { saveWorktreeState } from './utils/sessionStorage.js'
-import { profileCheckpoint } from './utils/startupProfiler.js'
 
 export async function setup(
   cwd: string,
@@ -113,7 +112,7 @@ export async function setup(
   initSessionMemory() // Synchronous - registers hook, gate check happens lazily
   logForDiagnosticsNoPII('info', 'setup_background_jobs_launched')
 
-  profileCheckpoint('setup_before_prefetch')
+
   // Pre-fetch promises - only items needed before render
   logForDiagnosticsNoPII('info', 'setup_prefetch_starting')
   // When CLAUDE_CODE_SYNC_PLUGIN_INSTALL is set, skip all plugin prefetch.
@@ -146,7 +145,7 @@ export async function setup(
   logEvent('tengu_started', {})
 
   void prefetchApiKeyFromApiKeyHelperIfSafe()
-  profileCheckpoint('setup_after_prefetch')
+
 
   // Pre-fetch data for Logo v2 - await to ensure it's ready before logo renders.
   const { hasReleaseNotes } = await checkForReleaseNotes(
