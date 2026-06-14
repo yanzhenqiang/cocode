@@ -21,6 +21,5 @@ export function initBundledSkills(): void {
   registerUpdateConfigSkill()
   registerKeybindingsSkill()
   registerDebugSkill()
-  registerSimplifySkill()
   registerBatchSkill()
 }

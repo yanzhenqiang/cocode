@@ -82,7 +82,6 @@ const COMMANDS = memoize((): Command[] => [
   compact,
   commitMessage,
   config,
-  copy,
   context,
   contextNonInteractive,
   effort,
