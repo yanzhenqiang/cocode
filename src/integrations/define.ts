@@ -10,23 +10,3 @@ import type {
   ModelDescriptor,
   VendorDescriptor,
 } from './descriptors.js'
-
-export function defineGateway(d: GatewayDescriptor): GatewayDescriptor {
-  return d
-}
-
-export function defineAnthropicProxy(d: AnthropicProxyDescriptor): AnthropicProxyDescriptor {
-  return d
-}
-
-export function defineBrand(d: BrandDescriptor): BrandDescriptor {
-  return d
-}
-
-export function defineModel(d: ModelDescriptor): ModelDescriptor {
-  return d
-}
-
-export function defineCatalog(d: ModelCatalogConfig): ModelCatalogConfig {
-  return d
-}

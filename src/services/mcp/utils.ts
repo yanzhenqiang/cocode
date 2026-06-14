@@ -297,18 +297,6 @@ export function getScopeLabel(scope: ConfigScope): string {
   }
 }
 
-export function ensureConfigScope(scope?: string): ConfigScope {
-  if (!scope) return 'local'
-
-  if (!ConfigScopeSchema().options.includes(scope as ConfigScope)) {
-    throw new Error(
-      `Invalid scope: ${scope}. Must be one of: ${ConfigScopeSchema().options.join(', ')}`,
-    )
-  }
-
-  return scope as ConfigScope
-}
-
 export function ensureTransport(type?: string): 'stdio' | 'sse' | 'http' {
   if (!type) return 'stdio'
 
