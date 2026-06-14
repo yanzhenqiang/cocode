@@ -108,75 +108,7 @@ function getReport(): string {
 
 let reported = false
 
-export function profileReport(): void {
-  if (reported) return
-  reported = true
-
-  // Log to Statsig (sampled: 100% ant, 0.1% external)
-  logStartupPerf()
-
-  // Output detailed report if CLAUDE_CODE_PROFILE_STARTUP=1
-  if (DETAILED_PROFILING) {
-    // Write to file
-    const path = getStartupPerfLogPath()
-    const dir = dirname(path)
-    const fs = getFsImplementation()
-    fs.mkdirSync(dir)
-    writeFileSync_DEPRECATED(path, getReport(), {
-      encoding: 'utf8',
-      flush: true,
-    })
-
-    logForDebugging('Startup profiling report:')
-    logForDebugging(getReport())
-  }
-}
-
-export function isDetailedProfilingEnabled(): boolean {
-  return DETAILED_PROFILING
-}
-
-export function getStartupPerfLogPath(): string {
-  return join(getClaudeConfigHomeDir(), 'startup-perf', `${getSessionId()}.txt`)
-}
-
 /**
  * Log startup performance phases to Statsig.
  * Only logs if this session was sampled at startup.
  */
-export function logStartupPerf(): void {
-  // Only log if we were sampled (decision made at module load)
-  if (!STATSIG_LOGGING_SAMPLED) return
-
-  const perf = getPerformance()
-  const marks = perf.getEntriesByType('mark')
-  if (marks.length === 0) return
-
-  // Build checkpoint lookup
-  const checkpointTimes = new Map<string, number>()
-  for (const mark of marks) {
-    checkpointTimes.set(mark.name, mark.startTime)
-  }
-
-  // Compute phase durations
-  const metadata: Record<string, number | undefined> = {}
-
-  for (const [phaseName, [startCheckpoint, endCheckpoint]] of Object.entries(
-    PHASE_DEFINITIONS,
-  )) {
-    const startTime = checkpointTimes.get(startCheckpoint)
-    const endTime = checkpointTimes.get(endCheckpoint)
-
-    if (startTime !== undefined && endTime !== undefined) {
-      metadata[`${phaseName}_ms`] = Math.round(endTime - startTime)
-    }
-  }
-
-  // Add checkpoint count for debugging
-  metadata.checkpoint_count = marks.length
-
-  logEvent(
-    'tengu_startup_perf',
-    metadata as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-  )
-}

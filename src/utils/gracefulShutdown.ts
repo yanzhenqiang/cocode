@@ -40,7 +40,6 @@ import { logForDiagnosticsNoPII } from './diagLogs.js'
 import { isEnvTruthy } from './envUtils.js'
 import { getCurrentSessionTitle, sessionIdExists } from './sessionStorage.js'
 import { sleep } from './sleep.js'
-import { profileReport } from './startupProfiler.js'
 
 /**
  * Clean up terminal modes synchronously before process exit.
@@ -490,7 +489,7 @@ export async function gracefulShutdown(
 
   // Log startup perf before analytics shutdown flushes/cancels timers
   try {
-    profileReport()
+
   } catch {
     // Ignore profiling errors during shutdown
   }

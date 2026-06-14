@@ -1,4 +1,3 @@
-import {profileReport } from './utils/startupProfiler.js';
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 
@@ -1463,7 +1462,7 @@ const {
 
 
   // Log startup perf to Statsig (sampled) and output detailed report if enabled
-  profileReport();
+
   return program;
 }
 async function logTenguInit({
