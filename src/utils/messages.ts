@@ -560,19 +560,6 @@ export function formatCommandInputTags(
  * so the model can see mid-conversation switches. Same shape the CLI's
  * /model command produces via processSlashCommand.
  */
-export function createModelSwitchBreadcrumbs(
-  modelArg: string,
-  resolvedDisplay: string,
-): UserMessage[] {
-  return [
-    createSyntheticUserCaveatMessage(),
-    createUserMessage({ content: formatCommandInputTags('model', modelArg) }),
-    createUserMessage({
-      content: `<${LOCAL_COMMAND_STDOUT_TAG}>Set model to ${resolvedDisplay}</${LOCAL_COMMAND_STDOUT_TAG}>`,
-    }),
-  ]
-}
-
 export function createProgressMessage<P extends Progress>({
   toolUseID,
   parentToolUseID,
@@ -4131,34 +4118,6 @@ export function createSystemMessage(
   }
 }
 
-export function createPermissionRetryMessage(
-  commands: string[],
-): SystemPermissionRetryMessage {
-  return {
-    type: 'system',
-    subtype: 'permission_retry',
-    content: `Allowed ${commands.join(', ')}`,
-    commands,
-    level: 'info',
-    isMeta: false,
-    timestamp: new Date().toISOString(),
-    uuid: randomUUID(),
-  }
-}
-
-export function createScheduledTaskFireMessage(
-  content: string,
-): SystemScheduledTaskFireMessage {
-  return {
-    type: 'system',
-    subtype: 'scheduled_task_fire',
-    content,
-    isMeta: false,
-    timestamp: new Date().toISOString(),
-    uuid: randomUUID(),
-  }
-}
-
 export function createStopHookSummaryMessage(
   hookCount: number,
   hookInfos: StopHookInfo[],
@@ -4215,19 +4174,6 @@ export function createAwaySummaryMessage(
     type: 'system',
     subtype: 'away_summary',
     content,
-    timestamp: new Date().toISOString(),
-    uuid: randomUUID(),
-    isMeta: false,
-  }
-}
-
-export function createMemorySavedMessage(
-  writtenPaths: string[],
-): SystemMemorySavedMessage {
-  return {
-    type: 'system',
-    subtype: 'memory_saved',
-    writtenPaths,
     timestamp: new Date().toISOString(),
     uuid: randomUUID(),
     isMeta: false,

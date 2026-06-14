@@ -111,17 +111,6 @@ const toolCache = new WeakMap<object, CreateResult>()
  * Returns {tool} on success or {error} with Ajv's diagnostic message
  * (e.g. "data/properties/bugs should be object") on invalid schema.
  */
-export function createSyntheticOutputTool(
-  jsonSchema: Record<string, unknown>,
-): CreateResult {
-  const cached = toolCache.get(jsonSchema)
-  if (cached) return cached
-
-  const result = buildSyntheticOutputTool(jsonSchema)
-  toolCache.set(jsonSchema, result)
-  return result
-}
-
 function buildSyntheticOutputTool(
   jsonSchema: Record<string, unknown>,
 ): CreateResult {

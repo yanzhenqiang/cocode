@@ -47,16 +47,7 @@ export type ProgressTracker = {
   latestInputTokens: number;
   cumulativeOutputTokens: number;
   recentActivities: ToolActivity[];
-};
-export function createProgressTracker(): ProgressTracker {
-  return {
-    toolUseCount: 0,
-    latestInputTokens: 0,
-    cumulativeOutputTokens: 0,
-    recentActivities: []
-  };
-}
-export function getTokenCountFromTracker(tracker: ProgressTracker): number {
+};export function getTokenCountFromTracker(tracker: ProgressTracker): number {
   return tracker.latestInputTokens + tracker.cumulativeOutputTokens;
 }
 
