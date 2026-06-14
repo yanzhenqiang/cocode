@@ -46,15 +46,3 @@ export function eagerParseCliFlag(
  * @param args - The remaining arguments array
  * @returns Object with corrected command and args
  */
-export function extractArgsAfterDoubleDash(
-  commandOrValue: string,
-  args: string[] = [],
-): { command: string; args: string[] } {
-  if (commandOrValue === '--' && args.length > 0) {
-    return {
-      command: args[0]!,
-      args: args.slice(1),
-    }
-  }
-  return { command: commandOrValue, args }
-}

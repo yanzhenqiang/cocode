@@ -4287,27 +4287,6 @@ export async function getAgentTranscript(agentId: AgentId): Promise<{
  * 'agent_progress' or 'skill_progress' and data.agentId.
  * This captures sync agents that emit progress messages during execution.
  */
-export function extractAgentIdsFromMessages(messages: Message[]): string[] {
-  const agentIds: string[] = []
-
-  for (const message of messages) {
-    if (
-      message.type === 'progress' &&
-      message.data &&
-      typeof message.data === 'object' &&
-      'type' in message.data &&
-      (message.data.type === 'agent_progress' ||
-        message.data.type === 'skill_progress') &&
-      'agentId' in message.data &&
-      typeof message.data.agentId === 'string'
-    ) {
-      agentIds.push(message.data.agentId)
-    }
-  }
-
-  return uniq(agentIds)
-}
-
 /**
  * Extract teammate transcripts directly from AppState tasks.
  * In-process teammates store their messages in task.messages,

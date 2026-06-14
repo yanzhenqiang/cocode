@@ -77,12 +77,6 @@ function asNumber(value: unknown): number {
  * Read the cached-tokens count from a RAW provider usage object.
  * Only handles Anthropic-native shape (cache_read_input_tokens).
  */
-export function extractCacheReadFromRawUsage(usage: RawUsage): number {
-  if (!usage || typeof usage !== 'object') return 0
-  const u = usage as Record<string, unknown>
-  return asNumber(u.cache_read_input_tokens)
-}
-
 /**
  * Shape produced by the shim layer — matches the Anthropic BetaUsage
  * fields that every downstream caller (cost-tracker, REPL, /cache-stats)
@@ -104,31 +98,6 @@ export type NormalizedShimUsage = {
 /**
  * Extract a unified CacheMetrics from POST-SHIM (Anthropic-shape) usage.
  */
-export function extractCacheMetrics(
-  usage: RawUsage,
-  provider: CacheAwareProvider,
-): CacheMetrics {
-  if (!usage || typeof usage !== 'object') return UNSUPPORTED
-  const u = usage as Record<string, unknown>
-  const read = asNumber(u.cache_read_input_tokens)
-  const created = asNumber(u.cache_creation_input_tokens)
-  const fresh = asNumber(u.input_tokens)
-
-  // Only Anthropic provider supports cache metrics reporting
-  if (provider !== 'anthropic') {
-    return UNSUPPORTED
-  }
-
-  const total = read + created + fresh
-  return {
-    read,
-    created,
-    total,
-    hitRate: total > 0 ? Math.min(1, read / total) : null,
-    supported: true,
-  }
-}
-
 /**
  * Map the canonical APIProvider enum into a cache-capability bucket.
  */
