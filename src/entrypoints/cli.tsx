@@ -96,14 +96,6 @@ async function main(): Promise<void> {
   const { printStartupScreen } = await import('../components/StartupScreen.js')
   printStartupScreen(earlyModelFlag)
 
-  // For all other paths, load the startup profiler
-  const {
-
-  } = await import('../utils/startupProfiler.js');
-
-
-
-
   // No special flags detected, load and run the full CLI
   if (process.env.COCODE_DISABLE_EARLY_INPUT !== '1') {
     const {
