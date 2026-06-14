@@ -225,7 +225,7 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
     // gate denied it (org not allowlisted, settings disabled), showing
     // consent for an unavailable feature is pointless. The
     // verifyAutoModeGateAccess notification will explain why instead.
-    if (permissionMode === 'auto' && !hasAutoModeOptIn()) {
+    if (false) {
       const {
         AutoModeOptInDialog
       } = await import('./components/AutoModeOptInDialog.js');

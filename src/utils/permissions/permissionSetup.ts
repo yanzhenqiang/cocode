@@ -17,9 +17,6 @@ import { SETTING_SOURCES } from '../settings/constants.js'
 import {
   getSettings_DEPRECATED,
   getSettingsFilePathForSource,
-  getUseAutoModeDuringPlan,
-  hasAllowBypassPermissionsMode,
-  hasAutoModeOptIn,
 } from '../settings/settings.js'
 import {
   type PermissionMode,
@@ -770,7 +767,7 @@ export async function initializeToolPermissionContext({
   const settings = getSettings_DEPRECATED() || {}
   const settingsDisableBypassPermissionsMode =
     settings.permissions?.disableBypassPermissionsMode === 'disable'
-  const settingsAllowBypassPermissionsMode = hasAllowBypassPermissionsMode()
+  const settingsAllowBypassPermissionsMode = false
   const isBypassPermissionsModeAvailable =
     (permissionMode === 'bypassPermissions' ||
       allowDangerouslySkipPermissions ||
@@ -923,7 +920,7 @@ export async function verifyAutoModeGateAccess(
   let carouselAvailable = false
   if (enabledState !== 'disabled' && !disabledBySettings && modelSupported) {
     carouselAvailable =
-      enabledState === 'enabled' || hasAutoModeOptInAnySource()
+      enabledState === "enabled" || false
   }
   // canEnterAuto gates explicit entry (--permission-mode auto, defaultMode: auto)
   // — explicit entry IS an opt-in, so we only block on circuit breaker + settings + model
@@ -1166,7 +1163,7 @@ export function getAutoModeEnabledStateIfCached():
  */
 export function hasAutoModeOptInAnySource(): boolean {
   if (autoModeStateModule?.getAutoModeFlagCli() ?? false) return true
-  return hasAutoModeOptIn()
+  return true
 }
 
 /**
@@ -1251,9 +1248,9 @@ export function isDefaultPermissionModeAuto(): boolean {
 export function shouldPlanUseAutoMode(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     return (
-      hasAutoModeOptIn() &&
+      true &&
       isAutoModeGateEnabled() &&
-      getUseAutoModeDuringPlan()
+      true
     )
   }
   return false
