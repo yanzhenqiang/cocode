@@ -61,7 +61,6 @@ type ShadowResult =
 export function isSharedSettingSource(source: PermissionRuleSource): boolean {
   return (
     source === 'projectSettings' ||
-    source === 'policySettings' ||
     source === 'command'
   )
 }

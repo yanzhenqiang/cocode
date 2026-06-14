@@ -31,7 +31,6 @@ export const permissionUpdateDestinationSchema = lazySchema(() =>
     // Project settings (shared per-directory)
     'projectSettings',
     // Local settings (gitignored)
-    'localSettings',
     // In-memory for the current session only
     'session',
     // From the command line arguments

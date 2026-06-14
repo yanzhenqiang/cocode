@@ -43,7 +43,7 @@ import {
 } from './sessionStorage.js'
 import type { AgentId } from '../types/ids.js'
 import {
-  getInitialSettings,
+  getSettings_DEPRECATED,
   getSettingsForSource,
 } from './settings/settings.js'
 import {
@@ -4377,9 +4377,8 @@ export async function executeStatusLineCommand(
   // (non-managed settings cannot disable managed commands, but non-managed commands are disabled)
   let statusLine
   if (shouldAllowManagedHooksOnly()) {
-    statusLine = getSettingsForSource('policySettings')?.statusLine
   } else {
-    statusLine = getInitialSettings()?.statusLine
+    statusLine = getSettings_DEPRECATED()?.statusLine
   }
 
   if (!statusLine || statusLine.type !== 'command') {
@@ -4471,9 +4470,8 @@ export async function executeFileSuggestionCommand(
   // (non-managed settings cannot disable managed commands, but non-managed commands are disabled)
   let fileSuggestion
   if (shouldAllowManagedHooksOnly()) {
-    fileSuggestion = getSettingsForSource('policySettings')?.fileSuggestion
   } else {
-    fileSuggestion = getInitialSettings()?.fileSuggestion
+    fileSuggestion = getSettings_DEPRECATED()?.fileSuggestion
   }
 
   if (!fileSuggestion || fileSuggestion.type !== 'command') {

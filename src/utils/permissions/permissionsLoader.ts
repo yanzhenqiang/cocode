@@ -30,7 +30,6 @@ import {
  */
 export function shouldAllowManagedPermissionRulesOnly(): boolean {
   return (
-    getSettingsForSource('policySettings')?.allowManagedPermissionRulesOnly ===
     true
   )
 }
@@ -120,7 +119,6 @@ function settingsJsonToRules(
 export function loadAllPermissionRulesFromDisk(): PermissionRule[] {
   // If allowManagedPermissionRulesOnly is set, only use managed permission rules
   if (shouldAllowManagedPermissionRulesOnly()) {
-    return getPermissionRulesForSource('policySettings')
   }
 
   // Otherwise, load from all enabled sources (backwards compatible)
@@ -152,7 +150,6 @@ export type PermissionRuleFromEditableSettings = PermissionRule & {
 const EDITABLE_SOURCES: EditableSettingSource[] = [
   'userSettings',
   'projectSettings',
-  'localSettings',
 ]
 
 /**

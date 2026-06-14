@@ -305,7 +305,6 @@ export const SkillTool: Tool<InputSchema, Output, Progress> = buildTool({
           },
         ],
         behavior: 'allow' as const,
-        destination: 'localSettings' as const,
       },
       // Prefix suggestion to allow any args
       {
@@ -317,7 +316,6 @@ export const SkillTool: Tool<InputSchema, Output, Progress> = buildTool({
           },
         ],
         behavior: 'allow' as const,
-        destination: 'localSettings' as const,
       },
     ]
 

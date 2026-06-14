@@ -34,7 +34,7 @@ export function shouldAllowManagedHooksOnly(): boolean {
   // If disableAllHooks is set but NOT from managed settings,
   // treat as managed-only (non-managed hooks disabled, managed hooks still run)
   if (
-    settingsModule.getInitialSettings().disableAllHooks === true &&
+    settingsModule.getSettings_DEPRECATED().disableAllHooks === true &&
     policySettings?.disableAllHooks !== true
   ) {
     return true
@@ -48,9 +48,7 @@ export function shouldAllowManagedHooksOnly(): boolean {
  * When disableAllHooks is set in non-managed settings, managed hooks still run.
  */
 export function shouldDisableAllHooksIncludingManaged(): boolean {
-  return (
-    true
-  )
+  return false
 }
 
 /**

@@ -79,8 +79,6 @@ export function getSkillsPath(
   dir: 'skills' | 'commands',
 ): string {
   switch (source) {
-    case 'policySettings':
-      return join(getManagedFilePath(), '.claude', dir)
     case 'userSettings':
       return join(getClaudeConfigHomeDir(), dir)
     case 'projectSettings':
@@ -722,11 +720,9 @@ async function loadSkillsFromCommandsDir(
 export const getSkillDirCommands = memoize(
   async (cwd: string): Promise<Command[]> => {
     const userSkillsDir = join(getClaudeConfigHomeDir(), 'skills')
-    const managedSkillsDir = join(getManagedFilePath(), '.claude', 'skills')
     const projectSkillsDirs = getProjectDirsUpToHome('skills', cwd)
 
     logForDebugging(
-      `Loading skills from: managed=${managedSkillsDir}, user=${userSkillsDir}, project=[${projectSkillsDirs.join(', ')}]`,
     )
 
     // Load from additional directories (--add-dir)
@@ -738,15 +734,11 @@ export const getSkillDirCommands = memoize(
     // Load from /skills/ directories, additional dirs, and legacy /commands/ in parallel
     // (all independent — different directories, no shared state)
     const [
-      managedSkills,
       userSkills,
       projectSkillsNested,
       additionalSkillsNested,
       legacyCommands,
     ] = await Promise.all([
-      isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_POLICY_SKILLS)
-        ? Promise.resolve([])
-        : loadSkillsFromSkillsDir(managedSkillsDir, 'policySettings'),
       isSettingSourceEnabled('userSettings') && !skillsLocked
         ? loadSkillsFromSkillsDir(userSkillsDir, 'userSettings')
         : Promise.resolve([]),
@@ -776,7 +768,6 @@ export const getSkillDirCommands = memoize(
 
     // Flatten and combine all skills
     const allSkillsWithPaths = [
-      ...managedSkills,
       ...userSkills,
       ...projectSkillsNested.flat(),
       ...additionalSkillsNested.flat(),
@@ -857,7 +848,6 @@ export const getSkillDirCommands = memoize(
     }
 
     logForDebugging(
-      `Loaded ${deduplicatedSkills.length} unique skills (${unconditionalSkills.length} unconditional, ${newConditionalSkills.length} conditional, managed: ${managedSkills.length}, user: ${userSkills.length}, project: ${projectSkillsNested.flat().length}, additional: ${additionalSkillsNested.flat().length}, legacy commands: ${legacyCommands.length})`,
     )
 
     return unconditionalSkills

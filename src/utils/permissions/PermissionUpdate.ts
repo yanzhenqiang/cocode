@@ -209,7 +209,6 @@ export function supportsPersistence(
   destination: PermissionUpdateDestination,
 ): destination is EditableSettingSource {
   return (
-    destination === 'localSettings' ||
     destination === 'userSettings' ||
     destination === 'projectSettings'
   )

@@ -15,8 +15,10 @@ import { isEnvTruthy } from '../envUtils.js'
 import type { SettingSource } from '../settings/constants.js'
 import { SETTING_SOURCES } from '../settings/constants.js'
 import {
-  getInitialSettings,
+  getSettings_DEPRECATED,
   getSettingsFilePathForSource,
+  getUseAutoModeDuringPlan,
+  hasAllowBypassPermissionsMode,
   hasAutoModeOptIn,
 } from '../settings/settings.js'
 import {
@@ -303,7 +305,6 @@ export function findOverlyBroadBashPermissions(
 
 /**
  * Type guard to check if a PermissionRuleSource is a valid PermissionUpdateDestination.
- * Sources like 'flagSettings', 'policySettings', and 'command' are not valid destinations.
  */
 function isPermissionUpdateDestination(
   source: PermissionRuleSource,
@@ -311,7 +312,6 @@ function isPermissionUpdateDestination(
   return [
     'userSettings',
     'projectSettings',
-    'localSettings',
     'session',
     'cliArg',
   ].includes(source)
@@ -543,7 +543,7 @@ export function initialPermissionModeFromCLI({
 }: {
   permissionModeCli: string | undefined
 }): { mode: PermissionMode; notification?: string } {
-  const settings = getInitialSettings() || {}
+  const settings = getSettings_DEPRECATED() || {}
 
   // Check GrowthBook gate first - highest precedence
   const growthBookDisableBypassPermissionsMode =
@@ -767,10 +767,10 @@ export async function initializeToolPermissionContext({
     checkStatsigFeatureGate_CACHED_MAY_BE_STALE(
       'tengu_disable_bypass_permissions_mode',
     )
-  const settings = getInitialSettings() || {}
+  const settings = getSettings_DEPRECATED() || {}
   const settingsDisableBypassPermissionsMode =
     settings.permissions?.disableBypassPermissionsMode === 'disable'
-  const settingsAllowBypassPermissionsMode = false
+  const settingsAllowBypassPermissionsMode = hasAllowBypassPermissionsMode()
   const isBypassPermissionsModeAvailable =
     (permissionMode === 'bypassPermissions' ||
       allowDangerouslySkipPermissions ||
@@ -1072,7 +1072,7 @@ export function shouldDisableBypassPermissions(): Promise<boolean> {
 }
 
 function isAutoModeDisabledBySettings(): boolean {
-  const settings = getInitialSettings() || {}
+  const settings = getSettings_DEPRECATED() || {}
   return (
     (settings as { disableAutoMode?: 'disable' }).disableAutoMode ===
       'disable' ||
@@ -1166,7 +1166,7 @@ export function getAutoModeEnabledStateIfCached():
  */
 export function hasAutoModeOptInAnySource(): boolean {
   if (autoModeStateModule?.getAutoModeFlagCli() ?? false) return true
-  return false
+  return hasAutoModeOptIn()
 }
 
 /**
@@ -1178,7 +1178,7 @@ export function isBypassPermissionsModeDisabled(): boolean {
     checkStatsigFeatureGate_CACHED_MAY_BE_STALE(
       'tengu_disable_bypass_permissions_mode',
     )
-  const settings = getInitialSettings() || {}
+  const settings = getSettings_DEPRECATED() || {}
   const settingsDisableBypassPermissionsMode =
     settings.permissions?.disableBypassPermissionsMode === 'disable'
 
@@ -1237,7 +1237,7 @@ export async function checkAndDisableBypassPermissions(
 
 export function isDefaultPermissionModeAuto(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
-    const settings = getInitialSettings() || {}
+    const settings = getSettings_DEPRECATED() || {}
     return settings.permissions?.defaultMode === 'auto'
   }
   return false
@@ -1251,9 +1251,9 @@ export function isDefaultPermissionModeAuto(): boolean {
 export function shouldPlanUseAutoMode(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     return (
-      false &&
+      hasAutoModeOptIn() &&
       isAutoModeGateEnabled() &&
-      true
+      getUseAutoModeDuringPlan()
     )
   }
   return false

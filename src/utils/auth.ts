@@ -35,7 +35,7 @@ import { execSyncWithDefaults_DEPRECATED } from './execFileNoThrow.js'
 import { logError } from './log.js'
 import { memoizeWithTTLAsync } from './memoize.js'
 import {
-  getInitialSettings,
+  getSettings_DEPRECATED,
   getSettingsForSource,
 } from './settings/settings.js'
 import { sleep } from './sleep.js'
@@ -83,7 +83,7 @@ export function isAnthropicAuthEnabled(): boolean {
 
   // Check if user has configured an external API key source
   // This allows externally-provided API keys to work (without requiring proxy configuration)
-  const settings = getInitialSettings() || {}
+  const settings = getSettings_DEPRECATED() || {}
   const apiKeyHelper = settings.apiKeyHelper
   const hasExternalAuthToken =
     process.env.ANTHROPIC_AUTH_TOKEN ||
@@ -299,7 +299,7 @@ export function getAnthropicApiKeyWithSource(
  * Get the configured apiKeyHelper from settings.
  */
 export function getConfiguredApiKeyHelper(): string | undefined {
-  const mergedSettings = getInitialSettings() || {}
+  const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.apiKeyHelper
 }
 
@@ -313,10 +313,8 @@ function isApiKeyHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.apiKeyHelper === apiKeyHelper ||
-    localSettings?.apiKeyHelper === apiKeyHelper
+    projectSettings?.apiKeyHelper === apiKeyHelper
   )
 }
 
@@ -324,7 +322,7 @@ function isApiKeyHelperFromProjectOrLocalSettings(): boolean {
  * Get the configured awsAuthRefresh from settings
  */
 function getConfiguredAwsAuthRefresh(): string | undefined {
-  const mergedSettings = getInitialSettings() || {}
+  const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.awsAuthRefresh
 }
 
@@ -338,10 +336,8 @@ export function isAwsAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsAuthRefresh === awsAuthRefresh ||
-    localSettings?.awsAuthRefresh === awsAuthRefresh
+    projectSettings?.awsAuthRefresh === awsAuthRefresh
   )
 }
 
@@ -349,7 +345,7 @@ export function isAwsAuthRefreshFromProjectSettings(): boolean {
  * Get the configured awsCredentialExport from settings
  */
 function getConfiguredAwsCredentialExport(): string | undefined {
-  const mergedSettings = getInitialSettings() || {}
+  const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.awsCredentialExport
 }
 
@@ -363,10 +359,8 @@ export function isAwsCredentialExportFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsCredentialExport === awsCredentialExport ||
-    localSettings?.awsCredentialExport === awsCredentialExport
+    projectSettings?.awsCredentialExport === awsCredentialExport
   )
 }
 
@@ -542,7 +536,7 @@ export function prefetchApiKeyFromApiKeyHelperIfSafe(): void {
  * Get the configured gcpAuthRefresh from settings
  */
 function getConfiguredGcpAuthRefresh(): string | undefined {
-  const mergedSettings = getInitialSettings() || {}
+  const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.gcpAuthRefresh
 }
 
@@ -556,10 +550,8 @@ export function isGcpAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.gcpAuthRefresh === gcpAuthRefresh ||
-    localSettings?.gcpAuthRefresh === gcpAuthRefresh
+    projectSettings?.gcpAuthRefresh === gcpAuthRefresh
   )
 }
 
@@ -1104,7 +1096,7 @@ export function isUsing3PServices(): boolean {
  * Get the configured otelHeadersHelper from settings
  */
 function getConfiguredOtelHeadersHelper(): string | undefined {
-  const mergedSettings = getInitialSettings() || {}
+  const mergedSettings = getSettings_DEPRECATED() || {}
   return mergedSettings.otelHeadersHelper
 }
 
@@ -1118,10 +1110,8 @@ export function isOtelHeadersHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.otelHeadersHelper === otelHeadersHelper ||
-    localSettings?.otelHeadersHelper === otelHeadersHelper
+    projectSettings?.otelHeadersHelper === otelHeadersHelper
   )
 }
 
@@ -1280,20 +1270,8 @@ export async function validateForceLoginOrg(): Promise<OrgValidationResult> {
     return { valid: true }
   }
 
-  const requiredOrgUuid =
-    getSettingsForSource('policySettings')?.forceLoginOrgUUID
-  if (!requiredOrgUuid) {
-    return { valid: true }
-  }
-
-  // Profile fetch is not available without Console OAuth — fail closed
-  return {
-    valid: false,
-    message:
-      `Unable to verify organization for the current authentication token.\n` +
-      `This machine requires organization ${requiredOrgUuid} but the profile could not be fetched.\n` +
-      `Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to authenticate with the required organization.`,
-  }
+  // policySettings removed — no org validation enforced
+  return { valid: true }
 }
 
 class GcpCredentialsTimeoutError extends Error {}
