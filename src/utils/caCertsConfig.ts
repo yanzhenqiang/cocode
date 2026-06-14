@@ -31,19 +31,6 @@ import { getSettingsForSource } from './settings/settings.js'
  * user-controlled files (~/.claude/settings.json and ~/.cocode.json),
  * not from project-level settings.
  */
-export function applyExtraCACertsFromConfig(): void {
-  if (process.env.NODE_EXTRA_CA_CERTS) {
-    return // Already set in environment, nothing to do
-  }
-  const configPath = getExtraCertsPathFromConfig()
-  if (configPath) {
-    process.env.NODE_EXTRA_CA_CERTS = configPath
-    logForDebugging(
-      `CA certs: Applied NODE_EXTRA_CA_CERTS from config to process.env: ${configPath}`,
-    )
-  }
-}
-
 /**
  * Read NODE_EXTRA_CA_CERTS from settings/config as a fallback.
  *
