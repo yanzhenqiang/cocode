@@ -144,7 +144,6 @@ export const getAllOutputStyles = memoize(async function getAllOutputStyles(
   }
 
   const managedStyles = customStyles.filter(
-    style => style.source === 'policySettings',
   )
   const userStyles = customStyles.filter(
     style => style.source === 'userSettings',

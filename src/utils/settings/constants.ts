@@ -9,9 +9,6 @@ export const SETTING_SOURCES = [
 
   // Project settings (shared per-directory)
   'projectSettings',
-
-  // Policy settings (managed-settings.json or remote settings from API)
-  'policySettings',
 ] as const
 
 export type SettingSource = (typeof SETTING_SOURCES)[number]
@@ -22,8 +19,6 @@ export function getSettingSourceName(source: SettingSource): string {
       return 'user'
     case 'projectSettings':
       return 'project'
-    case 'policySettings':
-      return 'managed'
   }
 }
 
@@ -40,8 +35,6 @@ export function getSourceDisplayName(
       return 'User'
     case 'projectSettings':
       return 'Project'
-    case 'policySettings':
-      return 'Managed'
     case 'plugin':
       return 'Plugin'
     case 'built-in':
@@ -62,8 +55,6 @@ export function getSettingSourceDisplayNameLowercase(
       return 'user settings'
     case 'projectSettings':
       return 'shared project settings'
-    case 'policySettings':
-      return 'enterprise managed settings'
     case 'cliArg':
       return 'CLI argument'
     case 'command':
@@ -86,8 +77,6 @@ export function getSettingSourceDisplayNameCapitalized(
       return 'User settings'
     case 'projectSettings':
       return 'Shared project settings'
-    case 'policySettings':
-      return 'Enterprise managed settings'
     case 'cliArg':
       return 'CLI argument'
     case 'command':
@@ -131,7 +120,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
  * @returns Array of enabled SettingSource values
  */
 export function getEnabledSettingSources(): SettingSource[] {
-  return ['userSettings', 'projectSettings', 'policySettings']
+  return ['userSettings', 'projectSettings']
 }
 
 /**
@@ -147,10 +136,7 @@ export function isSettingSourceEnabled(source: SettingSource): boolean {
 /**
  * Editable setting sources (excludes policySettings and flagSettings which are read-only)
  */
-export type EditableSettingSource = Exclude<
-  SettingSource,
-  'policySettings'
->
+export type EditableSettingSource = SettingSource
 
 /**
  * List of sources where permission rules can be saved, in display order.

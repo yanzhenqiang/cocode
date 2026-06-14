@@ -14,7 +14,6 @@ import { getSessionHooks } from './sessionHooks.js'
 
 export type HookSource =
   | EditableSettingSource
-  | 'policySettings'
   | 'pluginHook'
   | 'sessionHook'
   | 'builtinHook'
@@ -93,7 +92,6 @@ export function getAllHooks(appState: AppState): IndividualHookConfig[] {
   const hooks: IndividualHookConfig[] = []
 
   // Check if restricted to managed hooks only
-  const policySettings = getSettingsForSource('policySettings')
   const restrictedToManagedOnly = policySettings?.allowManagedHooksOnly === true
 
   // If allowManagedHooksOnly is set, don't show any hooks in the UI

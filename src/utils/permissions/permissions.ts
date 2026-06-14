@@ -1252,7 +1252,6 @@ export async function deletePermissionRule({
   setToolPermissionContext,
 }: EditPermissionRuleArgs & { rule: PermissionRule }): Promise<void> {
   if (
-    rule.source === 'policySettings' ||
     rule.source === 'command'
   ) {
     throw new Error('Cannot delete permission rules from read-only settings')

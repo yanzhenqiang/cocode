@@ -105,7 +105,6 @@ function filterSettingsEnv(
  */
 const TRUSTED_SETTING_SOURCES = [
   'userSettings',
-  'policySettings',
 ] as const
 
 /**
@@ -140,7 +139,6 @@ export function applySafeConfigEnvironmentVariables(): void {
   // doesn't get clobbered by ~/.claude/settings.json env (gh#217). policy/flag
   // sources are always enabled, so this only ever filters userSettings.
   for (const source of TRUSTED_SETTING_SOURCES) {
-    if (source === 'policySettings') continue
     if (!isSettingSourceEnabled(source)) continue
     Object.assign(
       process.env,
@@ -150,7 +148,6 @@ export function applySafeConfigEnvironmentVariables(): void {
 
   Object.assign(
     process.env,
-    filterSettingsEnv(getSettingsForSource('policySettings')?.env),
   )
 
   // Apply only safe env vars from the fully-merged settings (which includes

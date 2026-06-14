@@ -768,7 +768,6 @@ function rootPathForSource(source: PermissionRuleSource): string {
     case 'session':
       return expandPath(getOriginalCwd())
     case 'userSettings':
-    case 'policySettings':
     case 'projectSettings':
       return getSettingsRootPathForSource(source)
   }

@@ -347,7 +347,6 @@ export const loadMarkdownFilesForSubdir = memoize(
         _.map(file => ({
           ...file,
           baseDir: managedDir,
-          source: 'policySettings' as const,
         })),
       ),
       // Conditionally load user files

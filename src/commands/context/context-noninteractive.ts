@@ -165,7 +165,6 @@ function formatContextAsMarkdownTable(data: ContextData): string {
           break
           sourceDisplay = 'Flag'
           break
-        case 'policySettings':
           sourceDisplay = 'Policy'
           break
         case 'plugin':

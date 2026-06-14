@@ -236,7 +236,6 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
   switch (source) {
     case 'userSettings':
       return resolve(getClaudeConfigHomeDir())
-    case 'policySettings':
     case 'projectSettings': {
       return resolve(getOriginalCwd())
     }
@@ -276,8 +275,6 @@ export function getSettingsFilePathForSource(
         getRelativeSettingsFilePathForSource(source),
       )
     }
-    case 'policySettings':
-      return getManagedSettingsFilePath()
     }
   }
 
@@ -300,26 +297,6 @@ export function getSettingsForSource(
 function getSettingsForSourceUncached(
   source: SettingSource,
 ): SettingsJson | null {
-  // For policySettings: first source wins (HKLM/plist > file > HKCU)
-  if (source === 'policySettings') {
-    const mdmResult = getMdmSettings()
-    if (Object.keys(mdmResult.settings).length > 0) {
-      return mdmResult.settings
-    }
-
-    const { settings: fileSettings } = loadManagedFileSettings()
-    if (fileSettings) {
-      return fileSettings
-    }
-
-    const hkcu = getHkcuSettings()
-    if (Object.keys(hkcu.settings).length > 0) {
-      return hkcu.settings
-    }
-
-    return null
-  }
-
   const settingsFilePath = getSettingsFilePathForSource(source)
   const { settings: fileSettings } = settingsFilePath
     ? parseSettingsFile(settingsFilePath)
@@ -372,10 +349,6 @@ export function updateSettingsForSource(
   source: EditableSettingSource,
   settings: SettingsJson,
 ): { error: Error | null } {
-  if ((source as unknown) === 'policySettings') {
-    return { error: null }
-  }
-
   // Create the folder if needed
   const filePath = getSettingsFilePathForSource(source)
   if (!filePath) {
@@ -854,7 +827,6 @@ export function hasAutoModeOptIn(): boolean {
 export function getUseAutoModeDuringPlan(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     return (
-      getSettingsForSource('policySettings')?.useAutoModeDuringPlan !== false &&
       getSettingsForSource('userSettings')?.useAutoModeDuringPlan !== false
     )
   }
@@ -884,7 +856,6 @@ export function getAutoModeConfig():
 
     for (const source of [
       'userSettings',
-      'policySettings',
     ] as const) {
       const settings = getSettingsForSource(source)
       if (!settings) continue
@@ -912,10 +883,6 @@ export function getAutoModeConfig():
 
 export function rawSettingsContainsKey(key: string): boolean {
   for (const source of getEnabledSettingSources()) {
-    // Skip policySettings - we only care about user-configured settings
-    if (source === 'policySettings') {
-      continue
-    }
 
     const filePath = getSettingsFilePathForSource(source)
     if (!filePath) {

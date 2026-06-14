@@ -191,7 +191,6 @@ export function getActiveAgentsFromList(
   const pluginAgents = allAgents.filter(a => a.source === 'plugin')
   const userAgents = allAgents.filter(a => a.source === 'userSettings')
   const projectAgents = allAgents.filter(a => a.source === 'projectSettings')
-  const managedAgents = allAgents.filter(a => a.source === 'policySettings')
 
   const agentGroups = [
     builtInAgents,

@@ -54,7 +54,6 @@ export type PermissionBehavior = 'allow' | 'deny' | 'ask'
 export type PermissionRuleSource =
   | 'userSettings'
   | 'projectSettings'
-  | 'policySettings'
   | 'cliArg'
   | 'command'
   | 'session'

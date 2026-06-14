@@ -364,7 +364,6 @@ export function generateCommandSuggestions(
         builtinCommands.push(cmd)
       } else if (cmd.type === 'prompt' && cmd.source === 'projectSettings') {
         projectCommands.push(cmd)
-      } else if (cmd.type === 'prompt' && cmd.source === 'policySettings') {
         policyCommands.push(cmd)
       } else {
         otherCommands.push(cmd)
