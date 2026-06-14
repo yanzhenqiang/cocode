@@ -313,10 +313,8 @@ function isApiKeyHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.apiKeyHelper === apiKeyHelper ||
-    localSettings?.apiKeyHelper === apiKeyHelper
+    projectSettings?.apiKeyHelper === apiKeyHelper
   )
 }
 
@@ -338,10 +336,8 @@ export function isAwsAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsAuthRefresh === awsAuthRefresh ||
-    localSettings?.awsAuthRefresh === awsAuthRefresh
+    projectSettings?.awsAuthRefresh === awsAuthRefresh
   )
 }
 
@@ -363,10 +359,8 @@ export function isAwsCredentialExportFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.awsCredentialExport === awsCredentialExport ||
-    localSettings?.awsCredentialExport === awsCredentialExport
+    projectSettings?.awsCredentialExport === awsCredentialExport
   )
 }
 
@@ -556,10 +550,8 @@ export function isGcpAuthRefreshFromProjectSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.gcpAuthRefresh === gcpAuthRefresh ||
-    localSettings?.gcpAuthRefresh === gcpAuthRefresh
+    projectSettings?.gcpAuthRefresh === gcpAuthRefresh
   )
 }
 
@@ -1118,10 +1110,8 @@ export function isOtelHeadersHelperFromProjectOrLocalSettings(): boolean {
   }
 
   const projectSettings = getSettingsForSource('projectSettings')
-  const localSettings = getSettingsForSource('localSettings')
   return (
-    projectSettings?.otelHeadersHelper === otelHeadersHelper ||
-    localSettings?.otelHeadersHelper === otelHeadersHelper
+    projectSettings?.otelHeadersHelper === otelHeadersHelper
   )
 }
 
