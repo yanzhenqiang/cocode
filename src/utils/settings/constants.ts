@@ -10,9 +10,6 @@ export const SETTING_SOURCES = [
   // Project settings (shared per-directory)
   'projectSettings',
 
-  // Flag settings (from --settings flag)
-  'flagSettings',
-
   // Policy settings (managed-settings.json or remote settings from API)
   'policySettings',
 ] as const
@@ -25,8 +22,6 @@ export function getSettingSourceName(source: SettingSource): string {
       return 'user'
     case 'projectSettings':
       return 'project'
-    case 'flagSettings':
-      return 'cli flag'
     case 'policySettings':
       return 'managed'
   }
@@ -45,8 +40,6 @@ export function getSourceDisplayName(
       return 'User'
     case 'projectSettings':
       return 'Project'
-    case 'flagSettings':
-      return 'Flag'
     case 'policySettings':
       return 'Managed'
     case 'plugin':
@@ -69,8 +62,6 @@ export function getSettingSourceDisplayNameLowercase(
       return 'user settings'
     case 'projectSettings':
       return 'shared project settings'
-    case 'flagSettings':
-      return 'command line arguments'
     case 'policySettings':
       return 'enterprise managed settings'
     case 'cliArg':
@@ -95,8 +86,6 @@ export function getSettingSourceDisplayNameCapitalized(
       return 'User settings'
     case 'projectSettings':
       return 'Shared project settings'
-    case 'flagSettings':
-      return 'Command line arguments'
     case 'policySettings':
       return 'Enterprise managed settings'
     case 'cliArg':
@@ -129,7 +118,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
         break
       default:
         throw new Error(
-          `Invalid setting source: ${name}. Valid options are: user, project, local`,
+          `Invalid setting source: ${name}. Valid options are: user, project`,
         )
     }
   }
@@ -142,7 +131,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
  * @returns Array of enabled SettingSource values
  */
 export function getEnabledSettingSources(): SettingSource[] {
-  return ['userSettings', 'projectSettings', 'flagSettings', 'policySettings']
+  return ['userSettings', 'projectSettings', 'policySettings']
 }
 
 /**
@@ -160,7 +149,7 @@ export function isSettingSourceEnabled(source: SettingSource): boolean {
  */
 export type EditableSettingSource = Exclude<
   SettingSource,
-  'policySettings' | 'flagSettings'
+  'policySettings'
 >
 
 /**
