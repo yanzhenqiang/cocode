@@ -10,9 +10,6 @@ export const SETTING_SOURCES = [
   // Project settings (shared per-directory)
   'projectSettings',
 
-  // Local settings (gitignored)
-  'localSettings',
-
   // Flag settings (from --settings flag)
   'flagSettings',
 
@@ -28,8 +25,6 @@ export function getSettingSourceName(source: SettingSource): string {
       return 'user'
     case 'projectSettings':
       return 'project'
-    case 'localSettings':
-      return 'project, gitignored'
     case 'flagSettings':
       return 'cli flag'
     case 'policySettings':
@@ -50,8 +45,6 @@ export function getSourceDisplayName(
       return 'User'
     case 'projectSettings':
       return 'Project'
-    case 'localSettings':
-      return 'Local'
     case 'flagSettings':
       return 'Flag'
     case 'policySettings':
@@ -76,8 +69,6 @@ export function getSettingSourceDisplayNameLowercase(
       return 'user settings'
     case 'projectSettings':
       return 'shared project settings'
-    case 'localSettings':
-      return 'project local settings'
     case 'flagSettings':
       return 'command line arguments'
     case 'policySettings':
@@ -104,8 +95,6 @@ export function getSettingSourceDisplayNameCapitalized(
       return 'User settings'
     case 'projectSettings':
       return 'Shared project settings'
-    case 'localSettings':
-      return 'Project local settings'
     case 'flagSettings':
       return 'Command line arguments'
     case 'policySettings':
@@ -138,9 +127,6 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
       case 'project':
         result.push('projectSettings')
         break
-      case 'local':
-        result.push('localSettings')
-        break
       default:
         throw new Error(
           `Invalid setting source: ${name}. Valid options are: user, project, local`,
@@ -156,7 +142,7 @@ export function parseSettingSourcesFlag(flag: string): SettingSource[] {
  * @returns Array of enabled SettingSource values
  */
 export function getEnabledSettingSources(): SettingSource[] {
-  return ['userSettings', 'projectSettings', 'localSettings', 'flagSettings', 'policySettings']
+  return ['userSettings', 'projectSettings', 'flagSettings', 'policySettings']
 }
 
 /**
@@ -182,7 +168,6 @@ export type EditableSettingSource = Exclude<
  * Used by permission-rule and hook-save UIs to present source options.
  */
 export const SOURCES = [
-  'localSettings',
   'projectSettings',
   'userSettings',
 ] as const satisfies readonly EditableSettingSource[]
