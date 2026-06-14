@@ -37,7 +37,6 @@ import {
   clearSessionMetadata,
   getAgentTranscriptPath,
   resetSessionFilePointer,
-  saveWorktreeState,
 } from '../../utils/sessionStorage.js'
 import {
   evictTaskOutput,
@@ -223,7 +222,6 @@ export async function clearConversation({
   // and (if applicable) the same worktree directory.
   const worktreeSession = getCurrentWorktreeSession()
   if (worktreeSession) {
-    saveWorktreeState(worktreeSession)
   }
 
   // Execute SessionStart hooks after clearing

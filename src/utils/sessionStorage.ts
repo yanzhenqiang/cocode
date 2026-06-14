@@ -2929,9 +2929,6 @@ export async function saveAgentColor(
  * on the first user message, and re-stamped by reAppendSessionMetadata on exit.
  * Cache-only here to avoid creating metadata-only session files at startup.
  */
-export function saveAgentSetting(agentSetting: string): void {
-  getProject().currentSessionAgentSetting = agentSetting
-}
 
 /**
  * Cache a session title set at startup (--name). Written to disk by
@@ -2954,11 +2951,6 @@ export function saveMode(mode: 'coordinator' | 'normal'): void {
 /**
  * Worktree session state recording — no-op since worktrees are not supported.
  */
-export function saveWorktreeState(
-  _worktreeSession: PersistedWorktreeSession | null,
-): void {
-  // no-op
-}
 
 /**
  * Extracts the session ID from a log.
