@@ -26,7 +26,7 @@ import { usesAnthropicAccountFlow } from './utils/model/providers.js';
 import type { PermissionMode } from './utils/permissions/PermissionMode.js';
 import { getBaseRenderOptions } from './utils/renderOptions.js';
 import { getSettingsWithAllErrors } from './utils/settings/allErrors.js';
-import { hasAutoModeOptIn, hasSkipDangerousModePermissionPrompt } from './utils/settings/settings.js';
+import {} from './utils/settings/settings.js';
 export function completeOnboarding(): void {
   saveGlobalConfig(current => ({
     ...current,
@@ -214,7 +214,7 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
       });
     }
   }
-  if ((permissionMode === 'bypassPermissions' || allowDangerouslySkipPermissions) && !hasSkipDangerousModePermissionPrompt()) {
+  if ((permissionMode === 'bypassPermissions' || allowDangerouslySkipPermissions)) {
     const {
       BypassPermissionsModeDialog
     } = await import('./components/BypassPermissionsModeDialog.js');

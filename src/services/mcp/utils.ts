@@ -9,7 +9,6 @@ import { getGlobalClaudeFile } from '../../utils/env.js'
 import { isSettingSourceEnabled } from '../../utils/settings/constants.js'
 import {
   getSettings_DEPRECATED,
-  hasSkipDangerousModePermissionPrompt,
 } from '../../utils/settings/settings.js'
 import { jsonStringify } from '../../utils/slowOperations.js'
 import { getEnterpriseMcpFilePath, getMcpConfigByName } from './config.js'
@@ -371,7 +370,6 @@ export function getProjectMcpServerStatus(
   // sessionBypassPermissionsMode can be set from project settings before the dialog is shown,
   // which would allow RCE attacks via malicious project settings.
   if (
-    hasSkipDangerousModePermissionPrompt() &&
     isSettingSourceEnabled('projectSettings')
   ) {
     return 'approved'

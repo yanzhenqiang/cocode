@@ -18,7 +18,6 @@ import {
   getSettings_DEPRECATED,
   getSettingsFilePathForSource,
   getUseAutoModeDuringPlan,
-  hasAllowBypassPermissionsMode,
   hasAutoModeOptIn,
 } from '../settings/settings.js'
 import {
@@ -772,7 +771,7 @@ export async function initializeToolPermissionContext({
   const settings = getSettings_DEPRECATED() || {}
   const settingsDisableBypassPermissionsMode =
     settings.permissions?.disableBypassPermissionsMode === 'disable'
-  const settingsAllowBypassPermissionsMode = hasAllowBypassPermissionsMode()
+  const settingsAllowBypassPermissionsMode = false
   const isBypassPermissionsModeAvailable =
     (permissionMode === 'bypassPermissions' ||
       allowDangerouslySkipPermissions ||
@@ -1168,7 +1167,7 @@ export function getAutoModeEnabledStateIfCached():
  */
 export function hasAutoModeOptInAnySource(): boolean {
   if (autoModeStateModule?.getAutoModeFlagCli() ?? false) return true
-  return hasAutoModeOptIn()
+  return false
 }
 
 /**
@@ -1253,7 +1252,7 @@ export function isDefaultPermissionModeAuto(): boolean {
 export function shouldPlanUseAutoMode(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     return (
-      hasAutoModeOptIn() &&
+      false &&
       isAutoModeGateEnabled() &&
       getUseAutoModeDuringPlan()
     )

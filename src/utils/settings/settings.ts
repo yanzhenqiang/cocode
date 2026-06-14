@@ -500,20 +500,6 @@ export type SettingsWithSources = {
  * Always reads fresh from disk — resets the session cache so that `effective`
  * and `sources` are consistent even if the change detector hasn't fired yet.
  */
-export function getSettingsWithSources(): SettingsWithSources {
-  // Reset both caches so getSettingsForSource (per-source cache) and
-  // getInitialSettings (session cache) agree on the current disk state.
-  resetSettingsCache()
-  const sources: SettingsWithSources['sources'] = []
-  for (const source of getEnabledSettingSources()) {
-    const settings = getSettingsForSource(source)
-    if (settings && Object.keys(settings).length > 0) {
-      sources.push({ source, settings })
-    }
-  }
-  return { effective: getInitialSettings(), sources }
-}
-
 /**
  * Get merged settings and validation errors from all sources
  * This function now uses session-level caching to avoid repeated file I/O.
@@ -546,41 +532,16 @@ export function getSettingsWithErrors(): SettingsWithErrors {
  * permissions mode dialog. projectSettings is intentionally excluded —
  * a malicious project could otherwise auto-bypass the dialog (RCE risk).
  */
-export function hasSkipDangerousModePermissionPrompt(): boolean {
-  return !!(
-    getSettingsForSource('userSettings')?.skipDangerousModePermissionPrompt
-  )
-}
-
 /**
  * Returns true if any trusted settings source has enabled bypass permissions
  * mode availability. projectSettings is intentionally excluded — a malicious
  * project could otherwise enable bypass mode (security risk).
  */
-export function hasAllowBypassPermissionsMode(): boolean {
-  return !!(
-    getSettingsForSource('userSettings')?.permissions
-      ?.allowBypassPermissionsMode
-  )
-}
-
 /**
  * Returns true if any trusted settings source has accepted the auto
  * mode opt-in dialog. projectSettings is intentionally excluded —
  * a malicious project could otherwise auto-bypass the dialog (RCE risk).
  */
-export function hasAutoModeOptIn(): boolean {
-  if (feature('TRANSCRIPT_CLASSIFIER')) {
-    const user = getSettingsForSource('userSettings')?.skipAutoPermissionPrompt
-    const result = !!user
-    logForDebugging(
-      `[auto-mode] hasAutoModeOptIn=${result} skipAutoPermissionPrompt: user=${user}`,
-    )
-    return result
-  }
-  return false
-}
-
 /**
  * Returns whether plan mode should use auto mode semantics. Default true
  * (opt-out). Returns false if any trusted source explicitly sets false.
@@ -601,48 +562,6 @@ export function getUseAutoModeDuringPlan(): boolean {
  * projectSettings is intentionally excluded — a malicious project could
  * otherwise inject classifier allow/deny rules (RCE risk).
  */
-export function getAutoModeConfig():
-  | { allow?: string[]; soft_deny?: string[]; environment?: string[] }
-  | undefined {
-  if (feature('TRANSCRIPT_CLASSIFIER')) {
-    const schema = z.object({
-      allow: z.array(z.string()).optional(),
-      soft_deny: z.array(z.string()).optional(),
-      deny: z.array(z.string()).optional(),
-      environment: z.array(z.string()).optional(),
-    })
-
-    const allow: string[] = []
-    const soft_deny: string[] = []
-    const environment: string[] = []
-
-    for (const source of [
-      'userSettings',
-    ] as const) {
-      const settings = getSettingsForSource(source)
-      if (!settings) continue
-      const result = schema.safeParse(
-        (settings as Record<string, unknown>).autoMode,
-      )
-      if (result.success) {
-        if (result.data.allow) allow.push(...result.data.allow)
-        if (result.data.soft_deny) soft_deny.push(...result.data.soft_deny)
-        if (result.data.environment)
-          environment.push(...result.data.environment)
-      }
-    }
-
-    if (allow.length > 0 || soft_deny.length > 0 || environment.length > 0) {
-      return {
-        ...(allow.length > 0 && { allow }),
-        ...(soft_deny.length > 0 && { soft_deny }),
-        ...(environment.length > 0 && { environment }),
-      }
-    }
-  }
-  return undefined
-}
-
 export function rawSettingsContainsKey(key: string): boolean {
   for (const source of getEnabledSettingSources()) {
 
