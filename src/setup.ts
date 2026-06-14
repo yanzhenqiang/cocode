@@ -6,6 +6,7 @@ import {
   logEvent,
 } from 'src/services/analytics/index.js'
 import { getCwd } from 'src/utils/cwd.js'
+import { checkForReleaseNotes } from 'src/utils/releaseNotes.js'
 import { setCwd } from 'src/utils/Shell.js'
 import { initSinks } from 'src/utils/sinks.js'
 import {
@@ -33,6 +34,7 @@ import {
   updateHooksConfigSnapshot,
 } from './utils/hooks/hooksConfigSnapshot.js'
 import { logError } from './utils/log.js'
+import { getRecentActivity } from './utils/logoV2Utils.js'
 import type { PermissionMode } from './utils/permissions/PermissionMode.js'
 import { getPlanSlug } from './utils/plans.js'
 import { saveWorktreeState } from './utils/sessionStorage.js'
@@ -145,7 +147,13 @@ export async function setup(
   void prefetchApiKeyFromApiKeyHelperIfSafe()
 
 
-  // checkForReleaseNotes removed
+  // Pre-fetch data for Logo v2 - await to ensure it's ready before logo renders.
+  const { hasReleaseNotes } = await checkForReleaseNotes(
+    getGlobalConfig().lastReleaseNotesSeen,
+  )
+  if (hasReleaseNotes) {
+    await getRecentActivity()
+  }
 
   // If permission mode is set to bypass, verify we're in a safe environment
   if (

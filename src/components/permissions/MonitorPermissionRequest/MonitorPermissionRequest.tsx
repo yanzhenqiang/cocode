@@ -72,6 +72,7 @@ export function MonitorPermissionRequest({
             type: 'addRules',
             rules: [{ toolName: 'Bash', ruleContent: `${prefix}:*` }],
             behavior: 'allow',
+            destination: 'localSettings',
           },
         ] : [])
         onDone()

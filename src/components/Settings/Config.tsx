@@ -124,6 +124,7 @@ export function Config({
   // undefined-deletes-key semantics can. Lazy-init via useState (no setter) to
   // avoid reading settings files on every render — useRef evaluates its arg
   // eagerly even though only the first result is kept.
+  const [initialLocalSettings] = useState(() => getSettingsForSource('localSettings'));
   const [initialUserSettings] = useState(() => getSettingsForSource('userSettings'));
   const initialThemeSetting = React.useRef(themeSetting);
   // AppState fields Config may modify — snapshot once at mount.
@@ -281,6 +282,9 @@ export function Config({
     value: settingsData?.spinnerTipsEnabled ?? true,
     type: 'boolean' as const,
     onChange(spinnerTipsEnabled: boolean) {
+      updateSettingsForSource('localSettings', {
+        spinnerTipsEnabled
+      });
       // Update local state to reflect the change immediately
       setSettingsData(prev_3 => ({
         ...prev_3,
@@ -296,6 +300,9 @@ export function Config({
     value: settingsData?.prefersReducedMotion ?? false,
     type: 'boolean' as const,
     onChange(prefersReducedMotion: boolean) {
+      updateSettingsForSource('localSettings', {
+        prefersReducedMotion
+      });
       setSettingsData(prev_4 => ({
         ...prev_4,
         prefersReducedMotion
@@ -656,6 +663,9 @@ export function Config({
     type: 'enum' as const,
     onChange(selected: string) {
       const defaultView = selected === 'default' ? undefined : selected as 'chat' | 'transcript';
+      updateSettingsForSource('localSettings', {
+        defaultView
+      });
       setSettingsData(prev_17 => ({
         ...prev_17,
         defaultView
@@ -930,7 +940,15 @@ export function Config({
     // the returned ref equals current (test mode checks ref; prod writes to
     // disk but content is identical).
     saveGlobalConfig(() => initialConfig.current);
-    // localSettings support removed — restore no longer needed
+    // Settings files: restore each key Config may have touched. undefined
+    // deletes the key (updateSettingsForSource customizer at settings.ts:368).
+    const il = initialLocalSettings;
+    updateSettingsForSource('localSettings', {
+      spinnerTipsEnabled: il?.spinnerTipsEnabled,
+      prefersReducedMotion: il?.prefersReducedMotion,
+      defaultView: il?.defaultView,
+      outputStyle: il?.outputStyle
+    });
     const iu = initialUserSettings;
     updateSettingsForSource('userSettings', {
       alwaysThinkingEnabled: iu?.alwaysThinkingEnabled,
@@ -1142,12 +1160,14 @@ export function Config({
         setShowSubmenu(null);
         setTabsHidden(false);
 
-        updateSettingsForSource('userSettings', {
+        // Save to local settings
+        updateSettingsForSource('localSettings', {
           outputStyle: style
         });
         void logEvent('tengu_output_style_changed', {
           style: (style ?? DEFAULT_OUTPUT_STYLE_NAME) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
           source: 'config_panel' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+          settings_source: 'localSettings' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
         });
       }} onCancel={() => {
         setShowSubmenu(null);

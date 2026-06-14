@@ -234,6 +234,21 @@ export async function prepareCommandContext(
 /**
  * Extracts result text from agent messages.
  */
+export function extractResultText(
+  agentMessages: Message[],
+  defaultText = 'Execution completed',
+): string {
+  const lastAssistantMessage = getLastAssistantMessage(agentMessages)
+  if (!lastAssistantMessage) return defaultText
+
+  const textContent = extractTextContent(
+    lastAssistantMessage.message.content,
+    '\n',
+  )
+
+  return textContent || defaultText
+}
+
 /**
  * Options for creating a subagent context.
  *

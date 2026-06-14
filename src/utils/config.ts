@@ -701,6 +701,10 @@ export const GLOBAL_CONFIG_KEYS = [
 
 export type GlobalConfigKey = (typeof GLOBAL_CONFIG_KEYS)[number]
 
+export function isGlobalConfigKey(key: string): key is GlobalConfigKey {
+  return GLOBAL_CONFIG_KEYS.includes(key as GlobalConfigKey)
+}
+
 export const PROJECT_CONFIG_KEYS = [
   'allowedTools',
   'hasTrustDialogAccepted',

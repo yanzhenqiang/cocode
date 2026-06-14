@@ -185,6 +185,13 @@ async function getWatchTargets(): Promise<{
   const dirsWithExistingFiles = new Set<string>()
 
   for (const source of SETTING_SOURCES) {
+    // Skip flagSettings - they're provided via CLI and won't change during the session.
+    // Additionally, they may be temp files in $TMPDIR which can contain special files
+    // (FIFOs, sockets) that cause the file watcher to hang or error.
+    // See: https://github.com/anthropics/claude-code/issues/16469
+    if (source === 'flagSettings') {
+      continue
+    }
     const path = getSettingsFilePathForSource(source)
     if (!path) {
       continue
@@ -224,7 +231,7 @@ async function getWatchTargets(): Promise<{
   // Also watch the managed-settings.d/ drop-in directory for policy fragments.
   // We add it as a separate watched directory so chokidar's depth:0 watches
   // its immediate children (the .json files). Any .json file inside it maps
-  // policySettings removed
+  // to the 'policySettings' source.
   let dropInDir: string | null = null
   const managedDropIn = getManagedSettingsDropInDir()
   try {
@@ -248,6 +255,10 @@ function settingSourceToConfigChangeSource(
       return 'user_settings'
     case 'projectSettings':
       return 'project_settings'
+    case 'localSettings':
+      return 'local_settings'
+    case 'flagSettings':
+    case 'policySettings':
       return 'policy_settings'
   }
 }
@@ -353,6 +364,7 @@ function getSourceForPath(path: string): SettingSource | undefined {
   // Check if the path is inside the managed-settings.d/ drop-in directory
   const dropInDir = getManagedSettingsDropInDir()
   if (normalizedPath.startsWith(dropInDir + platformPath.sep)) {
+    return 'policySettings'
   }
 
   return SETTING_SOURCES.find(
@@ -391,6 +403,7 @@ function startMdmPoll(): void {
           // Update the cache so sync readers pick up new values
           setMdmSettingsCache(current, currentHkcu)
           logForDebugging('Detected MDM settings change via poll')
+          fanOut('policySettings')
         }
       } catch (error) {
         logForDebugging(`MDM poll error: ${errorMessage(error)}`)

@@ -28,3 +28,6 @@ export function isAnalyticsDisabled(): boolean {
  * (Bedrock/Vertex/Foundry). The survey is a local UI prompt with no
  * transcript data — enterprise customers capture responses via OTEL.
  */
+export function isFeedbackSurveyDisabled(): boolean {
+  return process.env.NODE_ENV === 'test' || isTelemetryDisabled()
+}

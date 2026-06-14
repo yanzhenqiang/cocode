@@ -54,6 +54,9 @@ export type PermissionBehavior = 'allow' | 'deny' | 'ask'
 export type PermissionRuleSource =
   | 'userSettings'
   | 'projectSettings'
+  | 'localSettings'
+  | 'flagSettings'
+  | 'policySettings'
   | 'cliArg'
   | 'command'
   | 'session'
@@ -85,6 +88,7 @@ export type PermissionRule = {
 export type PermissionUpdateDestination =
   | 'userSettings'
   | 'projectSettings'
+  | 'localSettings'
   | 'session'
   | 'cliArg'
 
