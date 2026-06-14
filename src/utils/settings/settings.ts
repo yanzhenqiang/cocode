@@ -237,8 +237,7 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
     case 'userSettings':
       return resolve(getClaudeConfigHomeDir())
     case 'policySettings':
-    case 'projectSettings':
-    case 'localSettings': {
+    case 'projectSettings': {
       return resolve(getOriginalCwd())
     }
     case 'flagSettings': {
@@ -275,8 +274,7 @@ export function getSettingsFilePathForSource(
         getSettingsRootPathForSource(source),
         getUserSettingsFilePath(),
       )
-    case 'projectSettings':
-    case 'localSettings': {
+    case 'projectSettings': {
       return join(
         getSettingsRootPathForSource(source),
         getRelativeSettingsFilePathForSource(source),
@@ -291,14 +289,9 @@ export function getSettingsFilePathForSource(
 }
 
 export function getRelativeSettingsFilePathForSource(
-  source: 'projectSettings' | 'localSettings',
+  source: 'projectSettings',
 ): string {
-  switch (source) {
-    case 'projectSettings':
-      return '.cocode/settings.json'
-    case 'localSettings':
-      return '.cocode/settings.local.json'
-  }
+  return '.cocode/settings.json'
 }
 
 export function getSettingsForSource(
@@ -473,14 +466,6 @@ export function updateSettingsForSource(
 
     // Invalidate the session cache since settings have been updated
     resetSettingsCache()
-
-    if (source === 'localSettings') {
-      // Okay to add to gitignore async without awaiting
-      void addFileGlobRuleToGitignore(
-        getRelativeSettingsFilePathForSource('localSettings'),
-        getOriginalCwd(),
-      )
-    }
   } catch (e) {
     const error = new Error(
       `Failed to read raw settings from ${filePath}: ${e}`,
@@ -834,7 +819,6 @@ export function getSettingsWithErrors(): SettingsWithErrors {
 export function hasSkipDangerousModePermissionPrompt(): boolean {
   return !!(
     getSettingsForSource('userSettings')?.skipDangerousModePermissionPrompt ||
-    getSettingsForSource('localSettings')?.skipDangerousModePermissionPrompt ||
     getSettingsForSource('flagSettings')?.skipDangerousModePermissionPrompt ||
     getSettingsForSource('policySettings')?.skipDangerousModePermissionPrompt
   )
@@ -848,8 +832,6 @@ export function hasSkipDangerousModePermissionPrompt(): boolean {
 export function hasAllowBypassPermissionsMode(): boolean {
   return !!(
     getSettingsForSource('userSettings')?.permissions
-      ?.allowBypassPermissionsMode ||
-    getSettingsForSource('localSettings')?.permissions
       ?.allowBypassPermissionsMode ||
     getSettingsForSource('flagSettings')?.permissions
       ?.allowBypassPermissionsMode ||
@@ -866,14 +848,12 @@ export function hasAllowBypassPermissionsMode(): boolean {
 export function hasAutoModeOptIn(): boolean {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
     const user = getSettingsForSource('userSettings')?.skipAutoPermissionPrompt
-    const local =
-      getSettingsForSource('localSettings')?.skipAutoPermissionPrompt
     const flag = getSettingsForSource('flagSettings')?.skipAutoPermissionPrompt
     const policy =
       getSettingsForSource('policySettings')?.skipAutoPermissionPrompt
-    const result = !!(user || local || flag || policy)
+    const result = !!(user || flag || policy)
     logForDebugging(
-      `[auto-mode] hasAutoModeOptIn=${result} skipAutoPermissionPrompt: user=${user} local=${local} flag=${flag} policy=${policy}`,
+      `[auto-mode] hasAutoModeOptIn=${result} skipAutoPermissionPrompt: user=${user} flag=${flag} policy=${policy}`,
     )
     return result
   }
@@ -890,8 +870,7 @@ export function getUseAutoModeDuringPlan(): boolean {
     return (
       getSettingsForSource('policySettings')?.useAutoModeDuringPlan !== false &&
       getSettingsForSource('flagSettings')?.useAutoModeDuringPlan !== false &&
-      getSettingsForSource('userSettings')?.useAutoModeDuringPlan !== false &&
-      getSettingsForSource('localSettings')?.useAutoModeDuringPlan !== false
+      getSettingsForSource('userSettings')?.useAutoModeDuringPlan !== false
     )
   }
   return true
@@ -920,7 +899,6 @@ export function getAutoModeConfig():
 
     for (const source of [
       'userSettings',
-      'localSettings',
       'flagSettings',
       'policySettings',
     ] as const) {
