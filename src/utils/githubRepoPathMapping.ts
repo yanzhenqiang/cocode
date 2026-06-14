@@ -3,7 +3,7 @@ import { getOriginalCwd } from '../bootstrap/state.js'
 import { getGlobalConfig, saveGlobalConfig } from './config.js'
 import { logForDebugging } from './debug.js'
 import {
-  detectCurrentRepository,
+
   parseGitHubRepository,
 } from './detectRepository.js'
 import { pathExists } from './file.js'
@@ -22,7 +22,7 @@ import { findGitRoot } from './git.js'
  */
 export async function updateGithubRepoPathMapping(): Promise<void> {
   try {
-    const repo = await detectCurrentRepository()
+
     if (!repo) {
       logForDebugging(
         'Not in a GitHub repository, skipping path mapping update',

@@ -14,16 +14,6 @@ export function clearRepositoryCaches(): void {
   repositoryWithHostCache.clear()
 }
 
-export async function detectCurrentRepository(): Promise<string | null> {
-  const result = await detectCurrentRepositoryWithHost()
-  if (!result) return null
-  // Only return results for github.com to avoid breaking downstream consumers
-  // that assume the result is a github.com repository.
-  // Use detectCurrentRepositoryWithHost() for GHE support.
-  if (result.host !== 'github.com') return null
-  return `${result.owner}/${result.name}`
-}
-
 /**
  * Like detectCurrentRepository, but also returns the host (e.g. "github.com"
  * or a GHE hostname). Callers that need to construct URLs against a specific

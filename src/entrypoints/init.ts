@@ -5,7 +5,6 @@ import memoize from 'lodash-es/memoize.js'
 import { registerCleanup } from '../utils/cleanupRegistry.js'
 import { enableConfigs} from '../utils/config.js'
 import { logForDebugging } from '../utils/debug.js'
-import { detectCurrentRepository } from '../utils/detectRepository.js'
 import { logForDiagnosticsNoPII } from '../utils/diagLogs.js'
 import { isEnvTruthy } from '../utils/envUtils.js'
 import { ConfigParseError, errorMessage } from '../utils/errors.js'
@@ -69,7 +68,7 @@ export const init = memoize(async (): Promise<void> => {
     profileCheckpoint('init_after_jetbrains_detection')
 
     // Detect GitHub repository asynchronously (populates cache for gitDiff PR linking)
-    void detectCurrentRepository()
+
 
     profileCheckpoint('init_after_policy_limits_check')
 
