@@ -84,7 +84,7 @@ export async function initialize(): Promise<void> {
   if (initialized || disposed) return
   initialized = true
 
-  // MDM poll removed (policySettings is no longer supported)
+  // MDM poll removed (policySettings no longer supported)
 
   // Register cleanup to properly dispose during graceful shutdown
   registerCleanup(dispose)
