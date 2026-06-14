@@ -84,8 +84,7 @@ export async function initialize(): Promise<void> {
   if (initialized || disposed) return
   initialized = true
 
-  // Start MDM poll for registry/plist changes (independent of filesystem watching)
-  startMdmPoll()
+  // MDM poll removed (policySettings is no longer supported)
 
   // Register cleanup to properly dispose during graceful shutdown
   registerCleanup(dispose)
