@@ -25,21 +25,6 @@ export type AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED = never
  * Strip `_PROTO_*` keys from a payload.
  * No-op in this stub — returns the input unchanged when no _PROTO_ keys present.
  */
-export function stripProtoFields<V>(
-	metadata: Record<string, V>,
-): Record<string, V> {
-	// Return a copy with _PROTO_ keys removed (no-op if none present)
-	const hasProtoKey = Object.keys(metadata).some((k) => k.startsWith('_PROTO_'))
-	if (!hasProtoKey) return metadata
-	const result: Record<string, V> = { ...metadata }
-	for (const key of Object.keys(result)) {
-		if (key.startsWith('_PROTO_')) {
-			delete result[key]
-		}
-	}
-	return result
-}
-
 /**
  * Analytics sink interface — no consumers in the no-op build,
  * but kept for type compatibility.
@@ -145,9 +130,3 @@ export function getFileExtensionsFromBashCommand(
 }
 
 /** No-op: telemetry is disabled. */
-export function getMcpToolAnalyticsMetadata(
-	_mcpInfo: unknown,
-	_toolName: string,
-): { serverName: undefined; mcpToolName: undefined } {
-	return { serverName: undefined, mcpToolName: undefined }
-}
