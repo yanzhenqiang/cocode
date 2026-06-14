@@ -6,7 +6,6 @@ import {
   logEvent,
 } from 'src/services/analytics/index.js'
 import { getCwd } from 'src/utils/cwd.js'
-import { checkForReleaseNotes } from 'src/utils/releaseNotes.js'
 import { setCwd } from 'src/utils/Shell.js'
 import { initSinks } from 'src/utils/sinks.js'
 import {
@@ -147,13 +146,7 @@ export async function setup(
   void prefetchApiKeyFromApiKeyHelperIfSafe()
 
 
-  // Pre-fetch data for Logo v2 - await to ensure it's ready before logo renders.
-  const { hasReleaseNotes } = await checkForReleaseNotes(
-    getGlobalConfig().lastReleaseNotesSeen,
-  )
-  if (hasReleaseNotes) {
-    await getRecentActivity()
-  }
+  // checkForReleaseNotes removed
 
   // If permission mode is set to bypass, verify we're in a safe environment
   if (

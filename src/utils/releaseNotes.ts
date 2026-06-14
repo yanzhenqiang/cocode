@@ -514,34 +514,6 @@ export function getAllReleaseNotes(
  * @param currentVersion The current application version, defaults to MACRO.VERSION
  * @returns An object with hasReleaseNotes and the releaseNotes content
  */
-export async function checkForReleaseNotes(
-  lastSeenVersion: string | null | undefined,
-  currentVersion: string = publicBuildVersion,
-): Promise<{ hasReleaseNotes: boolean; releaseNotes: string[] }> {
-  // For Ant builds, use VERSION_CHANGELOG bundled at build time
-
-  // Ensure the in-memory cache is populated for subsequent sync reads
-  const cachedChangelog = await getStoredChangelog()
-
-  // If the version has changed or we don't have a cached changelog, fetch a new one
-  // This happens in the background and doesn't block the UI
-  if (lastSeenVersion !== currentVersion || !cachedChangelog) {
-    fetchAndStoreChangelog().catch(error => logError(toError(error)))
-  }
-
-  const releaseNotes = getRecentReleaseNotes(
-    currentVersion,
-    lastSeenVersion,
-    cachedChangelog,
-  )
-  const hasReleaseNotes = releaseNotes.length > 0
-
-  return {
-    hasReleaseNotes,
-    releaseNotes,
-  }
-}
-
 /**
  * Synchronous variant of checkForReleaseNotes for React render paths.
  * Reads only from the in-memory cache populated by the async version.
