@@ -43,10 +43,16 @@ tmux new-session -d -s "$SESSION_NAME" \
   -e "AGENT_ID=$SESSION_NAME" \
   -e "AGENT_WORKSPACE=$AGENT_DIR" \
   -e "TMPDIR=$AGENT_DIR/tmp" \
-  "cd '$HOST_DIR' && exec bash"
+  "cd '$AGENT_DIR' && exec bash"
 
 # Create tmp dir inside agent workspace
 mkdir -p "$AGENT_DIR/tmp"
+
+# Create per-agent project settings so the subagent auto-approves Bash tool
+# calls without interactive permission prompts. This is scoped to the agent's
+# own workspace and does not pollute the host project's settings.
+mkdir -p "$AGENT_DIR/.cocode"
+printf '%s\n' '{"permissions":{"allow":["Bash(*)"]}}' > "$AGENT_DIR/.cocode/settings.json"
 
 # Start cocode inside the bash session
 sleep 2

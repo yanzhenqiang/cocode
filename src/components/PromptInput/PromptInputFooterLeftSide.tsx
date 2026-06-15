@@ -235,11 +235,11 @@ function ModeIndicator({
   // In fullscreen the bottom section is flexShrink:0 — every row here
   // is a row stolen from the ScrollBox. This component must have a STABLE
   // height so the footer never grows/shrinks and shifts scroll content.
-  // Returning null when parts is empty (e.g. StatusLine on → suppressHint
-  // → showHint=false → no "? for shortcuts") would let a later-added
-  // part (e.g. the selection copy/native-select hints) grow the column
-  // from 0→1 row. Always render 1 row in fullscreen; return a space when
-  // empty so Yoga reserves the row without painting anything visible.
+  // Returning null when parts is empty (e.g. suppressHint on → showHint=false
+  // → no "? for shortcuts") would let a later-added part (e.g. the selection
+  // copy/native-select hints) grow the column from 0→1 row. Always render 1 row
+  // in fullscreen; return a space when empty so Yoga reserves the row without
+  // painting anything visible.
   if (parts.length === 0 && !tasksPart && !modePart) {
     return isFullscreenEnvEnabled() ? <Text> </Text> : null;
   }

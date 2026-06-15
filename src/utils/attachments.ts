@@ -287,7 +287,7 @@ export type AsyncHookResponseAttachment = {
   type: 'async_hook_response'
   processId: string
   hookName: string
-  hookEvent: HookEvent | 'StatusLine' | 'FileSuggestion'
+  hookEvent: HookEvent | 'FileSuggestion'
   toolName?: string
   response: SyncHookJSONOutput
   stdout: string

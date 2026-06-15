@@ -5,7 +5,6 @@ import { registerExploreSkill } from './explore.js'
 import { registerGuideSkill } from './guide.js'
 import { registerKeybindingsSkill } from './keybindings.js'
 import { registerPlanSkill } from './plan.js'
-import { registerStatuslineSkill } from './statusline.js'
 import { registerUpdateConfigSkill } from './updateConfig.js'
 
 /**
@@ -17,7 +16,6 @@ export function initBundledSkills(): void {
   registerExploreSkill()
   registerPlanSkill()
   registerGuideSkill()
-  registerStatuslineSkill()
   registerUpdateConfigSkill()
   registerKeybindingsSkill()
   registerDebugSkill()

@@ -459,11 +459,11 @@ export const SettingsSchema = lazySchema(() =>
         })
         .optional()
         .describe('Git worktree configuration for --worktree flag.'),
-      // Whether to disable all hooks and statusLine
+      // Whether to disable all hooks
       disableAllHooks: z
         .boolean()
         .optional()
-        .describe('Disable all hooks and statusLine execution'),
+        .describe('Disable all hooks execution'),
       // Which shell backs input-box `!` (see docs/design/ps-shell-selection.md §4.2)
       defaultShell: z
         .enum(['bash'])
@@ -550,15 +550,6 @@ export const SettingsSchema = lazySchema(() =>
             'Composes with strictKnownMarketplaces for end-to-end admin control — plugins gated by ' +
             'marketplace allowlist, everything else blocked here.',
         ),
-      // Status line for custom status line display
-      statusLine: z
-        .object({
-          type: z.literal('command'),
-          command: z.string(),
-          padding: z.number().optional(),
-        })
-        .optional()
-        .describe('Custom status line display configuration'),
       // Enabled plugins using marketplace-first format
       enabledPlugins: z
         .record(

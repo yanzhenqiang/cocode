@@ -90,7 +90,6 @@ Terse command-style prompts produce shallow, generic work.
 
 <example_agent_descriptions>
 "claude-code-guide": use this agent when the user asks how Claude Code works or how to use its features
-"statusline-setup": use this agent to configure the user's Claude Code status line setting
 </example_agent_descriptions>
 
 <example>
@@ -99,14 +98,6 @@ user: "How do I configure Claude Code hooks?"
 This is a Claude Code usage question, so use the claude-code-guide agent
 </commentary>
 assistant: Uses the ${AGENT_TOOL_NAME} tool to launch the claude-code-guide agent
-</example>
-
-<example>
-user: "Set up my Claude Code status line"
-<commentary>
-This matches the statusline-setup agent, so use it to configure the setting
-</commentary>
-assistant: "I'm going to use the ${AGENT_TOOL_NAME} tool to launch the statusline-setup agent"
 </example>
 `
 

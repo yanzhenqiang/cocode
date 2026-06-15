@@ -28,7 +28,7 @@ const LEVEL_ORDER: Record<DebugLogLevel, number> = {
 /**
  * Minimum log level to include in debug output. Defaults to 'debug', which
  * filters out 'verbose' messages. Set CLAUDE_CODE_DEBUG_LOG_LEVEL=verbose to
- * include high-volume diagnostics (e.g. full statusLine command, shell, cwd,
+ * include high-volume diagnostics (e.g. shell command, cwd,
  * stdout/stderr) that would otherwise drown out useful debug output.
  */
 export const getMinDebugLogLevel = memoize((): DebugLogLevel => {

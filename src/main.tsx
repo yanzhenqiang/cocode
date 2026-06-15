@@ -6,7 +6,6 @@
 import { feature } from 'bun:bundle';
 import { Command as CommanderCommand, InvalidArgumentError, Option } from '@commander-js/extra-typings';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
 import mapValues from 'lodash-es/mapValues.js';
 import uniqBy from 'lodash-es/uniqBy.js';
 import React from 'react';
@@ -32,7 +31,7 @@ import { getBaseRenderOptions } from './utils/renderOptions.js';
 import { getSessionIngressAuthToken } from './utils/sessionIngressAuth.js';
 import { settingsChangeDetector } from './utils/settings/changeDetector.js';
 import { skillChangeDetector } from './utils/skills/skillChangeDetector.js';
-import { jsonParse, writeFileSync_DEPRECATED } from './utils/slowOperations.js';
+import { jsonParse } from './utils/slowOperations.js';
 import { initializeWarningHandler } from './utils/warningHandler.js';
 
 // Lazy require to avoid circular dependency: teammate.ts -> AppState.tsx -> ... -> main.tsx
@@ -76,10 +75,8 @@ import { checkAndDisableBypassPermissions, getAutoModeEnabledStateIfCached, init
 import { countFilesRoundedRg } from './utils/ripgrep.js';
 import { processSessionStartHooks, processSetupHooks } from './utils/sessionStart.js';
 import { getInitialSettings, getSettingsForSource, getSettingsWithErrors } from './utils/settings/settings.js';
-import { resetSettingsCache } from './utils/settings/settingsCache.js';
 import type { ValidationError } from './utils/settings/validation.js';
 import { TASK_STATUSES } from './utils/tasks.js';
-import { generateTempFilePath } from './utils/tempfile.js';
 import { validateUuid } from './utils/uuid.js';
 // Plugin startup checks are now handled non-blockingly in REPL.tsx
 
@@ -87,13 +84,12 @@ import { clearServerCache } from 'src/services/mcp/client.js';
 import { areMcpConfigsAllowedWithEnterpriseMcpConfig, doesEnterpriseMcpConfigExist, filterMcpServersByPolicy, getClaudeCodeMcpConfigs, parseMcpConfig, parseMcpConfigFromFilePath } from 'src/services/mcp/config.js';
 import { logContextMetrics } from 'src/utils/api.js';
 import { registerCleanup } from 'src/utils/cleanupRegistry.js';
-import { eagerParseCliFlag } from 'src/utils/cliArgs.js';
 import { createEmptyAttributionState } from 'src/utils/commitAttribution.js';
 import { countConcurrentSessions, registerSession, updateSessionName } from 'src/utils/concurrentSessions.js';
 import { getCwd } from 'src/utils/cwd.js';
 import { logForDebugging } from 'src/utils/debug.js';
-import { errorMessage, getErrnoCode, isENOENT, toError } from 'src/utils/errors.js';
-import { getFsImplementation, safeResolvePath } from 'src/utils/fsOperations.js';
+import { errorMessage, getErrnoCode, toError } from 'src/utils/errors.js';
+import { getFsImplementation } from 'src/utils/fsOperations.js';
 import { isInteractiveSession } from 'src/utils/interactivity.js';
 import { gracefulShutdown, gracefulShutdownSync } from 'src/utils/gracefulShutdown.js';
 import { setAllHookEventsEnabled } from 'src/utils/hooks/hookEvents.js';
@@ -203,72 +199,6 @@ export function startDeferredPrefetches(): void {
 
   // Event loop stall detector — logs when the main thread is blocked >500ms
 }
-function loadSettingsFromFlag(settingsFile: string): void {
-  try {
-    const trimmedSettings = settingsFile.trim();
-    const looksLikeJson = trimmedSettings.startsWith('{') && trimmedSettings.endsWith('}');
-    let settingsPath: string;
-    if (looksLikeJson) {
-      // It's a JSON string - validate and create temp file
-      const parsedJson = safeParseJSON(trimmedSettings);
-      if (!parsedJson) {
-        process.stderr.write(chalk.red('Error: Invalid JSON provided to --settings\n'));
-        process.exit(1);
-      }
-
-      // Create a temporary file and write the JSON to it.
-      // Use a content-hash-based path instead of random UUID to avoid
-      // busting the Anthropic API prompt cache. The settings path ends up
-      // in the Bash tool's sandbox denyWithinAllow list, which is part of
-      // the tool description sent to the API. A random UUID per subprocess
-      // changes the tool description on every query() call, invalidating
-      // the cache prefix and causing a 12x input token cost penalty.
-      // The content hash ensures identical settings produce the same path
-      // across process boundaries (each SDK query() spawns a new process).
-      settingsPath = generateTempFilePath('claude-settings', '.json', {
-        contentHash: trimmedSettings
-      });
-      writeFileSync_DEPRECATED(settingsPath, trimmedSettings, 'utf8');
-    } else {
-      // It's a file path - resolve and validate by attempting to read
-      const {
-        resolvedPath: resolvedSettingsPath
-      } = safeResolvePath(getFsImplementation(), settingsFile);
-      try {
-        readFileSync(resolvedSettingsPath, 'utf8');
-      } catch (e) {
-        if (isENOENT(e)) {
-          process.stderr.write(chalk.red(`Error: Settings file not found: ${resolvedSettingsPath}\n`));
-          process.exit(1);
-        }
-        throw e;
-      }
-      settingsPath = resolvedSettingsPath;
-    }
-    setFlagSettingsPath(settingsPath);
-    resetSettingsCache();
-  } catch (error) {
-    if (error instanceof Error) {
-      logError(error);
-    }
-    process.stderr.write(chalk.red(`Error processing settings: ${errorMessage(error)}\n`));
-    process.exit(1);
-  }
-}
-/**
- * Parse and load settings flags early, before init()
- * This ensures settings are filtered from the start of initialization
- */
-function eagerLoadSettings(): void {
-
-  // Parse --settings flag early to ensure settings are loaded before init()
-  const settingsFile = eagerParseCliFlag('--settings');
-  if (settingsFile) {
-    loadSettingsFromFlag(settingsFile);
-  }
-
-
-}
 function initializeEntrypoint(): void {
   // Skip if already set (e.g., by SDK or other entrypoints)
   if (process.env.CLAUDE_CODE_ENTRYPOINT) {
@@ -332,9 +262,6 @@ export async function main() {
     return 'cli';
   })();
 
-
-  // Parse and load settings flags early, before init()
-  eagerLoadSettings();
 
   await run();
 
@@ -443,7 +370,7 @@ async function run(): Promise<CommanderCommand> {
       throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
     }
     return value;
-  })).option('--settings <file-or-json>', 'Path to a settings JSON file or a JSON string to load additional settings from').option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)')
+  })).option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)')
   // gh-33508: <paths...> (variadic) consumed everything until the next
   // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
   // `mcp` and `add` as paths, then choked on --transport as an unknown
@@ -1138,7 +1065,6 @@ const {
         resources: {},
         pluginReconnectKey: 0
       },
-      statusLineText: undefined,
       notifications: {
         current: null,
         queue: initialNotifications

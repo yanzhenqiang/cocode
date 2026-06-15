@@ -13,7 +13,7 @@ export type PendingAsyncHook = {
   processId: string
   hookId: string
   hookName: string
-  hookEvent: HookEvent | 'StatusLine' | 'FileSuggestion'
+  hookEvent: HookEvent | 'FileSuggestion'
   toolName?: string
   pluginId?: string
   startTime: number
@@ -42,7 +42,7 @@ export function registerPendingAsyncHook({
   hookId: string
   asyncResponse: AsyncHookJSONOutput
   hookName: string
-  hookEvent: HookEvent | 'StatusLine' | 'FileSuggestion'
+  hookEvent: HookEvent | 'FileSuggestion'
   command: string
   shellCommand: ShellCommand
   toolName?: string
@@ -115,7 +115,7 @@ export async function checkForAsyncHookResponses(): Promise<
     processId: string
     response: SyncHookJSONOutput
     hookName: string
-    hookEvent: HookEvent | 'StatusLine' | 'FileSuggestion'
+    hookEvent: HookEvent | 'FileSuggestion'
     toolName?: string
     pluginId?: string
     stdout: string
@@ -127,7 +127,7 @@ export async function checkForAsyncHookResponses(): Promise<
     processId: string
     response: SyncHookJSONOutput
     hookName: string
-    hookEvent: HookEvent | 'StatusLine' | 'FileSuggestion'
+    hookEvent: HookEvent | 'FileSuggestion'
     toolName?: string
     pluginId?: string
     stdout: string

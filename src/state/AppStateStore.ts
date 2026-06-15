@@ -40,7 +40,6 @@ export type AppState = DeepImmutable<{
   verbose: boolean
   mainLoopModel: ModelSetting
   mainLoopModelForSession: ModelSetting
-  statusLineText: string | undefined
   // Which footer pill is focused (arrow-key navigation below the prompt).
   toolPermissionContext: ToolPermissionContext
 }> & {
@@ -111,7 +110,6 @@ export function getDefaultAppState(): AppState {
     verbose: false,
     mainLoopModel: null, // alias, full name (as with --model or env var), or null (default)
     mainLoopModelForSession: null,
-    statusLineText: undefined,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,

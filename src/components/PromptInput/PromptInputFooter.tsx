@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { memo, type ReactNode, useMemo, useRef } from 'react';
+import { memo, type ReactNode, useMemo } from 'react';
 import { useSetPromptOverlay } from '../../context/promptOverlayContext.js';
 import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
-import { useSettings } from '../../hooks/useSettings.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { Box, Text } from '../../ink.js';
 import type { MCPServerConnection } from '../../services/mcp/types.js';
@@ -12,8 +11,7 @@ import type { Message } from '../../types/message.js';
 import type { PromptInputMode } from '../../types/textInputTypes.js';
 import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
 import { CoordinatorTaskPanel, useCoordinatorTaskCount } from '../CoordinatorAgentStatus.js';
-import { getLastAssistantMessageId, StatusLine, statusLineShouldDisplay } from '../StatusLine.js';
-import { Notifications } from './Notifications.js';
+import { Notifications } from './Notifications.js'
 import { PromptInputFooterLeftSide } from './PromptInputFooterLeftSide.js';
 import { PromptInputFooterSuggestions, type SuggestionItem } from './PromptInputFooterSuggestions.js';
 import { PromptInputHelpMenu } from './PromptInputHelpMenu.js';
@@ -59,7 +57,6 @@ function PromptInputFooter({
   suppressHint: suppressHintFromProps,
   isLoading,
   tasksSelected,
-  teamsSelected,
   tmuxSelected,
   mcpClients,
   isPasting = false,
@@ -71,18 +68,14 @@ function PromptInputFooter({
   historyFailedMatch,
   onOpenTasksDialog
 }: Props): ReactNode {
-  const settings = useSettings();
   const {
     columns,
     rows
   } = useTerminalSize();
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
-  const lastAssistantMessageId = useMemo(() => getLastAssistantMessageId(messages), [messages]);
   const isNarrow = columns < 80;
   // In fullscreen the bottom slot is flexShrink:0, so every row here is a row
-  // stolen from the ScrollBox. Drop the optional StatusLine first. Non-fullscreen
-  // has terminal scrollback to absorb overflow, so we never hide StatusLine there.
+  // stolen from the ScrollBox. Non-fullscreen has terminal scrollback to absorb
+  // overflow, so we never hide content there.
   const isFullscreen = isFullscreenEnvEnabled();
   const isShort = isFullscreen && rows < 24;
 
@@ -95,8 +88,8 @@ function PromptInputFooter({
   const coordinatorTaskIndex = -1;
   const pillSelected = tasksSelected && (coordinatorTaskCount === 0 || coordinatorTaskIndex < 0);
 
-  // Hide `? for shortcuts` if the user has a custom status line, or during ctrl-r
-  const suppressHint = suppressHintFromProps || statusLineShouldDisplay(settings) || isSearching;
+  // Hide `? for shortcuts` during ctrl-r
+  const suppressHint = suppressHintFromProps || isSearching;
   // Fullscreen: portal data to FullscreenLayout — see promptOverlayContext.tsx
   const overlayData = useMemo(() => isFullscreen && suggestions.length ? {
     suggestions,
@@ -115,7 +108,6 @@ function PromptInputFooter({
   return <>
       <Box flexDirection={isNarrow ? 'column' : 'row'} justifyContent={isNarrow ? 'flex-start' : 'space-between'} paddingX={2} gap={isNarrow ? 0 : 1}>
         <Box flexDirection="column" flexShrink={isNarrow ? 0 : 1}>
-          {mode === 'prompt' && !isShort && !exitMessage.show && !isPasting && statusLineShouldDisplay(settings) && <StatusLine messagesRef={messagesRef} lastAssistantMessageId={lastAssistantMessageId} />}
         </Box>
         <Box flexShrink={1} gap={1}>
           {isFullscreen ? null : <Notifications apiKeyStatus={apiKeyStatus} debug={debug} verbose={verbose} messages={messages} mcpClients={mcpClients} isInputWrapped={isInputWrapped} isNarrow={isNarrow} />}
