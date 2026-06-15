@@ -50,6 +50,10 @@ export function restoreWorktreeSession(_session: WorktreeSession | null): void {
   // no-op
 }
 
+export function saveWorktreeState(_session: WorktreeSession | null): void {
+  // no-op
+}
+
 export function generateTmuxSessionName(
   _repoPath: string,
   _branch: string,

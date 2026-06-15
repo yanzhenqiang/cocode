@@ -144,7 +144,7 @@ import { type IDEExtensionInstallationStatus, type IdeType } from '../utils/ide.
 
 import exit from '../commands/exit/index.js';
 import { ExitFlow } from '../components/ExitFlow.js';
-import { getCurrentWorktreeSession } from '../utils/worktree.js';
+import { getCurrentWorktreeSession, saveWorktreeState } from '../utils/worktree.js';
 import { popAllEditable, enqueue, type SetAppState, getCommandQueue, getCommandQueueLength, removeByFilter } from '../utils/messageQueueManager.js';
 import { useCommandQueue } from '../hooks/useCommandQueue.js';
 import { SessionBackgroundHint } from '../components/SessionBackgroundHint.js';
@@ -192,9 +192,22 @@ import { useMessageActions, MessageActionsKeybindings, MessageActionsBar, type M
 import { setClipboard } from '../ink/termio/osc.js';
 import type { ScrollBoxHandle } from '../ink/components/ScrollBox.js';
 import { createAttachmentMessage, getQueuedCommandAttachments } from '../utils/attachments.js';
+import { renderMessagesToPlainText } from '../utils/exportRenderer.js';
 
 // Prompt suggestion stubs (deleted module)
+const handleSpeculationAccept = async (): Promise<{ queryRequired: boolean }> => ({ queryRequired: false });
 type ActiveSpeculationState = null;
+
+type AutoRunIssueReason = 'feedback_survey_bad' | 'feedback_survey_good';
+function getAutoRunCommand(_reason: AutoRunIssueReason): string { return '/issue'; }
+function getAutoRunIssueReasonText(reason: AutoRunIssueReason): string {
+  switch (reason) {
+    case 'feedback_survey_bad': return 'You responded "Bad" to the feedback survey';
+    case 'feedback_survey_good': return 'You responded "Good" to the feedback survey';
+    default: return 'Unknown reason';
+  }
+}
+function AutoRunIssueNotification(_props: { onRun: () => void; onCancel: () => void; reason: string }): React.ReactNode { return null; }
 
 // Stable empty array for hooks that accept MCPServerConnection[] — avoids
 const HISTORY_STUB = {

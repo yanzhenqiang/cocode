@@ -25,6 +25,7 @@ import {
 import {
   getModelUsage,
   getTotalAPIDuration,
+} from './services/api/claude.js'
 import type { CanUseToolFn } from './hooks/useCanUseTool.js'
 import { loadMemoryPrompt } from './memdir/memdir.js'
 import { hasAutoMemPathOverride } from './memdir/paths.js'

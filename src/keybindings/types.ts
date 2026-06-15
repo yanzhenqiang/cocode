@@ -31,7 +31,7 @@ export type KeybindingAction =
   | 'history:next'
   | 'chat:cancel'
   | 'chat:thinkingToggle'
-  'chat:cycleMode',
+  | 'chat:cycleMode'
   | 'chat:submit'
   | 'chat:newline'
   | 'chat:imagePaste'
