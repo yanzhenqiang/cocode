@@ -35,6 +35,11 @@ export type LayoutDimensions = {
 /**
  * Determines the layout mode based on terminal width
  */
+export function getLayoutMode(columns: number): LayoutMode {
+  if (columns >= 70) return 'horizontal'
+  return 'compact'
+}
+
 /**
  * Calculates layout dimensions for the LogoV2 component
  */

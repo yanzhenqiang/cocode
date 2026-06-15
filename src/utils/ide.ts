@@ -133,6 +133,12 @@ export function getConnectedIdeName(
   return null
 }
 
+export function getIdeClientName(
+  _ideClient?: MCPServerConnection,
+): string | null {
+  return null
+}
+
 export function toIDEDisplayName(_terminal: string | null): string {
   return 'IDE'
 }

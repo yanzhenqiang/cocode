@@ -10,6 +10,7 @@ import {
   unionRect,
 } from './layout/geometry.js'
 import { BEL, ESC, SEP } from './termio/ansi.js'
+import * as warn from './warn.js'
 
 // --- Shared Pools (interning for memory efficiency) ---
 
@@ -455,6 +456,8 @@ export function createScreen(
   hyperlinkPool: HyperlinkPool,
 ): Screen {
   // Warn if dimensions are not valid integers (likely bad yoga layout output)
+  warn.ifNotInteger(width, 'createScreen width')
+  warn.ifNotInteger(height, 'createScreen height')
 
   // Ensure width and height are valid integers to prevent crashes
   if (!Number.isInteger(width) || width < 0) {

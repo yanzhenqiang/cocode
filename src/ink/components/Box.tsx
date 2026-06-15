@@ -7,6 +7,7 @@ import type { ClickEvent } from '../events/click-event.js';
 import type { FocusEvent } from '../events/focus-event.js';
 import type { KeyboardEvent } from '../events/keyboard-event.js';
 import type { Styles } from '../styles.js';
+import * as warn from '../warn.js';
 export type Props = Except<Styles, 'textWrap'> & {
   /**
    * Tab order index. Nodes with `tabIndex >= 0` participate in
@@ -102,6 +103,23 @@ function BoxInner(t0, ref: React.ForwardedRef<DOMElement>) {
     flexDirection = t3 === undefined ? "row" : t3;
     flexGrow = t4 === undefined ? 0 : t4;
     flexShrink = t5 === undefined ? 1 : t5;
+    warn.ifNotInteger(style.margin, "margin");
+    warn.ifNotInteger(style.marginX, "marginX");
+    warn.ifNotInteger(style.marginY, "marginY");
+    warn.ifNotInteger(style.marginTop, "marginTop");
+    warn.ifNotInteger(style.marginBottom, "marginBottom");
+    warn.ifNotInteger(style.marginLeft, "marginLeft");
+    warn.ifNotInteger(style.marginRight, "marginRight");
+    warn.ifNotInteger(style.padding, "padding");
+    warn.ifNotInteger(style.paddingX, "paddingX");
+    warn.ifNotInteger(style.paddingY, "paddingY");
+    warn.ifNotInteger(style.paddingTop, "paddingTop");
+    warn.ifNotInteger(style.paddingBottom, "paddingBottom");
+    warn.ifNotInteger(style.paddingLeft, "paddingLeft");
+    warn.ifNotInteger(style.paddingRight, "paddingRight");
+    warn.ifNotInteger(style.gap, "gap");
+    warn.ifNotInteger(style.columnGap, "columnGap");
+    warn.ifNotInteger(style.rowGap, "rowGap");
     $[0] = t0;
     $[1] = autoFocus;
     $[2] = children;

@@ -52,6 +52,17 @@ export function getLastKill(): string {
   return killRing[0] ?? ''
 }
 
+export function getKillRingItem(index: number): string {
+  if (killRing.length === 0) return ''
+  const normalizedIndex =
+    ((index % killRing.length) + killRing.length) % killRing.length
+  return killRing[normalizedIndex] ?? ''
+}
+
+export function getKillRingSize(): number {
+  return killRing.length
+}
+
 export function resetKillAccumulation(): void {
   lastActionWasKill = false
 }

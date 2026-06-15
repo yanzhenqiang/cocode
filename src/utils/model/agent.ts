@@ -137,3 +137,27 @@ export function getAgentModelDisplay(model: string | undefined): string {
 /**
  * Get available model options for agents
  */
+export function getAgentModelOptions(): AgentModelOption[] {
+  return [
+    {
+      value: 'sonnet',
+      label: 'Sonnet',
+      description: 'Balanced performance - best for most agents',
+    },
+    {
+      value: 'opus',
+      label: 'Opus',
+      description: 'Most capable for complex reasoning tasks',
+    },
+    {
+      value: 'haiku',
+      label: 'Haiku',
+      description: 'Fast and efficient for simple tasks',
+    },
+    {
+      value: 'inherit',
+      label: 'Inherit from parent',
+      description: 'Use the same model as the main conversation',
+    },
+  ]
+}
