@@ -21,7 +21,6 @@ import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import files from './commands/files/index.js'
 import privacySettings from './commands/privacy-settings/index.js'
-import cacheProbe from './commands/cache-probe/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import rewind from './commands/rewind/index.js'
 import btw from './commands/btw/index.js'
@@ -75,7 +74,6 @@ const COMMANDS = memoize((): Command[] => [
   btw,
   rewind,
   cacheStats,
-  cacheProbe,
   privacySettings,
   clear,
   compact,
