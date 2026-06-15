@@ -73,13 +73,7 @@ export function isAnthropicAuthEnabled(): boolean {
     return !!process.env.CLAUDE_CODE_OAUTH_TOKEN
   }
 
-  const is3P =
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_GITHUB)
+  const is3P = false
 
   // Check if user has configured an external API key source
   // This allows externally-provided API keys to work (without requiring proxy configuration)
@@ -106,9 +100,8 @@ export function isAnthropicAuthEnabled(): boolean {
     apiKeySource === 'ANTHROPIC_API_KEY' || apiKeySource === 'apiKeyHelper'
 
   // Disable Anthropic auth if:
-  // 1. Using 3rd party services (Vertex/Foundry)
-  // 2. User has an external API key (regardless of proxy configuration)
-  // 3. User has an external auth token (regardless of proxy configuration)
+  // 1. User has an external API key (regardless of proxy configuration)
+  // 2. User has an external auth token (regardless of proxy configuration)
   // this may cause issues if users have complex proxy / gateway "client-side creds" auth scenarios,
   // e.g. if they want to set X-Api-Key to a gateway key but use Anthropic OAuth for the Authorization
   // if we get reports of that, we should probably add an env var to force OAuth enablement
@@ -219,7 +212,6 @@ export function getAnthropicApiKeyWithSource(
     }
 
     if (
-      !isUsing3PServices() &&
       !apiKeyEnv &&
       !process.env.CLAUDE_CODE_OAUTH_TOKEN &&
       !process.env.CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR
@@ -229,7 +221,7 @@ export function getAnthropicApiKeyWithSource(
       )
     }
 
-    if (apiKeyEnv && !isUsing3PServices()) {
+    if (apiKeyEnv) {
       return {
         key: apiKeyEnv,
         source: 'ANTHROPIC_API_KEY',
@@ -237,7 +229,6 @@ export function getAnthropicApiKeyWithSource(
     }
 
     // OAuth token is present but this function returns API keys only
-    // Also reached when 3P provider is active — ANTHROPIC_API_KEY is ignored
     return {
       key: null,
       source: 'none',
@@ -945,22 +936,6 @@ export function hasProfileScope(): boolean {
 }
 
 export function is1PApiCustomer(): boolean {
-  // 1P API customers are users who are NOT:
-  // 1. Claude.ai subscribers (Max, Pro, Enterprise, Team)
-  // 2. Vertex AI users
-  // 3. AWS Bedrock users
-  // 4. Foundry users
-
-  // Exclude Vertex, Bedrock, and Foundry customers
-  if (
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
-  ) {
-    return false
-  }
-
-  // Everyone else is an API customer (OAuth API customers, direct API key users, etc.)
   return true
 }
 
@@ -1081,15 +1056,7 @@ export function getSubscriptionName(): string {
 
 /** Check if using third-party services (Bedrock or Vertex or Foundry or OpenAI-compatible or Gemini or GitHub Models) */
 export function isUsing3PServices(): boolean {
-  return !!(
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_GITHUB)
-  )
+  return false
 }
 
 /**

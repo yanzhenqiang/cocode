@@ -179,9 +179,6 @@ export function startDeferredPrefetches(): void {
   void initUser();
   void getUserContext();
   prefetchSystemContextIfSafe();
-  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) && !isEnvTruthy(process.env.CLAUDE_CODE_SKIP_VERTEX_AUTH)) {
-    void prefetchGcpCredentialsIfSafe();
-  }
   const { signal: countFilesSignal, cleanup: cleanupCountFilesSignal } =
     createCombinedAbortSignal(undefined, { timeoutMs: 3000 });
   void countFilesRoundedRg(getCwd(), countFilesSignal, []).finally(

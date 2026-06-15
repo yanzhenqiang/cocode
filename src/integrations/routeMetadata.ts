@@ -348,46 +348,11 @@ export function resolveRouteIdFromBaseUrl(
 }
 
 export function resolveActiveRouteIdFromEnv(
-  processEnv: NodeJS.ProcessEnv = process.env,
-  options?: {
+  _processEnv: NodeJS.ProcessEnv = process.env,
+  _options?: {
     activeProfileProvider?: string
   },
 ): string | null {
-  if (isEnvTruthy(processEnv.CLAUDE_CODE_USE_OPENAI)) {
-    const baseUrl =
-      processEnv.OPENAI_BASE_URL ?? processEnv.OPENAI_API_BASE
-    const matchedRoute = resolveRouteIdFromBaseUrl(baseUrl)
-
-    if (
-      processEnv.CLAUDE_CODE_PROVIDER_PROFILE_ENV_APPLIED === '1' &&
-      options?.activeProfileProvider
-    ) {
-      const route = resolveProfileRoute(options.activeProfileProvider)
-      if (
-        route.routeId !== 'unknown-fallback' &&
-        route.routeId !== 'openai' &&
-        route.routeId !== 'custom'
-      ) {
-        return route.routeId
-      }
-    }
-
-    if (matchedRoute) {
-      return matchedRoute
-    }
-
-    const normalizedBaseUrl = normalizeComparableBaseUrl(baseUrl)
-    const openAIDefaultBaseUrl = normalizeComparableBaseUrl(
-      getRouteDefaultBaseUrl('openai'),
-    )
-
-    if (!normalizedBaseUrl || normalizedBaseUrl === openAIDefaultBaseUrl) {
-      return 'openai'
-    }
-
-    return 'custom'
-  }
-
   return 'anthropic'
 }
 

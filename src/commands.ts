@@ -39,7 +39,6 @@ import {
 import { getBundledSkills } from './skills/bundledSkills.js'
 // plugin commands removed
 import memoize from 'lodash-es/memoize.js'
-import { isUsing3PServices } from './utils/auth.js'
 import { isFirstPartyAnthropicBaseUrl } from './utils/model/providers.js'
 import exit from './commands/exit/index.js'
 import model from './commands/model/index.js'
@@ -162,14 +161,8 @@ export function meetsAvailabilityRequirement(cmd: Command | null | undefined): b
       case 'claude-ai':
         break
       case 'console':
-        // Console API key user = direct 1P API customer (not 3P, not claude.ai).
-        // Excludes 3P (Bedrock/Vertex/Foundry) who don't set ANTHROPIC_BASE_URL
-        // and gateway users who proxy through a custom base URL.
-        if (
-          !isUsing3PServices() &&
-          isFirstPartyAnthropicBaseUrl()
-        )
-          return true
+        // Console API key user = direct 1P API customer.
+        if (isFirstPartyAnthropicBaseUrl()) return true
         break
       default: {
         const _exhaustive: never = a

@@ -628,17 +628,7 @@ function isGoogleAuthLibraryCredentialError(error: unknown): boolean {
   )
 }
 
-function isVertexAuthError(error: unknown): boolean {
-  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX)) {
-    // SDK-level: google-auth-library fails in prepareOptions() before the HTTP call
-    if (isGoogleAuthLibraryCredentialError(error)) {
-      return true
-    }
-    // Server-side: Vertex returns 401 for expired/invalid tokens
-    if (error instanceof APIError && error.status === 401) {
-      return true
-    }
-  }
+function isVertexAuthError(_error: unknown): boolean {
   return false
 }
 

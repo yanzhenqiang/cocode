@@ -109,24 +109,8 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
   } else {
     const settings = getInitialSettings() || {}
     const setting = normalizeModelSetting(settings.model)
-    // Read the model env var that matches the active provider to prevent
-    // cross-provider leaks (e.g. ANTHROPIC_MODEL sent to the OpenAI API).
-    //
-    // All OpenAI-shim providers (openai, github, nvidia-nim, minimax)
-    // set CLAUDE_CODE_USE_OPENAI=1 + OPENAI_MODEL via
-    // applyProviderProfileToProcessEnv.
     const provider = getAPIProvider()
-    const isOpenAIShimProvider =
-      provider === 'openai' ||
-      provider === 'github' ||
-      provider === 'nvidia-nim' ||
-      provider === 'minimax' ||
-      provider === 'xiaomi-mimo' ||
-      provider === 'xai'
     specifiedModel =
-      (provider === 'gemini' ? process.env.GEMINI_MODEL : undefined) ||
-      (provider === 'mistral' ? process.env.MISTRAL_MODEL : undefined) ||
-      (isOpenAIShimProvider ? process.env.OPENAI_MODEL : undefined) ||
       (provider === 'firstParty' ? process.env.ANTHROPIC_MODEL : undefined) ||
       setting ||
       undefined
