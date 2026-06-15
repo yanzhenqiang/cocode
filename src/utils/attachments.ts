@@ -3323,12 +3323,6 @@ export function getCompactionReminderAttachment(
 /**
  * Context-efficiency nudge (currently disabled).
  */
-export function getContextEfficiencyAttachment(
-  _messages: Message[],
-): Attachment[] {
-  return []
-}
-
 
 function isFileReadDenied(
   filePath: string,

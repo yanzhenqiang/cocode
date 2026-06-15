@@ -391,12 +391,6 @@ async function getFilesUsingGit(
  * @param files An array of file paths
  * @returns An array of unique directory names with a trailing separator
  */
-export function getDirectoryNames(files: string[]): string[] {
-  const directoryNames = new Set<string>()
-  collectDirectoryNames(files, 0, files.length, directoryNames)
-  return [...directoryNames].map(d => d + path.sep)
-}
-
 /**
  * Async variant: yields every ~10k files so 270k+ file lists don't block
  * the main thread for >10ms at a time.

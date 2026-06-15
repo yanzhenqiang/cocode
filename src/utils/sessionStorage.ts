@@ -2817,10 +2817,6 @@ export function getCurrentSessionTitle(
   return undefined
 }
 
-export function getCurrentSessionAgentColor(): string | undefined {
-  return getProject().currentSessionAgentColor
-}
-
 /**
  * Restore session metadata into in-memory cache on resume.
  * Populates the cache so metadata is available for display (e.g. the

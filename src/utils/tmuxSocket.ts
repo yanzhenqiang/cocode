@@ -99,10 +99,6 @@ export function getClaudeSocketName(): string {
  * Gets the socket path if the socket has been initialized.
  * Returns null if not yet initialized.
  */
-export function getClaudeSocketPath(): string | null {
-  return socketPath
-}
-
 /**
  * Sets socket info after initialization.
  * Called after the tmux session is created.

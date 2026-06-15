@@ -194,38 +194,14 @@ export const CURSOR_RESTORE = csi('u')
 // Erase generators
 
 /** Erase from cursor to end of line (CSI K) */
-export function eraseToEndOfLine(): string {
-  return csi('K')
-}
-
 /** Erase from cursor to start of line (CSI 1 K) */
-export function eraseToStartOfLine(): string {
-  return csi(1, 'K')
-}
-
 /** Erase entire line (CSI 2 K) */
-export function eraseLine(): string {
-  return csi(2, 'K')
-}
-
 /** Erase entire line - constant form */
 export const ERASE_LINE = csi(2, 'K')
 
 /** Erase from cursor to end of screen (CSI J) */
-export function eraseToEndOfScreen(): string {
-  return csi('J')
-}
-
 /** Erase from cursor to start of screen (CSI 1 J) */
-export function eraseToStartOfScreen(): string {
-  return csi(1, 'J')
-}
-
 /** Erase entire screen (CSI 2 J) */
-export function eraseScreen(): string {
-  return csi(2, 'J')
-}
-
 /** Erase entire screen - constant form */
 export const ERASE_SCREEN = csi(2, 'J')
 

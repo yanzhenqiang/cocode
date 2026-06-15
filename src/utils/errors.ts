@@ -135,13 +135,6 @@ export function isENOENT(e: unknown): boolean {
  * from a caught error. Returns undefined if the error has no path.
  * Replaces the `(e as NodeJS.ErrnoException).path` cast pattern.
  */
-export function getErrnoPath(e: unknown): string | undefined {
-  if (e && typeof e === 'object' && 'path' in e && typeof e.path === 'string') {
-    return e.path
-  }
-  return undefined
-}
-
 /**
  * Extract error message + top N stack frames from an unknown error.
  * Use when the error flows to the model as a tool_result — full stack

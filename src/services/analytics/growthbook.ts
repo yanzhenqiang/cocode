@@ -77,10 +77,6 @@ export function getAllGrowthBookFeatures(): Record<string, unknown> {
 }
 
 /** Returns `{}` — no config overrides. */
-export function getGrowthBookConfigOverrides(): Record<string, unknown> {
-	return {}
-}
-
 /** No-op — nothing to override. */
 export function setGrowthBookConfigOverride(
 	_key: string,
@@ -97,13 +93,6 @@ export function getApiBaseUrlHost(): string | undefined {
 export function initializeGrowthBook(): void {}
 
 /** Returns the default value — feature flags resolve from local file or default. */
-export function getFeatureValue_DEPRECATED<T>(
-	_featureName: string,
-	defaultValue: T,
-): T {
-	return _getFlagValue(_featureName, defaultValue)
-}
-
 /** Returns the default value — feature flags resolve from local file or default. */
 export function getFeatureValue_CACHED_MAY_BE_STALE<T>(
 	_featureName: string,

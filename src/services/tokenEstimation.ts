@@ -239,10 +239,6 @@ export function getTokenizerConfig(model: string): ModelTokenizerConfig {
 /**
  * Get bytes-per-token ratio for a model.
  */
-export function getBytesPerTokenForModel(model: string): number {
-  return getTokenizerConfig(model).bytesPerToken
-}
-
 /**
  * Like {@link roughTokenCountEstimation} but uses a more accurate
  * bytes-per-token ratio when the file type is known.
