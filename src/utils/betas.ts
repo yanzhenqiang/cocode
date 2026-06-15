@@ -14,7 +14,6 @@ import {
   STRUCTURED_OUTPUTS_BETA_HEADER,
   TOOL_SEARCH_BETA_HEADER_1P,
   TOOL_SEARCH_BETA_HEADER_3P,
-  WEB_SEARCH_BETA_HEADER,
 } from '../constants/betas.js'
 import { has1mContext } from './context.js'
 import { isEnvTruthy } from './envUtils.js'
@@ -93,16 +92,6 @@ export function modelSupportsISP(model: string): boolean {
   }
   return (
     canonical.includes('claude-opus-4') || canonical.includes('claude-sonnet-4')
-  )
-}
-
-function vertexModelSupportsWebSearch(model: string): boolean {
-  const canonical = getCanonicalName(model)
-  // Web search only supported on Claude 4.0+ models on Vertex
-  return (
-    canonical.includes('claude-opus-4') ||
-    canonical.includes('claude-sonnet-4') ||
-    canonical.includes('claude-haiku-4')
   )
 }
 
@@ -269,15 +258,6 @@ export const getAllModelBetas = memoize((model: string): string[] => {
     strictToolsEnabled
   ) {
     betaHeaders.push(STRUCTURED_OUTPUTS_BETA_HEADER)
-  }
-
-  // Add web search beta for Vertex Claude 4.0+ models only
-  if (provider === 'vertex' && vertexModelSupportsWebSearch(model)) {
-    betaHeaders.push(WEB_SEARCH_BETA_HEADER)
-  }
-  // Foundry only ships models that already support Web Search
-  if (provider === 'foundry') {
-    betaHeaders.push(WEB_SEARCH_BETA_HEADER)
   }
 
   // Always send the beta header for 1P. The header is a no-op without a scope field.

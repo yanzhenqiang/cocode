@@ -13,7 +13,7 @@ import { buildTool, type ToolDef } from '../../Tool.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
 import { createUserMessage } from '../../utils/messages.js'
-import { getMainLoopModel, getSmallFastModel } from '../../utils/model/model.js'
+import { getSmallFastModel } from '../../utils/model/model.js'
 import { jsonParse, jsonStringify } from '../../utils/slowOperations.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
 import { getWebSearchPrompt, WEB_SEARCH_TOOL_NAME } from './prompt.js'
@@ -23,13 +23,6 @@ import {
   renderToolUseMessage,
   renderToolUseProgressMessage,
 } from './UI.js'
-
-import {
-  runSearch,
-  getProviderMode,
-  getAvailableProviders,
-  type ProviderOutput,
-} from './providers/index.js'
 
 const inputSchema = lazySchema(() =>
   z.strictObject({
@@ -82,69 +75,13 @@ export type { WebSearchProgress } from '../../types/tools.js'
 
 import type { WebSearchProgress } from '../../types/tools.js'
 
-// ---------------------------------------------------------------------------
-// Shared formatting: ProviderOutput → Output
-// ---------------------------------------------------------------------------
-
-function formatProviderOutput(po: ProviderOutput, query: string): Output {
-  const results: (SearchResult | string)[] = []
-
-  const snippets = po.hits
-    .filter(h => h.description)
-    .map(h => `**${h.title}** — ${h.description} (${h.url})`)
-    .join('\n')
-  if (snippets) results.push(snippets)
-
-  if (po.hits.length > 0) {
-    results.push({
-      tool_use_id: `${po.providerName}-search`,
-      content: po.hits.map(h => ({ title: h.title, url: h.url })),
-    })
-  }
-
-  if (results.length === 0) results.push('No results found.')
-
-  return {
-    query,
-    results,
-    durationSeconds: po.durationSeconds,
-  }
-}
-
-function buildEmptyAdapterResultHint(provider: string, providerName: string): string {
-  return (
-    `No results from "${providerName}" search backend for provider "${provider}". ` +
-    `The default DuckDuckGo backend is rate-limited from many networks (datacenter IPs, VPNs, repeated requests) and returns 0 results when blocked. ` +
-    `For reliable web search on this provider, set one of: ` +
-    `FIRECRAWL_API_KEY, TAVILY_API_KEY, EXA_API_KEY, JINA_API_KEY, BING_API_KEY, MOJEEK_API_KEY, LINKUP_API_KEY, YOU_API_KEY — ` +
-    `or switch to an Anthropic / Vertex / Foundry provider that supports the native web_search tool.`
-  )
-}
-
-function formatProviderOutputWithEmptyHint(
-  po: ProviderOutput,
-  query: string,
-  provider: string,
-): Output {
-  const base = formatProviderOutput(po, query)
-  // Replace the "No results found." placeholder with a diagnostic hint when
-  // we know the next layer (native Anthropic web_search) will also produce
-  // 0 silently for this provider. Hits-present case is unchanged.
-  if (po.hits.length > 0) return base
-  return {
-    ...base,
-    results: [buildEmptyAdapterResultHint(provider, po.providerName)],
-  }
-}
-
-// ---------------------------------------------------------------------------
 function makeToolSchema(input: Input): BetaWebSearchTool20250305 {
   return {
     type: 'web_search_20250305',
     name: 'web_search',
     allowed_domains: input.allowed_domains,
     blocked_domains: input.blocked_domains,
-    max_uses: 15, // Allow up to 15 searches per query for better coverage
+    max_uses: 15,
   }
 }
 
@@ -153,14 +90,6 @@ function makeOutputFromSearchResponse(
   query: string,
   durationSeconds: number,
 ): Output {
-  // The result is a sequence of these blocks:
-  // - text to start -- always?
-  // [
-  //    - server_tool_use
-  //    - web_search_tool_result
-  //    - text and citation blocks intermingled
-  //  ]+  (this block repeated for each search)
-
   const results: (SearchResult | string)[] = []
   let textAcc = ''
   let inText = true
@@ -178,34 +107,30 @@ function makeOutputFromSearchResponse(
     }
 
     if (block.type === 'web_search_tool_result') {
-      // Handle error case - content is a WebSearchToolResultError
       if (!Array.isArray(block.content)) {
         const errorMessage = `Web search error: ${block.content.error_code}`
         logError(new Error(errorMessage))
         results.push(errorMessage)
         continue
       }
-      // Success case - add results to our collection
       const hits = block.content.map(r => ({ title: r.title, url: r.url }))
       results.push({
-        tool_use_id: block.tool_use_id,
+        tool_use_id: block.tool_use_id ?? 'web-search',
         content: hits,
       })
+      continue
     }
 
     if (block.type === 'text') {
-      if (inText) {
-        textAcc += block.text
-      } else {
-        inText = true
-        textAcc = block.text
-      }
+      textAcc += block.text
     }
   }
 
-  if (textAcc.length) {
+  if (textAcc.trim().length > 0) {
     results.push(textAcc.trim())
   }
+
+  if (results.length === 0) results.push('No results found.')
 
   return {
     query,
@@ -213,71 +138,6 @@ function makeOutputFromSearchResponse(
     durationSeconds,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Helper: should we use adapter-based providers?
-// ---------------------------------------------------------------------------
-
-/**
- * Returns true for transient errors that are safe to fall through on in auto mode
- * (network failures, timeouts, HTTP 5xx). Config and guardrail errors return false.
- */
-function isTransientError(err: unknown): boolean {
-  if (!(err instanceof Error)) return true
-  const msg = err.message.toLowerCase()
-  // Guardrail / config errors — must surface
-  if (msg.includes('must use https')) return false
-  if (msg.includes('private/reserved address')) return false
-  if (msg.includes('not in the safe allowlist')) return false
-  if (msg.includes('exceeds') && msg.includes('bytes')) return false
-  if (msg.includes('not a valid url')) return false
-  if (msg.includes('is not configured')) return false
-  // Transient errors — safe to fall through
-  if (err.name === 'AbortError') return true
-  if (msg.includes('timed out')) return true
-  if (msg.includes('fetch failed') || msg.includes('econnrefused') || msg.includes('enotfound')) return true
-  if (msg.includes('returned 5')) return true // HTTP 5xx
-  // Unknown — treat as transient to preserve auto-mode fallback semantics
-  return true
-}
-
-/**
- * Returns true when we should use the adapter-based provider system.
- *
- * In auto mode: native/first-party paths take precedence.
- *   → Only falls back to adapter if no native path is available.
- * In explicit adapter modes (tavily, ddg, custom, etc.): always true.
- * In native mode: never true.
- */
-function shouldUseAdapterProvider(): boolean {
-  const mode = getProviderMode()
-  if (mode === 'native') return false
-  if (mode !== 'auto') return true // explicit adapter mode (tavily, ddg, custom, etc.)
-
-  // Auto mode: native/first-party paths take precedence over adapter
-  const provider = getAPIProvider()
-  if (provider === 'firstParty' || provider === 'vertex' || provider === 'foundry') {
-    return false
-  }
-  // No native path available — fall back to adapter
-  return getAvailableProviders().length > 0
-}
-
-/**
- * Returns true when the current provider has a working native
- * web-search fallback after an adapter failure. OpenAI shim providers
- * (moonshot, minimax, nvidia-nim, openai, github, etc.) do NOT support
- * Anthropic's web_search_20250305 tool, so falling through to the native
- * path silently produces "Did 0 searches".
- */
-function hasNativeSearchFallback(): boolean {
-  const provider = getAPIProvider()
-  return provider === 'firstParty' || provider === 'vertex' || provider === 'foundry'
-}
-
-// ---------------------------------------------------------------------------
-// Tool export
-// ---------------------------------------------------------------------------
 
 export const WebSearchTool = buildTool({
   name: WEB_SEARCH_TOOL_NAME,
@@ -296,40 +156,8 @@ export const WebSearchTool = buildTool({
     return summary ? `Searching for ${summary}` : 'Searching the web'
   },
   isEnabled() {
-    const mode = getProviderMode()
-
-    // Specific provider mode: enabled if any adapter is configured
-    if (mode !== 'auto' && mode !== 'native') {
-      return getAvailableProviders().length > 0
-    }
-
-    // Auto/native mode: check all paths
-    if (getAvailableProviders().length > 0) return true
-
     const provider = getAPIProvider()
-    const model = getMainLoopModel()
-
-    // Enable for firstParty
-    if (provider === 'firstParty') {
-      return true
-    }
-
-    // Enable for Vertex AI with supported models (Claude 4.0+)
-    if (provider === 'vertex') {
-      const supportsWebSearch =
-        model.includes('claude-opus-4') ||
-        model.includes('claude-sonnet-4') ||
-        model.includes('claude-haiku-4')
-
-      return supportsWebSearch
-    }
-
-    // Foundry only ships models that already support Web Search
-    if (provider === 'foundry') {
-      return true
-    }
-
-    return false
+    return provider === 'firstParty'
   },
   get inputSchema(): InputSchema {
     return inputSchema()
@@ -360,22 +188,12 @@ export const WebSearchTool = buildTool({
     }
   },
   async prompt() {
-    // Strip "US only" when using non-native backends
-    if (shouldUseAdapterProvider()) {
-      return getWebSearchPrompt().replace(
-        /\n\s*-\s*Web search is only available in the US/,
-        '',
-      )
-    }
     return getWebSearchPrompt()
   },
   renderToolUseMessage,
   renderToolUseProgressMessage,
   renderToolResultMessage,
   extractSearchText() {
-    // renderToolResultMessage shows only "Did N searches in Xs" chrome —
-    // the results[] content never appears on screen. Heuristic would index
-    // string entries in results[] (phantom match). Nothing to search.
     return ''
   },
   async validateInput(input) {
@@ -398,68 +216,6 @@ export const WebSearchTool = buildTool({
     return { result: true }
   },
   async call(input, context, _canUseTool, _parentMessage, onProgress) {
-    // --- Adapter-based providers (custom, firecrawl, ddg) ---
-    // runSearch handles fallback semantics based on WEB_SEARCH_PROVIDER mode:
-    //   - "auto": tries each provider, falls through on failure
-    //   - specific mode: runs one provider, throws on failure
-    if (shouldUseAdapterProvider()) {
-      const mode = getProviderMode()
-      const isExplicitAdapter = mode !== 'auto'
-      try {
-        const providerOutput = await runSearch(
-          {
-            query: input.query,
-            allowed_domains: input.allowed_domains,
-            blocked_domains: input.blocked_domains,
-          },
-          context.abortController.signal,
-        )
-        // Explicit adapter: return even 0 hits (no silent native fallback)
-        if (isExplicitAdapter || providerOutput.hits.length > 0) {
-          return { data: formatProviderOutput(providerOutput, input.query) }
-        }
-        // Auto mode with 0 hits: only fall through to native when a real
-        // native fallback exists. For openai-shim providers (minimax,
-        // moonshot, nvidia-nim, github copilot, etc.) the native path
-        // silently returns "Did 0 searches" because those providers do
-        // not support Anthropic's web_search_20250305 tool — same root
-        // cause as the catch branch below. Surface the empty result with
-        // an actionable note so users see why nothing came back.
-        if (!hasNativeSearchFallback()) {
-          return {
-            data: formatProviderOutputWithEmptyHint(
-              providerOutput,
-              input.query,
-              getAPIProvider(),
-            ),
-          }
-        }
-        // Auto mode + 0 hits + native fallback available: fall through to
-        // native (Anthropic/Vertex/Foundry) and let it try.
-      } catch (err) {
-        // Explicit adapter: throw the real error (no silent native fallback)
-        if (isExplicitAdapter) throw err
-        // Auto mode: only fall through on transient errors (network, timeout, 5xx).
-        // Config / guardrail errors (SSRF, HTTPS, bad URL, etc.) must surface.
-        if (!isTransientError(err)) throw err
-        // No viable fallback for this provider — surface the adapter error
-        // instead of falling through to a broken native path.
-        if (!hasNativeSearchFallback()) {
-          const provider = getAPIProvider()
-          const errMsg = err instanceof Error ? err.message : String(err)
-          throw new Error(
-            `Web search is unavailable for provider "${provider}". ` +
-              `The search adapter failed (${errMsg}). ` +
-              `Try switching to a provider with built-in web search (e.g. Anthropic) or try again later.`,
-          )
-        }
-        console.error(
-          `[web-search] Adapter failed, falling through to native: ${err}`,
-        )
-      }
-    }
-
-    // --- Native Anthropic path (firstParty / vertex / foundry) ---
     const startTime = performance.now()
     const { query } = input
     const userMessage = createUserMessage({
@@ -502,7 +258,7 @@ export const WebSearchTool = buildTool({
     let currentToolUseId = null
     let currentToolUseJson = ''
     let progressCounter = 0
-    const toolUseQueries = new Map() // Map of tool_use_id to query
+    const toolUseQueries = new Map()
 
     for await (const event of queryStream) {
       if (event.type === 'assistant') {
@@ -510,7 +266,6 @@ export const WebSearchTool = buildTool({
         continue
       }
 
-      // Track tool use ID when server_tool_use starts
       if (
         event.type === 'stream_event' &&
         event.event?.type === 'content_block_start'
@@ -523,7 +278,6 @@ export const WebSearchTool = buildTool({
         }
       }
 
-      // Accumulate JSON for current tool use
       if (
         currentToolUseId &&
         event.type === 'stream_event' &&
@@ -533,26 +287,25 @@ export const WebSearchTool = buildTool({
         if (delta?.type === 'input_json_delta' && delta.partial_json) {
           currentToolUseJson += delta.partial_json
 
-          // Try to extract query from partial JSON for progress updates
           try {
             const queryMatch = currentToolUseJson.match(
               /"query"\s*:\s*"((?:[^"\\]|\\.)*)"/,
             )
             if (queryMatch && queryMatch[1]) {
-              const query = jsonParse('"' + queryMatch[1] + '"')
+              const extractedQuery = jsonParse('"' + queryMatch[1] + '"')
 
               if (
                 !toolUseQueries.has(currentToolUseId) ||
-                toolUseQueries.get(currentToolUseId) !== query
+                toolUseQueries.get(currentToolUseId) !== extractedQuery
               ) {
-                toolUseQueries.set(currentToolUseId, query)
+                toolUseQueries.set(currentToolUseId, extractedQuery)
                 progressCounter++
                 if (onProgress) {
                   onProgress({
                     toolUseID: `search-progress-${progressCounter}`,
                     data: {
                       type: 'query_update',
-                      query,
+                      query: extractedQuery,
                     },
                   })
                 }
@@ -564,7 +317,6 @@ export const WebSearchTool = buildTool({
         }
       }
 
-      // Yield progress when search results come in
       if (
         event.type === 'stream_event' &&
         event.event?.type === 'content_block_start'
@@ -590,7 +342,6 @@ export const WebSearchTool = buildTool({
       }
     }
 
-    // Process the final result
     const endTime = performance.now()
     const durationSeconds = (endTime - startTime) / 1000
 
@@ -606,18 +357,13 @@ export const WebSearchTool = buildTool({
 
     let formattedOutput = `Web search results for query: "${query}"\n\n`
 
-    // Process the results array - it can contain both string summaries and search result objects.
-    // Guard against null/undefined entries that can appear after JSON round-tripping
-    // (e.g., from compaction or transcript deserialization).
     ;(results ?? []).forEach(result => {
       if (result == null) {
         return
       }
       if (typeof result === 'string') {
-        // Text summary
         formattedOutput += result + '\n\n'
       } else {
-        // Search result with links
         if (result.content?.length > 0) {
           formattedOutput += `Links: ${jsonStringify(result.content)}\n\n`
         } else {
