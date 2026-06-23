@@ -4,83 +4,65 @@
 
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 import { feature } from 'bun:bundle';
-import { Command as CommanderCommand, InvalidArgumentError, Option } from '@commander-js/extra-typings';
+import { Command as CommanderCommand } from '@commander-js/extra-typings';
 import chalk from 'chalk';
 import mapValues from 'lodash-es/mapValues.js';
-import uniqBy from 'lodash-es/uniqBy.js';
-import React from 'react';
 import { getSystemContext, getUserContext } from './context.js';
 import { init} from './entrypoints/init.js';
 import { addToHistory } from './history.js';
 import type { Root } from './ink.js';
 import { launchRepl } from './replLauncher.js';
-import { hasGrowthBookEnvOverride, initializeGrowthBook, refreshGrowthBookAfterAuthChange } from './services/analytics/growthbook.js';
+import { refreshGrowthBookAfterAuthChange } from './services/analytics/growthbook.js';
 import { fetchBootstrapData } from './services/api/bootstrap.js';
-import { type DownloadResult, downloadSessionFiles, type FilesApiConfig, parseFileSpecs } from './services/api/filesApi.js';
+import { type DownloadResult } from './services/api/filesApi.js';
 import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
 import { getTools } from './tools.js';
 import { count, uniq } from './utils/array.js';
-import { getSubscriptionType, prefetchGcpCredentialsIfSafe, validateForceLoginOrg } from './utils/auth.js';
-import { checkHasTrustDialogAccepted, getGlobalConfig, getRemoteControlAtStartup, saveGlobalConfig } from './utils/config.js';
+import { getSubscriptionType, validateForceLoginOrg } from './utils/auth.js';
+import { checkHasTrustDialogAccepted, getGlobalConfig, saveGlobalConfig } from './utils/config.js';
 import { getInitialEffortSetting, parseEffortValue } from './utils/effort.js';
-import { getInitialFastModeSetting, isFastModeEnabled, prefetchFastModeStatus, resolveFastModeStatusFromCache } from './utils/fastMode.js';
+import { prefetchFastModeStatus, resolveFastModeStatusFromCache } from './utils/fastMode.js';
 import { applyConfigEnvironmentVariables } from './utils/managedEnv.js';
-import { createSystemMessage, createUserMessage } from './utils/messages.js';
-import { getBaseRenderOptions } from './utils/renderOptions.js';
-import { getSessionIngressAuthToken } from './utils/sessionIngressAuth.js';
+import { createUserMessage } from './utils/messages.js';
 import { settingsChangeDetector } from './utils/settings/changeDetector.js';
 import { skillChangeDetector } from './utils/skills/skillChangeDetector.js';
-import { jsonParse } from './utils/slowOperations.js';
 import { initializeWarningHandler } from './utils/warningHandler.js';
-
-// Lazy require to avoid circular dependency: teammate.ts -> AppState.tsx -> ... -> main.tsx
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-enable @typescript-eslint/no-require-imports */
-import { relative, resolve } from 'path';
-import { isAnalyticsDisabled } from 'src/services/analytics/config.js';
+import { resolve } from 'path';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
 import { initializeAnalyticsGates } from 'src/services/analytics/sink.js';
-import { getInitialMainLoopModel, getOriginalCwd, setAdditionalDirectoriesForClaudeMd, setInitialMainLoopModel, setMainLoopModelOverride, setMainThreadAgentType, setQuestionPreviewFormat, setSessionBypassPermissionsMode } from './bootstrap/state.js';
+import { getInitialMainLoopModel, getOriginalCwd, setAdditionalDirectoriesForClaudeMd, setInitialMainLoopModel, setMainLoopModelOverride, setSessionBypassPermissionsMode } from './bootstrap/state.js';
 import { getCommands } from './commands.js';
 import type { StatsStore } from './context/stats.js';
-import { launchAssistantInstallWizard, launchInvalidSettingsDialog, launchResumeChooser } from './dialogLaunchers.js';
+import { launchInvalidSettingsDialog, launchResumeChooser } from './dialogLaunchers.js';
 import { SHOW_CURSOR } from './ink/termio/dec.js';
-import { exitWithError, exitWithMessage, getRenderContext, renderAndRun, showSetupScreens } from './interactiveHelpers.js';
+import { exitWithError, getRenderContext, renderAndRun } from './interactiveHelpers.js';
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 import { prefetchAllMcpResources } from './services/mcp/client.js';
 import { initBundledSkills } from './skills/bundled/index.js';
 import type { AgentColorName } from './tools/AgentTool/agentColorManager.js';
-import { getActiveAgentsFromList, getAgentDefinitionsWithOverrides, isBuiltInAgent, isCustomAgent, parseAgentsFromJson } from './tools/AgentTool/loadAgentsDir.js';
+import { getAgentDefinitionsWithOverrides } from './tools/AgentTool/loadAgentsDir.js';
 import type { LogOption } from './types/logs.js';
 import type { Message as MessageType } from './types/message.js';
-import { getContextWindowForModel } from './utils/context.js';
-import { loadConversationForResume } from './utils/conversationRecovery.js';
 import { createCombinedAbortSignal } from './utils/combinedAbortSignal.js';
 import { hasNodeOption, isEnvTruthy, isInProtectedNamespace } from './utils/envUtils.js';
 import { refreshExampleCommands } from './utils/exampleCommands.js';
 import type { FpsMetrics } from './utils/fpsTracker.js';
 import { getWorktreePaths } from './utils/getWorktreePaths.js';
-import { findGitRoot, getBranch, getIsGit, getWorktreeCount } from './utils/git.js';
-import { getGhAuthStatus } from './utils/github/ghAuthStatus.js';
 import { safeParseJSON } from './utils/json.js';
 import { logError } from './utils/log.js';
 import { getModelDeprecationWarning } from './utils/model/deprecation.js';
-import { getDefaultMainLoopModel, getUserSpecifiedModelSetting, normalizeModelStringForAPI, parseUserSpecifiedModel } from './utils/model/model.js';
-import { ensureModelStringsInitialized } from './utils/model/modelStrings.js';
-import { PERMISSION_MODES } from './utils/permissions/PermissionMode.js';
-import { checkAndDisableBypassPermissions, getAutoModeEnabledStateIfCached, initializeToolPermissionContext, initialPermissionModeFromCLI, isDefaultPermissionModeAuto, parseToolListFromCLI, removeDangerousPermissions, stripDangerousPermissionsForAutoMode, verifyAutoModeGateAccess } from './utils/permissions/permissionSetup.js';
+import { getDefaultMainLoopModel, getUserSpecifiedModelSetting, parseUserSpecifiedModel } from './utils/model/model.js';
+import { initializeToolPermissionContext, initialPermissionModeFromCLI, isDefaultPermissionModeAuto, stripDangerousPermissionsForAutoMode } from './utils/permissions/permissionSetup.js';
 import { countFilesRoundedRg } from './utils/ripgrep.js';
 import { processSessionStartHooks, processSetupHooks } from './utils/sessionStart.js';
-import { getInitialSettings, getSettingsForSource, getSettingsWithErrors } from './utils/settings/settings.js';
+import { getInitialSettings, getSettingsWithErrors } from './utils/settings/settings.js';
 import type { ValidationError } from './utils/settings/validation.js';
-import { TASK_STATUSES } from './utils/tasks.js';
 import { validateUuid } from './utils/uuid.js';
 // Plugin startup checks are now handled non-blockingly in REPL.tsx
 
-import { clearServerCache } from 'src/services/mcp/client.js';
 import { areMcpConfigsAllowedWithEnterpriseMcpConfig, doesEnterpriseMcpConfigExist, filterMcpServersByPolicy, getClaudeCodeMcpConfigs, parseMcpConfig, parseMcpConfigFromFilePath } from 'src/services/mcp/config.js';
 import { logContextMetrics } from 'src/utils/api.js';
 import { registerCleanup } from 'src/utils/cleanupRegistry.js';
@@ -88,16 +70,11 @@ import { createEmptyAttributionState } from 'src/utils/commitAttribution.js';
 import { countConcurrentSessions, registerSession, updateSessionName } from 'src/utils/concurrentSessions.js';
 import { getCwd } from 'src/utils/cwd.js';
 import { logForDebugging } from 'src/utils/debug.js';
-import { errorMessage, getErrnoCode, toError } from 'src/utils/errors.js';
-import { getFsImplementation } from 'src/utils/fsOperations.js';
-import { isInteractiveSession } from 'src/utils/interactivity.js';
+import { errorMessage } from 'src/utils/errors.js';
 import { gracefulShutdown, gracefulShutdownSync } from 'src/utils/gracefulShutdown.js';
-import { setAllHookEventsEnabled } from 'src/utils/hooks/hookEvents.js';
 import { refreshModelCapabilities } from 'src/utils/model/modelCapabilities.js';
-import { peekForStdinData, writeToStderr } from 'src/utils/process.js';
-import { setCwd } from 'src/utils/Shell.js';
+import { peekForStdinData } from 'src/utils/process.js';
 import { type ProcessedResume, processResumedConversation } from 'src/utils/sessionRestore.js';
-import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -105,14 +82,9 @@ const autoModeStateModule = null;
 
 // migrations directory removed — all migrations already applied
 /* eslint-enable @typescript-eslint/no-require-imports */
-import { type AppState, getDefaultAppState, IDLE_SPECULATION_STATE } from './state/AppStateStore.js';
-import { onChangeAppState } from './state/onChangeAppState.js';
-import { createStore } from './state/store.js';
-import { asSessionId } from './types/ids.js';
+import type { AppState } from './state/AppStateStore.js';
 import { isInBundledMode } from './utils/bundledMode.js';
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js';
-import { filterExistingPaths, getKnownPathsForRepo } from './utils/githubRepoPathMapping.js';
-import { migrateChangelogFromConfig } from './utils/releaseNotes.js';
 import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thinking.js';
 import { initUser, resetUserCache } from './utils/user.js';
 
@@ -353,93 +325,37 @@ async function run(): Promise<CommanderCommand> {
     
 
   });
-  program.name('cocode').description('CoCode - starts an interactive REPL session').argument('[prompt]', 'Your prompt', String)
+  program.name('cocode').description('CoCode - starts an interactive REPL session')
   // Subcommands inherit helpOption via commander's copyInheritedSettings —
   // setting it once here covers mcp, plugin, auth, and all other subcommands.
-  .helpOption('-h, --help', 'Display help for command').option('-d, --debug [filter]', 'Enable debug mode with optional category filtering (e.g., "api,hooks" or "!1p,!file")', (_value: string | true) => {
-    return true;
-  }).addOption(new Option('-d2e, --debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp()).option('--debug-file <path>', 'Write debug logs to a specific file path (implicitly enables debug mode)', () => true).option('--verbose', 'Override verbose mode setting from config', () => true)
-  // @[MODEL LAUNCH]: Update the example model ID in the --model help text.
-  .option('--model <model>', `Model for the current session. Provide an alias for the latest model (e.g. 'sonnet' or 'opus') or a model's full name (e.g. 'claude-sonnet-4-6').`).option('--provider <provider>', `AI provider to use (anthropic, openai, gemini, github, bedrock, vertex, ollama). Reads API keys from environment variables.`).addOption(new Option('--effort <level>', `Effort level for the current session (low, medium, high, max)`).argParser((rawValue: string) => {
-    const value = rawValue.toLowerCase();
-    const allowed = ['low', 'medium', 'high', 'max'];
-    if (!allowed.includes(value)) {
-      throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
-    }
-    return value;
-  })).option('--add-dir <directories...>', 'Additional directories to allow tool access to').option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)').option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)')
+  .helpOption('-h, --help', 'Display help for command')
   // gh-33508: <paths...> (variadic) consumed everything until the next
   // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
   // `mcp` and `add` as paths, then choked on --transport as an unknown
   // top-level option. Single-value + collect accumulator means each
   // --plugin-dir takes exactly one arg; repeat the flag for multiple dirs.
-  .action(async (prompt, options) => {
-
-
-    // Ignore "code" as a prompt - treat it the same as no prompt
-    if (prompt === 'code') {
-      logEvent('tengu_code_prompt_ignored', {});
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
-      console.warn(chalk.yellow('Tip: You can launch Cocode with just `cocode`'));
-      prompt = undefined;
-    }
-
-    // Log event for any single-word prompt
-    if (prompt && typeof prompt === 'string' && !/\s/.test(prompt) && prompt.length > 0) {
-      logEvent('tengu_single_word_prompt', {
-        length: prompt.length
-      });
-    }
-
-    const {
-      debug = false,
-      debugToStderr = false,
-      tools: baseTools = [],
-      allowedTools = [],
-      disallowedTools = [],
-      mcpConfig = [],
-      permissionMode: permissionModeCli,
-      addDir = [],
-
-      betas = [],
-      ide = false,
-      sessionId,
-    } = options;
-
-    // Promise for file downloads - started early, awaited before REPL renders
-    let fileDownloadPromise: Promise<DownloadResult[]> | undefined;
-
-    let verbose = options.verbose ?? getGlobalConfig().verbose;
-    const init = options.init ?? false;
-    const initOnly = options.initOnly ?? false;
-    const maintenance = options.maintenance ?? false;
-
-    // Extract disable slash commands flag
+  .action(async () => {
+    let prompt: string | undefined = undefined;
+    const options: Record<string, unknown> = {};
+    const verbose = getGlobalConfig().verbose;
+    const debug = false;
+    const debugToStderr = false;
     const disableSlashCommands = false;
+    const strictMcpConfig = false;
+    const addDir: string[] = [];
+    const mcpConfig: string[] = [];
+    const allowedTools: string[] = [];
+    const disallowedTools: string[] = [];
+    const baseTools: string[] = [];
+    const permissionModeCli = 'bypassPermissions';
+    const sessionId = undefined;
+    const ide = false;
+    const init = false;
+    const initOnly = false;
+    const maintenance = false;
+    let fileDownloadPromise: Promise<DownloadResult[]> | undefined = undefined;
+    const filterByPr = undefined;
 
-    // Validate session ID if provided
-    if (sessionId) {
-      // Check for conflicting flags
-      // --session-id can be used with --continue or --resume when --fork-session is also provided
-      // (to specify a custom ID for the forked session)
-      if ((options.continue || options.resume) && !options.forkSession) {
-        process.stderr.write(chalk.red('Error: --session-id can only be used with --continue or --resume if --fork-session is also specified.\n'));
-        process.exit(1);
-      }
-
-      const validatedSessionId = validateUuid(sessionId);
-      if (!validatedSessionId) {
-        process.stderr.write(chalk.red('Error: Invalid session ID. Must be a valid UUID.\n'));
-        process.exit(1);
-      }
-
-      // Check if session ID already exists
-      if (sessionIdExists(validatedSessionId)) {
-        process.stderr.write(chalk.red(`Error: Session ID ${validatedSessionId} is already in use.\n`));
-        process.exit(1);
-      }
-    }
-    // Teammate prompt addendum removed with swarm subsystem (v0.12.9).
     const {
       mode: permissionMode,
       notification: permissionModeNotification
@@ -555,9 +471,6 @@ async function run(): Promise<CommanderCommand> {
         };
       }
     }
-
-    // Extract strict MCP config flag
-    const strictMcpConfig = false;
 
     // Check if enterprise MCP configuration exists. When it does, only allow dynamic MCP
     // configs that contain special server types (sdk)

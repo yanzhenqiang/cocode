@@ -9,7 +9,9 @@ echo "========================================"
 tmux kill-server 2>/dev/null || true
 
 # 确保 dist 与源码一致
+# 先 link 当前包，使 cocode.sh 中的 `exec cocode` 可用
 echo "Building..."
+npm link
 npx tsx scripts/build-node.ts
 
 PASS=0

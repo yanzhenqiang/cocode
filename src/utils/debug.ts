@@ -5,11 +5,6 @@ import { getSessionId } from 'src/bootstrap/state.js'
 
 import { type BufferedWriter, createBufferedWriter } from './bufferedWriter.js'
 import { registerCleanup } from './cleanupRegistry.js'
-import {
-  type DebugFilter,
-  parseDebugFilter,
-  shouldShowDebugMessage,
-} from './debugFilter.js'
 import { getClaudeConfigHomeDir, isEnvTruthy } from './envUtils.js'
 import { getFsImplementation } from './fsOperations.js'
 import { writeToStderr } from './process.js'
@@ -46,12 +41,7 @@ export const isDebugMode = memoize((): boolean => {
     runtimeDebugEnabled ||
     isEnvTruthy(process.env.DEBUG) ||
     isEnvTruthy(process.env.DEBUG_SDK) ||
-    process.argv.includes('--debug') ||
-    process.argv.includes('-d') ||
-    isDebugToStdErr() ||
-    // Also check for --debug=pattern syntax
-    process.argv.some(arg => arg.startsWith('--debug=')) ||
-    // --debug-file implicitly enables debug mode
+    // CLAUDE_CODE_DEBUG_FILE implicitly enables debug mode
     getDebugFilePath() !== null
   )
 })
@@ -68,37 +58,13 @@ export function enableDebugLogging(): boolean {
   return wasActive
 }
 
-// Extract and parse debug filter from command line arguments
-// Exported for testing purposes
-export const getDebugFilter = memoize((): DebugFilter | null => {
-  // Look for --debug=pattern in argv
-  const debugArg = process.argv.find(arg => arg.startsWith('--debug='))
-  if (!debugArg) {
-    return null
-  }
-
-  // Extract the pattern after the equals sign
-  const filterPattern = debugArg.substring('--debug='.length)
-  return parseDebugFilter(filterPattern)
-})
-
 export const isDebugToStdErr = memoize((): boolean => {
-  return (
-    process.argv.includes('--debug-to-stderr') || process.argv.includes('-d2e')
-  )
+  return false
 })
 
 export const getDebugFilePath = memoize((): string | null => {
-  for (let i = 0; i < process.argv.length; i++) {
-    const arg = process.argv[i]!
-    if (arg.startsWith('--debug-file=')) {
-      return arg.substring('--debug-file='.length)
-    }
-    if (arg === '--debug-file' && i + 1 < process.argv.length) {
-      return process.argv[i + 1]!
-    }
-  }
-  return null
+  const path = process.env.CLAUDE_CODE_DEBUG_FILE
+  return path && path.length > 0 ? path : null
 })
 
 function shouldLogDebugMessage(message: string): boolean {
@@ -120,8 +86,7 @@ function shouldLogDebugMessage(message: string): boolean {
     return false
   }
 
-  const filter = getDebugFilter()
-  return shouldShowDebugMessage(message, filter)
+  return true
 }
 
 let hasFormattedOutput = false
