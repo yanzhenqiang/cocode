@@ -40,7 +40,6 @@ export function registerGuideSkill(): void {
     name: 'guide',
     description:
       'Answer questions about Cocode CLI, Claude Agent SDK, and Claude API usage',
-    aliases: ['help', 'docs'],
     userInvocable: true,
     getPromptForCommand: async (args) => {
       let prompt = GUIDE_SYSTEM_PROMPT

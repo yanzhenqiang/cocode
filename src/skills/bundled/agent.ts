@@ -52,7 +52,6 @@ export function registerAgentSkill(): void {
     name: 'agent',
     description: 'Spawn and manage subagents in independent tmux sessions',
     whenToUse: 'When the user asks you to spawn, create, or launch a subagent, or delegate a task to an agent. You MUST spawn a subagent via the Bash tool — never perform the delegated task yourself.',
-    aliases: ['spawn'],
     userInvocable: true,
     allowedTools: [BASH_TOOL_NAME, 'Glob', 'Grep', 'Read', 'FileEdit'],
     getPromptForCommand: async (args) => {

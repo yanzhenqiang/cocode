@@ -1,6 +1,5 @@
 // biome-ignore-all assist/source/organizeImports: internal-only import markers must not be reordered
 import clear from './commands/clear/index.js'
-import commitMessage from './commands/commit-message/index.js'
 import compact from './commands/compact/index.js'
 import config from './commands/config/index.js'
 import { context, contextNonInteractive } from './commands/context/index.js'
@@ -15,12 +14,10 @@ import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import shiftTab from './commands/shiftTab/index.js'
 import tasks from './commands/tasks/index.js'
-import theme from './commands/theme/index.js'
 
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import files from './commands/files/index.js'
-import privacySettings from './commands/privacy-settings/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import rewind from './commands/rewind/index.js'
 import btw from './commands/btw/index.js'
@@ -74,10 +71,8 @@ const COMMANDS = memoize((): Command[] => [
   btw,
   rewind,
   cacheStats,
-  privacySettings,
   clear,
   compact,
-  commitMessage,
   config,
   context,
   contextNonInteractive,
@@ -96,7 +91,6 @@ const COMMANDS = memoize((): Command[] => [
   status,
   shiftTab,
   tag,
-  theme,
 
 
 

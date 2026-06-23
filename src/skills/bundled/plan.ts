@@ -81,7 +81,6 @@ export function registerPlanSkill(): void {
     name: 'plan',
     description:
       'Launch a software architect agent in an isolated tmux session to design implementation plans',
-    aliases: ['architect'],
     userInvocable: true,
     allowedTools: [BASH_TOOL_NAME],
     getPromptForCommand: async (args) => {

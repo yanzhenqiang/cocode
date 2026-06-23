@@ -76,7 +76,6 @@ export function registerExploreSkill(): void {
     name: 'explore',
     description:
       'Launch a read-only exploration agent in an isolated tmux session to deeply search the codebase',
-    aliases: ['search'],
     userInvocable: true,
     allowedTools: [BASH_TOOL_NAME],
     getPromptForCommand: async (args) => {
