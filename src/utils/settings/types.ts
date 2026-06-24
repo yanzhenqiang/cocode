@@ -729,18 +729,6 @@ export const SettingsSchema = lazySchema(() =>
             'Use "default" key as fallback. Model name must exist in agentModels. ' +
             'Example: { "Explore": "deepseek-chat", "general-purpose": "gpt-4o", "default": "gpt-4o" }',
         ),
-      fastMode: z
-        .boolean()
-        .optional()
-        .describe(
-          'When true, fast mode is enabled. When absent or false, fast mode is off.',
-        ),
-      fastModePerSessionOptIn: z
-        .boolean()
-        .optional()
-        .describe(
-          'When true, fast mode does not persist across sessions. Each session starts with fast mode off.',
-        ),
       showClearContextOnPlanAccept: z
         .boolean()
         .optional()

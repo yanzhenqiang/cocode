@@ -22,7 +22,6 @@ import { count, uniq } from './utils/array.js';
 import { getSubscriptionType, validateForceLoginOrg } from './utils/auth.js';
 import { checkHasTrustDialogAccepted, getGlobalConfig, saveGlobalConfig } from './utils/config.js';
 import { getInitialEffortSetting, parseEffortValue } from './utils/effort.js';
-import { prefetchFastModeStatus, resolveFastModeStatusFromCache } from './utils/fastMode.js';
 import { applyConfigEnvironmentVariables } from './utils/managedEnv.js';
 import { createUserMessage } from './utils/messages.js';
 import { settingsChangeDetector } from './utils/settings/changeDetector.js';
@@ -720,10 +719,9 @@ const {
         });
       }
 
-    // Check quota status, fast mode, passes eligibility, and bootstrap data
+    // Check quota status, passes eligibility, and bootstrap data
     // --bare / SIMPLE: skip — these are cache-warms for the REPL's
-    // first-turn responsiveness (quota, passes, fastMode, bootstrap data). Fast
-    // mode doesn't apply to the Agent SDK anyway (see getFastModeUnavailableReason).
+    // first-turn responsiveness (quota, passes, bootstrap data).
     const bgRefreshThrottleMs = getFeatureValue_CACHED_MAY_BE_STALE('tengu_cicada_nap_ms', 0);
     const lastPrefetched = getGlobalConfig().startupPrefetchedAt ?? 0;
     const skipStartupPrefetches = bgRefreshThrottleMs > 0 && Date.now() - lastPrefetched < bgRefreshThrottleMs;
@@ -736,14 +734,6 @@ const {
       // Fetch bootstrap data from the server and update all cache values.
       void fetchBootstrapData();
 
-      if (!getFeatureValue_CACHED_MAY_BE_STALE('tengu_miraculo_the_bard', false)) {
-        void prefetchFastModeStatus();
-      } else {
-        // Kill switch skips the network call, not org-policy enforcement.
-        // Resolve from cache so orgStatus doesn't stay 'pending' (which
-        // getFastModeUnavailableReason treats as permissive).
-        resolveFastModeStatusFromCache();
-      }
       if (bgRefreshThrottleMs > 0) {
         saveGlobalConfig(current => ({
           ...current,
@@ -752,8 +742,6 @@ const {
       }
     } else {
       logForDebugging(`Skipping startup prefetches, last ran ${Math.round((Date.now() - lastPrefetched) / 1000)}s ago`);
-      // Resolve fast mode org status from cache (no network)
-      resolveFastModeStatusFromCache();
     }
     void refreshExampleCommands(); // Pre-fetch example commands (runs git log, no API call)
 

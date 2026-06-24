@@ -16,13 +16,13 @@ import shiftTab from './commands/shiftTab/index.js'
 import tasks from './commands/tasks/index.js'
 
 import plan from './commands/plan/index.js'
-import fast from './commands/fast/index.js'
 import files from './commands/files/index.js'
 import cacheStats from './commands/cacheStats/index.js'
 import rewind from './commands/rewind/index.js'
 import btw from './commands/btw/index.js'
 import branch from './commands/branch/index.js'
 // /agents command removed
+// /fast command removed
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
 import { toError } from './utils/errors.js'
@@ -78,7 +78,6 @@ const COMMANDS = memoize((): Command[] => [
   contextNonInteractive,
   effort,
   exit,
-  fast,
   files,
   init,
   keybindings,

@@ -169,7 +169,6 @@ export function logAPIQuery({
   queryTracking,
   thinkingType,
   effortValue,
-  fastMode,
   previousRequestId,
 }: {
   model: string
@@ -181,7 +180,6 @@ export function logAPIQuery({
   queryTracking?: QueryChainTracking
   thinkingType?: 'adaptive' | 'enabled' | 'disabled'
   effortValue?: EffortLevel | null
-  fastMode?: boolean
   previousRequestId?: string | null
 }): void {
   logEvent('tengu_api_query', {
@@ -212,7 +210,6 @@ export function logAPIQuery({
       thinkingType as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     effortValue:
       effortValue as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    fastMode,
     ...(previousRequestId
       ? {
           previousRequestId:
@@ -238,7 +235,6 @@ export function logAPIError({
   headers,
   queryTracking,
   querySource,
-  fastMode,
   previousRequestId,
 }: {
   error: unknown
@@ -256,7 +252,6 @@ export function logAPIError({
   headers?: globalThis.Headers
   queryTracking?: QueryChainTracking
   querySource?: string
-  fastMode?: boolean
   previousRequestId?: string | null
 }): void {
   const gateway = detectGateway({
@@ -342,7 +337,6 @@ export function logAPIError({
             querySource as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
         }
       : {}),
-    fastMode,
     ...(previousRequestId
       ? {
           previousRequestId:
@@ -378,7 +372,6 @@ function logAPISuccess({
   thinkingContentLength,
   toolUseContentLengths,
   connectorTextBlockCount,
-  fastMode,
   previousRequestId,
   betas,
 }: {
@@ -404,7 +397,6 @@ function logAPISuccess({
   thinkingContentLength?: number
   toolUseContentLengths?: Record<string, number>
   connectorTextBlockCount?: number
-  fastMode?: boolean
   previousRequestId?: string | null
   betas?: string[]
 }): void {
@@ -511,7 +503,6 @@ function logAPISuccess({
           connectorTextBlockCount,
         } as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS)
       : {}),
-    fastMode,
     // Log cache_deleted_input_tokens for cache editing analysis. Casts needed
     // because the field is intentionally not on NonNullableUsage (excluded from
     // external builds). Set by updateUsage() when cache editing is active.
@@ -560,7 +551,6 @@ export function logAPISuccessAndDuration({
   globalCacheStrategy,
   requestSetupMs,
   attemptStartTimes,
-  fastMode,
   previousRequestId,
   betas,
 }: {
@@ -589,7 +579,6 @@ export function logAPISuccessAndDuration({
   requestSetupMs?: number
   /** Timestamps (Date.now()) of each attempt start — used for retry sub-spans in Perfetto */
   attemptStartTimes?: number[]
-  fastMode?: boolean
   /** Request ID from the previous API call in this session */
   previousRequestId?: string | null
   betas?: string[]
@@ -666,7 +655,6 @@ export function logAPISuccessAndDuration({
     thinkingContentLength,
     toolUseContentLengths,
     connectorTextBlockCount,
-    fastMode,
     previousRequestId,
     betas,
   })
